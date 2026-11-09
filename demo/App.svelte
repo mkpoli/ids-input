@@ -6,7 +6,7 @@
   // the toolbar holds undo, redo, examples, sharing, the language, settings and sources; the tab
   // strip's + opens a blank tab and its chevron opens the templates and examples as starting points.
   import SiteSelect from './ui/SiteSelect.svelte'
-  import { tick, untrack } from 'svelte'
+  import { onMount, tick, untrack } from 'svelte'
   import { watchFallback } from '../src/svelte/fallback-font.js'
   import { IdsCharacterInfo, IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, OperatorIcon, createEditor, shortcut, translator } from '../src/svelte/index.js'
   import { smallSealAdapter } from '../src/adapter/index.js'
@@ -18,6 +18,7 @@
   import { createDocumentSession, layerAtPath, sessionRecord, toSequence } from '../src/document/index.js'
   import { documentFile, readDocumentFile } from './lib/documents.js'
   import ids from '../data/babelstone-ids.tsv.gz?url'
+  import equivalencesUrl from '../data/ids-equivalences.json?url'
   import layers from '../data/tangut-layers.json.gz?url'
   import zitools from '../data/yi-bai-ids.tsv.gz?url'
   import corpus from '../data/ids-corpus.json.gz?url'
@@ -72,6 +73,49 @@
   import Toast from './ui/Toast.svelte'
   import ColumnSplitter from './ui/ColumnSplitter.svelte'
   import ComponentLookup from './ui/ComponentLookup.svelte'
+
+  /** The BabelStone numbers' CHISE equivalents, for the palette's hover text. @type {Map<string, string[]>} */
+  let equivalents = $state(new Map())
+  /** The corpus's equivalence rows, kept so a change to the reader's list can rebuild the map.
+   * @type {any[][]} */
+  let equivalenceRows = $state([])
+  const rebuildEquivalents = () => {
+    const map = new Map()
+    for (const [a, b, , , , , , status] of equivalenceRows) {
+      if (!a.startsWith('bsp:') || status !== 'verified') continue
+      const key = `{${a.slice(4)}}`
+      const names = map.get(key) ?? []
+      names.push(b.replace(/^chise:/, ''))
+      map.set(key, names)
+    }
+    // A reader's own pairs from the appendix join the corpus ones; a pair without both a number
+    // and a CHISE name has nothing to say on a numbered part.
+    try {
+      const stored = JSON.parse(localStorage.getItem('ids-input:equivalences') ?? '[]')
+      for (const row of Array.isArray(stored) ? stored : []) {
+        const sides = [String(row?.a ?? ''), String(row?.b ?? '')]
+        const number = sides.map(side => /^bsp:(\d+)$/.exec(side)).find(Boolean)
+        const entity = sides.map(side => /^chise:(.+)$/.exec(side)).find(Boolean)
+        if (!number || !entity) continue
+        const key = `{${number[1]}}`
+        const names = map.get(key) ?? []
+        if (!names.includes(entity[1])) names.push(entity[1])
+        map.set(key, names)
+      }
+    } catch { /* A malformed stored list leaves the corpus pairs. */ }
+    equivalents = map
+  }
+  onMount(async () => {
+    try {
+      const response = await fetch(equivalencesUrl)
+      if (response.ok) equivalenceRows = (await response.json()).rows ?? []
+    } catch { /* The palette works without the equivalents. */ }
+    rebuildEquivalents()
+    // The appendix writes the reader's list under this key; another tab's change reaches this one.
+    const onStorage = (/** @type {StorageEvent} */ event) => { if (event.key === 'ids-input:equivalences') rebuildEquivalents() }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  })
 
   const params = new URLSearchParams(location.search)
   /** A preview over the export at `base`, read from wherever this build holds it. @param {Parameters<typeof composerAt>[0]} options */
@@ -315,6 +359,12 @@
   /** @param {typeof FONT_FACES[number]} option */
   const sampleDraw = option => {
     const at = faceExport(option.key), key = `${at}\0${option.style}`
+    // An export named anew retires this face's drawer over the one before, and the drawing in it.
+    for (const [oldKey, drawer] of sampleDrawings) {
+      if (oldKey === key || !oldKey.endsWith(`\0${option.style}`)) continue
+      drawer.cancel()
+      sampleDrawings.delete(oldKey)
+    }
     if (!sampleDrawings.has(key)) {
       const preview = previewAt(at, separate, option.style, `switch-${option.key}`)
       sampleDrawings.set(key, createSampleDrawings((sequence, { signal }) => preview(sequence, { signal })))
@@ -1315,7 +1365,7 @@
           {:else if editor.pending}<p class="status" role="status">{wholeComponentLookup ? t('ids.search.emptyHint') : editor.pending}</p>{/if}
         </div>
         <div class="block"><IdsOperators {editor} {keyHints} /></div>
-        <div class="block grow"><IdsPicker {editor} pickers={['parts', 'templates', 'from', 'find']} bind:fromText={fromText_} title={false} /></div>
+        <div class="block grow"><IdsPicker {editor} pickers={['parts', 'templates', 'from', 'find']} bind:fromText={fromText_} title={false} {equivalents} /></div>
       </section>
 
       <div class="column-gap input-gap">

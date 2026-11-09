@@ -394,5 +394,6 @@
   "info.site.chise": "CHISE IDS",
   "info.firstStrokeShort": "nét đầu",
   "info.script.jurchen": "Chữ Nữ Chân",
-  "info.script.kana": "Kana"
+  "info.script.kana": "Kana",
+  "parts.equivalents": "CHISE: {names}"
 }

@@ -182,6 +182,9 @@ def wan_shan(cs, style):
     allowed.lineTo(spine[1], top); allowed.lineTo(spine[0], top); allowed.close()
     assert overlap.area > 0, '山 stem does not join the ceiling'
     assert pathops.op(overlap, allowed, pathops.PathOp.DIFFERENCE).area < 0.1, '山 runs into 萬 outside the stem'
+    # 田 over 冂 around 山: the same band with 艹 left out, for a description whose 金
+    # bottom already draws the stroke 艹 would.
+    globals().setdefault('WAN_WITHOUT_CAO', [group([band] + counters), group(shan)])
     return [group([band] + cao + counters), group(shan)]
 
 def wan_shan_brush(cs, style):
@@ -410,6 +413,7 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
         for dots_seq in ['⿰冫⿱丿丶','⿰冫⿾冫']:
             forms['⿳田'+dots_seq+bottom]=[group(cs(ch))]
     forms['⿳艹田⿵冂山'] = wan_shan(cs, style)
+    forms['⿱田⿵冂山'] = globals()['WAN_WITHOUT_CAO']
     # The top of the KRM vulgar 處 (K07097330): ⺊'s dot as a bar, the stem centred on the cover
     # and joined to it. One component, reused as the top of ⿳⺊冖人 and its relatives.
     forms['⿱⺊冖'] = seal_dot_top(cs, style)

@@ -70,6 +70,9 @@ One artifact, `data/ids-corpus.json.gz`, with columnar tables in the shape `ids-
 uses: `components`, `aliases`, `equivalences`, `merges`, `descriptions`, plus `sources`, `provenance`,
 `pua` and `counts`. Outlines stay where they already live, so the corpus carries no `glyphs` table.
 
+The build also writes `data/ids-equivalences.json`, the same table with each side's display character and
+BabelStone's description, for the components page at `/unencoded`.
+
 An `equivalences` row names two cids, a `basis` (`alignment`), a `status` (`verified` where two or more
 characters attest the pair, `candidate` where one does), the provenance indexes of the descriptions
 that carry it, and a note listing the characters. One kind is recorded: a BabelStone number against a
