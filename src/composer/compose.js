@@ -371,11 +371,19 @@ const ENCLOSURE_FORMS = {
   },
 }
 
-/** Characters whose glyphs the designed cuts are read from; the loader preloads them. */
-export const designedSources = () => [...new Set([
-  ...Object.values(ENCLOSURE_FORMS).flatMap(forms => Object.values(forms).map(([char]) => char)),
-  ...Object.values(DESIGNED_CUTS).map(([char]) => char),
-])]
+/** Characters whose glyphs the tree's designed cuts are read from; the loader preloads them. */
+export const designedSources = tree => {
+  const out = new Set()
+  const visit = node => {
+    if (!Array.isArray(node)) return
+    const [op, ...children] = node
+    for (const [key, [char]] of Object.entries(ENCLOSURE_FORMS[op] ?? {})) if (children[0] === key) out.add(char)
+    for (const [key, [char]] of Object.entries(DESIGNED_CUTS)) if (children.includes(key)) out.add(char)
+    children.forEach(visit)
+  }
+  visit(tree)
+  return [...out]
+}
 
 // Left components the export carries no host cuts for, taken from a designed character's glyph.
 const DESIGNED_CUTS = {

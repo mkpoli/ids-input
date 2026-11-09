@@ -270,7 +270,7 @@ export async function compose(source, sequence, { exclude = [], face = null, sep
   const tree = parseTree(description, arity)
   if (tooLarge(tree)) throw new LookupError(`${sequence} is larger than a preview draws.`)
   // A mark's outline loads like a component's.
-  await source.load(source.filesOf([...keysOf(tree, [], separate, fontStyle), ...marks, ...designedSources()]))
+  await source.load(source.filesOf([...keysOf(tree, [], separate, fontStyle), ...marks, ...designedSources(tree)]))
   for (let round = 0; round < ROUNDS; round++) {
     const store = source.store()
     let drawn = null, failure = null, composer = null, cells = false
