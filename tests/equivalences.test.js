@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { parsePair, parseSide } from '../demo/lib/equivalences.js'
+import { importPairs, parsePair, parseSide } from '../demo/lib/equivalences.js'
 
 describe('equivalence input', () => {
   it('reads a numbered component in the three ways it is written', () => {
@@ -31,6 +31,18 @@ describe('equivalence input', () => {
     expect(parseSide('ucs:110000')).toBeNull()
     expect(parseSide('&CDP 8BD0;')).toBeNull()
     expect(parseSide('two')).toBeNull()
+  })
+
+  it('imports an exported file, including a short code point', () => {
+    const exported = { format: 'ids-input/equivalences-mine', version: 1, rows: [
+      { a: 'bsp:7', b: 'chise:CDP-8BD0', note: 'checked' },
+      { a: 'ucs:41', b: 'bsp:5', note: 'A' },
+    ] }
+    expect(importPairs(exported)).toEqual([
+      { a: 'bsp:7', b: 'chise:CDP-8BD0', note: 'checked' },
+      { a: 'bsp:5', b: 'ucs:41', note: 'A' },
+    ])
+    expect(importPairs({ rows: [{ a: 'bsp:7', b: 'bsp:7', note: '' }, { a: 'ucs:D800', b: 'bsp:5' }] })).toEqual([])
   })
 
   it('sorts a pair and refuses one side against itself', () => {

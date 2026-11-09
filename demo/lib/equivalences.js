@@ -32,3 +32,22 @@ export function parsePair(a, b) {
   const one = parseSide(a), two = parseSide(b)
   return one && two && one !== two ? [one, two].sort() : null
 }
+
+/** The pairs in an exported file: an array, or an object with `rows`; each row an object or an
+ * array. `@param {any} parsed @returns {{ a: string, b: string, note: string }[]}` */
+export function importPairs(parsed) {
+  const list = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.rows) ? parsed.rows : null
+  if (!list) throw new Error('no rows')
+  /** @type {{ a: string, b: string, note: string }[]} */
+  const rows = []
+  for (const item of list) {
+    const [a, b, note] = Array.isArray(item)
+      ? [item[0], item[1], item[2]]
+      : [item?.a, item?.b, item?.note]
+    const pair = parsePair(String(a ?? ''), String(b ?? ''))
+    if (!pair) continue
+    const [one, two] = pair
+    if (!rows.some(row => row.a === one && row.b === two)) rows.push({ a: one, b: two, note: String(note ?? '') })
+  }
+  return rows
+}
