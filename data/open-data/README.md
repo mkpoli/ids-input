@@ -22,6 +22,8 @@ The 8 Small Seal descriptions come from CHISE's GPL-2.0-or-later data. They stay
 | `descriptions.json` | The dataset: metadata, sources, records and numbered components. |
 | `descriptions.tsv` | The records as a table, one row per description. |
 | `components.tsv` | BabelStone's 121 numbered components, with the fragment that writes each out. |
+| `equivalences.json` | The 48 kana and 10 Hangul shapes the search reads as component spellings. |
+| `equivalences.tsv` | The same table, one row per shape family. |
 | `manifest.json` | Counts and file sizes, read by the site page. |
 
 ## Records
@@ -40,6 +42,18 @@ The 8 Small Seal descriptions come from CHISE's GPL-2.0-or-later data. They stay
 
 A description is a source's account of one form, not an absolute glyph. The same character can carry
 several descriptions, each with the regions or reading that account belongs to.
+
+## Equivalences
+
+The release also carries the search's visual substitutes: 48 kana and
+10 Hangul shape families. `equivalences.json` holds the `kana` and
+`hangul` arrays; `equivalences.tsv` has the columns `kind`, `shapes` and `components`.
+Halfwidth katakana uses its fullwidth row, and a kana followed by a voicing mark stays literal.
+
+The kana rows follow the [葦手入力 correspondence table](https://ashide.otodo.net/setumei/ziboziso.html).
+`ヱ` comes from Unihan's [`kStrange`](https://www.unicode.org/reports/tr38/#kStrange) and
+[BabelStone's description](https://www.babelstone.co.uk/CJK/IDS.TXT); the Hangul rows are this
+project's search aliases.
 
 ## Groups
 
@@ -169,8 +183,8 @@ terms, those terms apply to material taken from it.
 `bun scripts/build_open_ids.mjs` rewrites these files. Add `--check` to fail when a committed
 file differs.
 
-The source data is `demo/lib/examples.js`, `demo/lib/example-sources.js` and
-`data/ids-components.tsv`.
+The source data is `demo/lib/examples.js`, `demo/lib/example-sources.js`,
+`data/ids-components.tsv` and the search's `equivalences()` in `src/core/search-shapes.js`.
 
 ## Cite
 

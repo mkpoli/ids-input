@@ -37,8 +37,9 @@
   </header>
 
   <main>
-    <p class="lead">The IDS descriptions this project transcribed or read, each with the source behind it.
-      The release is dedicated to the public domain under CC0 1.0.</p>
+    <p class="lead">The IDS descriptions this project transcribed or read, and the kana and Hangul
+      shapes the search reads as component spellings, each with the source behind it. The release is
+      dedicated to the public domain under CC0 1.0.</p>
 
     <ul class="stats">
       <li><b>{manifest.counts.descriptions}</b><span>descriptions</span></li>
@@ -58,7 +59,9 @@
     </ul>
     <p class="note">The JSON carries the sources and their notes; the TSV repeats the records as one
       row per description. <code>components.tsv</code> lists BabelStone's numbered components and the
-      fragment that writes each out.</p>
+      fragment that writes each out. <code>equivalences.tsv</code> lists the kana and Hangul shapes
+      the search reads as component spellings, and <code>equivalences.json</code> is the same table
+      with arrays.</p>
 
     <h2>Groups</h2>
     <div class="scroll">

@@ -9,6 +9,7 @@
 // data/ids-components.tsv. A row that is a character alone is not a description and is left out.
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { OPERATORS, parse } from '../src/core/ids.js'
+import { equivalences } from '../src/core/search-shapes.js'
 import { EXAMPLE_GROUPS } from '../demo/lib/examples.js'
 import { EXAMPLE_SOURCES } from '../demo/lib/example-sources.js'
 
@@ -103,6 +104,12 @@ const components = (await read('../data/ids-components.tsv'))
     return { component, description, fragment, editorial: EDITORIAL_COMPONENTS.has(component) }
   })
 
+const equivalenceTable = equivalences()
+const equivalenceRows = [
+  ...equivalenceTable.kana.map(row => ({ kind: 'kana', shapes: row.shapes, components: row.components })),
+  ...equivalenceTable.hangul.map(row => ({ kind: 'hangul', shapes: row.shapes, components: row.components })),
+]
+
 const groups = EXAMPLE_GROUPS
   .map(group => ({
     key: group.key,
@@ -158,6 +165,20 @@ const componentsTsv = [
   ])),
 ].join('\n') + '\n'
 
+const equivalenceDataset = {
+  format: 'ids-input/equivalences',
+  version: 1,
+  licence,
+  counts: { kana: equivalenceTable.kana.length, hangul: equivalenceTable.hangul.length },
+  kana: equivalenceTable.kana,
+  hangul: equivalenceTable.hangul,
+}
+const equivalencesJson = JSON.stringify(equivalenceDataset, null, 2) + '\n'
+const equivalencesTsv = [
+  tsvLine(['kind', 'shapes', 'components']),
+  ...equivalenceRows.map(row => tsvLine([row.kind, row.shapes.join(' '), row.components.join(' ')])),
+].join('\n') + '\n'
+
 const json = JSON.stringify(dataset, null, 2) + '\n'
 
 /** A table cell, with the pipes and newlines Markdown would take for structure. @param {string} text */
@@ -191,6 +212,8 @@ The ${restricted} Small Seal descriptions come from CHISE's GPL-2.0-or-later dat
 | \`descriptions.json\` | The dataset: metadata, sources, records and numbered components. |
 | \`descriptions.tsv\` | The records as a table, one row per description. |
 | \`components.tsv\` | BabelStone's ${counts.components} numbered components, with the fragment that writes each out. |
+| \`equivalences.json\` | The ${equivalenceTable.kana.length} kana and ${equivalenceTable.hangul.length} Hangul shapes the search reads as component spellings. |
+| \`equivalences.tsv\` | The same table, one row per shape family. |
 | \`manifest.json\` | Counts and file sizes, read by the site page. |
 
 ## Records
@@ -209,6 +232,18 @@ The ${restricted} Small Seal descriptions come from CHISE's GPL-2.0-or-later dat
 
 A description is a source's account of one form, not an absolute glyph. The same character can carry
 several descriptions, each with the regions or reading that account belongs to.
+
+## Equivalences
+
+The release also carries the search's visual substitutes: ${equivalenceTable.kana.length} kana and
+${equivalenceTable.hangul.length} Hangul shape families. \`equivalences.json\` holds the \`kana\` and
+\`hangul\` arrays; \`equivalences.tsv\` has the columns \`kind\`, \`shapes\` and \`components\`.
+Halfwidth katakana uses its fullwidth row, and a kana followed by a voicing mark stays literal.
+
+The kana rows follow the [葦手入力 correspondence table](https://ashide.otodo.net/setumei/ziboziso.html).
+\`ヱ\` comes from Unihan's [\`kStrange\`](https://www.unicode.org/reports/tr38/#kStrange) and
+[BabelStone's description](https://www.babelstone.co.uk/CJK/IDS.TXT); the Hangul rows are this
+project's search aliases.
 
 ## Groups
 
@@ -243,15 +278,22 @@ terms, those terms apply to material taken from it.
 \`bun scripts/build_open_ids.mjs\` rewrites these files. Add \`--check\` to fail when a committed
 file differs.
 
-The source data is \`demo/lib/examples.js\`, \`demo/lib/example-sources.js\` and
-\`data/ids-components.tsv\`.
+The source data is \`demo/lib/examples.js\`, \`demo/lib/example-sources.js\`,
+\`data/ids-components.tsv\` and the search's \`equivalences()\` in \`src/core/search-shapes.js\`.
 
 ## Cite
 
 IDS Input. Open IDS descriptions, version 1. <https://ids.mkpo.li/open-data>
 `
 
-const text = { 'descriptions.json': json, 'descriptions.tsv': descriptionsTsv, 'components.tsv': componentsTsv, 'README.md': readme }
+const text = {
+  'descriptions.json': json,
+  'descriptions.tsv': descriptionsTsv,
+  'components.tsv': componentsTsv,
+  'equivalences.json': equivalencesJson,
+  'equivalences.tsv': equivalencesTsv,
+  'README.md': readme,
+}
 const manifest = {
   format: dataset.format,
   version: dataset.version,
@@ -262,6 +304,8 @@ const manifest = {
     { name: 'descriptions.json', bytes: Buffer.byteLength(json), type: 'application/json' },
     { name: 'descriptions.tsv', bytes: Buffer.byteLength(descriptionsTsv), type: 'text/tab-separated-values' },
     { name: 'components.tsv', bytes: Buffer.byteLength(componentsTsv), type: 'text/tab-separated-values' },
+    { name: 'equivalences.json', bytes: Buffer.byteLength(equivalencesJson), type: 'application/json' },
+    { name: 'equivalences.tsv', bytes: Buffer.byteLength(equivalencesTsv), type: 'text/tab-separated-values' },
     { name: 'README.md', bytes: Buffer.byteLength(readme), type: 'text/markdown' },
   ],
 }

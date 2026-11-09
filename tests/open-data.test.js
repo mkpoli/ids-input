@@ -10,6 +10,8 @@ const manifest = JSON.parse(read('manifest.json'))
 const readme = read('README.md')
 const tsv = read('descriptions.tsv').trimEnd().split('\n')
 const componentsTsv = read('components.tsv').trimEnd().split('\n')
+const equivalences = JSON.parse(read('equivalences.json'))
+const equivalenceTsv = read('equivalences.tsv').trimEnd().split('\n')
 const OPERATOR = new Set(OPERATORS.map(([operator]) => operator))
 const SOURCES = new Map(dataset.sources.map(source => [source.key, source]))
 
@@ -129,8 +131,26 @@ describe('the open data release', () => {
     })
   })
 
+  it('carries the kana and Hangul equivalences', () => {
+    expect(equivalences.format).toBe('ids-input/equivalences')
+    expect(equivalences.version).toBe(1)
+    expect(equivalences.counts).toEqual({ kana: 48, hangul: 10 })
+    expect(equivalences.kana).toHaveLength(48)
+    expect(equivalences.hangul).toHaveLength(10)
+    expect(equivalences.kana.find(row => row.shapes[0] === 'マ')).toMatchObject({ components: ['龴', '丅', '丁'] })
+    expect(equivalences.hangul.find(row => row.shapes[0] === 'ㅅ')).toMatchObject({ shapes: ['ㅅ', 'ᄉ', 'ᆺ'], components: ['人'] })
+    expect(equivalenceTsv[0]).toBe('kind\tshapes\tcomponents')
+    expect(equivalenceTsv).toHaveLength(equivalences.kana.length + equivalences.hangul.length + 1)
+    expect(equivalenceTsv[1].split('\t')).toEqual(['kana', 'ア', '了 ㇌ 卩 刀 丫'])
+    expect(readme).toContain('## Equivalences')
+    expect(readme).toContain('equivalences.tsv')
+  })
+
   it('lists the files it ships with their sizes', () => {
-    expect(manifest.files.map(file => file.name)).toEqual(['descriptions.json', 'descriptions.tsv', 'components.tsv', 'README.md'])
+    expect(manifest.files.map(file => file.name)).toEqual([
+      'descriptions.json', 'descriptions.tsv', 'components.tsv',
+      'equivalences.json', 'equivalences.tsv', 'README.md',
+    ])
     for (const file of manifest.files) expect(Buffer.byteLength(read(file.name))).toBe(file.bytes)
   })
 

@@ -1,0 +1,564 @@
+{
+  "format": "ids-input/equivalences",
+  "version": 1,
+  "licence": {
+    "spdx": "CC0-1.0",
+    "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "note": "This project’s selection, arrangement, source notes and editorial readings are dedicated to the public domain. Source-derived material keeps the terms its record names, where the project records one."
+  },
+  "counts": {
+    "kana": 48,
+    "hangul": 10
+  },
+  "kana": [
+    {
+      "shapes": [
+        "ア"
+      ],
+      "components": [
+        "了",
+        "㇌",
+        "卩",
+        "刀",
+        "丫"
+      ]
+    },
+    {
+      "shapes": [
+        "イ"
+      ],
+      "components": [
+        "亻",
+        "𠂆",
+        "人",
+        "入",
+        "㐄",
+        "井"
+      ]
+    },
+    {
+      "shapes": [
+        "ウ"
+      ],
+      "components": [
+        "宀"
+      ]
+    },
+    {
+      "shapes": [
+        "エ"
+      ],
+      "components": [
+        "工"
+      ]
+    },
+    {
+      "shapes": [
+        "オ"
+      ],
+      "components": [
+        "才",
+        "扌"
+      ]
+    },
+    {
+      "shapes": [
+        "カ"
+      ],
+      "components": [
+        "力",
+        "尸"
+      ]
+    },
+    {
+      "shapes": [
+        "キ"
+      ],
+      "components": [
+        "十",
+        "弋"
+      ]
+    },
+    {
+      "shapes": [
+        "ク"
+      ],
+      "components": [
+        "𠂊",
+        "勹"
+      ]
+    },
+    {
+      "shapes": [
+        "ケ"
+      ],
+      "components": [
+        "亼",
+        "个"
+      ]
+    },
+    {
+      "shapes": [
+        "コ"
+      ],
+      "components": [
+        "凵",
+        "囗",
+        "〇"
+      ]
+    },
+    {
+      "shapes": [
+        "サ"
+      ],
+      "components": [
+        "卄",
+        "廾",
+        "艹",
+        "䒑"
+      ]
+    },
+    {
+      "shapes": [
+        "シ"
+      ],
+      "components": [
+        "氵",
+        "辶",
+        "辶",
+        "丨"
+      ]
+    },
+    {
+      "shapes": [
+        "ス"
+      ],
+      "components": [
+        "大",
+        "丌"
+      ]
+    },
+    {
+      "shapes": [
+        "セ"
+      ],
+      "components": [
+        "七",
+        "土",
+        "士",
+        "廿"
+      ]
+    },
+    {
+      "shapes": [
+        "ソ"
+      ],
+      "components": [
+        "丷"
+      ]
+    },
+    {
+      "shapes": [
+        "タ"
+      ],
+      "components": [
+        "夕",
+        "月"
+      ]
+    },
+    {
+      "shapes": [
+        "チ"
+      ],
+      "components": [
+        "千",
+        "干"
+      ]
+    },
+    {
+      "shapes": [
+        "ツ"
+      ],
+      "components": [
+        "灬",
+        "小",
+        "川",
+        "巛",
+        "𫶧"
+      ]
+    },
+    {
+      "shapes": [
+        "テ"
+      ],
+      "components": [
+        "亍",
+        "于"
+      ]
+    },
+    {
+      "shapes": [
+        "ト"
+      ],
+      "components": [
+        "卜",
+        "⺊",
+        "𠂉"
+      ]
+    },
+    {
+      "shapes": [
+        "ナ"
+      ],
+      "components": [
+        "𠂇"
+      ]
+    },
+    {
+      "shapes": [
+        "ニ"
+      ],
+      "components": [
+        "二"
+      ]
+    },
+    {
+      "shapes": [
+        "ヌ"
+      ],
+      "components": [
+        "又"
+      ]
+    },
+    {
+      "shapes": [
+        "ネ"
+      ],
+      "components": [
+        "礻"
+      ]
+    },
+    {
+      "shapes": [
+        "ノ"
+      ],
+      "components": [
+        "丿",
+        "㇢",
+        "亅"
+      ]
+    },
+    {
+      "shapes": [
+        "ハ"
+      ],
+      "components": [
+        "八"
+      ]
+    },
+    {
+      "shapes": [
+        "ヒ"
+      ],
+      "components": [
+        "匕",
+        "匚",
+        "匸"
+      ]
+    },
+    {
+      "shapes": [
+        "フ"
+      ],
+      "components": [
+        "乛",
+        "丆",
+        "厂"
+      ]
+    },
+    {
+      "shapes": [
+        "ヘ"
+      ],
+      "components": [
+        "乀",
+        "乁",
+        "一",
+        "㇀"
+      ]
+    },
+    {
+      "shapes": [
+        "ホ"
+      ],
+      "components": [
+        "木",
+        "朩",
+        "𣎳"
+      ]
+    },
+    {
+      "shapes": [
+        "マ"
+      ],
+      "components": [
+        "龴",
+        "丅",
+        "丁"
+      ]
+    },
+    {
+      "shapes": [
+        "ミ"
+      ],
+      "components": [
+        "三",
+        "彡"
+      ]
+    },
+    {
+      "shapes": [
+        "ム"
+      ],
+      "components": [
+        "厶"
+      ]
+    },
+    {
+      "shapes": [
+        "メ"
+      ],
+      "components": [
+        "乂"
+      ]
+    },
+    {
+      "shapes": [
+        "モ"
+      ],
+      "components": [
+        "乇",
+        "王",
+        "壬"
+      ]
+    },
+    {
+      "shapes": [
+        "ヤ"
+      ],
+      "components": [
+        "巾",
+        "㔾"
+      ]
+    },
+    {
+      "shapes": [
+        "ユ"
+      ],
+      "components": [
+        "丄",
+        "亠"
+      ]
+    },
+    {
+      "shapes": [
+        "ヨ"
+      ],
+      "components": [
+        "彐",
+        "⺕",
+        "日"
+      ]
+    },
+    {
+      "shapes": [
+        "ラ"
+      ],
+      "components": [
+        "广"
+      ]
+    },
+    {
+      "shapes": [
+        "リ"
+      ],
+      "components": [
+        "刂"
+      ]
+    },
+    {
+      "shapes": [
+        "ル"
+      ],
+      "components": [
+        "儿",
+        "几",
+        "𠘧"
+      ]
+    },
+    {
+      "shapes": [
+        "レ"
+      ],
+      "components": [
+        "𠄌",
+        "㇗",
+        "㇄",
+        "乚",
+        "𡿨",
+        "乙"
+      ]
+    },
+    {
+      "shapes": [
+        "ロ"
+      ],
+      "components": [
+        "口"
+      ]
+    },
+    {
+      "shapes": [
+        "ワ"
+      ],
+      "components": [
+        "冖",
+        "冂"
+      ]
+    },
+    {
+      "shapes": [
+        "ヲ"
+      ],
+      "components": [
+        "丩",
+        "丬",
+        "山",
+        "屮"
+      ]
+    },
+    {
+      "shapes": [
+        "ン"
+      ],
+      "components": [
+        "冫",
+        "丶"
+      ]
+    },
+    {
+      "shapes": [
+        "ヰ"
+      ],
+      "components": [
+        "井"
+      ]
+    },
+    {
+      "shapes": [
+        "ヱ"
+      ],
+      "components": [
+        "𠀄"
+      ]
+    }
+  ],
+  "hangul": [
+    {
+      "shapes": [
+        "ㅅ",
+        "ᄉ",
+        "ᆺ"
+      ],
+      "components": [
+        "人"
+      ]
+    },
+    {
+      "shapes": [
+        "ㅆ",
+        "ᄊ",
+        "ᆻ"
+      ],
+      "components": [
+        "从"
+      ]
+    },
+    {
+      "shapes": [
+        "스"
+      ],
+      "components": [
+        "亼"
+      ]
+    },
+    {
+      "shapes": [
+        "ㅁ",
+        "ᄆ",
+        "ᆷ"
+      ],
+      "components": [
+        "口"
+      ]
+    },
+    {
+      "shapes": [
+        "ㅇ",
+        "ᄋ",
+        "ᆼ"
+      ],
+      "components": [
+        "〇"
+      ]
+    },
+    {
+      "shapes": [
+        "ㅣ",
+        "ᅵ"
+      ],
+      "components": [
+        "丨"
+      ]
+    },
+    {
+      "shapes": [
+        "ㅡ",
+        "ᅳ"
+      ],
+      "components": [
+        "一"
+      ]
+    },
+    {
+      "shapes": [
+        "ㄱ",
+        "ᄀ",
+        "ᆨ"
+      ],
+      "components": [
+        "𠃍"
+      ]
+    },
+    {
+      "shapes": [
+        "ㄴ",
+        "ᄂ",
+        "ᆫ"
+      ],
+      "components": [
+        "𠃊"
+      ]
+    },
+    {
+      "shapes": [
+        "ㄷ",
+        "ᄃ",
+        "ᆮ"
+      ],
+      "components": [
+        "匚"
+      ]
+    }
+  ]
+}

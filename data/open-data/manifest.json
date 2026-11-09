@@ -153,8 +153,18 @@
       "type": "text/tab-separated-values"
     },
     {
+      "name": "equivalences.json",
+      "bytes": 7408,
+      "type": "application/json"
+    },
+    {
+      "name": "equivalences.tsv",
+      "bytes": 1141,
+      "type": "text/tab-separated-values"
+    },
+    {
       "name": "README.md",
-      "bytes": 16145,
+      "bytes": 17035,
       "type": "text/markdown"
     }
   ]
