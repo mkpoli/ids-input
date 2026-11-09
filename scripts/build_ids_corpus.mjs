@@ -180,7 +180,7 @@ const equivalences = [...aligned.values()]
     const characters = [...found.chars]
     return [found.a, found.b, 'alignment', characters.length >= 2 ? 'verified' : 'candidate',
       [...found.prov, babelProv].sort((a, b) => a - b),
-      `${characters.length} ${characters.length === 1 ? 'character' : 'characters'}: ${characters.slice(0, 5).join(' ')}`]
+      `${characters.length} ${characters.length === 1 ? 'character' : 'characters'}: ${characters.join(' ')}`]
   })
   .sort((a, b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]))
 
