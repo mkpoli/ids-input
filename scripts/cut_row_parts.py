@@ -82,6 +82,65 @@ def close(candidate, pieces):
     return [group for group in groups if group]
 
 
+def rect_path(x0: float, y0: float, x1: float, y1: float):
+    path = cut.pathops.Path()
+    pen = path.getPen()
+    pen.moveTo((x0, y0))
+    pen.lineTo((x1, y0))
+    pen.lineTo((x1, y1))
+    pen.lineTo((x0, y1))
+    pen.closePath()
+    return path
+
+
+def bounds_of(pieces) -> tuple[float, float, float, float]:
+    return (min(p.bounds[0] for p in pieces), min(p.bounds[1] for p in pieces),
+            max(p.bounds[2] for p in pieces), max(p.bounds[3] for p in pieces))
+
+
+def seam_ink(piece, x: float) -> int:
+    crossings = 0
+    for ring in cut.rings_of(piece):
+        for index in range(len(ring) - 1):
+            (ax, ay), (bx, by) = ring[index], ring[index + 1]
+            if (ax > x) != (bx > x):
+                crossings += 1
+    return crossings
+
+
+def split_straddlers(pieces):
+    """Clip a piece that spans the row seam, and say where the cut fell.
+
+    A piece that reaches into both columns is never dealt whole to one side. It is
+    intersected with the left and right half-planes at the thinnest vertical section
+    inside the seam window, so the invented boundary lands on the stroke junction.
+    """
+    x0, y0, x1, y1 = bounds_of(pieces)
+    width = max(x1 - x0, 1.0)
+    lo, hi = x0 + 0.32 * width, x0 + 0.48 * width
+    out, cuts = [], []
+    for piece in pieces:
+        bx0, by0, bx1, by1 = piece.bounds
+        spans = (bx0 - x0) / width < 0.26 and (bx1 - x0) / width > 0.54
+        if spans:
+            best = None
+            for step in range(16):
+                x = lo + (hi - lo) * step / 15
+                ink = seam_ink(piece, x)
+                if best is None or ink < best[0]:
+                    best = (ink, x)
+            x_cut = best[1] if best else (lo + hi) / 2
+            left = cut.clip(piece, rect_path(x0 - 2, by0 - 2, x_cut, by1 + 2))
+            right = cut.clip(piece, rect_path(x_cut, by0 - 2, bx1 + 2, by1 + 2))
+            for half in cut.pieces_of(left) + cut.pieces_of(right):
+                if abs(half.area) > 1.0:
+                    out.append(half)
+            cuts.append(x_cut)
+        else:
+            out.append(piece)
+    return out, cuts
+
+
 def candidates(pieces, arity):
     order = list(range(len(pieces)))
     keys = (
@@ -156,6 +215,7 @@ def main() -> int:
         if not pieces or len(pieces) < 2:
             out[char] = {"error": "fewer than two pieces"}
             continue
+        pieces, cuts_x = split_straddlers(pieces)
         cutter = cut.Cutter(pieces, labels, faces)
         x0 = min(p.bounds[0] for p in pieces)
         width = max(p.bounds[2] for p in pieces) - x0
@@ -188,6 +248,9 @@ def main() -> int:
             "left": cut.commands_of(cut.union_of([pieces[i] for i in left])),
             "right": cut.commands_of(cut.union_of([pieces[i] for i in right])),
         }
+        if cuts_x:
+            out[char]["approximate"] = True
+            out[char]["cutX"] = round(cuts_x[0], 3)
     print(json.dumps(out, ensure_ascii=False))
     return 0
 
