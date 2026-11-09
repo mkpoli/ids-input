@@ -33,6 +33,7 @@ from fontTools.pens.perimeterPen import PerimeterPen
 from fontTools.ttLib import TTFont
 
 from build_tangut_outlines import Contours
+from engine_data import WRITE_DATA
 
 ROOT = Path(__file__).resolve().parents[1]
 FONT_URL = "https://www.babelstone.co.uk/Fonts/Download/BabelStoneHanPUA.ttf"
@@ -41,7 +42,7 @@ LICENSE_URL = "http://ftp.gnu.org/non-gnu/chinese-fonts-truetype/LICENSE"
 LICENSE_SHA256 = "ba74a961aaa5fa7e73dc67276df2781ba405da2cb30c52c9d9eee9c200d4d11e"
 OUTLINES = ROOT / "data" / "numbered-pua-outlines.json.gz"
 SUBSET = ROOT / "fonts" / "IDSNumbered.woff2"
-FALLBACKS = ROOT / "data" / "palette-fallback-characters.json"
+FALLBACKS = WRITE_DATA / "palette/fallback-characters.json"
 LICENSE = ROOT / "fonts" / "LICENSE-BabelStoneHanPUA.txt"
 COMPONENTS = ROOT / "data" / "ids-components.tsv"
 PUA = re.compile(r"\(([0-9A-F]{4,6})\)")

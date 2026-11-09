@@ -1,7 +1,7 @@
 // @ts-check
 import { parse } from '../core/ids.js'
 import { pyramidRows } from '../core/pyramid.js'
-import { pyramidCells } from '../composer/pyramid.js'
+import { pyramidCells } from '@han-compose/composer/pyramid'
 
 /** @typedef {{ kind: 'slot', x: number, y: number, width: number, height: number, accent: boolean } | { kind: 'frame', d: string, accent: boolean, decorative?: boolean }} Shape */
 const AXIS = new Map([['⿰', 0], ['⿲', 0], ['⿱', 1], ['⿳', 1]])

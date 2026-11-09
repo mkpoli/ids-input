@@ -33,11 +33,12 @@ from fontTools.pens.boundsPen import BoundsPen
 from fontTools.pens.perimeterPen import PerimeterPen
 from fontTools.ttLib import TTFont, newTable
 from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
+from engine_data import DATA, WRITE_DATA
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / 'data/shuishu'
 FONT = ROOT / 'fonts/IDSShuishu.woff2'
-OUTLINES = ROOT / 'data/shuishu-outlines.json.gz'
+OUTLINES = WRITE_DATA / 'sources/shuishu/outlines.json.gz'
 INDEX = ROOT / 'data/shuishu.json.gz'
 LICENCE = ROOT / 'fonts/LICENSE-IDSShuishu.txt'
 

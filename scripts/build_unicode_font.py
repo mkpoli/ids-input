@@ -8,7 +8,7 @@ uv run scripts/build_unicode_font.py
 
 The composer already draws these characters as outlines; this writes the same shapes as a webfont,
 one file per 256-code-point shard, so text surfaces fall back to them when no installed font has the
-character. Coverage, metrics and provenance come from data/unicode-outlines.json and its shards.
+character. Coverage, metrics and provenance come from the engine's `data/unicode/outlines.json` and its shards.
 
 Characters the app shows but cannot draw -- palette parts, the empty-slot mark and the radicals --
 come from Jigmo, the CC0 glyphs of GlyphWiki, with `--jigmo JIGMO.ttf`. The app asks for the shard of
@@ -28,15 +28,17 @@ from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.pens.transformPen import TransformPen
 from fontTools.ttLib import TTFont
 
+from engine_data import DATA
+
 ROOT = Path(__file__).resolve().parents[1]
-OUTLINES = ROOT / 'data/unicode-outlines'
+OUTLINES = DATA / 'unicode/outlines'
 OUT = ROOT / 'fonts/unicode'
 FAMILY = 'IDS Fallback'
 UPEM = 1000
 ASCENT, DESCENT = 880, -120
 COPYRIGHT = ('Outline sources: Noto fonts (c) Google LLC, SIL OFL 1.1; Jigmo by Kamichi Chizuko, '
              'CC0 1.0; GNU Unifont and GlyphWiki contributors, see their licence files. Full notices: '
-             'fonts/README.md and data/unicode-outlines.json.')
+             'fonts/README.md and the engine\'s data/unicode/outlines.json.')
 
 
 def int16(text):
@@ -162,10 +164,11 @@ def characters_without_outline(metadata):
         value = record[0] if isinstance(record, list) else record.get('part')
         if isinstance(value, str):
             needed.update(value)
-    needed.update(json.loads((ROOT / 'data/palette-fallback-characters.json').read_text()))
-    needed.update(json.loads(gzip.decompress((ROOT / 'data/palette-outlines.json.gz').read_bytes()))['records'])
-    # The bopomofo palette draws from its own outline bundle, which no webfont face carries.
-    needed.update(json.loads(gzip.decompress((ROOT / 'data/bopomofo-outlines.json.gz').read_bytes()))['records'])
+    # The palette's outlines and the bopomofo bundle are the engine's files, read where the package
+    # holds them.
+    needed.update(json.loads((DATA / 'palette/fallback-characters.json').read_text()))
+    needed.update(json.loads(gzip.decompress((DATA / 'sources/palette/outlines.json.gz').read_bytes()))['records'])
+    needed.update(json.loads(gzip.decompress((DATA / 'sources/bopomofo/outlines.json.gz').read_bytes()))['records'])
     needed.update(chr(code) for code in range(0x2FF0, 0x2FFC))
     needed.update(han_ideographs())
     # BabelStone's PUA glyphs have their own face (`IDS Numbered`); no Unicode font draws them.
@@ -236,7 +239,7 @@ def build(rows, extra=None, family=FAMILY):
 
 
 def main():
-    metadata = json.loads((ROOT / 'data/unicode-outlines.json').read_text())
+    metadata = json.loads((DATA / 'unicode/outlines.json').read_text())
     OUT.mkdir(exist_ok=True)
     outlines = {path.name.split('.')[0] for path in OUTLINES.glob('*.json.gz')}
     global VISIBLE

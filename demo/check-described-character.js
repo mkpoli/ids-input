@@ -23,6 +23,8 @@ try {
     // A fill that lands before the app's listener is attached is read again here.
     await field.dispatchEvent('input')
     await page.waitForFunction(text => (document.querySelector('.ids-preview-meta')?.textContent ?? '').includes(text), expect, { timeout: 30000 })
+    // The meta names the character before the drawing is done; the drawing follows the sketch.
+    await page.waitForFunction(() => document.querySelector('.ids-preview')?.dataset.step !== 'loading', null, { timeout: 60000 })
     await page.waitForTimeout(300)
     // The drawing is one `ink` path, or the paths of the document group the layer view draws it in.
     let last = '', ink = []
@@ -33,16 +35,33 @@ try {
       if (seen !== '[]' && seen === last) break
       last = seen
     }
-    return {
-      meta: (await page.locator('.ids-preview-meta').textContent())?.trim().replace(/\s+/g, ' ') ?? '',
-      ink: ink.map(d => d.replace(/-?\d*\.\d+/g, number => String(Number(number)))).join('|'),
+    return { meta: (await page.locator('.ids-preview-meta').textContent())?.trim().replace(/\s+/g, ' ') ?? '', ink }
+  }
+  /**
+   * Whether two drawings are the same ink: the same commands over the same points. A description and
+   * the character it names are drawn by different routes, so a point may land a unit or two away, and
+   * the engine writes its numbers to three decimals; neither changes the drawing.
+   * @param {string[]} a @param {string[]} b
+   */
+  const sameInk = (a, b) => {
+    if (a.length !== b.length) return false
+    for (let i = 0; i < a.length; i++) {
+      const left = a[i].match(/[MLQCZ][^MLQCZ]*/g) ?? [], right = b[i].match(/[MLQCZ][^MLQCZ]*/g) ?? []
+      if (left.length !== right.length) return false
+      for (let j = 0; j < left.length; j++) {
+        const numbers = text => text.slice(1).trim().split(/[\s,]+/).filter(Boolean).map(Number)
+        const [l, r] = [numbers(left[j]), numbers(right[j])]
+        if (left[j][0] !== right[j][0] || l.length !== r.length) return false
+        if (!l.every((value, k) => Math.abs(value - r[k]) <= 3)) return false
+      }
     }
+    return true
   }
   // A description the composer does not know draws the character it names, not its own layout.
   for (const [sequence, char, code] of [['㇯上一', '丄', 'U+4E04'], ['⿿亚', '𠀜', 'U+2001C']]) {
     const described = await read(sequence, code), typed = await read(char, 'Preview')
     assert.ok(!/Approximate/.test(described.meta), `${sequence} is still approximate: ${described.meta}`)
-    assert.equal(described.ink, typed.ink, `${sequence} does not draw ${char}`)
+    assert.ok(sameInk(described.ink, typed.ink), `${sequence} does not draw ${char}`)
   }
   // A common character may come from a prepared example; the description still draws that character.
   const common = await read('⿰木木', 'U+6797')

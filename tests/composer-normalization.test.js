@@ -1,6 +1,6 @@
 import { expect, it } from 'bun:test'
-import { Composer, keyOf, parseTree } from '../src/composer/compose.js'
-import { compose, createSource } from '../src/composer/loader.js'
+import { Composer, keyOf, parseTree } from '@han-compose/composer/compose'
+import { compose, createSource } from '@han-compose/composer/loader'
 import { constants, layout, shards } from './fixtures/composer-export.js'
 
 // Deliberately unequal outline lengths expose spelling-dependent row allocation.
@@ -17,7 +17,7 @@ const records = {
 }
 const fixture = () => {
   const input = {
-    'manifest.json': JSON.stringify({ format: 5, weighted: false, constants, spelled: [], files: { layout: { path: 'layout.json' }, hosts: { bytes: 0 } } }),
+    'manifest.json': JSON.stringify({ format: 6, weighted: false, constants, spelled: [], files: { layout: { path: 'layout.json' }, hosts: { bytes: 0 } } }),
     'layout.json': JSON.stringify(layout),
     ...shards('g', Object.entries(records)),
   }

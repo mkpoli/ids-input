@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'bun:test'
-import { composerPreview } from '../src/composer/index.js'
-import { roughLayout, runPreview } from '../src/core/preview.js'
+import { composerPreview } from '@han-compose/composer'
+import { badge, roughLayout, runPreview } from '../src/core/preview.js'
+import { files as smallExport } from './fixtures/small-export.js'
+import { drawingWorker } from './fixtures/drawing-worker.js'
 
 // A worker that answers each drawing when told to, and notes when it is ended.
 class FakeWorker {
@@ -20,8 +22,9 @@ describe('the composer preview', () => {
     const worker = FakeWorker.made.at(-1)
     expect(worker.posted[0]).toMatchObject({ sequence: '⿰木⬚', base: 'https://example.org/composer/v1/' })
     worker.answer({ id: worker.posted[0].id, sketch: [{ index: 0, box: [0, 0, 500, 1000], empty: false }] })
-    worker.answer({ id: worker.posted[0].id, drawn: { d: 'M0 0Z', slots: [{ index: 0, box: [500, 0, 500, 1000] }] } })
-    expect(await drawing).toEqual({ d: 'M0 0Z', slots: [{ index: 0, box: [500, 0, 500, 1000] }] })
+    const drawn = { d: 'M0 0Z', sketch: [{ index: 0, box: [0, 0, 500, 1000], empty: false }], slots: [{ index: 0, box: [500, 0, 500, 1000] }] }
+    worker.answer({ id: worker.posted[0].id, drawn })
+    expect(await drawing).toEqual(drawn)
     expect(sketches).toHaveLength(1)
   })
   it('answers a sequence it has drawn before from memory, sketch included', async () => {
@@ -30,9 +33,9 @@ describe('the composer preview', () => {
     const [worker] = FakeWorker.made
     const sketch = [{ index: 0, box: [0, 0, 500, 1000], empty: false }]
     worker.answer({ id: worker.posted[0].id, sketch })
-    worker.answer({ id: worker.posted[0].id, drawn: { d: 'M0 0Z' } })
-    expect(await first).toEqual({ d: 'M0 0Z' })
-    expect(await draw('⿱木林', { onSketch: leaves => sketches.push(leaves) })).toEqual({ d: 'M0 0Z' })
+    worker.answer({ id: worker.posted[0].id, drawn: { d: 'M0 0Z', sketch } })
+    expect(await first).toEqual({ d: 'M0 0Z', sketch })
+    expect(await draw('⿱木林', { onSketch: leaves => sketches.push(leaves) })).toEqual({ d: 'M0 0Z', sketch })
     expect(worker.posted).toHaveLength(1)
     expect(sketches).toEqual([sketch, sketch])
   })
@@ -42,6 +45,7 @@ describe('the composer preview', () => {
     const [worker] = FakeWorker.made
     expect(worker.posted[0]).toMatchObject({ warm: true, base: 'https://example.org/composer/v1/' })
     worker.answer({ id: worker.posted[0].id, warm: true })
+    // A drawing answers in the worker that warmed: nothing is asked of the export twice.
     const drawing = draw('⿱木口')
     expect(FakeWorker.made).toHaveLength(1)
     worker.answer({ id: worker.posted.at(-1).id, drawn: { d: 'M2 2Z' } })
@@ -91,14 +95,16 @@ describe('the composer preview', () => {
 
 it('draws Tangut after an invalid Han warmup while still rejecting Han requests', async () => {
   FakeWorker.made = []
-  const draw = composerPreview({ base: 'http://[', worker: () => new FakeWorker() })
+  const draw = composerPreview({ base: 'https://example.org/composer/v1', worker: () => new FakeWorker() })
   draw.warm()
-  expect(FakeWorker.made).toHaveLength(0)
+  expect(FakeWorker.made).toHaveLength(1)
   const request = draw('⿰𘠀𘠁')
-  const worker = FakeWorker.made[0]
-  worker.answer({ id: worker.posted[0].id, drawn: { d: 'M0 0Z' } })
+  const worker = FakeWorker.made.at(-1)
+  worker.answer({ id: worker.posted.at(-1).id, drawn: { d: 'M0 0Z' } })
   expect(await request).toEqual({ d: 'M0 0Z' })
-  expect((await draw('⿰木口').catch(error => error)).name).toBe('UnavailableError')
+  const han = draw('⿰木口')
+  worker.answer({ id: worker.posted.at(-1).id, error: 'manifest.json: 404', unavailable: true })
+  expect((await han.catch(error => error)).name).toBe('UnavailableError')
 })
 
 describe('the rough layout', () => {
@@ -126,7 +132,7 @@ describe('an export that cannot be read', () => {
     const fails = reach('⿱木口')
     const next = FakeWorker.made.at(-1)
     next.answer({ id: next.posted.at(-1).id, error: 'No glyph or sequence draws 㐀.' })
-    expect((await fails.catch(e => e)).name).toBe('Error')
+    expect((await fails.catch(e => e)).name).toBe('LookupError')
   })
 })
 
@@ -234,4 +240,43 @@ it('rejects an overlay with emoji it cannot order, subtraction or not', async ()
   worker.answer({ id, sketch: [{ index: 0, box: [0, 0, 1000, 1000], empty: false }, { index: 1, box: [0, 0, 1000, 1000], empty: false }] })
   worker.answer({ id, drawn: { d: 'M0 0Z', slots: [{ index: 0, box: [0, 0, 1000, 1000] }], parts: [{ box: [0, 0, 1000, 1000], d: 'M0 0Z', leaf: 0 }, { box: [0, 0, 1000, 1000], d: 'M1 1Z', leaf: 1 }] } })
   await expect(result).rejects.toThrow('Cannot determine emoji stacking order')
+})
+
+describe('the composer preview against a real drawing', () => {
+  /** A preview whose worker draws in this process from `files`, answering as a browser's worker does. */
+  const drawing = (files = smallExport) => composerPreview({ base: 'https://example.org/composer/v/', worker: () => drawingWorker(files) })
+
+  it('draws a description the export holds', async () => {
+    const drawn = await drawing()('⿰木口')
+    expect(drawn.d.length).toBeGreaterThan(10)
+    expect(drawn.slots).toEqual([])
+  })
+  it('draws a draft with its slot in the box the layout gives it', async () => {
+    const drawn = await drawing()('⿰木⬚')
+    expect(drawn.slots).toHaveLength(1)
+    expect(drawn.slots[0].box.every(Number.isFinite)).toBe(true)
+  })
+  it('fails a description the export cannot draw, with the reason', async () => {
+    const error = await drawing()('⿰木龘').catch(caught => caught)
+    expect(error.name).toBe('LookupError')
+    expect(error.message).toContain('龘')
+  })
+  it('rejects as unavailable when the export has no manifest', async () => {
+    const missing = { ...smallExport }
+    delete missing['manifest.json']
+    expect((await drawing(missing)('⿰木口').catch(caught => caught)).name).toBe('UnavailableError')
+  })
+})
+
+describe('the preview badge', () => {
+  it('says composing, preview, approximate, final, failed or too large', () => {
+    expect(badge('loading')).toEqual({ label: 'loading', params: {} })
+    expect(badge('capped')).toEqual({ label: 'tooLarge', params: {} })
+    expect(badge('failed')).toEqual({ label: 'failed', params: {} })
+    expect(badge('composed', { approximate: [] })).toEqual({ label: 'draft', params: {} })
+    expect(badge('composed', { approximate: ['⿾', '㇯'] })).toEqual({ label: 'approximate', params: { ops: '⿾ ㇯' } })
+    expect(badge('composed', { cells: true })).toEqual({ label: 'cells', params: {} })
+    expect(badge('composed', { cells: true, approximate: ['⿼'] })).toEqual({ label: 'approximate', params: { ops: '⿼' } })
+    expect(badge('final')).toEqual({ label: 'final', params: {} })
+  })
 })

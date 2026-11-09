@@ -4,7 +4,8 @@ import { gunzipSync } from 'node:zlib'
 import { paletteRows } from '../src/adapter/babelstone.js'
 import { UNICODE_VERSION } from '../src/core/unicode.js'
 import { isOtherScript, partScript } from '../src/core/scripts.js'
-const read = name => JSON.parse(readFileSync(new URL(`../data/${name}`, import.meta.url)))
+const ENGINE = 'node_modules/@han-compose/composer/data/'
+const read = name => JSON.parse(readFileSync(new URL(`../${name === 'unicode-coverage.json' ? `${ENGINE}unicode/coverage.json` : `data/${name}`}`, import.meta.url)))
 const gz = name => JSON.parse(gunzipSync(readFileSync(new URL(`../data/${name}`, import.meta.url))))
 
 it('indexes additional scripts, symbols and mixed descriptions without changing the existing script groups', () => {

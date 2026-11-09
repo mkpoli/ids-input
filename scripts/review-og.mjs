@@ -6,8 +6,8 @@ import { Resvg } from '@cf-wasm/resvg/node'
 import { cardSvg } from '../worker/card.js'
 import { facesFor } from '../worker/fonts.js'
 import examples from '../demo/lib/example-drawings.json'
-import { compose } from '../src/composer/loader.js'
-import { sourceFor } from '../src/composer/source.js'
+import { compose } from '@han-compose/composer/loader'
+import { sourceFor } from '@han-compose/composer/source'
 import { COMPOSER_BASE } from '../demo/lib/composer.js'
 
 const root = new URL('../', import.meta.url)

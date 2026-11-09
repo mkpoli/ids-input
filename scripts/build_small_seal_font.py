@@ -24,6 +24,7 @@ from fontTools.pens.boundsPen import BoundsPen
 from fontTools.pens.perimeterPen import PerimeterPen
 from fontTools.svgLib.path import parse_path
 from build_tangut_outlines import Contours
+from engine_data import DATA, WRITE_DATA
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -96,7 +97,7 @@ def main():
     doc = {'font': 'IDS Seal', 'license': 'See fonts/LICENSE-IDSSeal.txt', 'source': source,
            'fontSha256': hashlib.sha256(target.read_bytes()).hexdigest(), 'provenance': provenance,
            'descriptionLicense': data['license'], 'descriptionSources': data['sources'], 'records': outlines}
-    (ROOT / 'data/small-seal-outlines.json.gz').write_bytes(gzip.compress(json.dumps(doc, ensure_ascii=False, separators=(',', ':')).encode(), mtime=0))
+    (WRITE_DATA / 'sources/small-seal/outlines.json.gz').write_bytes(gzip.compress(json.dumps(doc, ensure_ascii=False, separators=(',', ':')).encode(), mtime=0))
     print(f'{len(chars)} glyphs; {len(outlines)} outline records')
 
 

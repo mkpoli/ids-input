@@ -106,12 +106,15 @@ for (const file of Object.keys(FONTS)) console.log(`font ${file} ${readFileSync(
 console.log(`fonts general.otf, planes.ttf, ${pairs.length - Object.keys(FONTS).length} shards`)
 
 // The scripts with bundled outlines, and the glyphs of the parts beyond what an installed font draws.
-const DATA = ['tangut-outlines', 'bopomofo-outlines', 'small-seal-outlines', 'new-korean-outlines', 'shuishu-outlines', 'jurchen-outlines', 'palette-outlines', 'numbered-sans-outlines']
+// They are the drawing engine's data, so they come from its package.
+const ENGINE = join(import.meta.dirname, '../node_modules/@han-compose/composer/data')
+const DATA = ['tangut', 'bopomofo', 'small-seal', 'new-korean', 'shuishu', 'jurchen', 'palette']
+const NUMBERED = 'numbered-sans-outlines.json.gz'
 for (const name of DATA) {
-  copyFileSync(join(import.meta.dirname, `../data/${name}.json.gz`), join(out, `data/${name}.json.gz`))
+  copyFileSync(join(ENGINE, `sources/${name}/outlines.json.gz`), join(out, `data/${name}-outlines.json.gz`))
   console.log(`data ${name}`)
 }
-const shards = join(import.meta.dirname, '../data/unicode-outlines')
+const shards = join(ENGINE, 'unicode/outlines')
 for (const file of (await Array.fromAsync(new Bun.Glob('*.json.gz').scan(shards)))) {
   copyFileSync(join(shards, file), join(out, 'data/unicode-outlines', file))
 }

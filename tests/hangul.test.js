@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import {
   HANGUL_FINALS, HANGUL_INITIALS, HANGUL_MEDIALS, HANGUL_TONE_MARKS, composeHangul, composeJamo, findSyllablesByRomanization, hangulClusterAt, jamoClass,
   normalizeRomanization, romanizeHangul, toConjoiningJamo,
-} from '../src/core/hangul.js'
+} from '@han-compose/composer/hangul'
 import { descriptionEnd, parse, write } from '../src/core/ids.js'
 
 const char = point => String.fromCodePoint(point)

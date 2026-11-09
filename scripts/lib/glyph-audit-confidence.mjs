@@ -1,4 +1,4 @@
-import { APPROXIMATE } from '../../src/composer/compose.js'
+import { APPROXIMATE } from '@han-compose/composer/compose'
 
 /** The demo may resolve a sequence before the direct composer sees it.
  * These labels describe unverified routes; they are not correctness verdicts. */

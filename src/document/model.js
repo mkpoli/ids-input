@@ -5,7 +5,7 @@
 // it, projects a document to IDS and builds one from IDS. A renderer, storage and the editor binding
 // are separate; nothing here reaches into the current canvas-space Drawing or the positional core
 // tree beyond the IDS projection boundary.
-import { hangulClusterAt } from '../core/hangul.js'
+import { hangulClusterAt } from '@han-compose/composer/hangul'
 import { arity, isComponent, isMark, isModifier, isSelector, parse, splitMarks } from '../core/ids.js'
 import { inspectJson } from './json.js'
 

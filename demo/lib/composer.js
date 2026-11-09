@@ -10,7 +10,6 @@ export const COMPOSER_BASES = {
   serif: 'https://ids-input-composer.mkpoli.workers.dev/8156f838798c-serif-compose-layout-v4-serif-f6/',
   fangsong: 'https://ids-input-composer.mkpoli.workers.dev/9f797e2322d2-fangsong-compose-layout-v4-fangsong-f6/',
   klee: 'https://ids-input-composer.mkpoli.workers.dev/ce3eaafda8f9-kaisho-compose-layout-v4-kaisho-f6/',
-
 }
 
 /** Where this build reads an export from: the desktop app holds a copy of the sans export, and

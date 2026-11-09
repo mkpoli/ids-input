@@ -5,8 +5,8 @@
 // `KEYS_FILE` is a JSON list of keys (han-compose `export-web` records the letters and digits of
 // `web_export.letters`). Nothing should come out torn once han-compose grows a duplicated point once.
 import { readFile } from 'node:fs/promises'
-import { hexOf } from '../src/composer/sha256.js'
-import { unpack } from '../src/composer/loader.js'
+import { hexOf } from '@han-compose/composer/sha256'
+import { unpack } from '@han-compose/composer/loader'
 
 const [base, listFile, suffix = ''] = process.argv.slice(2)
 if (!base || !listFile) throw Error('Usage: bun scripts/audit_open_contours.mjs EXPORT_DIR_OR_URL KEYS_FILE [SUFFIX]')

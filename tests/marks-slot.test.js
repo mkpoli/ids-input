@@ -7,15 +7,16 @@ import {
 } from '../src/core/index.js'
 import { drawingSvg } from '../src/core/preview.js'
 import { tokens } from '../src/svelte/tokens.js'
-import { bopomofoSource } from '../src/composer/bopomofo.js'
-import { unicodeSource } from '../src/composer/unicode.js'
-import { hasUnicodeGlyph } from '../src/composer/unicode.js'
-import { onlyBundled } from '../src/composer/local.js'
-import { compose, sketch } from '../src/composer/loader.js'
+import { bopomofoSource } from '@han-compose/composer/bopomofo'
+import { unicodeSource } from '@han-compose/composer/unicode'
+import { hasUnicodeGlyph } from '@han-compose/composer/unicode'
+import { onlyBundled } from '@han-compose/composer/local'
+import { compose, sketch } from '@han-compose/composer/loader'
 
-const data = name => JSON.parse(gunzipSync(readFileSync(new URL(`../data/${name}-outlines.json.gz`, import.meta.url))))
+// The bundled outlines ship with the engine's package.
+const data = name => JSON.parse(gunzipSync(readFileSync(new URL(`../node_modules/@han-compose/composer/data/sources/${name}/outlines.json.gz`, import.meta.url))))
 const bopomofo = data('bopomofo')
-const unicode = name => JSON.parse(gunzipSync(readFileSync(new URL(`../data/unicode-outlines/${name.slice('unicode/'.length)}.json.gz`, import.meta.url))))
+const unicode = name => JSON.parse(gunzipSync(readFileSync(new URL(`../node_modules/@han-compose/composer/data/unicode/outlines/${name.slice('unicode/'.length)}.json.gz`, import.meta.url))))
 const source = () => unicodeSource({ load: unicode, fallback: bopomofoSource({ load: async () => bopomofo }) })
 
 describe('a mark beside an empty slot', () => {

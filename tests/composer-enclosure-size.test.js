@@ -3,9 +3,9 @@
 import { describe, expect, it } from 'bun:test'
 import { createHash } from 'node:crypto'
 import { gzipSync } from 'node:zlib'
-import { compose, createSource } from '../src/composer/loader.js'
-import { Composer } from '../src/composer/compose.js'
-import { commands, makePart, stretchOf } from '../src/composer/geometry.js'
+import { compose, createSource } from '@han-compose/composer/loader'
+import { Composer } from '@han-compose/composer/compose'
+import { commands, makePart, stretchOf } from '@han-compose/composer/geometry'
 import { files, layout, ops } from './fixtures/composer-export.js'
 
 const hex = text => createHash('sha256').update(text).digest('hex')

@@ -2,8 +2,8 @@
 // of the cell and frames its own operand, instead of a host's cut of the whole row setting the
 // donor's frame and the partner's column. The export is the small fixture's, with a fixed row split.
 import { describe, expect, it } from 'bun:test'
-import { Composer } from '../src/composer/compose.js'
-import { compose, createSource } from '../src/composer/loader.js'
+import { Composer } from '@han-compose/composer/compose'
+import { compose, createSource } from '@han-compose/composer/loader'
 import { files, layout, ops, shards } from './fixtures/composer-export.js'
 
 const int16 = values => Buffer.from(Int16Array.from(values).buffer).toString('base64')
