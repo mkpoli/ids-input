@@ -1795,10 +1795,10 @@ export class Composer {
       const frameRoom = frame ? [fx0 + 0.19 * fw, fy0 + 0.21 * fh, fx1 - 0.19 * fw, fy1 - 0.09 * fh] : null
       const inner = this.node(children[1], hu ? huRoom : frame ? frameRoom : room)
       if (frame) {
-        const cx = (region[0] + region[2]) / 2, cy = (region[1] + region[3]) / 2
+        const cx = (region[0] + region[2]) / 2
         for (const p of inner) {
           const [x0, y0, x1, y1] = p.target
-          p.target = [cx + (x0 - cx) * 1.26, cy + (y0 - cy) * 1.15 - 0.12 * fh, cx + (x1 - cx) * 1.26, cy + (y1 - cy) * 1.15 - 0.12 * fh]
+          p.target = [cx + (x0 - cx) * 1.08, y0 - 0.03 * fh, cx + (x1 - cx) * 1.08, y1 - 0.03 * fh]
         }
       }
       if (!hu && !frame) this.fit(outer, inner, region, this.stem0[0][0], C,
