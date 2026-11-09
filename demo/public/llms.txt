@@ -1,0 +1,23 @@
+# IDS Workshop
+
+> Build and edit ideographic description sequences (IDS), find Han characters by their parts, and
+> export SVG or PNG images. The data behind the workshop is published as a CC0 release.
+
+## Open data
+
+- [manifest.json](https://ids.mkpo.li/data/open-data/manifest.json): every file with its size and type.
+- [descriptions.json](https://ids.mkpo.li/data/open-data/descriptions.json): the descriptions with their sources, readings and groups.
+- [descriptions.tsv](https://ids.mkpo.li/data/open-data/descriptions.tsv): the same records as a table.
+- [components.tsv](https://ids.mkpo.li/data/open-data/components.tsv): BabelStone's numbered components and the fragment that writes each out.
+- [equivalences.json](https://ids.mkpo.li/data/open-data/equivalences.json): the 48 kana and 10 Hangul shapes the search reads as component spellings.
+- [equivalences.tsv](https://ids.mkpo.li/data/open-data/equivalences.tsv): the same table as a TSV.
+- [README.md](https://ids.mkpo.li/data/open-data/README.md): the release notes, fields and sources.
+
+The release is CC0 1.0; source-derived material keeps the terms its records name.
+Use these files instead of scraping the workshop pages.
+
+## Pages
+
+- [Workshop](https://ids.mkpo.li/)
+- [Sources](https://ids.mkpo.li/sources)
+- [Open data](https://ids.mkpo.li/open-data)
