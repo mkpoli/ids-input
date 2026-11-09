@@ -1,7 +1,7 @@
 # Open IDS descriptions
 
 The ideographic description sequences IDS Input transcribed or read, with the source behind each
-one. The release holds 584 descriptions in 20 groups. 130 of them
+one. The release holds 599 descriptions in 20 groups. 130 of them
 name a character with no code point. It is released under CC0 1.0.
 
 The format is `ids-input/open-ids`, version 1.
@@ -51,7 +51,7 @@ several descriptions, each with the regions or reading that account belongs to.
 | Enclosures | `enclosures` | 11 | 4 |
 | Mixed scripts | `mixed` | 19 | 14 |
 | Station sign forms | `sign` | 5 | 0 |
-| Erjian forms | `erjian` | 16 | 15 |
+| Erjian forms | `erjian` | 31 | 15 |
 | Geba-ji | `geba` | 33 | 31 |
 | Navy characters | `navy` | 5 | 5 |
 | Word ligatures | `ligature` | 14 | 14 |
