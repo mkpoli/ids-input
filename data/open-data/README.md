@@ -1,7 +1,7 @@
 # Open IDS descriptions
 
 The ideographic description sequences IDS Input transcribed or read, with the source behind each
-one. The release holds 584 descriptions in 20 groups. 115 of them
+one. The release holds 605 descriptions in 20 groups. 130 of them
 name a character with no code point. It is released under CC0 1.0.
 
 The format is `ids-input/open-ids`, version 1.
@@ -9,7 +9,7 @@ The format is `ids-input/open-ids`, version 1.
 ## Scope
 
 The records are the workshop's curated examples, not a complete IDS corpus. A row whose `ids` is a
-character alone is not a description and is left out: 74 such rows stay in the workshop's examples,
+character alone is not a description and is left out: 76 such rows stay in the workshop's examples,
 including the single-character Geba forms and their abbreviations.
 
 The 8 Small Seal descriptions come from CHISE's GPL-2.0-or-later data. They stay in
@@ -51,7 +51,7 @@ several descriptions, each with the regions or reading that account belongs to.
 | Enclosures | `enclosures` | 11 | 4 |
 | Mixed scripts | `mixed` | 19 | 14 |
 | Station sign forms | `sign` | 5 | 0 |
-| Erjian forms | `erjian` | 16 | 0 |
+| Erjian forms | `erjian` | 37 | 15 |
 | Geba-ji | `geba` | 33 | 31 |
 | Navy characters | `navy` | 5 | 5 |
 | Word ligatures | `ligature` | 14 | 14 |

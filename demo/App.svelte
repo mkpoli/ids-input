@@ -14,7 +14,7 @@
   import { hasTangut } from '@han-compose/composer/tangut'
   import { composerPreview as composerAt } from '@han-compose/composer'
   import engineOutlines from 'ids-engine-outlines'
-  import { EMPTY_MARKS, OPERATORS, characterStrokes, componentQuery, isJurchen, isShuishu, parse, unalias } from '../src/core/index.js'
+  import { EMPTY_MARKS, OPERATORS, characterStrokes, componentQuery, isJurchen, isShuishu, parse, substituteSequences, unalias } from '../src/core/index.js'
   import { loadStrokeRecords } from '../src/svelte/strokes.js'
   import { createDocumentSession, layerAtPath, sessionRecord, toSequence } from '../src/document/index.js'
   import { documentFile, readDocumentFile } from './lib/documents.js'
@@ -178,9 +178,9 @@
   // names the package reads, and the URL Vite gives each file it bundles. See `vite.config.js`.
   const bundles = engineOutlines
   /** @param {string} at @param {boolean} split @param {'sans' | 'serif' | 'fangsong' | 'kaisho'} style @param {string} [owner] A view whose drawings the others must not cancel. */
-  const previewAt = (at, split, style, owner = '') => {
-    const key = `${at}\0${split ? '1' : '0'}\0${style}\0${owner}`
-    if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split, fontStyle: style, loaders: bundles }))
+  const previewAt = (at, split, style, owner = '', preferExport = false) => {
+    const key = `${at}\0${split ? '1' : '0'}\0${style}\0${owner}\0${preferExport ? '1' : '0'}`
+    if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split, fontStyle: style, preferExport, loaders: bundles }))
     return /** @type {ReturnType<typeof composerPreview>} */ (previews.get(key))
   }
   // The drawings demo/scripts/build-example-drawings.mjs prepares for this export, one per example.
@@ -242,12 +242,12 @@
    * @param {'sans' | 'serif' | 'fangsong' | 'kaisho'} style
    * @param {string} [owner] A view with its own worker, so the editor's drawings do not cancel its own.
    */
-  function previewFor(at, split, style, owner = '') {
+  function previewFor(at, split, style, owner = '', preferExport = false) {
     const key = `${at}\0${split ? '1' : '0'}\0${style}\0${owner}`
     const known = previewsWithExamples.get(key)
     if (known) return known
-    const composed = previewAt(at, split, style, owner)
-    const serif = previewAt(COMPOSER_BASES.serif, split, 'serif', owner)
+    const composed = previewAt(at, split, style, owner, preferExport)
+    const serif = previewAt(COMPOSER_BASES.serif, split, 'serif', owner, preferExport)
     const sans = sansPreviewAt(split)
     const defaultFace = !owner && exportUrl(at) === preparedBase && style === 'sans'
     const draw = defaultFace ? sans : composed
@@ -591,11 +591,37 @@
   let encoded = $state(/** @type {string[]} */ ([]))
   $effect(() => {
     const text = editor.tree === null ? '' : editor.whole, ask = adapter.encoded
-    const known = EXAMPLES.filter(example => example.sequence === text && example.char).map(example => example.char)
+    const example = EXAMPLES.find(example => example.sequence === text)
+    const known = example?.char ? [example.char] : []
     encoded = known
-    if (!editor.usable || !text || !ask) return
+    // An example that names a standard and no character is a form the project reads as unencoded;
+    // the index's reading of the same IDS does not override it.
+    if (!editor.usable || !text || !ask || example?.standard && !example.char) return
     let live = true
     ask(text).then(found => { if (live) encoded = [...new Set([...known, ...found])] }, () => {})
+    return () => { live = false }
+  })
+  // A description written with a visual substitute names the character its canonical description
+  // does: ⿰彳ヱ is ⿰彳𠀄, and that is 𭛝. The typed sequence stays as written; the character and
+  // code point are shown beside it.
+  let substituted = $state(/** @type {{ sequence: string, char: string } | null} */ (null))
+  $effect(() => {
+    const text = editor.tree === null ? '' : editor.whole
+    const ask = adapter.encoded
+    substituted = null
+    if (!editor.usable || !text || !ask || encoded.length) return
+    const candidates = substituteSequences(text).slice(0, 8)
+    if (!candidates.length) return
+    let live = true
+    const read = async () => {
+      for (const sequence of candidates) {
+        try {
+          const chars = await ask(sequence)
+          if (live && chars.length) { substituted = { sequence, char: chars[0] }; return }
+        } catch { /* a description the adapter cannot encode */ }
+      }
+    }
+    void read()
     return () => { live = false }
   })
   // The strokes the output shows: an encoded character's recorded count when the description names
@@ -1134,14 +1160,20 @@
     } catch { note(t('app.edit.pasteFailed')) }
   }
   function selectAll() { if (editor.tree !== null) { editor.choose([], { toggle: false }); editor.focusChosen(work) } }
-  /** @param {{ sequence: string, char: string, refs?: number[], abbreviates?: string, modern?: string, reading?: string }} example @param {string} lang @param {number[]} [groupRefs] @param {string} [readingLang] */
-  function exampleItem(example, lang, groupRefs = [], readingLang = 'ja') {
+  /** @param {{ sequence: string, char: string, refs?: number[], abbreviates?: string, modern?: string, standard?: string, traditional?: string, reading?: string }} example @param {string} lang @param {number[]} [groupRefs] @param {string} [readingLang] @param {string} [groupKey] */
+  function exampleItem(example, lang, groupRefs = [], readingLang = 'ja', groupKey = '') {
     const point = example.char ? cp(example.char) : ''
+    const standard = example.standard ?? example.char
+    const traditional = example.traditional ?? standard
     const target = example.char || example.abbreviates || ''
     const citation = (example.refs ?? groupRefs).map(/** @param {number} n */ n => `[${n}]`).join('')
-    const noteText = example.abbreviates ? `${example.abbreviates} · ${t('app.examples.abbreviation')}` : example.char ? [example.modern, point].filter(Boolean).join(' · ') : t('app.examples.none')
+    // A 二簡字 form names the standard it replaces. Where the form itself is unencoded, its note
+    // names that standard without marking a code point; where it is encoded, the note names the form.
+    const replaces = groupKey === 'erjian' && standard ? `${standard}${traditional === standard ? '' : ` ${traditional}`}` : ''
+    const encodedForm = groupKey === 'erjian' && example.char ? `${point}${replaces ? ` · ${replaces}` : ''}` : ''
+    const noteText = example.abbreviates ? `${example.abbreviates} · ${t('app.examples.abbreviation')}` : groupKey === 'erjian' && standard ? (encodedForm || replaces) : example.char ? [example.modern, point].filter(Boolean).join(' · ') : t('app.examples.none')
     return {
-      leading: target || undefined,
+      leading: groupKey === 'erjian' && example.char ? undefined : target || undefined,
       label: example.sequence,
       sequence: example.sequence,
       note: [noteText, citation].filter(Boolean).join(' '),
@@ -1150,13 +1182,13 @@
       unencoded: !example.char,
       lang,
       drawing: prepared.get(example.sequence),
-      hint: [example.abbreviates ? `${example.abbreviates}　${example.sequence}　${t('app.examples.abbreviation')}` : example.char ? `${example.char}${example.sequence === example.char ? '' : `　${example.sequence}`}　${point}` : `${example.sequence}　${t('app.examples.none')}`, citation].filter(Boolean).join('　'),
+      hint: [groupKey === 'erjian' && example.char ? `${example.sequence}　${point}${replaces ? `　${replaces}` : ''}` : replaces ? `${example.sequence}　${replaces}　${t('app.examples.none')}` : example.abbreviates ? `${example.abbreviates}　${example.sequence}　${t('app.examples.abbreviation')}` : example.char ? `${example.char}${example.sequence === example.char ? '' : `　${example.sequence}`}　${point}` : `${example.sequence}　${t('app.examples.none')}`, citation].filter(Boolean).join('　'),
       run: () => addTab(canonical(example.sequence)),
     }
   }
   const exampleItems = $derived(EXAMPLE_GROUPS.flatMap(group => [
     { heading: t(`app.examples.${group.key}`) },
-    ...group.examples.map(example => exampleItem(example, hasTangut(example.sequence) ? 'txg' : isShuishu(example.sequence) ? 'swi' : isJurchen(example.sequence) ? 'juc' : 'ja', group.refs, ['korean', 'hangul', 'gugyeol'].includes(group.key) ? 'ko' : group.key === 'nom' ? 'vi' : group.key === 'jurchen' ? 'juc' : 'ja')),
+    ...group.examples.map(example => exampleItem(example, hasTangut(example.sequence) ? 'txg' : isShuishu(example.sequence) ? 'swi' : isJurchen(example.sequence) ? 'juc' : 'ja', group.refs, ['korean', 'hangul', 'gugyeol'].includes(group.key) ? 'ko' : group.key === 'nom' ? 'vi' : group.key === 'jurchen' ? 'juc' : 'ja', group.key)),
   ]))
   const exampleView = $derived({
     list: t('app.examples.list'), cards: t('app.examples.cards'), cardsSelected: exampleCards,
@@ -1438,6 +1470,15 @@
                 document={currentSession()?.document} session={currentSession()} version={documentTick} bind:scopes bind:slots
                 editable={adjusting} onchoose={path => editor.choose(path, { toggle: false })} onedit={layerChanged} bind:drawing bind:emoji bind:cut bind:cutLeaf>
                 {#snippet detailContent()}
+                  {#if substituted}
+                    <span class="encoded-character substituted-character" lang="ja" title={substituted.sequence}>
+                      <span class="substituted-sequence">{editor.whole}</span>
+                      <span class="substituted-arrow" aria-hidden="true">→</span>
+                      <span class="substituted-glyph">{substituted.char}</span>
+                      <code>{cp(substituted.char)}</code>
+                      <button type="button" title={t('app.copyChar', { char: substituted.char })} aria-label={t('app.copyChar', { char: substituted.char })} onclick={() => copy(substituted.char)}><Icon name="copy" size={13} /></button>
+                    </span>
+                  {/if}
                   {#each encoded as ch (ch)}
                     <span class="encoded-character"><code>{cp(ch)}</code><button type="button" title={t('app.copyChar', { char: ch })} aria-label={t('app.copyChar', { char: ch })} onclick={() => copy(ch)}><Icon name="copy" size={13} /></button></span>
                   {/each}
@@ -1537,7 +1578,7 @@
 <ReportDialog bind:open={reportOpen} {endpoint} sequence={editor.whole} link={linkTo(editor.whole, location, currentDocument())}
   {drawing} {scopes} {slots} {emoji} {cut} {cutLeaf} version={documentTick} preview={() => work?.querySelector('#output-panel .ids-preview') ?? null} workspace={reportWorkspace}
   {locale} {theme} {face} composer={base} {t} />
-<LayerDialog bind:open={layerOpen} session={currentSession()} preview={previewFor(base, true, componentStyle, 'layers')} sequence={editor.whole} {t}
+<LayerDialog bind:open={layerOpen} session={currentSession()} preview={previewFor(base, true, componentStyle, 'layers', true)} sequence={editor.whole} {t}
   chosenPath={editor.chosen} structure={char => adapter.structure(char)} onchange={layerChanged}
   onchoose={path => editor.choose(path, { toggle: false })} onstructure={layerStructureChanged}
   oncanvas={() => { layerOpen = false; adjusting = true }} />
@@ -1665,6 +1706,10 @@
   .large-close:hover{border-color:var(--ui-color-border-strong)}
   .large-close:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:2px}
   .encoded-character{display:inline-flex;align-items:center;gap:2px;color:var(--ui-color-ink-muted)}
+  .substituted-character{gap:4px;max-width:100%;font-family:var(--ids-font);font-size:13px}
+  .substituted-sequence{max-width:10em;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .substituted-arrow{flex:none}
+  .substituted-glyph{font-size:16px;color:var(--ui-color-ink)}
   .encoded-character code{font:11px ui-monospace,monospace}
   .encoded-character button{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;padding:0;border:0;border-radius:var(--ui-radius-xs);background:transparent;color:var(--ui-color-ink-muted);cursor:pointer}
   .encoded-character button:hover{color:var(--ui-color-ink);background:var(--ui-color-surface-hover)}

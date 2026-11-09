@@ -133,7 +133,9 @@ async function png(env, sequence, drawing, char, shown = null, document = null) 
  */
 export function namedFor(sequence, composed = null) {
   const example = EXAMPLES.find(example => example.sequence === sequence)
-  const named = example?.char || example?.abbreviates || composed
+  // An example that names a standard and no character is a form the project reads as unencoded;
+  // the index's reading of the same IDS does not name it.
+  const named = example?.char || example?.abbreviates || (example?.standard ? null : composed)
   return named && isOneCharacter(named) ? named : null
 }
 

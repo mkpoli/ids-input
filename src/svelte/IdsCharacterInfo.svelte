@@ -48,11 +48,13 @@
   })
   // Tangut characters carry a count in their own table; it has no first stroke to give.
   let tangutStrokes = $state.raw(/** @type {Map<string, number> | null} */ (null))
+  // The Tangut table counts the ideographs and the 768 components of U+18800–U+18AFF alike.
+  const tangutKeyed = $derived(characterScript(char ?? '') === 'tangut' || characterScript(char ?? '') === 'component')
   $effect(() => {
-    if (tangutStrokes || !char || characterScript(char) !== 'tangut') return
+    if (tangutStrokes || !tangutKeyed) return
     loadTangutStrokes().then(counts => { tangutStrokes = counts }).catch(() => { tangutStrokes = new Map() })
   })
-  const tangutCount = $derived(char && characterScript(char) === 'tangut' ? tangutStrokes?.get(char) ?? null : null)
+  const tangutCount = $derived(tangutKeyed ? tangutStrokes?.get(char ?? '') ?? null : null)
   // Jurchen characters carry a count and, from their stroke code, a first stroke of their own.
   let jurchenStrokes = $state.raw(/** @type {Map<string, import('./strokes.js').StrokeRecord> | null} */ (null))
   $effect(() => {

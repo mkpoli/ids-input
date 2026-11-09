@@ -1168,15 +1168,17 @@ catalog cannot be loaded. A configured composer export or font can have differen
 
 ## `kana-strokes.json.gz`
 
-The stroke count of every kana KanjiVG draws, and of the forms it leaves to other sources: 256 keys
+The stroke count of every kana KanjiVG draws, and of the forms it leaves to other sources: 258 keys
 in code-point order, hiragana U+3041–U+3096, the marks U+309B–U+309E, katakana U+30A1–U+30FE
 (the middle dot ・ and the prolonged sound mark ー included), the Ainu small katakana U+31F0–U+31FF,
-then halfwidth katakana U+FF66–U+FF9D, with a count for each (`strokes`, one entry per key), the
-pinned `revision` and its `source`.
+then halfwidth katakana U+FF66–U+FF9F (the sound marks included), with a count for each (`strokes`,
+one entry per key), the pinned `revision` and its `source`.
 
 Two kinds are derived from the kana they write. A halfwidth form is the same kana drawn narrow, so
-it takes the count of the kana NFKC decomposes it to, ｰ included. An Ainu small katakana is the same
-letter drawn small, named for it (KATAKANA LETTER SMALL KU is ク), so it takes that letter's count.
+it takes the count of the kana NFKC decomposes it to, ｰ included; ﾞ and ﾟ decompose to combining
+marks, so they take the count of the spacing ゛ and ゜ their names give. An Ainu small katakana is
+the same letter drawn small, named for it (KATAKANA LETTER SMALL KU is ク), so it takes that
+letter's count.
 
 The marks are counted from their own paths: ー and ・ one stroke, ヽ and ゝ one, ヾ and ゞ three (the
 base mark plus the two of the voiced mark).

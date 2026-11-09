@@ -19,6 +19,15 @@ for (const [char, sequences] of table) for (const { text } of sequences) {
   if (chars) { if (!chars.includes(char)) chars.push(char) } else described.set(text, [char])
 }
 
+/** The Erjian forms that are already encoded, and the character each one is. */
+const ENCODED_ERJIAN = new Map([
+  ['⿰忄井', '𲟱'], ['⿰亻丁', '仃'], ['⿱一丁', '亍'], ['⿰氵九', '氿'], ['⿱𠂉十', '午'],
+  ['⿺辶刀', '辺'], ['⿺辶占', '迠'], ['⿱日一', '旦'], ['⿰口且', '咀'], ['⿰亻寸', '付'],
+  ['⿰亻文', '伩'], ['⿰示示', '祘'], ['⿱艹才', '𦬁'], ['⿱宀西', '𡧳'], ['⿰又圭', '𰆻'],
+  ['⿱大正', '𰋞'], ['歺', '歺'], ['疒', '疒'], ['⿱自廾', '𢍂'], ['⿰忄万', '𭜌'],
+  ['⿱宀夫', '𫲷'], ['⿱攵彡', '㣊'], ['⿱艹上', '䒙'], ['⿱宀一', '㝉'],
+])
+
 describe('the demo examples', () => {
   it('read as whole descriptions', () => {
     for (const { sequence, char } of EXAMPLES) {
@@ -36,7 +45,18 @@ describe('the demo examples', () => {
       for (const example of group.examples) {
         const { sequence, char } = example
         const found = described.get(sequence) ?? []
-        if (group.key === 'geba') {
+        if (group.key === 'erjian') {
+          // A 二簡字 form names the standard it replaces in `standard`; some forms are already
+          // encoded characters, whose BabelStone descriptions give the IDS.
+          expect(char).toBe(ENCODED_ERJIAN.get(sequence) ?? '')
+          expect(example.refs).toContain(sourceNumber('erjian'))
+          if (char && sequence !== char && sequence !== '⿰忄井') expect(example.refs).toContain(sourceNumber('babelstone'))
+          expect([...example.standard]).toHaveLength(1)
+          expect([...(example.traditional ?? example.standard)]).toHaveLength(1)
+          if (sequence === '⿰忄井' || sequence === char) expect(found).toEqual([])
+          else if (char) expect(found).toContain(char)
+          else expect(found).toEqual([])
+        } else if (group.key === 'geba') {
           expect(group.refs ?? []).toContain(sourceNumber('geba-wp'))
           const name = char || example.abbreviates
           expect(typeof name).toBe('string')
@@ -73,11 +93,6 @@ describe('the demo examples', () => {
             const shui = JSON.parse(gunzipSync(readFileSync(new URL('../data/shuishu.json.gz', import.meta.url))))
             expect(shui.parts.map(part => part.part)).toContain(char)
             expect(shui.parts.find(part => part.part === char)?.shuiMeaning).toBe(example.modern)
-          } else if (group.key === 'erjian') {
-            // The table's forms name characters BabelStone has no row for, so the example names one
-            // by the sequence and the table records it.
-            expect(example.refs).toEqual([sourceNumber('erjian')])
-            expect(found.some(other => other !== char)).toBe(false)
           } else if ('source' in example && example.source === 'data/shuishu/ids.json') {
             const ids = JSON.parse(readFileSync(new URL('../data/shuishu/ids.json', import.meta.url), 'utf8'))
             expect(ids.entries[char.codePointAt(0).toString(16).toUpperCase()]).toBe(sequence)
@@ -117,6 +132,16 @@ describe('the demo examples', () => {
     expect(bySequence.get('⿰舟ラ')?.refs).toContain(sourceNumber('ndl-jmtt'))
     expect(bySequence.has('⿰艦ラ')).toBe(false)
   })
+  it('gives each Erjian standard its 繁體字', () => {
+    const group = EXAMPLE_GROUPS.find(group => group.key === 'erjian')
+    const differing = Object.fromEntries(group.examples.filter(example => example.traditional).map(example => [example.standard, example.traditional]))
+    expect(differing).toEqual({ 厩: '廄', 衮: '袞', 弹: '彈', 数: '數', 赛: '賽' })
+    for (const example of group.examples) {
+      expect(example.char).toBe(ENCODED_ERJIAN.get(example.sequence) ?? '')
+      expect([...example.standard]).toHaveLength(1)
+      expect([...(example.traditional ?? example.standard)]).toHaveLength(1)
+    }
+  })
   it('keep the Geba abbreviations in one cited group', () => {
     const group = EXAMPLE_GROUPS.find(group => group.key === 'geba')
     expect(group.refs ?? []).toContain(sourceNumber('geba-wp'))
@@ -133,7 +158,7 @@ describe('the demo examples', () => {
     const group = EXAMPLE_GROUPS.find(group => group.key === 'ligature')
     expect(group.examples.map(example => example.sequence)).toEqual([
       '⿺辶⿱宀⿱⿰王尔⿲隹貝招', '⿱⿰日日⿲有見財', '⿰⿱日斗⿱進金', '⿳𦥯⿲女子乚皿',
-      '⿳五⿲矢口隹龰', '⿱黄⿱金⿱田⿵冂山', '⿳士⿲女口意祥',
+      '⿳五⿲矢口隹龰', '⿱⿱龷由⿱金⿱田⿵冂山', '⿳士⿲女口意祥',
       '⿱艹⿰马尼', '⿰⿳⿰SIR木阝',
       '⿱⿰⿱コン⿱クリ土', '⿱⿲ンメセ土', '⿸广⿰KO', '⿱宀K', '⿻Mo',
     ])
@@ -143,7 +168,7 @@ describe('the demo examples', () => {
     expect(refs.get('⿰⿱日斗⿱進金')).toEqual([sourceNumber('uhk-hetizi')])
     expect(refs.get('⿳𦥯⿲女子乚皿')).toEqual([sourceNumber('uhk-hetizi'), sourceNumber('zi-tools-kongmeng')])
     expect(refs.get('⿳五⿲矢口隹龰')).toEqual([sourceNumber('uhk-hetizi')])
-    expect(refs.get('⿱黄⿱金⿱田⿵冂山')).toEqual([sourceNumber('uhk-hetizi'), sourceNumber('gmw-zuhezi')])
+    expect(refs.get('⿱⿱龷由⿱金⿱田⿵冂山')).toEqual([sourceNumber('uhk-hetizi'), sourceNumber('gmw-zuhezi')])
     expect(refs.get('⿳士⿲女口意祥')).toEqual([sourceNumber('fznews-jixiang')])
     expect(refs.get('⿱艹⿰马尼')).toEqual([sourceNumber('zh-yue-hetizi')])
     expect(refs.get('⿰⿳⿰SIR木阝')).toEqual([sourceNumber('zh-yue-hetizi')])

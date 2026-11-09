@@ -5,9 +5,10 @@
 //
 // `abbreviates` names the standard character a Geba form stands for; `char` is empty for a form
 // with no code point, and names the character for an encoded one. `reading` holds a Korean
-// gukja's reading in Hangul, or a Jurchen character's reading as Unicode records it.
+// gukja's reading in Hangul, or a Jurchen character's reading as Unicode records it. `standard`
+// names the 1簡字 a 二簡字 form replaces; `traditional` gives its 繁體字 where it differs.
 /**
- * @typedef {{ sequence: string, refs?: number[], char: string, parts?: string, abbreviates?: string, reading?: string, modern?: string, source?: string, editorial?: boolean }} Example
+ * @typedef {{ sequence: string, refs?: number[], char: string, parts?: string, abbreviates?: string, reading?: string, modern?: string, standard?: string, traditional?: string, source?: string, editorial?: boolean }} Example
  * @typedef {{ key: string, refs?: number[], examples: Example[] }} ExampleGroup
  */
 
@@ -149,27 +150,56 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰彳卫', refs: [59, 68, 69, 70], char: '衛', parts: '彳卫' },
   ] },
   // 二简字 from the draft's table as West records it, written with each component's own description,
-  // since a component runs its own description in its own IDS. Each names the character it writes,
-  // which BabelStone has no row for. 弹 keeps 单's IDS ⿱丷甲, so its arrow strokes are not drawn.
+  // since a component runs its own description in its own IDS. The table-2 forms below name the standard
+  // character they replace in `standard`, and BabelStone has no row for the form itself; Unihan
+  // 18.0 gives each 繁體字. 弹 keeps 单's IDS ⿱丷甲, so its arrow strokes are not drawn. Unicode 18.0 encodes
+  // ⿰忄井 as 𲟱 (U+327F1), so that example keeps its character.
   // 多 and 皆 are left out: ⿱夕夕 and ⿱比白 are the ordinary descriptions of the modern characters,
   // which the composer then draws. 诅 (⿰讠且) is left out because 且's own description is ⿱𠃌夕.
-  { key: 'erjian', refs: [3], examples: [
-    { sequence: '⿰忄井', refs: [3], char: '警' },
-    { sequence: '⿱艹么', refs: [3], char: '蘑' },
-    { sequence: '⿱千田', refs: [3], char: '臿' },
-    { sequence: '⿸厂九', refs: [3], char: '厩' },
-    { sequence: '⿱亠公', refs: [3], char: '衮' },
-    { sequence: '⿰彳力', refs: [3], char: '律' },
-    { sequence: '⿱力十', refs: [3], char: '率' },
-    { sequence: '⿱入寸', refs: [3], char: '辱' },
-    { sequence: '⿱甲弓', refs: [3], char: '弹' },
-    { sequence: '⿻弓冫', refs: [3], char: '弱' },
-    { sequence: '⿱犬一', refs: [3], char: '然' },
-    { sequence: '⿱大手', refs: [3], char: '攀' },
-    { sequence: '⿰亻彐', refs: [3], char: '侵' },
-    { sequence: '⿱由攵', refs: [3], char: '数' },
-    { sequence: '⿸疒力', refs: [3], char: '痢' },
-    { sequence: '⿺辶欠', refs: [3], char: '遣' },
+  // Table 1 forms that are already encoded characters: 餐→歺, 病→疒, 停→仃, 街→亍, 酒→氿,
+  // 舞→午, 道→辺, 建→迠, 蛋→旦, 嘴→咀, 副→付, 信→伩, 算→祘, 菜→𦬁, 赛→𡧳, 鞋→𰆻, 整→𰋞,
+  // 鼻→𢍂, 慢→𭜌, 富→𫲷, 修→㣊, 藏→䒙 and 宣→㝉. Each `char` is that encoded form; `standard`
+  // is the character it replaces, and a described form's IDS is BabelStone's.
+  { key: 'erjian', refs: [1, 3], examples: [
+    { sequence: '歺', refs: [3], char: '歺', standard: '餐' },
+    { sequence: '疒', refs: [3], char: '疒', standard: '病' },
+    { sequence: '⿰亻丁', refs: [1, 3], char: '仃', standard: '停' },
+    { sequence: '⿱一丁', refs: [1, 3], char: '亍', standard: '街' },
+    { sequence: '⿰氵九', refs: [1, 3], char: '氿', standard: '酒' },
+    { sequence: '⿱𠂉十', refs: [1, 3], char: '午', standard: '舞' },
+    { sequence: '⿺辶刀', refs: [1, 3], char: '辺', standard: '道' },
+    { sequence: '⿺辶占', refs: [1, 3], char: '迠', standard: '建' },
+    { sequence: '⿱日一', refs: [1, 3], char: '旦', standard: '蛋' },
+    { sequence: '⿰口且', refs: [1, 3], char: '咀', standard: '嘴' },
+    { sequence: '⿰亻寸', refs: [1, 3], char: '付', standard: '副' },
+    { sequence: '⿰亻文', refs: [1, 3], char: '伩', standard: '信' },
+    { sequence: '⿰示示', refs: [1, 3], char: '祘', standard: '算' },
+    { sequence: '⿱艹才', refs: [1, 3], char: '𦬁', standard: '菜' },
+    { sequence: '⿱宀西', refs: [1, 3], char: '𡧳', standard: '赛', traditional: '賽' },
+    { sequence: '⿰又圭', refs: [1, 3], char: '𰆻', standard: '鞋' },
+    { sequence: '⿱大正', refs: [1, 3], char: '𰋞', standard: '整' },
+    { sequence: '⿱自廾', refs: [1, 3], char: '𢍂', standard: '鼻' },
+    { sequence: '⿰忄万', refs: [1, 3], char: '𭜌', standard: '慢' },
+    { sequence: '⿱宀夫', refs: [1, 3], char: '𫲷', standard: '富' },
+    { sequence: '⿱攵彡', refs: [1, 3], char: '㣊', standard: '修' },
+    { sequence: '⿱艹上', refs: [1, 3], char: '䒙', standard: '藏' },
+    { sequence: '⿱宀一', refs: [1, 3], char: '㝉', standard: '宣' },
+    { sequence: '⿰忄井', refs: [3], char: '𲟱', standard: '警' },
+    { sequence: '⿱艹么', refs: [3], char: '', standard: '蘑' },
+    { sequence: '⿱千田', refs: [3], char: '', standard: '臿' },
+    { sequence: '⿸厂九', refs: [3], char: '', standard: '厩', traditional: '廄' },
+    { sequence: '⿱亠公', refs: [3], char: '', standard: '衮', traditional: '袞' },
+    { sequence: '⿰彳力', refs: [3], char: '', standard: '律' },
+    { sequence: '⿱力十', refs: [3], char: '', standard: '率' },
+    { sequence: '⿱入寸', refs: [3], char: '', standard: '辱' },
+    { sequence: '⿱甲弓', refs: [3], char: '', standard: '弹', traditional: '彈' },
+    { sequence: '⿻弓冫', refs: [3], char: '', standard: '弱' },
+    { sequence: '⿱犬一', refs: [3], char: '', standard: '然' },
+    { sequence: '⿱大手', refs: [3], char: '', standard: '攀' },
+    { sequence: '⿰亻彐', refs: [3], char: '', standard: '侵' },
+    { sequence: '⿱由攵', refs: [3], char: '', standard: '数', traditional: '數' },
+    { sequence: '⿸疒力', refs: [3], char: '', standard: '痢' },
+    { sequence: '⿺辶欠', refs: [3], char: '', standard: '遣' },
   ] },
 
   // `abbreviates` names the standard character a Geba form stands for. `char` is empty for a form
@@ -279,7 +309,7 @@ export const EXAMPLE_GROUPS = [
     // In 黄金萬兩 the sharing runs the other way as well: 金's top stands where 黄's last two
     // strokes would, and 金's bottom stands where 萬's 艹 would, so neither is drawn twice.
     { sequence: '⿳五⿲矢口隹龰', refs: [46], char: '', editorial: true },
-    { sequence: '⿱黄⿱金⿱田⿵冂山', refs: [46,51], char: '', editorial: true },
+    { sequence: '⿱⿱龷由⿱金⿱田⿵冂山', refs: [46,51], char: '', editorial: true },
     { sequence: '⿳士⿲女口意祥', refs: [50], char: '', editorial: true },
     { sequence: '⿱艹⿰马尼', refs: [43], char: '' },
     { sequence: '⿰⿳⿰SIR木阝', refs: [43], char: '' },

@@ -115,22 +115,43 @@ ids	char	codepoint	group	reading	modern	abbreviates	editorial	sources
 ⿱艹𢎨	苐	U+82D0	sign				false	babelstone x-eonway-sign
 ⿰设正	証	U+8A3C	sign				false	x-eonway-sign
 ⿰彳卫	衛	U+885B	sign				false	x-eonway-sign yixiwu-jianhuaziyuan chenguangyao-jianzipu zh-wp-jianhua-fangfa
-⿰忄井	警	U+8B66	erjian				false	erjian
-⿱艹么	蘑	U+8611	erjian				false	erjian
-⿱千田	臿	U+81FF	erjian				false	erjian
-⿸厂九	厩	U+53A9	erjian				false	erjian
-⿱亠公	衮	U+886E	erjian				false	erjian
-⿰彳力	律	U+5F8B	erjian				false	erjian
-⿱力十	率	U+7387	erjian				false	erjian
-⿱入寸	辱	U+8FB1	erjian				false	erjian
-⿱甲弓	弹	U+5F39	erjian				false	erjian
-⿻弓冫	弱	U+5F31	erjian				false	erjian
-⿱犬一	然	U+7136	erjian				false	erjian
-⿱大手	攀	U+6500	erjian				false	erjian
-⿰亻彐	侵	U+4FB5	erjian				false	erjian
-⿱由攵	数	U+6570	erjian				false	erjian
-⿸疒力	痢	U+75E2	erjian				false	erjian
-⿺辶欠	遣	U+9063	erjian				false	erjian
+⿰亻丁	仃	U+4EC3	erjian				false	babelstone erjian
+⿱一丁	亍	U+4E8D	erjian				false	babelstone erjian
+⿰氵九	氿	U+6C3F	erjian				false	babelstone erjian
+⿱𠂉十	午	U+5348	erjian				false	babelstone erjian
+⿺辶刀	辺	U+8FBA	erjian				false	babelstone erjian
+⿺辶占	迠	U+8FE0	erjian				false	babelstone erjian
+⿱日一	旦	U+65E6	erjian				false	babelstone erjian
+⿰口且	咀	U+5480	erjian				false	babelstone erjian
+⿰亻寸	付	U+4ED8	erjian				false	babelstone erjian
+⿰亻文	伩	U+4F29	erjian				false	babelstone erjian
+⿰示示	祘	U+7958	erjian				false	babelstone erjian
+⿱艹才	𦬁	U+26B01	erjian				false	babelstone erjian
+⿱宀西	𡧳	U+219F3	erjian				false	babelstone erjian
+⿰又圭	𰆻	U+301BB	erjian				false	babelstone erjian
+⿱大正	𰋞	U+302DE	erjian				false	babelstone erjian
+⿱自廾	𢍂	U+22342	erjian				false	babelstone erjian
+⿰忄万	𭜌	U+2D70C	erjian				false	babelstone erjian
+⿱宀夫	𫲷	U+2BCB7	erjian				false	babelstone erjian
+⿱攵彡	㣊	U+38CA	erjian				false	babelstone erjian
+⿱艹上	䒙	U+4499	erjian				false	babelstone erjian
+⿱宀一	㝉	U+3749	erjian				false	babelstone erjian
+⿰忄井	𲟱	U+327F1	erjian				false	erjian
+⿱艹么			erjian				false	erjian
+⿱千田			erjian				false	erjian
+⿸厂九			erjian				false	erjian
+⿱亠公			erjian				false	erjian
+⿰彳力			erjian				false	erjian
+⿱力十			erjian				false	erjian
+⿱入寸			erjian				false	erjian
+⿱甲弓			erjian				false	erjian
+⿻弓冫			erjian				false	erjian
+⿱犬一			erjian				false	erjian
+⿱大手			erjian				false	erjian
+⿰亻彐			erjian				false	erjian
+⿱由攵			erjian				false	erjian
+⿸疒力			erjian				false	erjian
+⿺辶欠			erjian				false	erjian
 ⿱宀R			geba			寮	false	geba-wp l2-24-125 ja-wp-geba
 ⿰亻⿱宀R			geba			僚	false	geba-wp l2-24-125
 ⿸疒R			geba			療	false	geba-wp l2-24-125
@@ -174,7 +195,7 @@ ids	char	codepoint	group	reading	modern	abbreviates	editorial	sources
 ⿰⿱日斗⿱進金			ligature				false	uhk-hetizi
 ⿳𦥯⿲女子乚皿			ligature				false	uhk-hetizi zi-tools-kongmeng
 ⿳五⿲矢口隹龰			ligature				true	uhk-hetizi
-⿱黄⿱金⿱田⿵冂山			ligature				true	uhk-hetizi gmw-zuhezi
+⿱⿱龷由⿱金⿱田⿵冂山			ligature				true	uhk-hetizi gmw-zuhezi
 ⿳士⿲女口意祥			ligature				true	fznews-jixiang
 ⿱艹⿰马尼			ligature				false	zh-yue-hetizi
 ⿰⿳⿰SIR木阝			ligature				false	zh-yue-hetizi

@@ -26,7 +26,7 @@ describe('the open data release', () => {
 
   it('counts what it holds', () => {
     expect(dataset.counts).toEqual({
-      descriptions: 584, unencoded: 115, editorial: 65, groups: 20, sources: 77, components: 121,
+      descriptions: 605, unencoded: 130, editorial: 65, groups: 20, sources: 77, components: 121,
     })
     expect(dataset.counts.descriptions).toBe(dataset.records.length)
     expect(dataset.counts.unencoded).toBe(dataset.records.filter(record => !record.char).length)
