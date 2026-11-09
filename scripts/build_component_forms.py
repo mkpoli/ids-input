@@ -141,7 +141,7 @@ def jin_with_ba(cs, style='sans'):
     x0, x1, y0, y1 = min(xs), max(xs), min(ys), max(ys)
     c = cs('\u91d1')
     if style == 'sans':
-        box = (37, 480, 967, 710)
+        box = (140, 540, 860, 845)
         body, clip = pathops.Path(), pathops.Path()
         for contour in c: replayRecording(contour, body.getPen())
         clip.moveTo(0, -100); clip.lineTo(1000, -100); clip.lineTo(1000, 400)
