@@ -1782,6 +1782,9 @@ export class Composer {
       const frame = union(groups[1].map(p => p.target)), left = frame[0], cy = (frame[1] + frame[3]) / 2
       const sx = 0.88, sy = 0.93
       for (const p of groups[1]) p.target = [left + (p.target[0] - left) * sx, cy + (p.target[1] - cy) * sy, left + (p.target[2] - left) * sx, cy + (p.target[3] - cy) * sy]
+      // The inner keeps a bottom gap the described row closed.
+      const lift = 0.04 * (this.face[3] - this.face[1])
+      for (const p of groups[1]) if (!p.origin.startsWith('host 𭰲')) p.target = [p.target[0], p.target[1] + lift, p.target[2], p.target[3] + lift]
     }
     return this.flatten(groups)
   }
@@ -1951,6 +1954,9 @@ export class Composer {
       const frame = union(groups[1].map(p => p.target)), left = frame[0], cy = (frame[1] + frame[3]) / 2
       const sx = 0.88, sy = 0.93
       for (const p of groups[1]) p.target = [left + (p.target[0] - left) * sx, cy + (p.target[1] - cy) * sy, left + (p.target[2] - left) * sx, cy + (p.target[3] - cy) * sy]
+      // The inner keeps a bottom gap the described row closed.
+      const lift = 0.04 * (this.face[3] - this.face[1])
+      for (const p of groups[1]) if (!p.origin.startsWith('host 𭰲')) p.target = [p.target[0], p.target[1] + lift, p.target[2], p.target[3] + lift]
     }
     return this.flatten(groups)
   }
