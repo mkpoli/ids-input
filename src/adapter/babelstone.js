@@ -65,6 +65,18 @@ const withSources = (row, sources) => {
  * A description another source gives without a region tag is the same description, so only its
  * source is added; a distinct region tag stays a distinct row.
  * @param {Map<string, Sequence[]>} base @param {Map<string, Sequence[]>} extra */
+/** The Japanese-tagged description leads, as in the corpus (`scripts/build_ids_corpus.mjs`): the
+ * face draws the Japanese positional forms, and a source's base-form row would otherwise come first.
+ * A curated project row still leads every source. */
+function rankOf(row) {
+  return row.sources?.includes('project') ? -1 : (row.regions ?? '').includes('J') ? 0 : row.regions ? 1 : 2
+}
+
+/** @param {Sequence[]} rows */
+function byRank(rows) {
+  return rows.length > 1 ? [...rows].sort((a, b) => rankOf(a) - rankOf(b)) : rows
+}
+
 export function mergeIdsTables(base, extra) {
   const merged = new Map(base)
   for (const [char, descriptions] of extra) {
@@ -687,7 +699,12 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
   }
 
   return {
-    async table() { return (await readSearch()).table },
+    async table() {
+      const { table } = await readSearch()
+      const sorted = new Map()
+      for (const [char, rows] of table) sorted.set(char, byRank(rows))
+      return sorted
+    },
     ...(characterInfo ? { async characterInfo(/** @type {string} */ char, /** @type {import('./types.js').Options} */ { signal } = {}) {
       signal?.throwIfAborted()
       const { doc, lookup } = await readInformation()
@@ -711,12 +728,18 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
       // A computed character-first description replaces its source in the decomposition tree;
       // both remain indexed for search. Preserve malformed descriptions as source text.
       const derived = found.find(sequence => sequence.derived)
-      // The first source entry is the BabelStone description used to build the layer. Preserve
-      // additional descriptions supplied by the host.
-      if (derived) return [derived, ...found.filter(sequence => !sequence.derived).slice(1)]
-      return found.filter(sequence => isSequence(sequence.text) ||
+      // The BabelStone entry the layer was built from is replaced by the computed description; the
+      // other descriptions, including descriptions supplied by the host, stay.
+      if (derived) {
+        const rest = found.filter(sequence => !sequence.derived)
+        // The source row the layer replaced carries the same text as the computed description.
+        const at = rest.findIndex(sequence => sequence.text === derived.text)
+        rest.splice(at >= 0 ? at : 0, 1)
+        return [derived, ...byRank(rest)]
+      }
+      return byRank(found.filter(sequence => isSequence(sequence.text) ||
         (/^[\u{17000}-\u{187FF}\u{18D00}-\u{18D7F}]$/u.test(char) &&
-         /^[\u{18800}-\u{18AFF}\u{18D80}-\u{18DFF}]$/u.test(sequence.text)))
+         /^[\u{18800}-\u{18AFF}\u{18D80}-\u{18DFF}]$/u.test(sequence.text))))
     },
     /** @param {string} query @param {import('./types.js').Options} [options] */
     async search(query, { limit = 24, signal } = {}) {

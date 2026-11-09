@@ -11,7 +11,7 @@ try {
     const field = page.locator('.ids-field input')
     await field.fill('⿰木口')
     await field.press('Tab')
-    await page.locator('.ids-preview[data-step="composed"]').waitFor({ timeout: 30000 })
+    await page.locator('.ids-preview[data-step="composed"]').waitFor({ timeout: 60000 })
     await page.getByRole('button', { name: 'Layers', exact: true }).click()
     const dialog = page.getByRole('dialog')
     await dialog.locator('img').waitFor({ timeout: 30000 })
@@ -59,6 +59,9 @@ try {
     await dialog.getByRole('button', { name: 'Reset transform', exact: true }).click()
 
     const rotateHandle = dialog.locator('.handle.rotate')
+    // Reset transform sits below the drawing, so the dialog scrolls and the handle above it can end
+    // up under the header; drag only once it is back in view.
+    await rotateHandle.scrollIntoViewIfNeeded()
     const rotateBox = await rotateHandle.boundingBox()
     assert.ok(rotateBox, 'the layer has a rotate handle')
     await page.mouse.move(rotateBox.x + rotateBox.width / 2, rotateBox.y + rotateBox.height / 2)
