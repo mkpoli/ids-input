@@ -1780,8 +1780,8 @@ export class Composer {
         for (const p of groups[1]) p.target = [p.target[0] + d, p.target[1], p.target[2] + d, p.target[3] + d]
       }
       const frame = union(groups[1].map(p => p.target)), left = frame[0], cy = (frame[1] + frame[3]) / 2
-      const scale = 0.81
-      for (const p of groups[1]) p.target = [left + (p.target[0] - left) * scale, cy + (p.target[1] - cy) * scale, left + (p.target[2] - left) * scale, cy + (p.target[3] - cy) * scale]
+      const sx = 0.88, sy = 0.93
+      for (const p of groups[1]) p.target = [left + (p.target[0] - left) * sx, cy + (p.target[1] - cy) * sy, left + (p.target[2] - left) * sx, cy + (p.target[3] - cy) * sy]
     }
     return this.flatten(groups)
   }
@@ -1949,8 +1949,8 @@ export class Composer {
         for (const p of groups[1]) p.target = [p.target[0] + d, p.target[1], p.target[2] + d, p.target[3] + d]
       }
       const frame = union(groups[1].map(p => p.target)), left = frame[0], cy = (frame[1] + frame[3]) / 2
-      const scale = 0.81
-      for (const p of groups[1]) p.target = [left + (p.target[0] - left) * scale, cy + (p.target[1] - cy) * scale, left + (p.target[2] - left) * scale, cy + (p.target[3] - cy) * scale]
+      const sx = 0.88, sy = 0.93
+      for (const p of groups[1]) p.target = [left + (p.target[0] - left) * sx, cy + (p.target[1] - cy) * sy, left + (p.target[2] - left) * sx, cy + (p.target[3] - cy) * sy]
     }
     return this.flatten(groups)
   }
