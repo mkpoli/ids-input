@@ -1770,7 +1770,8 @@ export class Composer {
     this.openUnderCover(op, children, groups)
     this.containUnderCover(op, children, groups)
     this.joinUnderCover(op, children, groups)
-    // 𭰲 (⿰氵⿵冂并) keeps a gap between the water and the frame; a described ⿰氵⿵冂… closes it.
+    // 𭰲 (⿰氵⿵冂并) sets the water at 5–31% and the frame at 33–93% of the face; a described
+    // row stretched the frame wider. Keep the reference's shares and the gap between them.
     if (op === '⿰' && children[0] === '氵' && Array.isArray(children[1]) && children[1][0] === '⿵') {
       const a = union(groups[0].map(p => p.target)), b = union(groups[1].map(p => p.target))
       const want = 0.02 * (this.face[2] - this.face[0]), gap = b[0] - a[2]
@@ -1778,6 +1779,9 @@ export class Composer {
         const d = want - gap
         for (const p of groups[1]) p.target = [p.target[0] + d, p.target[1], p.target[2] + d, p.target[3] + d]
       }
+      const frame = union(groups[1].map(p => p.target)), left = frame[0], cy = (frame[1] + frame[3]) / 2
+      const scale = 0.81
+      for (const p of groups[1]) p.target = [left + (p.target[0] - left) * scale, cy + (p.target[1] - cy) * scale, left + (p.target[2] - left) * scale, cy + (p.target[3] - cy) * scale]
     }
     return this.flatten(groups)
   }
@@ -1935,7 +1939,8 @@ export class Composer {
     this.openUnderCover(op, children, groups)
     this.containUnderCover(op, children, groups)
     this.joinUnderCover(op, children, groups)
-    // 𭰲 (⿰氵⿵冂并) keeps a gap between the water and the frame; a described ⿰氵⿵冂… closes it.
+    // 𭰲 (⿰氵⿵冂并) sets the water at 5–31% and the frame at 33–93% of the face; a described
+    // row stretched the frame wider. Keep the reference's shares and the gap between them.
     if (op === '⿰' && children[0] === '氵' && Array.isArray(children[1]) && children[1][0] === '⿵') {
       const a = union(groups[0].map(p => p.target)), b = union(groups[1].map(p => p.target))
       const want = 0.02 * (this.face[2] - this.face[0]), gap = b[0] - a[2]
@@ -1943,6 +1948,9 @@ export class Composer {
         const d = want - gap
         for (const p of groups[1]) p.target = [p.target[0] + d, p.target[1], p.target[2] + d, p.target[3] + d]
       }
+      const frame = union(groups[1].map(p => p.target)), left = frame[0], cy = (frame[1] + frame[3]) / 2
+      const scale = 0.81
+      for (const p of groups[1]) p.target = [left + (p.target[0] - left) * scale, cy + (p.target[1] - cy) * scale, left + (p.target[2] - left) * scale, cy + (p.target[3] - cy) * scale]
     }
     return this.flatten(groups)
   }
