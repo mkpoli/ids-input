@@ -156,10 +156,13 @@ export const EXAMPLE_GROUPS = [
   // ⿰忄井 as 𲟱 (U+327F1), so that example keeps its character.
   // 多 and 皆 are left out: ⿱夕夕 and ⿱比白 are the ordinary descriptions of the modern characters,
   // which the composer then draws. 诅 (⿰讠且) is left out because 且's own description is ⿱𠃌夕.
-  // Table 1 forms that are already encoded characters: 停→仃, 街→亍, 酒→氿, 舞→午, 道→辺,
-  // 建→迠, 蛋→旦, 嘴→咀, 副→付, 信→伩, 算→祘, 菜→𦬁, 赛→𡧳, 鞋→𰆻 and 整→𰋞. Each `char` is
-  // that encoded form, and its description is BabelStone's; `standard` is the character it replaces.
+  // Table 1 forms that are already encoded characters: 餐→歺, 病→疒, 停→仃, 街→亍, 酒→氿,
+  // 舞→午, 道→辺, 建→迠, 蛋→旦, 嘴→咀, 副→付, 信→伩, 算→祘, 菜→𦬁, 赛→𡧳, 鞋→𰆻, 整→𰋞,
+  // 鼻→𢍂, 慢→𭜌, 富→𫲷, 修→㣊, 藏→䒙 and 宣→㝉. Each `char` is that encoded form; `standard`
+  // is the character it replaces, and a described form's IDS is BabelStone's.
   { key: 'erjian', refs: [1, 3], examples: [
+    { sequence: '歺', refs: [3], char: '歺', standard: '餐' },
+    { sequence: '疒', refs: [3], char: '疒', standard: '病' },
     { sequence: '⿰亻丁', refs: [1, 3], char: '仃', standard: '停' },
     { sequence: '⿱一丁', refs: [1, 3], char: '亍', standard: '街' },
     { sequence: '⿰氵九', refs: [1, 3], char: '氿', standard: '酒' },
@@ -175,6 +178,12 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿱宀西', refs: [1, 3], char: '𡧳', standard: '赛', traditional: '賽' },
     { sequence: '⿰又圭', refs: [1, 3], char: '𰆻', standard: '鞋' },
     { sequence: '⿱大正', refs: [1, 3], char: '𰋞', standard: '整' },
+    { sequence: '⿱自廾', refs: [1, 3], char: '𢍂', standard: '鼻' },
+    { sequence: '⿰忄万', refs: [1, 3], char: '𭜌', standard: '慢' },
+    { sequence: '⿱宀夫', refs: [1, 3], char: '𫲷', standard: '富' },
+    { sequence: '⿱攵彡', refs: [1, 3], char: '㣊', standard: '修' },
+    { sequence: '⿱艹上', refs: [1, 3], char: '䒙', standard: '藏' },
+    { sequence: '⿱宀一', refs: [1, 3], char: '㝉', standard: '宣' },
     { sequence: '⿰忄井', refs: [3], char: '𲟱', standard: '警' },
     { sequence: '⿱艹么', refs: [3], char: '', standard: '蘑' },
     { sequence: '⿱千田', refs: [3], char: '', standard: '臿' },

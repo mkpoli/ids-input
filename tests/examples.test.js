@@ -24,7 +24,8 @@ const ENCODED_ERJIAN = new Map([
   ['⿰忄井', '𲟱'], ['⿰亻丁', '仃'], ['⿱一丁', '亍'], ['⿰氵九', '氿'], ['⿱𠂉十', '午'],
   ['⿺辶刀', '辺'], ['⿺辶占', '迠'], ['⿱日一', '旦'], ['⿰口且', '咀'], ['⿰亻寸', '付'],
   ['⿰亻文', '伩'], ['⿰示示', '祘'], ['⿱艹才', '𦬁'], ['⿱宀西', '𡧳'], ['⿰又圭', '𰆻'],
-  ['⿱大正', '𰋞'],
+  ['⿱大正', '𰋞'], ['歺', '歺'], ['疒', '疒'], ['⿱自廾', '𢍂'], ['⿰忄万', '𭜌'],
+  ['⿱宀夫', '𫲷'], ['⿱攵彡', '㣊'], ['⿱艹上', '䒙'], ['⿱宀一', '㝉'],
 ])
 
 describe('the demo examples', () => {
@@ -49,10 +50,10 @@ describe('the demo examples', () => {
           // encoded characters, whose BabelStone descriptions give the IDS.
           expect(char).toBe(ENCODED_ERJIAN.get(sequence) ?? '')
           expect(example.refs).toContain(sourceNumber('erjian'))
-          if (char && sequence !== '⿰忄井') expect(example.refs).toContain(sourceNumber('babelstone'))
+          if (char && sequence !== char && sequence !== '⿰忄井') expect(example.refs).toContain(sourceNumber('babelstone'))
           expect([...example.standard]).toHaveLength(1)
           expect([...(example.traditional ?? example.standard)]).toHaveLength(1)
-          if (sequence === '⿰忄井') expect(found).toEqual([])
+          if (sequence === '⿰忄井' || sequence === char) expect(found).toEqual([])
           else if (char) expect(found).toContain(char)
           else expect(found).toEqual([])
         } else if (group.key === 'geba') {
