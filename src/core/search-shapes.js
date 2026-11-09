@@ -4,6 +4,12 @@
 // https://ashide.otodo.net/setumei/tebiki.html
 // Read 2026-10-27. Stroke-code fragments and five-keystroke selection rules are not imported.
 // 亼 and 弋 are named in the learning guide; ヰ → 井 is named in the correspondence rules.
+//
+// ヱ is outside the 46 basic kana, and the correspondence table names no component for it, though
+// it names 井 for ヰ. Unihan's provisional kStrange gives 𭛝 (U+2D6DD) K:U+30F1: a component of
+// the character resembles katakana ヱ. BabelStone describes the character as ⿰彳𠀄, and 𠀄 is
+// that component.
+// https://www.unicode.org/reports/tr38/#kStrange, https://www.babelstone.co.uk/CJK/IDS.TXT
 
 /** @type {Readonly<Record<string, string>>} */
 const KANA = {
@@ -16,7 +22,7 @@ const KANA = {
   マ: '龴丅丁', ミ: '三彡', ム: '厶', メ: '乂', モ: '乇王壬',
   ヤ: '巾㔾', ユ: '丄亠', ヨ: '彐⺕日', ラ: '广', リ: '刂',
   ル: '儿几𠘧', レ: '𠄌㇗㇄乚𡿨乙', ロ: '口', ワ: '冖冂', ヲ: '丩丬山屮', ン: '冫丶',
-  ヰ: '井',
+  ヰ: '井', ヱ: '𠀄',
 }
 /** @type {Readonly<Record<string, string[]>>} */
 const SHAPES = {

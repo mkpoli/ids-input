@@ -694,6 +694,9 @@ IDS queries accept visual substitutes. The kana families follow the encoded
 components in the [葦手入力 correspondence table](https://ashide.otodo.net/setumei/ziboziso.html)
 and its [learning guide](https://ashide.otodo.net/setumei/tebiki.html).
 All 46 basic kana are covered; the table below lists their search alternatives.
+The kana `ヱ` searches for `𠀄`: Unihan's provisional
+[`kStrange`](https://www.unicode.org/reports/tr38/#kStrange) field gives 𭛝 (U+2D6DD) `K:U+30F1`,
+and [BabelStone](https://www.babelstone.co.uk/CJK/IDS.TXT) describes that character as `⿰彳𠀄`.
 
 | Kana | Components | Kana | Components |
 |---|---|---|---|
