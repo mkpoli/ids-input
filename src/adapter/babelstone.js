@@ -61,13 +61,10 @@ const withSources = (row, sources) => {
   return next.length === (row.sources ?? []).length ? row : { ...row, sources: next }
 }
 
-/** Combine descriptions, keeping each source's region tags and the sources that attest a description.
- * A description another source gives without a region tag is the same description, so only its
- * source is added; a distinct region tag stays a distinct row.
- * @param {Map<string, Sequence[]>} base @param {Map<string, Sequence[]>} extra */
 /** The Japanese-tagged description leads, as in the corpus (`scripts/build_ids_corpus.mjs`): the
  * face draws the Japanese positional forms, and a source's base-form row would otherwise come first.
- * A curated project row still leads every source. */
+ * A curated project row still leads every source.
+ * @param {Sequence} row */
 function rankOf(row) {
   return row.sources?.includes('project') ? -1 : (row.regions ?? '').includes('J') ? 0 : row.regions ? 1 : 2
 }
@@ -77,6 +74,10 @@ function byRank(rows) {
   return rows.length > 1 ? [...rows].sort((a, b) => rankOf(a) - rankOf(b)) : rows
 }
 
+/** Combine descriptions, keeping each source's region tags and the sources that attest a description.
+ * A description another source gives without a region tag is the same description, so only its
+ * source is added; a distinct region tag stays a distinct row.
+ * @param {Map<string, Sequence[]>} base @param {Map<string, Sequence[]>} extra */
 export function mergeIdsTables(base, extra) {
   const merged = new Map(base)
   for (const [char, descriptions] of extra) {
