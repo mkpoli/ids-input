@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { gunzipSync } from 'node:zlib'
-import { compose, createSource } from '../src/composer/loader.js'
+import { compose, createSource } from '@han-compose/composer'
 
 const folder = process.env.COMPOSER_EXPORT
 const hex = text => createHash('sha256').update(text).digest('hex')

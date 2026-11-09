@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { commands, rings } from '../src/composer/geometry.js'
+import { commands, rings } from '@han-compose/composer/geometry'
 
 describe('the rings of a contour', () => {
   it('samples a cubic curve and goes on from its end point', () => {

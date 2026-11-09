@@ -10,7 +10,7 @@ import { jurchenSequences } from './jurchen-data.js'
 import { createSearch, readStructuralForms } from '../core/search.js'
 import { expandNumberedComponents, mergeIdsTables, parseIdsTable, parseLayers, readNumberedComponents, readText } from './babelstone.js'
 import { readCorpus } from './corpus.js'
-import { download } from '../core/retry.js'
+import { download } from '@han-compose/composer/retry'
 
 /** @type {Promise<ReturnType<typeof createSearch>> | null} */
 let ready = null

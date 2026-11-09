@@ -2,10 +2,10 @@
 // The image behind a share link: the sequence composed from the same export the editor draws from,
 // laid out by `card.js`, rasterized, and kept in the cache. A sequence the composer cannot draw
 // still gets a card, with the empty frame.
-import { compose, sketch as composerSketch, unpack } from '../src/composer/loader.js'
-import { documentView } from '../src/composer/document-view.js'
+import { compose, dataUrls, sketch as composerSketch, unpack } from '@han-compose/composer'
+import { documentView } from '@han-compose/composer/document-view'
 import { boxCorners } from '../src/document/index.js'
-import { sourceFor } from '../src/composer/source.js'
+import { sourceFor } from '@han-compose/composer/source'
 import { cardSvg, SIZE, codePoint } from './card.js'
 import { JURCHEN_VARIANT, OPERATORS } from '../src/core/ids.js'
 import { facesFor } from './fonts.js'
@@ -30,23 +30,34 @@ const read = async (env, path) => {
   return answer.arrayBuffer()
 }
 
-/** Outlines as `JSON.parse(await unpack(bytes))`, or an empty set where the file is missing. */
-const outlines = (env, path) => async () => {
-  const bytes = await read(env, path)
-  return bytes === null ? { records: {} } : JSON.parse(await unpack(bytes))
+/**
+ * How a source reads the outlines this deployment serves under `/og/data/`, where `og-assets.mjs`
+ * copies the drawing engine's files: each by the name of the engine's `data/` path it answers for.
+ * The loader leaves a file out unless it is copied to `data/`.
+ * @param {any} env
+ */
+const loadFor = env => {
+  const SERVED = /^sources\/([a-z-]+)\/outlines\.json\.gz$|^unicode\/outlines\/([0-9a-f]+\.json\.gz)$/
+  /** The deployment's name for a file the engine names. @param {string} path */
+  const served = path => path.replace(SERVED, (_, script, shard) => script ? `${script}-outlines.json.gz` : `unicode-outlines/${shard}`)
+  /** @type {Record<string, string>} */
+  const loaders = {}
+  for (const path of Object.keys(dataUrls)) {
+    if (SERVED.test(path)) loaders[path] = new URL(`/og/data/${served(path)}`, 'https://assets/').href
+  }
+  return {
+    loaders,
+    // The files are the deployment's own: read from its assets by the path the engine names and
+    // answered as the parsed file, which is what a bundled source reads (`records`, `unicode/...`).
+    // A missing one is answered empty, as `outlines` on the page does; a dev server's page stands in
+    // for a file it does not have, which the content type tells apart.
+    read: async path => {
+      const answer = await env.ASSETS.fetch(new URL(`/og/data/${served(path)}`, 'https://assets/'))
+      if (!answer.ok || answer.headers.get('content-type')?.startsWith('text/html')) return {}
+      return JSON.parse(await unpack(await answer.arrayBuffer()))
+    },
+  }
 }
-
-/** The overlay loaders, reading this deployment's own copies of the outline files. @param {any} env */
-const loadersFor = env => ({
-  tangut: { load: outlines(env, 'data/tangut-outlines.json.gz') },
-  bopomofo: { load: outlines(env, 'data/bopomofo-outlines.json.gz') },
-  seal: { load: outlines(env, 'data/small-seal-outlines.json.gz') },
-  newKorean: { load: outlines(env, 'data/new-korean-outlines.json.gz') },
-  shuishu: { load: outlines(env, 'data/shuishu-outlines.json.gz') },
-  jurchen: { load: outlines(env, 'data/jurchen-outlines.json.gz') },
-  palette: { load: outlines(env, 'data/palette-outlines.json.gz'), sans: outlines(env, 'data/numbered-sans-outlines.json.gz') },
-  unicode: { load: async name => { const bytes = await read(env, `data/${name.replace('unicode/', 'unicode-outlines/')}.json.gz`); return bytes === null ? {} : JSON.parse(await unpack(bytes)) } },
-})
 
 /** @type {Promise<Record<string, string>> | null} */
 let index = null
@@ -79,7 +90,8 @@ async function drawUnits(env, units, first) {
 
 /** The sequence composed, or null where it could not be. @param {any} env @param {string} sequence */
 async function draw(env, sequence) {
-  const source = sourceFor(sequence, { base: COMPOSER_BASE, loaders: loadersFor(env) })
+  const { loaders, read } = loadFor(env)
+  const source = sourceFor(sequence, { base: COMPOSER_BASE, loaders, read })
   await source.ready()
   return await compose(source, sequence, { separate: false, fontStyle: 'sans' })
 }
@@ -90,7 +102,8 @@ async function draw(env, sequence) {
  * @param {any} env @param {string} sequence @param {any} document
  */
 async function drawDocument(env, sequence, document) {
-  const source = sourceFor(sequence, { base: COMPOSER_BASE, separate: true, loaders: loadersFor(env) })
+  const { loaders, read } = loadFor(env)
+  const source = sourceFor(sequence, { base: COMPOSER_BASE, separate: true, loaders, read })
   await source.ready()
   const drawing = await compose(source, sequence, { separate: true, fontStyle: 'sans' })
   const sketch = await composerSketch(source, sequence)

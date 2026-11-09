@@ -62,6 +62,8 @@
       fragment that writes each out. <code>equivalences.tsv</code> lists the kana and Hangul shapes
       the search reads as component spellings, and <code>equivalences.json</code> is the same table
       with arrays.</p>
+    <p class="note">For scripts and agents: <a href="/data/open-data/manifest.json">manifest.json</a>
+      is the index; read the files rather than scraping this page. <a href="/llms.txt">llms.txt</a>.</p>
 
     <h2>Groups</h2>
     <div class="scroll">

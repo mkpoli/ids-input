@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { EXAMPLES, EXAMPLE_GROUPS } from '../demo/lib/examples.js'
 import { COMPOSER_BASE } from '../demo/lib/composer.js'
-import { onlyBundled } from '../src/composer/local.js'
+import { onlyBundled } from '@han-compose/composer/local'
 
 const data = JSON.parse(readFileSync(new URL('../demo/lib/example-drawings.json', import.meta.url), 'utf8'))
 

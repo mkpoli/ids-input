@@ -1,7 +1,7 @@
 import { expect, it } from 'bun:test'
-import { Composer } from '../src/composer/compose.js'
-import { commands, makePart, placed } from '../src/composer/geometry.js'
-import constants from '../src/composer/constants.json' with { type: 'json' }
+import { Composer } from '@han-compose/composer/compose'
+import { commands, makePart, placed } from '@han-compose/composer/geometry'
+import constants from '@han-compose/composer/constants.json' with { type: 'json' }
 
 const rect = (x0, y0, x1, y1) => {
   const light = new Float64Array([x0, y0, x1, y0, x1, y1, x0, y1])

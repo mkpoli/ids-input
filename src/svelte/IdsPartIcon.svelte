@@ -1,6 +1,6 @@
 <script>
   // Draw compound palette entries only when their cells enter the scroll area.
-  import { componentDrawing } from '../composer/component-forms.js'
+  import { componentDrawing } from '@han-compose/composer/component-forms'
   import { parse } from '../core/ids.js'
   import { roughLayout, runPreview } from '../core/preview.js'
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { boxCorners, fromSequence, invertAffine, layerAtPath, layerFrames, pathOfLayer } from '../src/document/index.js'
-import { documentSource } from '../src/composer/index.js'
+import { documentSource } from '@han-compose/composer'
 
 const identity = [1, 0, 0, 1, 0, 0]
 const sketch = boxes => boxes.map((box, index) => ({ index, box, empty: false }))

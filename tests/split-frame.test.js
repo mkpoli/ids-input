@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
-import { commands, derived, makePart } from '../src/composer/geometry.js'
-import { Composer } from '../src/composer/compose.js'
-import constants from '../src/composer/constants.json' with { type: 'json' }
+import { commands, derived, makePart } from '@han-compose/composer/geometry'
+import { Composer } from '@han-compose/composer/compose'
+import constants from '@han-compose/composer/constants.json' with { type: 'json' }
 
 /** A contour in font units, y up: a box drawn clockwise, as the fonts draw an outline. */
 const box = (x0, y0, x1, y1) => ({

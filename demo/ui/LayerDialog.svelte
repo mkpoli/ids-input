@@ -1,7 +1,7 @@
 <script>
   // A document view of the active description: the composer's separated drawing, rendered through
   // the layer document, with a layer list and an affine transform for the chosen layer.
-  import { documentSource } from '../../src/composer/index.js'
+  import { documentSource } from '@han-compose/composer/document-source'
   import { affineForChain, applyAffine, applyGeometryEdits, boxCorners, findLayer, fingerprintGeometry, invertAffine, layerAtPath, layerFrames, pathOfLayer, renderScopes, scopesSvg, transformPath } from '../../src/document/index.js'
   import Dialog from './Dialog.svelte'
 
@@ -158,10 +158,32 @@
     return () => controller.abort()
   })
 
+  /** The composer's drawing with each part's leaf named. A drawing that names its leaves is taken
+   *  as it is; one that names none draws one part per leaf in reading order, so the parts are only
+   *  matched to leaves when there is a leaf for each and no more, and a drawing of another shape is
+   *  left to the engine's own inference.
+   *  @param {import('../../src/document/model.js').Node} root @param {Drawing} drawing */
+  function namedParts(root, drawing) {
+    const parts = drawing.parts ?? []
+    if (!parts.length || parts.every(part => Number.isInteger(part.leaf))) return drawing
+    const leaves = leafCount(root)
+    if (leaves !== parts.length) return drawing
+    return { ...drawing, parts: parts.map((part, index) => ({ ...part, leaf: index })) }
+  }
+
+  /** How many leaves a document node holds: a component or a slot is one, a group its child's, an
+   *  operator its children's. @param {import('../../src/document/model.js').Node} node */
+  function leafCount(node) {
+    if (node.kind === 'group') return leafCount(node.child)
+    if (node.kind === 'operator') return node.children.reduce((sum, child) => sum + leafCount(child), 0)
+    return 1
+  }
+
   // The scoped drawing follows the document, the composer drawing and its sketch.
   $effect(() => {
     if (!doc || !drawing || !sketch || step !== 'ready') { svg = ''; issue = ''; return }
-    const made = documentSource(doc, drawing, sketch)
+    const named = namedParts(doc.root, drawing)
+    const made = documentSource(doc, named, sketch)
     source = made.source
     if (!made.complete) {
       issue = made.issues[0] ?? t('app.layers.incomplete')

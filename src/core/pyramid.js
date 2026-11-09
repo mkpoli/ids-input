@@ -3,10 +3,10 @@
 // generator writes a balanced description; `pyramidRows` reads such a tree back, however its groups
 // and cross axis are grouped.
 import { parse, sameTree } from './ids.js'
-import { PYRAMID_DIRECTIONS, pyramidRows } from './pyramid-shape.js'
+import { PYRAMID_DIRECTIONS, pyramidRows } from '@han-compose/composer/pyramid-rows'
 import { repeatedPart, repeatedText } from './repeat-part.js'
 
-export { pyramidRows, pyramidOnBase } from './pyramid-shape.js'
+export { PYRAMID_DIRECTIONS, pyramidOnBase, pyramidRows } from '@han-compose/composer/pyramid-rows'
 
 /**
  * The cells in a pyramid of `layers` rows.
@@ -72,9 +72,9 @@ export function pyramidSequence(part, layers, { direction = 'top' } = {}) {
   // one through the ordinary length and preview limits. A draft of slots is no pyramid to read.
   if (!hasSlot(cell)) {
     const read = parse(text, { open: true })
-    const shape = read.tree === undefined ? null : pyramidRows(read.tree, { minLayers: layers })
+    const shape = read.tree === undefined ? null : pyramidRows(/** @type {any} */ (read.tree), { minLayers: layers })
     if (!shape || shape.layers !== layers || (layers > 1 && shape.direction !== direction)
-      || !sameTree(shape.cell, cell)) {
+      || !sameTree(/** @type {any} */ (shape.cell), cell)) {
       throw new TypeError('A pyramid part cannot be repeated as written.')
     }
   }

@@ -2,11 +2,11 @@
 import gzip
 import json
 from pathlib import Path
+from engine_data import WRITE_DATA
 
-ROOT = Path(__file__).resolve().parents[1]
 coverage = {}
 for name in ['tangut', 'small-seal', 'bopomofo', 'shuishu', 'jurchen']:
-    source = ROOT / f'data/{name}-outlines.json.gz'
+    source = WRITE_DATA / f'sources/{name}/outlines.json.gz'
     records = json.loads(gzip.decompress(source.read_bytes()))['records']
     points = sorted(ord(key) for key, record in records.items()
                     if len(key) == 1 and record.get('G', {}).get('p'))
@@ -29,5 +29,5 @@ for name in ['tangut', 'small-seal', 'bopomofo', 'shuishu', 'jurchen']:
             else:
                 ranges.append([cp, cp])
         coverage[f'{name}:{selector:x}'] = ranges
-(ROOT / 'data/bundled-coverage.json').write_text(
+(WRITE_DATA / 'palette/bundled-coverage.json').write_text(
     json.dumps(coverage, separators=(',', ':')) + '\n')

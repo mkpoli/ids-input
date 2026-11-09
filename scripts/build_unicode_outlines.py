@@ -18,9 +18,10 @@ from fontTools.pens.boundsPen import BoundsPen
 from fontTools.pens.cu2quPen import Cu2QuPen
 from fontTools.pens.perimeterPen import PerimeterPen
 from build_tangut_outlines import Contours
+from engine_data import DATA, WRITE_DATA
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / 'data/unicode-outlines'
+OUT = WRITE_DATA / 'unicode/outlines'
 
 
 def main():
@@ -44,7 +45,7 @@ def main():
         allowed.difference_update(host_points.intersection(range(lo, hi + 1)))
     # Dedicated bundles have holes too. Their exact records are the coverage boundary.
     for name in ['tangut', 'bopomofo', 'small-seal', 'jurchen', 'palette']:
-        bundle = json.loads(gzip.decompress((ROOT / f'data/{name}-outlines.json.gz').read_bytes()))
+        bundle = json.loads(gzip.decompress((DATA / f'sources/{name}/outlines.json.gz').read_bytes()))
         allowed.difference_update(ord(key) for key, record in bundle['records'].items()
                                   if len(key) == 1 and record.get('G', {}).get('p'))
     for lo, hi in [(0xE000, 0xF8FF), (0xF0000, 0xFFFFD), (0x100000, 0x10FFFD)]:
@@ -102,8 +103,8 @@ def main():
         data = bytes(data)
         (OUT / f'{name}.json.gz').write_bytes(data)
         metadata[name] = {'count': len(rows), 'bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest()}
-    (ROOT / 'data/unicode-coverage.json').write_text(json.dumps(ranges, separators=(',', ':')) + '\n')
-    (ROOT / 'data/unicode-outlines.json').write_text(json.dumps({'build': {'unicode': properties['version'], 'fonttools': '4.63.0', 'quantization': 4}, 'count': len(records), 'ranges': ranges,
+    (WRITE_DATA / 'unicode/coverage.json').write_text(json.dumps(ranges, separators=(',', ':')) + '\n')
+    (WRITE_DATA / 'unicode/outlines.json').write_text(json.dumps({'build': {'unicode': properties['version'], 'fonttools': '4.63.0', 'quantization': 4}, 'count': len(records), 'ranges': ranges,
         'shards': metadata, 'sources': provenance}, ensure_ascii=False, separators=(',', ':')) + '\n')
     # Report every remaining assigned candidate, rather than hiding holes behind block ranges.
     missing = allowed.difference(records)

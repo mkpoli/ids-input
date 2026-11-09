@@ -26,6 +26,12 @@ The 8 Small Seal descriptions come from CHISE's GPL-2.0-or-later data. They stay
 | `equivalences.tsv` | The same table, one row per shape family. |
 | `manifest.json` | Counts and file sizes, read by the site page. |
 
+## Use the files
+
+Start from `manifest.json` and read the JSON or TSV it lists. The release is the data; the
+workshop and this page are one view of it. Do not scrape the rendered workshop pages for
+descriptions, components or equivalents.
+
 ## Records
 
 | Field | |

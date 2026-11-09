@@ -1,16 +1,17 @@
 import { describe, expect, it } from 'bun:test'
 import { LONGEST, PYRAMID_LONGEST, isDescription, parse, pyramidCount, pyramidOnBase, pyramidRows, pyramidSequence, write } from '../src/core/index.js'
-import { PYRAMID_LAYERS, compose, createSource, sketch, tooLarge } from '../src/composer/loader.js'
-import { Composer } from '../src/composer/compose.js'
-import { pyramidCells } from '../src/composer/pyramid.js'
+import { PYRAMID_LAYERS, compose, createSource, sketch, tooLarge } from '@han-compose/composer/loader'
+import { Composer } from '@han-compose/composer/compose'
+import { pyramidCells } from '@han-compose/composer/pyramid'
 import { groupParts } from '../src/core/preview.js'
-import { constants, files } from './fixtures/composer-export.js'
+import { constants, files } from './fixtures/small-export.js'
 
 const sourceOf = (fetched = []) => createSource(async name => {
   fetched.push(name)
   const body = files[name]
   return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
 })
+
 const tree = text => parse(text).tree
 
 describe('a pyramid sequence', () => {
@@ -219,6 +220,7 @@ describe('a pyramid on a base', () => {
     expect(tooLarge(tree('⿳口⿰口口木'))).toBe(false)
   })
 })
+
 
 describe('pyramid cells', () => {
   it('has none for a count of layers that is no whole number', () => {

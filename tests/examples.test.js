@@ -4,8 +4,8 @@ import { gunzipSync } from 'node:zlib'
 import { EXAMPLES, EXAMPLE_GROUPS } from '../demo/lib/examples.js'
 import { sourceNumber } from '../demo/lib/example-sources.js'
 import { expandNumberedComponents, parseIdsTable, readNumberedComponents } from '../src/adapter/babelstone.js'
-import { onlyTangut } from '../src/composer/tangut.js'
-import { size } from '../src/composer/loader.js'
+import { onlyTangut } from '@han-compose/composer/tangut'
+import { size } from '@han-compose/composer'
 import { LONGEST, OPERATORS, parse, leaves } from '../src/core/index.js'
 
 const shipped = parseIdsTable(gunzipSync(readFileSync(new URL('../data/babelstone-ids.tsv.gz', import.meta.url))).toString('utf8'))

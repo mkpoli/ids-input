@@ -497,4 +497,7 @@ result['editorial'] = {
         'forms': ['⿱⺊冖'],
     },
 }
-Path('src/composer/component-forms.json').write_text(json.dumps(result,ensure_ascii=False,separators=(',',':'))+'\n')
+# The table is the engine's: it is committed in a han-compose checkout, which `bun run data` copies
+# into the package, so the file written is the source of truth rather than an installed copy.
+from engine_data import WRITE_SRC as SRC
+(SRC / 'component-forms.json').write_text(json.dumps(result,ensure_ascii=False,separators=(',',':'))+'\n')

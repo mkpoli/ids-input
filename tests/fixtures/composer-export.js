@@ -1,13 +1,15 @@
-// A small composer export built in memory: `src/composer/constants.json` holds han-compose's drawing
+// A composer export built in memory: the engine's `src/constants.json` holds han-compose's drawing
 // constants (`compose.py` at bd0829b, with the stems and face the font gives), and a few characters
-// are boxes. The layout network is all zeros, so two-operand nodes fall back to the composer's shares.
+// are boxes, each glyph carrying the stroke groups a document splits by. The layout network is all zeros, so two-operand nodes fall back to the composer's shares.
 // The tests draw from it in place of a real export.
 import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { gzipSync } from 'node:zlib'
 
-export const constants = JSON.parse(readFileSync(join(import.meta.dirname, '../../src/composer/constants.json'), 'utf8'))
+const engine = dirname(fileURLToPath(import.meta.resolve('@han-compose/composer/package.json')))
+export const constants = JSON.parse(readFileSync(join(engine, 'src/constants.json'), 'utf8'))
 const hex = text => createHash('sha256').update(text).digest('hex')
 /** The shard a key's record or host list is in: the first three hex digits of its SHA-256. */
 export const shardOf = (folder, text) => `${folder}/${hex(text).slice(0, 3)}.json`
@@ -64,7 +66,7 @@ const records = {
 }
 /** Each file of the export by its name: JSON text, or gzip bytes for a shard. */
 export const files = {
-  'manifest.json': JSON.stringify({ format: 5, files: { layout: { path: 'layout.json' } }, constants, spelled: [] }),
+  'manifest.json': JSON.stringify({ format: 6, files: { layout: { path: 'layout.json' } }, constants, spelled: [] }),
   'layout.json': JSON.stringify(layout),
   ...shards('g', Object.entries(records)),
 }

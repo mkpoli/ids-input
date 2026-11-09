@@ -7,7 +7,7 @@
   import SiteSelect from './ui/SiteSelect.svelte'
   import ThemeSwitch from './ui/ThemeSwitch.svelte'
   import { translator } from '../src/svelte/index.js'
-  import { componentDrawing } from '../src/composer/component-forms.js'
+  import { componentDrawing } from '@han-compose/composer'
   import { LOCALES, appMessages } from './lib/locales.js'
   import { applyTheme, storedTheme } from './lib/theme.js'
   import { load, save } from './lib/storage.js'
