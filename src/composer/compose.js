@@ -301,6 +301,19 @@ const ENCLOSURE_FORMS = {
       '2fa6f7b8e09a68c6173dafe84d5b96d5b4c36dc9a7e6b77703d9ed9f13ff525a': [0, 3, 4, 6, 7],
     }],
   },
+  // 𭰲 (⿰氵⿵冂并) is the only encoded character with this shape; its frame serves the ⿵冂 enclosure.
+  '⿵': {
+    冂: ['𭰲', {
+      '345749510c894ac303898cacbbd71bc35880cb6179990632d00b1ffe463f2d71': [3],
+    }],
+  },
+}
+
+// Left components the export carries no host cuts for, taken from a designed character's glyph.
+const DESIGNED_CUTS = {
+  氵: ['𭰲', {
+    '345749510c894ac303898cacbbd71bc35880cb6179990632d00b1ffe463f2d71': [0, 1, 2],
+  }],
 }
 
 export class Composer {
@@ -853,6 +866,10 @@ export class Composer {
 
   node(node, region, atRoot = false, sideBySide = false) {
     if (isEmpty(node)) return [this.placeholder(node, region)]
+    if (!atRoot && sideBySide && typeof node === 'string') {
+      const designed = this.designedCut(node)
+      if (designed) return [placed(designed.piece, designed.piece.box, fitted(designed.piece.box, region, this.C.STRETCH), this.ink(designed.record.h), `host ${designed.record.h}`)]
+    }
     const pyramid = this.pyramid(node)
     if (pyramid) {
       const cells = pyramidCells(region, pyramid.layers, { direction: pyramid.direction })
@@ -1498,7 +1515,20 @@ export class Composer {
     // not used; the sequence is drawn through `node` instead.
     if (this.separate && Array.isArray(node)) return null
     const ranked = this.ranked(op, index, node, siblings, box, isPlaced)
-    return ranked.length ? ranked[0][1] : null
+    if (ranked.length) return ranked[0][1]
+    return this.designedCut(node)
+  }
+
+  /** A designed left form from a character's glyph, for a component whose host cuts the export lacks. */
+  designedCut(node) {
+    const entry = typeof node === 'string' ? DESIGNED_CUTS[node] : null
+    if (!entry) return null
+    const [char, cuts] = entry, record = this.glyphRecord(char)
+    if (!record) return null
+    const indices = cuts[hexOf(JSON.stringify(record.p))]
+    if (!indices) return null
+    const glyph = partOf(record)
+    return { record: { h: char }, piece: derived(glyph, indices.map(i => glyph.contours[i])) }
   }
 
   /** Whether the export carries the left column's 身, cut from 射, 躬 or 躭. */
@@ -1659,6 +1689,11 @@ export class Composer {
       // narrow form from 射, 躬 or 躭.
       if (ownParts && typeof child === 'string' && !this.excluded(child)
         && !(op === '⿰' && i === 0 && keyOf(child) === '身' && this.hasLeftBody(child))) {
+        const designed = this.designedCut(child)
+        if (designed) {
+          groups.push([this.place(designed.piece, box, this.ink(designed.record.h), `host ${designed.record.h}`)])
+          continue
+        }
         const own = this.glyph(child)
         // The left column is where a square glyph loses its form; a right or upper operand keeps
         // its own glyph, which the box's size matches.
@@ -1785,6 +1820,8 @@ export class Composer {
     const C = this.C
     if (op in this.ENCLOSE) {
       let outer = this.node(children[0], region)
+      const designedOuter = this.enclosureForm(op, children[0])
+      if (designedOuter) outer = [placed(designedOuter.piece, designedOuter.piece.box, fitted(designedOuter.piece.box, region, C.STRETCH), this.ink(designedOuter.record.h), `host ${designedOuter.record.h}`)]
       // 虍's whole glyph leaves the inner only the narrow hook. The export's designed 虍 cuts
       // (from 慮, 虜, 虞 …) open wider, so take one when the outer is 虍.
       if (op === '⿸' && typeof children[0] === 'string' && children[0] === '虍') {
@@ -1828,8 +1865,10 @@ export class Composer {
             const box = region.slice()
             box[axis] = ranges[i][0]
             box[axis + 2] = ranges[i][1]
+            const designed = typeof child === 'string' ? this.designedCut(child) : null
             const glyph = typeof child === 'string' ? this.glyph(child) : null
-            if (glyph && !(axis === 0 && child === '\u{F2A9}' && this.fontStyle === 'sans')) groups.push(placed(glyph, glyph.box, box, this.ink(child), `glyph ${child}`))
+            if (designed) groups.push(placed(designed.piece, designed.piece.box, fitted(designed.piece.box, box, C.STRETCH), this.ink(designed.record.h), `host ${designed.record.h}`))
+            else if (glyph && !(axis === 0 && child === '\u{F2A9}' && this.fontStyle === 'sans')) groups.push(placed(glyph, glyph.box, box, this.ink(child), `glyph ${child}`))
             else groups.push(this.row(child, box, children.length, axis === 0))
           }
           return this.flatten(groups)
@@ -1911,6 +1950,8 @@ export class Composer {
   /** `child` drawn into `box` as one of `count` aligned operands; a whole glyph in a row of three may
    *  change its proportions up to `ROW_STRETCH`. */
   row(child, box, n, sideBySide) {
+    const designed = typeof child === 'string' ? this.designedCut(child) : null
+    if (designed) return [placed(designed.piece, designed.piece.box, fitted(designed.piece.box, box, this.C.STRETCH), this.ink(designed.record.h), `host ${designed.record.h}`)]
     const group = this.node(child, box, false, sideBySide)
     if (n === 3 && group.length === 1 && !group[0].nativeAspect && group[0].origin.startsWith('glyph ')) group[0].target = fitted(group[0].source, box, this.C.ROW_STRETCH)
     else if (n === 3 && group.length > 1 && group[0].balanceBox && group.every(p => p.balanceBox === group[0].balanceBox)) {
