@@ -360,7 +360,7 @@ const ENCLOSURE_FORMS = {
     }],
     // 爬 (⿺爪巴) draws the designed ⿺爪; a described ⿺爪… has no host cut with that posture.
     爪: ['爬', {
-      '631556d7281ca84d39388d047c9dfbada101ae2cda66713c29263f7b9d9b5df6': [0, 1, 2],
+      '631556d7281ca84d39388d047c9dfbada101ae2cda66713c29263f7b9d9b5df6': [0, 1, 2, 3],
     }],
   },
   // 𭰲 (⿰氵⿵冂并) is the only encoded character with this shape; its frame serves the ⿵冂 enclosure.
