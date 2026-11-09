@@ -18,7 +18,7 @@ export const SOURCE_KINDS = /** @type {const} */ (['editorial', 'unicodeSealSour
 export const characterScript = char => [...char].length !== 1 ? null : isSmallSeal(char) ? 'seal'
   : /^[\u{18800}-\u{18AFF}]$/u.test(char) ? 'component'
   : isJurchen(char) ? 'jurchen'
-  : /^[\u3041-\u3096\u30a1-\u30fa\uff66-\uff9d]$/u.test(char) ? 'kana'
+  : /^[\u3041-\u3096\u30a1-\u30fa\u31f0-\u31ff\uff66-\uff9d]$/u.test(char) ? 'kana'
   : /^[\u{17000}-\u{187FF}\u{18D00}-\u{18DFF}]$/u.test(char) ? 'tangut'
   : /^[\p{Unified_Ideograph}\p{Radical}\uF900-\uFAFF\u{2F800}-\u{2FA1F}〇]$/u.test(char) ? 'han' : null
 

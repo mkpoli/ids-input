@@ -375,8 +375,10 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
     readSeal(),
   ]).then(([base, fromZitools, fromChise, fromProject, numbered, doc]) => {
     const parts = readNumberedComponents(/** @type {string} */ (numbered))
-    let merged = expandNumberedComponents(/** @type {Map<string, Sequence[]>} */ (base), parts)
-    for (const extra of [fromZitools, fromProject]) if (extra) merged = mergeIdsTables(merged, expandNumberedComponents(/** @type {Map<string, Sequence[]>} */ (extra), parts))
+    // The project's descriptions come first: a curated reading of a character precedes the source's
+    // spelling of the same description, which stays in the table as an alternative.
+    let merged = fromProject ? expandNumberedComponents(/** @type {Map<string, Sequence[]>} */ (fromProject), parts) : /** @type {Map<string, Sequence[]>} */ (new Map())
+    for (const extra of [base, fromZitools]) if (extra) merged = mergeIdsTables(merged, expandNumberedComponents(/** @type {Map<string, Sequence[]>} */ (extra), parts))
     if (fromChise) merged = mergeIdsTables(merged, /** @type {Map<string, Sequence[]>} */ (fromChise))
     return doc ? mergeIdsTables(merged, sealTable(doc)) : merged
   })

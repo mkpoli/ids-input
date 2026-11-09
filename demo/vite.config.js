@@ -96,6 +96,35 @@ function ortAssets() {
   }
 }
 
+// The open data release keeps its files where the build script writes them, under
+// data/open-data/, and serves them at /data/open-data/: the page links to stable paths, and the
+// build puts the same directory beside the app.
+const OPEN_DATA = fileURLToPath(new URL('../data/open-data/', import.meta.url))
+const OPEN_DATA_TYPES = { '.json': 'application/json; charset=utf-8', '.tsv': 'text/tab-separated-values; charset=utf-8', '.md': 'text/markdown; charset=utf-8' }
+
+function openData() {
+  return {
+    name: 'open-data',
+    configureServer(server) {
+      server.middlewares.use('/data/open-data', (request, response, next) => {
+        let name
+        try { name = decodeURIComponent((request.url ?? '').split('?')[0].replace(/^\//, '')) } catch { return next() }
+        const file = join(OPEN_DATA, name)
+        if (!name || name.startsWith('.') || name.includes('/') || !existsSync(file) || !statSync(file).isFile()) return next()
+        response.setHeader('Content-Type', OPEN_DATA_TYPES[extname(file)] ?? 'application/octet-stream')
+        response.end(readFileSync(file))
+      })
+    },
+    writeBundle() {
+      const out = join(import.meta.dirname, '..', 'dist', 'data', 'open-data')
+      mkdirSync(out, { recursive: true })
+      for (const name of ['descriptions.json', 'descriptions.tsv', 'components.tsv', 'manifest.json', 'README.md']) {
+        if (existsSync(join(OPEN_DATA, name))) copyFileSync(join(OPEN_DATA, name), join(out, name))
+      }
+    },
+  }
+}
+
 // A static site served at the root of https://ids.mkpo.li/ behind the worker in `worker/`, which
 // answers any path with the app so a sequence can live in the path.
 export default defineConfig({
@@ -107,7 +136,7 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(VERSION),
     __BUILD_COMMIT__: JSON.stringify(process.env.GITHUB_SHA || process.env.VITE_BUILD_COMMIT || 'dev'),
   },
-  plugins: [lazyFallbackFont(), svelte(), ortAssets(), engineOutlines()],
+  plugins: [lazyFallbackFont(), svelte(), ortAssets(), engineOutlines(), openData()],
   resolve: { alias: { 'onnxruntime-web/wasm': ORT_ALIAS } },
   // The drawing engine starts its Worker from `new URL('./worker.js', import.meta.url)`, which Vite
   // resolves from source; pre-bundled, that URL points nowhere.
@@ -116,7 +145,7 @@ export default defineConfig({
     // A fallback shard is fetched when a character needs it; inlined, the small ones would ride in
     // the first scripts as base64, which hardly compresses.
     assetsInlineLimit: file => file.endsWith('.woff2') ? false : undefined,
-    rollupOptions: { input: { index: `${import.meta.dirname}/index.html`, compare: `${import.meta.dirname}/compare.html`, engines: `${import.meta.dirname}/engines.html`, sources: `${import.meta.dirname}/sources.html`, embed: `${import.meta.dirname}/embed.html`, design: `${import.meta.dirname}/design.html` } } },
+    rollupOptions: { input: { index: `${import.meta.dirname}/index.html`, compare: `${import.meta.dirname}/compare.html`, engines: `${import.meta.dirname}/engines.html`, sources: `${import.meta.dirname}/sources.html`, embed: `${import.meta.dirname}/embed.html`, design: `${import.meta.dirname}/design.html`, 'open-data': `${import.meta.dirname}/open-data.html`, unencoded: `${import.meta.dirname}/unencoded.html` } } },
   // The drawing engine's files, outside this checkout's root: a dependency that is a directory is
   // read where it stands, and its Worker is a `file:` module the page asks for by that path.
   server: { fs: { strict: false, allow: ['..', join(import.meta.dirname, '..', 'node_modules', '@han-compose', 'composer')] } },

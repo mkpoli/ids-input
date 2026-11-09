@@ -4,7 +4,7 @@
 /**
  * @template T
  * @param {(sequence: string, options: { signal: AbortSignal }) => Promise<T | null>} draw
- * @returns {(sequence: string) => Promise<T | null>}
+ * @returns {((sequence: string) => Promise<T | null>) & { cancel: () => void }}
  */
 export function createSampleDrawings(draw) {
   /** @type {Map<string, T>} */
@@ -12,15 +12,11 @@ export function createSampleDrawings(draw) {
   /** @type {{ sequence: string, controller: AbortController, promise: Promise<T | null> } | null} */
   let inFlight = null
 
-  return sequence => {
+  /** @type {((sequence: string) => Promise<T | null>) & { cancel: () => void }} */
+  const samples = sequence => {
     if (!sequence) return Promise.resolve(null)
     const cached = drawings.get(sequence)
-    if (cached) {
-      // A drawing kept from before answers at once; whatever is in flight for another sequence is
-      // no longer the one being shown.
-      if (inFlight && inFlight.sequence !== sequence) inFlight.controller.abort()
-      return Promise.resolve(cached)
-    }
+    if (cached) return Promise.resolve(cached)
     if (inFlight?.sequence === sequence) return inFlight.promise
     inFlight?.controller.abort()
     const controller = new AbortController()
@@ -36,4 +32,11 @@ export function createSampleDrawings(draw) {
     inFlight = { sequence, controller, promise }
     return promise
   }
+  // No sample is wanted: stop the drawing in flight rather than let it finish unseen.
+  samples.cancel = () => {
+    if (!inFlight) return
+    inFlight.controller.abort()
+    inFlight = null
+  }
+  return samples
 }

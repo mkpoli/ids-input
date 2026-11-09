@@ -201,6 +201,16 @@ test('reads a subtraction through its decompositions', async () => {
   expect((await collect(tree('㇯輝車'), source)).texts).toContain('⿰光冖')
 })
 
+test('offers the encoded character beside the remainder', async () => {
+  const source = adapter({ 軍: ['⿱冖車'] }, { '㇯軍車': ['乙', '？', '甲乙'] })
+  const { texts, operations } = await collect(tree('㇯軍車'), source)
+  expect(texts).toContain('冖')
+  expect(texts).toContain('乙')
+  expect(operations['乙']).toBe('merge')
+  expect(texts).not.toContain('？')
+  expect(texts).not.toContain('甲乙')
+})
+
 test('follows a single-component description as well as a decomposition', async () => {
   const source = adapter({ 甲: ['⿱冖車'], 乙: ['甲'] })
   expect((await collect(tree('㇯乙車'), source)).texts).toContain('冖')

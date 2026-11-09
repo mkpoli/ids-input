@@ -53,4 +53,43 @@ describe('the font switch sample drawings', () => {
     expect(await samples('')).toBeNull()
     expect(calls).toBe(0)
   })
+
+  it('cancels the drawing in flight when no sample is wanted, and asks again later', async () => {
+    const signals = []
+    const samples = createSampleDrawings((sequence, { signal }) => {
+      signals.push(signal)
+      if (signal.aborted) return Promise.reject(new Error('cancelled'))
+      if (signals.length === 1) return new Promise((resolve, reject) => signal.addEventListener('abort', () => reject(new Error('cancelled'))))
+      return Promise.resolve({ d: sequence })
+    })
+    const cancelled = samples('⿰木口')
+    samples.cancel()
+    await Promise.resolve()
+    expect(signals[0].aborted).toBe(true)
+    expect(await cancelled).toBeNull()
+    const asked = samples('⿰木口')
+    expect(asked).not.toBe(cancelled)
+    expect(await asked).toEqual({ d: '⿰木口' })
+  })
+
+  it('keeps a drawing in flight when a kept sequence is asked for', async () => {
+    const waiting = new Map()
+    let calls = 0
+    const samples = createSampleDrawings((sequence, { signal }) => new Promise((resolve, reject) => {
+      calls++
+      signal.addEventListener('abort', () => reject(new Error('cancelled')))
+      waiting.set(sequence, resolve)
+    }))
+    const a = samples('A')
+    await Promise.resolve()
+    waiting.get('A')({ d: 'A' })
+    expect(await a).toEqual({ d: 'A' })
+    const b = samples('B')
+    await Promise.resolve()
+    expect(await samples('A')).toEqual({ d: 'A' })
+    expect(samples('B')).toBe(b)
+    waiting.get('B')({ d: 'B' })
+    expect(await b).toEqual({ d: 'B' })
+    expect(calls).toBe(2)
+  })
 })

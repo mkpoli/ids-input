@@ -104,7 +104,7 @@ it('draws a left 身 from 射, 躬 or 躭 rather than a denser neighbour', () =>
   expect(['射', '躬', '躭']).toContain(ranked[0][1].record.h)
 })
 
-it('keeps a left 身 off its own glyph when the description names no character', () => {
+it('draws a left 身 from a host cut, not its own glyph', () => {
   const base = { op: '⿰', j: 1, v: 1, d: 0, k: [0], r: 0 }
   const hosts = [{ ...base, h: '𨊂', si: 11408, b: [29, -80, 410, 841] },
     { ...base, h: '躬', si: 6772, b: [32, -80, 474, 841] }]
@@ -116,11 +116,27 @@ it('keeps a left 身 off its own glyph when the description names no character',
   const groups = c.learned('⿰', ['身', '牚'], null, true)
   expect(groups[0].origin).toBe('learned 躬')
   expect(groups[1].origin).toBe('glyph 牚')
-  // Without one of those cuts, the description keeps drawing its own 身.
-  const plain = new Composer({ manifest: { constants, spelled: [], files: { hosts: { bytes: 1 } } }, layout,
-    rec: key => evidence[key] ?? null, hosts: () => [hosts[0]], places: () => [] })
-  plain.predict = c.predict
-  expect(plain.learned('⿰', ['身', '牚'], null, true)[0].origin).toBe('glyph 身')
+})
+
+it('draws an operand from its own glyph only when the box does not deform it', () => {
+  const base = { op: '⿰', j: 1, v: 1, d: 0, k: [0], r: 0 }
+  const evidence = { 示: glyph('示', [50, -80, 950, 840], 5000), 口: glyph('口', [100, -80, 900, 840], 5000),
+    祚: glyph('祚', [30, -80, 470, 840], 5000) }
+  const c = new Composer({ manifest: { constants, spelled: [], files: { hosts: { bytes: 1 } } }, layout,
+    rec: key => evidence[key] ?? null,
+    hosts: (key, place) => key === '示' && place === 'L' ? [{ ...base, h: '祚', ok: [], si: 5000, b: [30, -80, 470, 840] }] : [],
+    places: () => [] })
+  c.predict = () => [[30, -80, 470, 840], [500, -80, 960, 840]]
+  expect(c.learned('⿰', ['示', '口'], null, true)[0].origin).toBe('learned 祚')
+})
+
+it('draws 王 in its combining form before a single right operand', () => {
+  const evidence = { 王: glyph('王', [50, -80, 950, 840], 4000), 木: glyph('木', [100, -80, 900, 840], 4000),
+    '𤣩': glyph('𤣩', [30, -80, 360, 840], 3000) }
+  const c = new Composer({ manifest: { constants, spelled: [], files: { hosts: { bytes: 0 } } }, layout,
+    rec: key => evidence[key] ?? null, hosts: () => [], places: () => [] })
+  c.predict = () => [[30, -80, 360, 840], [400, -80, 960, 840]]
+  expect(c.learned('⿰', ['王', '木'], null)[0].origin).toBe('glyph 𤣩')
 })
 
 it('uses the same preferred donor keys when only a source-spelling host exists', () => {
