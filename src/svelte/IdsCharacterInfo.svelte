@@ -536,7 +536,7 @@
         </dl>
       {:else if info.glosses.length}
         <ul class="glosses" lang="en">{#each info.glosses as gloss}<li>{gloss}</li>{/each}</ul>
-      {:else if !info.association}<p class="muted">{t('info.missing')}</p>{/if}
+      {:else if !info.association && info.script !== 'kana'}<p class="muted">{t('info.missing')}</p>{/if}
       {#if info.readings?.length || info.soundGlosses?.length}
         <section class="readings">
           <p class="label">{t('info.readings')}</p>
