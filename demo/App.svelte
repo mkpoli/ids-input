@@ -620,6 +620,10 @@
     void read()
     return () => { live = false }
   })
+  // The character the output names: the encoded character when the description is one, else the
+  // character a substituted description resolves to. The line shows the typed description, the
+  // substituted one when it differs, and the character and its code point.
+  const resolved = $derived(substituted ?? (encoded.length && encoded[0] !== editor.whole ? { sequence: editor.whole, char: encoded[0] } : null))
   // The strokes the output shows: an encoded character's recorded count when the description names
   // one, else the components' counts added up. A single component is its own character. The table
   // is 285 KB gzipped, so it loads once there is a description to count.
@@ -1466,23 +1470,25 @@
                 document={currentSession()?.document} session={currentSession()} version={documentTick} bind:scopes bind:slots
                 editable={adjusting} onchoose={path => editor.choose(path, { toggle: false })} onedit={layerChanged} bind:drawing bind:emoji bind:cut bind:cutLeaf>
                 {#snippet detailContent()}
-                  {#if substituted}
-                    <span class="encoded-character substituted-character" lang="ja" title={substituted.sequence}>
+                  {#if resolved}
+                    <span class="encoded-character substituted-character" lang="ja" title={resolved.sequence}>
                       <span class="substituted-sequence">{editor.whole}</span>
+                      {#if resolved.sequence !== editor.whole}
+                        <span class="substituted-arrow" aria-hidden="true">→</span>
+                        <span class="substituted-canonical">{resolved.sequence}</span>
+                      {/if}
                       <span class="substituted-arrow" aria-hidden="true">→</span>
-                      <span class="substituted-canonical">{substituted.sequence}</span>
-                      <span class="substituted-arrow" aria-hidden="true">→</span>
-                      <span class="substituted-glyph">{substituted.char}</span>
-                      <code>{cp(substituted.char)}</code>
-                      <button type="button" title={t('app.copyChar', { char: substituted.char })} aria-label={t('app.copyChar', { char: substituted.char })} onclick={() => copy(substituted.char)}><Icon name="copy" size={13} /></button>
+                      <span class="substituted-glyph">{resolved.char}</span>
+                      <code>{cp(resolved.char)}</code>
+                      <button type="button" title={t('app.copyChar', { char: resolved.char })} aria-label={t('app.copyChar', { char: resolved.char })} onclick={() => copy(resolved.char)}><Icon name="copy" size={13} /></button>
                     </span>
                   {/if}
-                  {#each encoded as ch (ch)}
+                  {#each encoded.slice(resolved && encoded[0] === resolved.char ? 1 : 0) as ch (ch)}
                     <span class="encoded-character"><code>{cp(ch)}</code><button type="button" title={t('app.copyChar', { char: ch })} aria-label={t('app.copyChar', { char: ch })} onclick={() => copy(ch)}><Icon name="copy" size={13} /></button></span>
                   {/each}
                   {#if drawnStrokes}
                     <span class="component-counts" title={drawnStrokes.strokes == null ? undefined : t(drawnStrokes.approximate ? 'app.componentStrokes' : 'app.recordedStrokes')}>
-                      {#if encoded.length}<span class="strokes-sep" aria-hidden="true">·</span>{/if}
+                      {#if resolved || encoded.length}<span class="strokes-sep" aria-hidden="true">·</span>{/if}
                       {t('app.components', { count: drawnStrokes.components })}
                       {#if drawnStrokes.strokes != null}
                         <span class="strokes-sep" aria-hidden="true">·</span>
