@@ -1905,11 +1905,13 @@ export class Composer {
         this.fit(groups[0], groups[1], frameOf, stem, C, { room: opening })
         continue
       }
-      // An operand drawn from its own glyph keeps the part inside its box, where a host cut can carry
-      // the rest of that character in with it. A glyph the box would deform beyond STRETCH is no
-      // form for that place (示's square glyph in a left column); 身 also takes the left column's
-      // narrow form from 射, 躬 or 躭.
-      if (ownParts && typeof child === 'string' && !this.excluded(child)
+      let part = this.host(op, i, child, [...children.slice(0, i), ...children.slice(i + 1)], box, region === null)
+      // An operand with no host cut is drawn from its own glyph, which keeps the part inside its box.
+      // A repeated component still has its cuts (⿱丑丑 takes both halves from 峱), so the glyph is
+      // the fallback and never replaces a cut the export provides. A glyph the box would deform
+      // beyond STRETCH is no form for that place (示's square glyph in a left column); 身 also takes
+      // the left column's narrow form from 射, 躬 or 躭.
+      if (!part && ownParts && typeof child === 'string' && !this.excluded(child)
         && !(op === '⿰' && i === 0 && keyOf(child) === '身' && this.hasLeftBody(child))) {
         const own = this.glyph(child)
         // The left column is where a square glyph loses its form; a right or upper operand keeps
@@ -1919,7 +1921,6 @@ export class Composer {
           continue
         }
       }
-      let part = this.host(op, i, child, [...children.slice(0, i), ...children.slice(i + 1)], box, region === null)
       if (part && op in this.ENCLOSE && i === 0 && typeof child === 'string' && this.own(child)
         && stretchOf(part.piece.box, box) > C.ENCLOSING_STRETCH) part = null
       // A grid whose whole glyph overflows the opening keeps its rows equal only when its

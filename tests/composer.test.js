@@ -1428,3 +1428,11 @@ it('C060 keeps the inner roof inside the cover before outline-specific correctio
   expect(inner[0] - cover[0]).toBeGreaterThanOrEqual(50)
   expect(cover[2] - inner[2]).toBeGreaterThanOrEqual(50)
 })
+
+it('draws a repeated component from the host cuts, not its own glyph', async () => {
+  const { fromUrl, compose } = await import('../src/composer/loader.js')
+  const source = fromUrl('https://glyphatlas.org/atlas/composer/bd0829bc6fbf-sans-compose-layout-v4-f5+letters/')
+  const drawn = await compose(source, '⿱丑丑', { fontStyle: 'sans' })
+  // Both halves come from 峱, one cut each; the standalone glyph would deform the bar.
+  expect(drawn.parts.map(part => part.origin)).toEqual(['host 峱', 'host 峱'])
+})
