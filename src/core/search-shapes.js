@@ -4,6 +4,7 @@
 // https://ashide.otodo.net/setumei/tebiki.html
 // Read 2026-10-27. Stroke-code fragments and five-keystroke selection rules are not imported.
 // 亼 and 弋 are named in the learning guide; ヰ → 井 is named in the correspondence rules.
+// The table is katakana; hiragana is looked up as the katakana it matches (む as ム, ゑ as ヱ).
 //
 // ヱ is outside the 46 basic kana, and the correspondence table names no component for it, though
 // it names 井 for ヰ. Unihan's provisional kStrange gives 𭛝 (U+2D6DD) K:U+30F1: a component of
@@ -41,7 +42,9 @@ export const SHAPE_COMPONENTS = new Set(Object.values(SHAPES).flat())
 export function searchShape(token, next) {
   if (/^[\u3099-\u309C\uFF9E\uFF9F]/u.test(next ?? '')) return token
   const base = [...token][0]
-  const lookup = /^[\uFF66-\uFF9D\uFFA0-\uFFDC]$/u.test(base) ? base.normalize('NFKC') : base
+  const fullwidth = /^[\uFF66-\uFF9D\uFFA0-\uFFDC]$/u.test(base) ? base.normalize('NFKC') : base
+  const code = fullwidth.codePointAt(0)
+  const lookup = code !== undefined && code >= 0x3041 && code <= 0x3096 ? String.fromCodePoint(code + 0x60) : fullwidth
   const choices = SHAPES[lookup]
   if (!choices) return token
   const anyOf = choices.map(component => component + token.slice(base.length))

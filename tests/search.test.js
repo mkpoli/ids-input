@@ -360,6 +360,20 @@ it('finds 𭛝 from the katakana ヱ through its component 𠀄', () => {
 })
 
 
+it('searches hiragana as the katakana it matches', () => {
+  const index = createSearch(new Map([
+    ['私', ['⿰禾厶']], ['𭛝', ['⿰彳𠀄']], ['休', ['⿰亻木']], ['江', ['⿰氵工']],
+  ]))
+  expect(index.search('⿰禾む')).toEqual(index.search('⿰禾ム'))
+  expect(index.search('⿰禾む').hits.map(hit => hit.char)).toEqual(['私'])
+  expect(index.search('⿰彳ゑ')).toEqual(index.search('⿰彳ヱ'))
+  expect(index.search('⿰彳ゑ').hits.map(hit => hit.char)).toEqual(['𭛝'])
+  expect(parseQuery('む').terms[0].leaves).toEqual(['厶'])
+  expect(parseQuery('き').terms[0].leaves).toEqual([{ anyOf: ['十', '弋'] }])
+  expect(parseQuery('が').terms[0].leaves).toEqual(['が'])
+})
+
+
 it('leaves unlisted halfwidth and enclosed kana out of the alias mapping', () => {
   const index = createSearch(new Map([['甲', ['⿰ｬ口']], ['乙', ['⿰ャ口']]]))
   expect(index.search('⿰ｬ口').hits.map(hit => hit.char)).toEqual(['甲'])
