@@ -216,7 +216,7 @@
     {:else if !doc}
       <p class="empty">{t('appendix.loading')}</p>
     {/if}
-    <p class="count" aria-live="polite">{t('appendix.count', { count: filtered.length })}</p>
+    <p class="count" aria-live="polite">{filtered.length === 1 ? t('appendix.countOne', { count: filtered.length }) : t('appendix.count', { count: filtered.length })}</p>
     <p class="glyph-note">{t('appendix.glyphNote')}</p>
 
     {#if filtered.length === 0}
@@ -348,7 +348,7 @@
   .identity{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
   .name{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
   .scheme{font-size:10px;color:var(--ids-muted);text-transform:uppercase;letter-spacing:.02em}
-  .desc{flex-basis:100%;color:var(--ids-muted);font-size:11.5px}
+  .desc{flex-basis:100%;color:var(--ids-muted);font-size:11.5px;font-family:var(--cjk)}
   .kind,.uses{color:var(--ids-muted);white-space:nowrap}
   .equivalent{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:var(--ids-ink-soft);max-width:36ch}
   .remove{padding:0 5px;border:0;background:none;color:var(--ids-muted);font-size:16px;line-height:1;cursor:pointer}

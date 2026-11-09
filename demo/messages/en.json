@@ -443,5 +443,6 @@
   "appendix.custom.add": "Add",
   "appendix.custom.invalid": "Use letters, digits, dots, plus or hyphen for the name.",
   "appendix.custom.exists": "That component is already here.",
-  "appendix.custom.hint": "Stored in this browser; pairs can name it as custom:name."
+  "appendix.custom.hint": "Stored in this browser; pairs can name it as custom:name.",
+  "appendix.countOne": "{count} component"
 }

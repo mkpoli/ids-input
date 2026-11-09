@@ -441,5 +441,6 @@
   "appendix.custom.add": "Thêm",
   "appendix.custom.invalid": "Tên dùng chữ, số, dấu chấm, dấu cộng hoặc gạch nối.",
   "appendix.custom.exists": "Thành phần đó đã có.",
-  "appendix.custom.hint": "Lưu trong trình duyệt này; cặp có thể gọi nó là custom:tên."
+  "appendix.custom.hint": "Lưu trong trình duyệt này; cặp có thể gọi nó là custom:tên.",
+  "appendix.countOne": "{count} thành phần"
 }

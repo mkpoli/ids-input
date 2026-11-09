@@ -441,5 +441,6 @@
   "appendix.custom.add": "追加",
   "appendix.custom.invalid": "名前には英数字・ピリオド・プラス・ハイフンを使います。",
   "appendix.custom.exists": "その部品はすでにあります。",
-  "appendix.custom.hint": "このブラウザに保存され、対応では custom:名前 として参照できます。"
+  "appendix.custom.hint": "このブラウザに保存され、対応では custom:名前 として参照できます。",
+  "appendix.countOne": "{count}個の部品"
 }
