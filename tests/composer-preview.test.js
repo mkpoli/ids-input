@@ -54,6 +54,12 @@ describe('the composer preview', () => {
     const [worker] = FakeWorker.made
     expect(worker.posted[0]).toMatchObject({ sequence: '⿱木口', separate: true })
   })
+  it('asks for the export when the view needs stroke groups', () => {
+    FakeWorker.made = []
+    const draw = composerPreview({ base: 'https://example.org/composer/v1', separate: true, preferExport: true, worker: () => new FakeWorker() })
+    draw('木')
+    expect(FakeWorker.made[0].posted[0]).toMatchObject({ sequence: '木', separate: true, preferExport: true })
+  })
   it('refuses a description larger than it draws without asking the worker', async () => {
     const draw = preview()
     const error = await draw('⿰木'.repeat(9) + '口').catch(e => e)
