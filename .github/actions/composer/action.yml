@@ -26,7 +26,8 @@ runs:
         bun run data
         bun run types
         # `file:../composer` resolves one level above the checkout, where this repository sits.
-        ln --symbolic --force --no-dereference "$target/js" "$(dirname "$GITHUB_WORKSPACE")/composer"
+        # `ln -sfn` is the portable form: BSD's ln has no long options.
+        ln -sfn "$target/js" "$(dirname "$GITHUB_WORKSPACE")/composer"
     - name: Show the package it reads
       shell: bash
       run: ls -l "$(dirname "$GITHUB_WORKSPACE")/composer" && jq -r .version "$(dirname "$GITHUB_WORKSPACE")/composer/package.json"
