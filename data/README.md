@@ -2,6 +2,14 @@
 
 Each file keeps its own licence; the MIT licence of the code does not cover them.
 
+## `open-data/`
+
+The release served at <https://ids.mkpo.li/open-data>: the descriptions this project transcribed
+or read, one row per description, each citing its source. JSON, TSV, the numbered components and a
+README with the fields and the source list; CC0 1.0. Built by `bun scripts/build_open_ids.mjs`
+from the starter catalogue in `demo/lib/examples.js`, its source records and
+`data/ids-components.tsv`.
+
 ## `yi-bai-ids.tsv.gz`
 
 Standard IDS descriptions from Yi Bai's level-1 IDS dataset at commit
@@ -89,13 +97,31 @@ font versions, so the palette's `glyph` column is tied to that version. Built by
 `scripts/build_palette_outlines.py`, and the font is under the Arphic Public License
 (`fonts/LICENSE-BabelStoneHanPUA.txt`).
 
+## `numbered-forms.json` and `numbered-sans-outlines.json.gz`
+
+The 69 numbered components with no IDS fragment have two faces. `numbered-forms.json` holds their
+component forms: the Sans forms are cut from the host characters' Noto Sans CJK JP 2.004 and Plangothic
+V2.9.5795 glyphs, using the component's BabelStone PUA glyph as the shape to match; the Serif and
+Kaisho forms are the PUA glyph itself. 60 have a clean host cut. The other 9 (`{23}`, `{27}`,
+`{65}`, `{79}`, `{90}`, `{92}`, `{103}`, `{111}`, `{118}`) have no clean cut and use the PUA
+glyph in Sans too; the file lists them in `fallback`.
+`numbered-sans-outlines.json.gz` carries the same 69 Sans outlines for the palette source, so a
+description draws the cut in the Sans face and the PUA glyph in Serif. The contextual Sans `{5}`
+variant in `numbered-five-context.json` uses the native left portion of 葭 in Noto Sans CJK JP 2.004,
+centred without reshaping; regenerate it with `scripts/build_numbered_five.py`. The cuts use han-compose
+`fec2847` and record their font versions and digests in `numbered-forms.json`; the PUA glyphs are
+under the Arphic Public License, the Noto and Plangothic cuts under their own SIL OFL terms.
+
 ## `ids-project.tsv.gz`
 
-This project's own IDS descriptions for characters newer than BabelStone's Unicode 16.0 edition and
-Yi Bai's set. The source is `data/ids-project.tsv`, one line per description,
-`char<TAB>IDS<TAB>source`; `scripts/build_ids_project.py` checks each description and writes the
-compact `char<TAB>sequences` table the adapter reads with
-`babelStoneAdapter({ additionalIds })`.
+This project's own IDS descriptions: characters newer than BabelStone's Unicode 16.0 edition and
+Yi Bai's set, and curated corrections of a source description that writes a base character where the
+glyph's left column uses its positional form (𣲍's ⿰水兀 read as ⿰氵兀). The source is
+`data/ids-project.tsv`, one line per description, `char<TAB>IDS<TAB>source`;
+`scripts/build_ids_project.py` checks each description and writes the compact
+`char<TAB>sequences` table the adapter reads with `babelStoneAdapter({ additionalIds })`. The
+adapter puts these rows before the sources', so the curated reading is the one read first; the
+source's own spelling stays in the table as an alternative.
 
 The table is currently empty. The newer character this project knows, 𳑳 (U+33473), is a 獨體字 with
 no IDS decomposition; it is listed in `ids-characters.tsv` instead. Add a line here only for a
@@ -606,7 +632,8 @@ dictionary numbers, `logogram` for the other 279 and `radical` for the 47 radica
 dictionary coverage, not frequency; the spreadsheet also lists 286 further forms that the proposal
 does not cover.
 
-`ids` is an editorial decomposition, written by hand in [`shuishu/ids.json`](shuishu/ids.json) for
+`ids` is an editorial decomposition, written by hand in [`shuishu/ids.json`](shuishu/ids.json) and
+carried with `sources: ['project']` for
 the characters whose parts are all in the block and whose arrangement is plain. No source states
 one: the charts give a `→` cross reference to a radical for 41 of the 533 characters and nothing
 else, the spreadsheet has no structure column, and the chart font carries no ligature or IDS glyph
@@ -649,10 +676,11 @@ for Jurchen, so another font may draw the base form. Each carries its base chara
 and its own stroke code. The build reads the row for U+18FF3 U+FE01 without the stray U+FE00 at the
 end of its code, and drops the table's placeholder row for U+25A1.
 
-`ids` is an editorial decomposition, written in [`jurchen/ids.json`](jurchen/ids.json) for 22
+`ids` is an editorial decomposition, written in [`jurchen/ids.json`](jurchen/ids.json) and carried
+with `sources: ['project']` for 44
 characters. No source states one, so each is a reading of the Alari glyph: it describes the shape
 and makes no claim about how the character arose. `scripts/build_jurchen.py` refuses an entry with an
-operator other than ⿰ and ⿱, a part outside the block, or strokes that do not add up; a radical's
+operator other than ⿰, ⿱, ⿷ and ⿸, a part outside the block, or strokes that do not add up; a radical's
 count is read from its stroke code, since Unicode gives none.
 
 Sources are pinned with SHA-256 digests in [`jurchen/sources.json`](jurchen/sources.json). Rebuild the
@@ -1138,6 +1166,29 @@ hashes. Unicode data is distributed under the Unicode License v3; see
 host adapter. These parts remain available in their script group, including when the bundled
 catalog cannot be loaded. A configured composer export or font can have different coverage.
 
+## `kana-strokes.json.gz`
+
+The stroke count of every kana KanjiVG draws, and of the halfwidth forms of them: 231 keys in
+code-point order, hiragana U+3041–U+3096, katakana U+30A1–U+30FA, then halfwidth katakana
+U+FF66–U+FF9D, with a count for each (`strokes`, one entry per key), the pinned `revision` and its
+`source`. A halfwidth form is the same kana drawn narrow, so it takes the count of the kana NFKC
+decomposes it to; ｰ has none, since ー lies outside the counted ranges.
+
+KanjiVG draws one path per stroke, in writing order, so the number of paths is the count: あ three,
+イ two, マ two, フ one. That is every kana in both ranges, and the build says which ones KanjiVG does
+not draw rather than dropping them silently: one path may carry attributes besides `id` and `d`,
+which is how マ was once lost.
+
+- Licence: **CC BY-SA 3.0**, Copyright (C) 2009/2010/2011 Ulrich Apel; attribution and licence links
+  in `data/licences/kanjivg-CC-BY-SA-3.0.txt`. The derived table is shared alike under the same
+  licence. Rebuild with `node scripts/build_kana_strokes.mjs [kvg directory]`, which reads KanjiVG at
+  revision `610091ce618cf757ed1357a8954cd65283e015d6` unless given a checkout.
+
+The table holds counts alone. KanjiVG records no five-stroke class, and one cannot be read off the
+paths: kana strokes are curved, so a turn and a curve carry the same turning angle, and a classifier
+built on that angle labelled ア, コ and ヨ wrongly. A class column waits for a source that names
+stroke types.
+
 ## `han-parts.json.gz`
 
 Every Han-script character the composer can draw: 103,352 keys in code-point order, with the
@@ -1181,7 +1232,9 @@ dictionary under LGPL-3.0 (see `data/licences/rime-stroke-LGPL-3.0.txt`).
 One catalogue of component identities and the descriptions that name them, built by
 `scripts/build_ids_corpus.mjs` from BabelStone IDS and CHISE-IDS. It holds 211,319 descriptions,
 108,425 of them BabelStone's (public domain, `babelstone-ids.tsv.gz`, pinned above) and 102,894
-CHISE's, and every row carries the source it came from.
+CHISE's, and every row carries the source it came from. It also holds 1,517 components — 1,396 CHISE
+entities and BabelStone's 121 numbered parts as `bsp:n` — and 62 `equivalences` between them, 48 of
+them seen on two or more characters.
 
 - Licence: **GPL-2.0-or-later** for the file as a whole, because CHISE's rows are
   (`COPYING-chise-ids.txt`). The code stays MIT.
@@ -1189,9 +1242,24 @@ CHISE's, and every row carries the source it came from.
   licence; the pin, per-file digests and licence statement are in `chise-sources.json`.
 - Changes: CHISE writes each description with the character's code point and its parts as entities;
   the build converts the first to a `ucs` cid and the second to `chise:` names, then merges the
-  rows with BabelStone's. Built on 2026-11-04.
+  rows with BabelStone's. It gives BabelStone's numbered parts `bsp:n` cids and aligns the two
+  sources' descriptions of each character: at every operand position where a number and an entity
+  differ, the pair is an `equivalence` (`verified` on two or more characters, `candidate` on one). A
+  number with a known note 6 fragment is compared as that fragment, so a composite is not taken for a
+  leaf. A component is not equated with a character it resembles, and two characters that differ are
+  variants or slips, not identities. Built on 2026-11-09 from the sources pinned on 2026-11-04.
+- Use: `babelStoneAdapter({ chise })` adds the CHISE rows to the description table, each with
+  `sources: ['chise']`; a host that cannot take GPL leaves the option out.
 - Format: columnar JSON, gzipped; the design behind the identity model is in
   [the corpus note](../docs/ids-corpus.md).
+
+## `ids-equivalences.json`
+
+The alignments in `ids-corpus.json.gz`, as one small table for the components page at `/unencoded`:
+62 rows of a BabelStone number against the CHISE entity that names the same component, 48 of them
+`verified`. Each row carries both sides' display characters, BabelStone's description, the basis, the
+status, the provenance indexes and the characters that attest it. Written by
+`scripts/build_ids_corpus.mjs`; the data is **GPL-2.0-or-later** like the corpus it comes from.
 
 ## Preview coverage audit
 

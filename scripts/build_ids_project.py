@@ -5,9 +5,12 @@
 
 BabelStone IDS covers Unicode 16.0 (File Date 2025-06-27) and Yi Bai's level-1 set stops earlier; a
 character encoded later has no description in either. `data/ids-project.tsv` holds the descriptions
-this project writes for those characters, one line per description, `char<TAB>IDS<TAB>source`. This
-script checks each description, drops duplicates and writes the compact table the adapter reads
-(`char<TAB>sequences`, as BabelStone's table is written) with the source file's digest in its header.
+this project writes for those characters, and its curated corrections of a source description that
+writes a base character where the glyph's left column uses its positional form, one line per
+description, `char<TAB>IDS<TAB>source`. This script checks each description, drops duplicates and
+writes the compact table the adapter reads (`char<TAB>sequences`, as BabelStone's table is written)
+with the source file's digest in its header. The adapter puts these rows before the sources', so a
+curated description is the one read first while the source's spelling stays an alternative.
 
     uv run scripts/build_ids_project.py
 """
@@ -80,7 +83,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     rows, digest = read_source(args.source)
     lines = [
-        "# The IDS Workshop's descriptions for characters newer than BabelStone IDS (Unicode 16.0) and Yi Bai's set.",
+        "# The IDS Workshop's descriptions for characters newer than BabelStone IDS (Unicode 16.0) and Yi Bai's set, and its curated corrections of a source description.",
         f"# Source: data/{args.source.name}, sha256:{digest}. char<TAB>sequences; regions optional.",
         *(f"{char}\t{sequence}" for char, sequence in rows),
     ]

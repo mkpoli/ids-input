@@ -28,7 +28,7 @@ export const ops = ['⿰', '⿱', '⿸', '⿺', '⿵', '⿹', '⿶', '⿴', '⿷
 export const layout = { ops, defaults: Object.fromEntries(['L', 'R', 'T', 'B', ...ops.slice(2).flatMap(op => [`${op}0`, `${op}1`])].map(p => [p, [0, 0, 1000, 1000]])),
   features: {}, seeds: [[{ shape: [ops.length + 2 * 81, 8], data: Buffer.alloc(2 * (ops.length + 162) * 8).toString('base64') }, Buffer.alloc(32).toString('base64')]] }
 const records = {
-  木: character('木', [[100, -60, 900, 0], [470, -80, 530, 820]]),
+  木: { ...character('木', [[100, -60, 900, 0], [470, -80, 530, 820]]), sg: [[0, [0]], [1, [1]]] },
   厃: character('厃', [[100, 700, 900, 800], [100, 0, 180, 800], [820, 0, 900, 800]]),
   儿: character('儿', [[250, 0, 330, 620], [670, 0, 750, 620]]),
   扌: character('扌', [[300, 0, 380, 800], [120, 500, 700, 580]]),

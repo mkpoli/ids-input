@@ -181,6 +181,20 @@ it('renders the connected-stroke upper part of 卑 without its bottom 十', asyn
   }
 })
 
+it('keeps the neck that joins the upper component of 卑 to the 十 below it', async () => {
+  const { componentParts } = await import('../src/composer/component-forms.js')
+  const [placed] = componentParts('⿱㇒⿻日丿', undefined, 'sans')
+  const boxes = placed.part.contours.map(({ light }) => {
+    const xs = light.filter((_, i) => i % 2 === 0), ys = light.filter((_, i) => i % 2 === 1)
+    return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)]
+  })
+  // The cut removed 十 with the neck that joins it to 日, leaving the 日's stroke
+  // short. The neck now reaches the bar below 日 and the cut edge 十 continues from.
+  expect(boxes).toContainEqual([570, 179, 646, 336])
+  const drawn = await compose(local(), '⿱㇒⿻日丿', { separate: true })
+  expect(drawn.d.match(/M/g)).toHaveLength(6)
+})
+
 it('preserves both yan enclosures as distinct native forms without requiring a remote font', async () => {
   const { componentParts, componentDrawing } = await import('../src/composer/component-forms.js')
   for (const fontStyle of ['sans', 'serif']) {

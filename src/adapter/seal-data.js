@@ -8,12 +8,12 @@ export const isSmallSeal = text => /^[\u{3D000}-\u{3FC3F}]$/u.test(text)
 /** @param {SmallSealData} doc @returns {Map<string, import('../core/decompose.js').Sequence[]>} */
 export function sealTable(doc) {
   if (doc.format !== 1) throw new Error('Unsupported Small Seal data format')
-  return new Map(Object.entries(doc.table).map(([char, texts]) => [char, texts.map(text => ({ text, regions: '' }))]))
+  return new Map(Object.entries(doc.table).map(([char, texts]) => [char, texts.map(text => ({ text, regions: '', sources: ['chise'] }))]))
 }
 /** @param {SmallSealData} doc @param {string} query */
 export function sealNames(doc, query) {
   if (isSmallSeal(query)) return (doc.modern[query] ?? []).map(char => ({ char, label: `CJK · U+${char.codePointAt(0)?.toString(16).toUpperCase()}` }))
-  return Object.entries(doc.modern).filter(([char, names]) => names.includes(query))
+  return Object.entries(doc.modern).filter(([, names]) => names.includes(query))
     .map(([char, names]) => ({ char, label: `小篆 · ${names.join(' / ')} · U+${char.codePointAt(0)?.toString(16).toUpperCase()}` }))
 }
 

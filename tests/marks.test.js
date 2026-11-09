@@ -80,6 +80,11 @@ describe('loose marks', () => {
     expect(write(placed.tree)).toBe('⿰亻水ˇ')
   })
 
+  it('retains operator modifiers when marks are normalized', () => {
+    const tree = { op: '⿴', note: '1', parts: ['甲', { op: '⿰', note: '2', parts: ['乙', '丙'], marks: 'ˊ' }] }
+    expect(write(normalizeMarks(tree))).toBe('⿴[1]甲⿰[2]乙丙ˊ')
+  })
+
   it('keeps a child mark before the marks of the node that holds it', () => {
     const tree = { op: '⿰', parts: ['木', { op: '⿱', parts: ['七', '口'], marks: 'ˇ' }], marks: 'ˊ' }
     expect(write(normalizeMarks(tree))).toBe('⿰木⿱七口ˇˊ')
@@ -201,5 +206,11 @@ describe('drawing loose marks', () => {
     expect(onlyBundled('⿰ㄅㄚˊ')).toBe(true)
     expect(hasUnicodeGlyph('ˊ')).toBe(true)
     expect(onlyBundled('⿰ㄅㄚˊ木')).toBe(false)
+  })
+})
+
+describe('splitting a part from its marks', () => {
+  it('keeps the modifier of an operator that carries marks', () => {
+    expect(splitDescription('⿴[1]囗水́')).toEqual({ base: '⿴[1]囗水', marks: '́' })
   })
 })

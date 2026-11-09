@@ -7,6 +7,7 @@
 // names the tone of the one syllable it follows and stays on it, ⿰가〮나〯.
 import { unicodeProperty } from './unicode.js'
 import { hangulClusterAt } from './hangul.js'
+import { emojiPrefix } from './emoji.js'
 
 /** A variation selector, as `isSelector` reads it in `ids.js`; kept here so the modules need not cycle. */
 const SELECTOR = /^[\uFE00-\uFE0F\u{E0100}-\u{E01EF}]$/u
@@ -55,13 +56,22 @@ export const isMarks = text => {
 export function splitMarks(part) {
   if (typeof part !== 'string') {
     if (part === null || part === undefined) return { base: part ?? null, marks: '' }
-    return part.marks ? { base: { op: part.op, parts: part.parts }, marks: part.marks } : { base: part, marks: '' }
+    if (!part.marks) return { base: part, marks: '' }
+    const { marks, ...base } = part
+    return { base, marks }
   }
   const chars = [...part]
-  // A conjoining jamo run is one component, not the initial jamo and a mark after it.
-  let at = hangulClusterAt(chars, 0)?.end ?? 1
+  // A conjoining jamo run or an Emoji sequence is one component, not its first character and a mark.
+  const emoji = emojiPrefix(part)
+  let at = emoji ? [...emoji].length : hangulClusterAt(chars, 0)?.end ?? 1
   if (isSelector(chars[at])) at++
   return { base: chars.slice(0, at).join(''), marks: chars.slice(at).join('') }
+}
+
+/** The tone marks a part's components hold, in reading order. @param {import('./ids.js').Part} part @returns {string} */
+export const tonesOf = part => {
+  if (part !== null && typeof part === 'object') return part.parts.map(tonesOf).join('')
+  return part === null ? '' : [...splitMarks(part).marks].filter(isToneMark).join('')
 }
 
 /** The loose marks `part` carries. @param {import('./ids.js').Part} part */
@@ -110,7 +120,8 @@ export function normalizeMarks(tree) {
     // A node's marks come after its children's, so collect the children first.
     const parts = part.parts.map(strip)
     if (part.marks) found.push(part.marks)
-    return { op: part.op, parts }
+    const { marks: _marks, ...base } = part
+    return { ...base, parts }
   }
   const base = strip(tree)
   return found.length ? withMarks(base, found.join('')) : tree

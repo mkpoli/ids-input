@@ -25,6 +25,7 @@
 import { spawn } from 'node:child_process'
 import { existsSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
+import { stripVTControlCharacters } from 'node:util'
 import { chromium as launchable } from 'playwright-core'
 
 const arg = name => { const at = process.argv.indexOf(name); return at >= 0 ? process.argv[at + 1] : undefined }
@@ -96,7 +97,7 @@ async function start() {
     if (server.exitCode !== null) break
     // Vite colours its output when the environment asks for it, as CI does, and the escape codes
     // sit inside the address line; read the line without them.
-    const found = log.replace(/\x1b\[[0-9;]*m/g, '').match(/Local:\s+(http:\/\/localhost:\d+)/)
+    const found = stripVTControlCharacters(log).match(/Local:\s+(http:\/\/localhost:\d+)/)
     if (found) { url = found[1]; return }
     await Bun.sleep(500)
   }

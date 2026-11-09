@@ -70,7 +70,7 @@ it('searches an unknown structure through the local adapter and respects abortio
 
 it('searches an unknown structure through the worker loader', async () => {
   const ids = '杏\t⿱木口\n呆\t⿱口木\n木\t木\n口\t口\n'
-  const search = await loadSearchWorker(`data:text/plain,${encodeURIComponent(ids)}`, undefined, undefined, '', undefined, '', undefined, '', undefined, undefined)
+  const search = await loadSearchWorker({ ids: `data:text/plain,${encodeURIComponent(ids)}` })
   expect(search.unknownStructure('⿰木口', { limit: 5 }).hits.map(hit => hit.char)).toEqual(['呆', '杏'])
 })
 
@@ -114,4 +114,17 @@ it('uses narrow forms in the adapter while retaining broad ordinary component se
   ]), formsText: readFileSync(new URL('../data/component-forms.tsv',import.meta.url),'utf8') })
   expect(chars(await adapter.findByStructure('⿰AA'))).toEqual(['林'])
   expect(chars(await adapter.findByIds('⿰丿丿'))).toContain('八')
+})
+
+it('does not read a placeholder in a subtraction', () => {
+  const s = createStructuralSearch(new Map([['甲', ['⿱？木']], ['乙', ['⿰光木']]]))
+  expect(s.search('⿰光㇯甲？').problem).toBeUndefined()
+  expect(chars(s.search('⿰光㇯甲？'))).toEqual([])
+})
+
+it('normalizes a subtraction before matching a whole structure', () => {
+  const s = createStructuralSearch(new Map([
+    ['光', ['⿱⺌兀']], ['軍', ['⿱冖車']], ['車', ['⿻亘丨']], ['甲', ['⿰光冖']],
+  ]))
+  expect(chars(s.search('⿰光㇯軍車'))).toEqual(['甲'])
 })

@@ -1,5 +1,5 @@
-import { copyFileSync, mkdirSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { copyFileSync, existsSync, mkdirSync, readFileSync, statSync } from 'node:fs'
+import { extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
@@ -30,7 +30,7 @@ function lazyFallbackFont() {
         asset.source = text.replace(CSS_FACE, '')
         // The published shards' names, which the app reads to build each face's URL.
         const files = {}
-        for (const [name, file] of Object.entries(bundle)) {
+        for (const name of Object.keys(bundle)) {
           const match = /^(?:assets\/)?([0-9a-f]{3})-[^/]+\.woff2$/.exec(name)
           if (match) files[match[1]] = name
         }
@@ -59,6 +59,35 @@ function ortAssets() {
   }
 }
 
+// The open data release keeps its files where the build script writes them, under
+// data/open-data/, and serves them at /data/open-data/: the page links to stable paths, and the
+// build puts the same directory beside the app.
+const OPEN_DATA = fileURLToPath(new URL('../data/open-data/', import.meta.url))
+const OPEN_DATA_TYPES = { '.json': 'application/json; charset=utf-8', '.tsv': 'text/tab-separated-values; charset=utf-8', '.md': 'text/markdown; charset=utf-8' }
+
+function openData() {
+  return {
+    name: 'open-data',
+    configureServer(server) {
+      server.middlewares.use('/data/open-data', (request, response, next) => {
+        let name
+        try { name = decodeURIComponent((request.url ?? '').split('?')[0].replace(/^\//, '')) } catch { return next() }
+        const file = join(OPEN_DATA, name)
+        if (!name || name.startsWith('.') || name.includes('/') || !existsSync(file) || !statSync(file).isFile()) return next()
+        response.setHeader('Content-Type', OPEN_DATA_TYPES[extname(file)] ?? 'application/octet-stream')
+        response.end(readFileSync(file))
+      })
+    },
+    writeBundle() {
+      const out = join(import.meta.dirname, '..', 'dist', 'data', 'open-data')
+      mkdirSync(out, { recursive: true })
+      for (const name of ['descriptions.json', 'descriptions.tsv', 'components.tsv', 'manifest.json', 'README.md']) {
+        if (existsSync(join(OPEN_DATA, name))) copyFileSync(join(OPEN_DATA, name), join(out, name))
+      }
+    },
+  }
+}
+
 // A static site served at the root of https://ids.mkpo.li/ behind the worker in `worker/`, which
 // answers any path with the app so a sequence can live in the path.
 export default defineConfig({
@@ -70,12 +99,12 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(VERSION),
     __BUILD_COMMIT__: JSON.stringify(process.env.GITHUB_SHA || process.env.VITE_BUILD_COMMIT || 'dev'),
   },
-  plugins: [lazyFallbackFont(), svelte(), ortAssets()],
+  plugins: [lazyFallbackFont(), svelte(), ortAssets(), openData()],
   resolve: { alias: { 'onnxruntime-web/wasm': ORT_ALIAS } },
   build: { outDir: '../dist', emptyOutDir: true, target: 'es2022',
     // A fallback shard is fetched when a character needs it; inlined, the small ones would ride in
     // the first scripts as base64, which hardly compresses.
     assetsInlineLimit: file => file.endsWith('.woff2') ? false : undefined,
-    rollupOptions: { input: { index: `${import.meta.dirname}/index.html`, compare: `${import.meta.dirname}/compare.html`, engines: `${import.meta.dirname}/engines.html`, sources: `${import.meta.dirname}/sources.html`, embed: `${import.meta.dirname}/embed.html`, design: `${import.meta.dirname}/design.html` } } },
+    rollupOptions: { input: { index: `${import.meta.dirname}/index.html`, compare: `${import.meta.dirname}/compare.html`, engines: `${import.meta.dirname}/engines.html`, sources: `${import.meta.dirname}/sources.html`, 'open-data': `${import.meta.dirname}/open-data.html`, unencoded: `${import.meta.dirname}/unencoded.html`, embed: `${import.meta.dirname}/embed.html`, design: `${import.meta.dirname}/design.html` } } },
   server: { fs: { allow: ['..'] } },
 })

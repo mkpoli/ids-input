@@ -435,7 +435,6 @@ export function validateDocument(document) {
   }
   if (array(document.geometryEdits)) {
     if (document.geometryEdits.length > MAX_EDITS) issues.push({ path: '/geometryEdits', message: `at most ${MAX_EDITS} edits` })
-    if (document.geometryEdits.length && object(document.render) && document.render.mode !== 'pinned') issues.push({ path: '/geometryEdits', message: 'geometry edits need a pinned recipe' })
     const editIds = new Set()
     document.geometryEdits.forEach((edit, i) => {
       validateEdit(edit, `/geometryEdits/${i}`, issues)

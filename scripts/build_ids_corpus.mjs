@@ -110,6 +110,80 @@ for (const [i, entry] of manifest.files.entries()) {
   }
 }
 
+// Equivalences: BabelStone names a part `{n}` where CHISE names it `&name;`. Aligning their
+// descriptions of one character, operator by operator, and keeping the operand positions where the
+// two differ gives the two names that stand for one component. A pair seen on several characters is
+// stronger than one seen once. A component against a *character* is not recorded: a part may look
+// like 叀 without being the character 叀, and the alignment cannot tell the two apart.
+const TOKEN = /\{(\d+)\}|&([^;]+);|./gsu
+/** The IDS fragment note 6 gives each numbered component; a number with one is compared as that
+ * fragment, so a composite such as {2} (`⿱⺈𫩏`) is not taken for its first character. */
+const fragments = new Map()
+for (const line of (await readFile(new URL('../data/ids-components.tsv', import.meta.url), 'utf8')).split(/\r?\n/)) {
+  if (!line || line.startsWith('#')) continue
+  const [name, , fragment] = line.split('\t')
+  const number = Number(name?.slice(1, -1))
+  if (fragment && Number.isInteger(number)) fragments.set(number, fragment)
+}
+/** @param {string} value @param {Set<number>} [seen] */
+const expand = (value, seen = new Set()) => value.replace(/\{(\d+)\}/g, (whole, digits) => {
+  const number = Number(digits), fragment = fragments.get(number)
+  if (fragment === undefined || seen.has(number)) return whole
+  return expand(fragment, new Set([...seen, number]))
+})
+const tokenize = value => [...expand(value).matchAll(TOKEN)].map(match => match[0])
+/** @type {Map<number, { babel: typeof rows, chise: typeof rows }>} */
+const bySubject = new Map()
+for (const row of rows) {
+  let group = bySubject.get(row.subject)
+  if (!group) bySubject.set(row.subject, group = { babel: [], chise: [] })
+  ;(row.prov === babelProv ? group.babel : group.chise).push(row)
+}
+/** @type {Map<string, { a: string, b: string, count: number, prov: Set<number>, chars: string[] }>} */
+const aligned = new Map()
+const record = (a, b, prov, char) => {
+  const [one, two] = [a, b].sort()
+  const key = `${one}\0${two}`
+  let found = aligned.get(key)
+  if (!found) aligned.set(key, found = { a: one, b: two, prov: new Set(), chars: new Set() })
+  found.prov.add(prov)
+  found.chars.add(char)
+}
+for (const [subject, group] of bySubject) {
+  for (const b of group.babel) {
+    const bt = tokenize(b.text)
+    for (const c of group.chise) {
+      const ct = tokenize(c.text)
+      if (bt.length !== ct.length) continue
+      /** @type {[number, string, string][]} */
+      const diff = []
+      let sameOperators = true
+      for (let i = 0; i < bt.length; i++) {
+        if (bt[i] === ct[i]) continue
+        if (OPERATORS.has(bt[i]) || OPERATORS.has(ct[i])) { sameOperators = false; break }
+        diff.push([i, bt[i], ct[i]])
+      }
+      if (!sameOperators || !diff.length) continue
+      for (const [, x, y] of diff) {
+        for (const [a, d] of [[x, y], [y, x]]) {
+          const numbered = /^\{(\d+)\}$/.exec(a), entity = /^&([^;]+);$/.exec(d)
+          if (numbered && entity) record(`bsp:${numbered[1]}`, `chise:${entity[1]}`, c.prov, String.fromCodePoint(subject))
+        }
+      }
+    }
+  }
+}
+const equivalences = [...aligned.values()]
+  .map(found => {
+    // One character's regional descriptions may give the same pair several times; the count is of
+    // characters, not descriptions.
+    const characters = [...found.chars]
+    return [found.a, found.b, 'alignment', characters.length >= 2 ? 'verified' : 'candidate',
+      [...found.prov, babelProv].sort((a, b) => a - b),
+      `${characters.length} ${characters.length === 1 ? 'character' : 'characters'}: ${characters.join(' ')}`]
+  })
+  .sort((a, b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]))
+
 // Component identities: every entity name CHISE uses that no codepoint covers.
 const components = []
 const aliases = []
@@ -125,6 +199,43 @@ for (const name of [...entityNames].sort()) {
   aliases.push([cid, 'chise', name, chiseProv[0], 'name', 'glyph', 'verified'])
   aliases.push([cid, 'char', `U+${char.toString(16).toUpperCase()}`, chiseProv[0], 'codepoint', 'character', 'verified'])
 }
+
+// BabelStone's numbered components, after the CHISE entities so their private-use slots stay put.
+const numbered = []
+for (const line of (await readFile(new URL('../data/ids-components.tsv', import.meta.url), 'utf8')).split(/\r?\n/)) {
+  if (!line || line.startsWith('#')) continue
+  const [name, description, fragment] = line.split('\t')
+  const number = Number(name?.slice(1, -1))
+  if (Number.isInteger(number)) numbered.push({ number, description, fragment: fragment || null })
+}
+numbered.sort((a, b) => a.number - b.number)
+for (const { number } of numbered) {
+  const cid = `bsp:${number}`
+  const char = PUA_BASE + nextSlot++
+  components.push([cid, `U+${char.toString(16).toUpperCase()}`, 'unencoded', 'u', null, 0, null, false, null])
+  aliases.push([cid, 'bsp', String(number), babelProv, 'number', 'glyph', 'verified'])
+  aliases.push([cid, 'char', `U+${char.toString(16).toUpperCase()}`, babelProv, 'codepoint', 'character', 'verified'])
+}
+
+// The equivalence table as its own small document, for the appendix page. Labels come from the
+// components' characters and note 6's descriptions, so a reader sees `CDP-8BD0` beside `top of 專惠`.
+const charOf = new Map(components.map(([cid, code]) => [cid, code ? String.fromCodePoint(Number.parseInt(code.slice(2), 16)) : null]))
+const descriptionOf = new Map(numbered.map(({ number, description }) => [`bsp:${number}`, description]))
+const fragmentOf = new Map(numbered.map(({ number, fragment }) => [`bsp:${number}`, fragment]))
+const equivalenceDoc = {
+  format: 'ids-input/equivalences',
+  version: 1,
+  licence: 'GPL-2.0-or-later',
+  sources,
+  provenance,
+  columns: ['a', 'b', 'aChar', 'bChar', 'aDescription', 'bDescription', 'basis', 'status', 'prov', 'note'],
+  rows: equivalences.map(([a, b, basis, status, prov, note]) => [
+    a, b, charOf.get(a) ?? null, charOf.get(b) ?? null,
+    descriptionOf.get(a) ?? null, descriptionOf.get(b) ?? null, basis, status, prov, note,
+  ]),
+}
+const EQUIVALENCES = new URL('../data/ids-equivalences.json', import.meta.url)
+const equivalenceBytes = Buffer.from(`${JSON.stringify(equivalenceDoc, null, 1)}\n`)
 
 /** The canonical text of a row: entity names rewritten to their cid token. */
 const resolvedOf = value => {
@@ -154,6 +265,64 @@ const descriptions = [...seen.values()]
   .sort((a, b) => a.subject.localeCompare(b.subject) || a.text.localeCompare(b.text))
   .map(row => [row.subject, row.text, row.resolved, row.prov, row.regions, row.role, row.status])
 
+// Every component the descriptions use, encoded or not: the numbered parts, the CHISE entities and
+// the characters that fill the other operands. The appendix lists the lot, with an equivalence where
+// one is known.
+const uses = new Map()
+const use = cid => uses.set(cid, (uses.get(cid) ?? 0) + 1)
+for (const row of descriptions) {
+  const text = row[1].replace(/\[[^\]]*\]/g, '')
+  for (const match of text.matchAll(/\{(\d+)\}|&([^;]+);|./gsu)) {
+    const [whole, number, entity] = match
+    if (number) use(`bsp:${number}`)
+    else if (entity) use(`chise:${entity}`)
+    else if (!OPERATORS.has(whole)) use(`ucs:${(whole.codePointAt(0) ?? 0).toString(16).toUpperCase()}`)
+  }
+}
+/** @type {Map<string, { cid: string, status: string, note: string }[]>} */
+const equivalentsOf = new Map()
+for (const [a, b, , status, , note] of equivalences) {
+  for (const [one, two] of [[a, b], [b, a]]) {
+    const list = equivalentsOf.get(one) ?? []
+    list.push({ cid: two, status, note })
+    equivalentsOf.set(one, list)
+  }
+}
+const componentRows = components.map(([cid, code]) => {
+  const kind = cid.startsWith('bsp:') ? 'number' : cid.startsWith('chise:') ? 'entity' : 'character'
+  const number = /^bsp:(\d+)$/.exec(cid)
+  const description = number ? descriptionOf.get(`bsp:${number[1]}`) ?? null : null
+  const pua = number ? /\(([0-9A-F]{4,6})\)\s*$/.exec(description ?? '') : null
+  return {
+    cid,
+    char: pua ? String.fromCodePoint(Number.parseInt(pua[1], 16)) : code ? String.fromCodePoint(Number.parseInt(code.slice(2), 16)) : null,
+    kind,
+    label: number ? `{${number[1]}}` : cid.replace(/^chise:/, ''),
+    description: description ? description.replace(/\s*\([0-9A-F]{4,6}\)\s*$/, '') : description,
+    fragment: number ? fragmentOf.get(`bsp:${number[1]}`) ?? null : null,
+    uses: uses.get(cid) ?? 0,
+    equivalents: equivalentsOf.get(cid) ?? [],
+  }
+})
+const encodedRows = [...uses.keys()].filter(cid => cid.startsWith('ucs:') && !charOf.has(cid)).map(cid => {
+  const point = Number.parseInt(cid.slice(4), 16)
+  return { cid, char: String.fromCodePoint(point), kind: 'character', label: String.fromCodePoint(point), description: null, uses: uses.get(cid) ?? 0, equivalents: equivalentsOf.get(cid) ?? [] }
+})
+const RANK = { number: 0, entity: 1, character: 2 }
+const indexRows = [...componentRows, ...encodedRows].sort((a, b) =>
+  (RANK[a.kind] - RANK[b.kind]) || a.cid.localeCompare(b.cid))
+const indexDoc = {
+  format: 'ids-input/components',
+  version: 1,
+  licence: 'GPL-2.0-or-later',
+  sources,
+  provenance,
+  counts: { all: indexRows.length, number: indexRows.filter(row => row.kind === 'number').length, entity: indexRows.filter(row => row.kind === 'entity').length, character: indexRows.filter(row => row.kind === 'character').length },
+  rows: indexRows,
+}
+const INDEX = new URL('../data/ids-components-index.json.gz', import.meta.url)
+const indexBytes = gzipSync(Buffer.from(JSON.stringify(indexDoc)), { level: 9, mtime: 0 })
+
 const corpus = {
   format: 'ids-input/ids-corpus',
   version: 1,
@@ -167,7 +336,7 @@ const corpus = {
   provenance,
   components: { columns: ['cid', 'char', 'type', 'class', 'label', 'uses', 'strokes', 'strokesDerived', 'first'], rows: components },
   aliases: { columns: ['cid', 'ns', 'value', 'prov', 'basis', 'scope', 'status'], rows: aliases },
-  equivalences: { columns: ['a', 'b', 'basis', 'status', 'prov', 'note'], rows: [] },
+  equivalences: { columns: ['a', 'b', 'basis', 'status', 'prov', 'note'], rows: equivalences },
   merges: { columns: ['kept', 'absorbed', 'basis', 'prov', 'note'], rows: [] },
   descriptions: { columns: ['subject', 'text', 'resolved', 'prov', 'regions', 'role', 'status'], rows: descriptions },
   counts: {
@@ -175,6 +344,7 @@ const corpus = {
     components: components.length,
     unresolved: descriptions.filter(row => row[6] === 'unresolved').length,
     ready: descriptions.filter(row => row[6] === 'ready').length,
+    equivalences: equivalences.length,
   },
 }
 
@@ -203,7 +373,7 @@ const archive = gzipSync(tar(inputs), { level: 9, mtime: 0 })
 const ARCHIVE = new URL('../data/ids-corpus-sources.tar.gz', import.meta.url)
 
 if (CHECK) {
-  for (const [path, expected] of [[OUT, bytes], [ARCHIVE, archive]]) {
+  for (const [path, expected] of [[OUT, bytes], [ARCHIVE, archive], [EQUIVALENCES, equivalenceBytes], [INDEX, indexBytes]]) {
     const committed = await readFile(path).catch(() => null)
     if (!committed || !committed.equals(expected)) throw new Error(`${path} is not what this build writes`)
   }
@@ -212,5 +382,9 @@ if (CHECK) {
   await mkdir(dirname(OUT), { recursive: true })
   await writeFile(OUT, bytes)
   await writeFile(ARCHIVE, archive)
+  await writeFile(EQUIVALENCES, equivalenceBytes)
+  await writeFile(INDEX, indexBytes)
   console.log(`${OUT}: ${corpus.counts.descriptions} descriptions, ${corpus.counts.components} components, ${corpus.counts.unresolved} unresolved, ${bytes.length} bytes`)
+  console.log(`${EQUIVALENCES}: ${equivalences.length} equivalences, ${equivalenceBytes.length} bytes`)
+  console.log(`${INDEX}: ${indexRows.length} components, ${indexBytes.length} bytes`)
 }

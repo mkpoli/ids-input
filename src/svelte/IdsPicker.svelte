@@ -11,12 +11,12 @@
   import IdsParts from './IdsParts.svelte'
   import IdsSketch from './IdsSketch.svelte'
   import IdsTemplates from './IdsTemplates.svelte'
-  import { loadStrokeRecords } from './strokes.js'
+  import { loadJurchenStrokes, loadKanaStrokes, loadStrokeRecords, loadTangutStrokes } from './strokes.js'
   import { strokeSummary } from './i18n.js'
 
   /** @typedef {'find' | 'parts' | 'from' | 'templates'} Tab */
-  /** @type {{ editor: import('./editor.svelte.js').Editor, pickers?: Tab[], recentKey?: string | null, tab?: Tab | null, fromText?: string, title?: boolean }} */
-  let { editor, pickers = ['find', 'parts', 'from', 'templates'], recentKey = 'ids-input.recentParts', tab = $bindable(null), fromText = $bindable(''), title = true } = $props()
+  /** @type {{ editor: import('./editor.svelte.js').Editor, pickers?: Tab[], recentKey?: string | null, tab?: Tab | null, fromText?: string, title?: boolean, equivalents?: Map<string, string[]> }} */
+  let { editor, pickers = ['find', 'parts', 'from', 'templates'], recentKey = 'ids-input.recentParts', tab = $bindable(null), fromText = $bindable(''), title = true, equivalents } = $props()
   const t = $derived(editor.t)
   const adapter = $derived(editor.adapter)
   const uid = $props.id()
@@ -60,15 +60,31 @@
     if (strokeRecords || (strokeLimit === '' && !found.items.length)) return
     loadStrokeRecords().then(records => { strokeRecords = records }).catch(() => { strokeRecords = new Map() })
   })
+  // The other scripts' counts, 72 KB together, loaded with the Han table so a hit says how many
+  // strokes it has whichever script it belongs to. Only Jurchen records a first stroke.
+  let scriptStrokes = $state.raw(/** @type {Map<string, import('./strokes.js').StrokeRecord> | null} */ (null))
+  $effect(() => {
+    if (scriptStrokes || (strokeLimit === '' && !found.items.length)) return
+    Promise.all([loadTangutStrokes(), loadJurchenStrokes(), loadKanaStrokes()])
+      .then(([tangut, jurchen, kana]) => {
+        /** @type {Map<string, import('./strokes.js').StrokeRecord>} */
+        const all = new Map()
+        for (const [char, count] of tangut) all.set(char, { strokes: count, first: null })
+        for (const [char, record] of jurchen) all.set(char, record)
+        for (const [char, count] of kana) all.set(char, { strokes: count, first: null })
+        scriptStrokes = all
+      })
+      .catch(() => { scriptStrokes = new Map() })
+  })
   const wantedStrokes = $derived(strokeLimit === '' ? null : Number(strokeLimit))
   // Each hit with the title its button carries: its label, then its stroke count and first stroke.
   const foundItems = $derived.by(() => {
-    const records = strokeRecords, wanted = wantedStrokes
+    const records = strokeRecords, others = scriptStrokes, wanted = wantedStrokes
     const items = wanted === null || !records ? found.items
       : found.items.filter(item => (records.get(item.char)?.strokes ?? null) === wanted)
     return items.map(item => ({ ...item, title: [
       item.label ? `${item.char} ${item.label}` : item.char,
-      strokeSummary(t, records?.get(item.char)),
+      strokeSummary(t, records?.get(item.char) ?? others?.get(item.char)),
     ].filter(Boolean).join(' · ') }))
   })
   $effect(() => {
@@ -135,7 +151,7 @@
               {/if}
             </div>
           {:else if name === 'templates'}<IdsTemplates {editor} />
-          {:else if name === 'parts'}<IdsParts {adapter} disabled={editor.disabled} messages={editor.messages} locale={editor.locale} {recentKey} onpick={part => editor.take(part, undefined, { loose: isMarks(part) })} />
+          {:else if name === 'parts'}<IdsParts {adapter} disabled={editor.disabled} messages={editor.messages} locale={editor.locale} {recentKey} {equivalents} onpick={part => editor.take(part, undefined, { loose: isMarks(part) })} />
           {:else}<IdsFrom {adapter} lookup={editor.lookup} disabled={editor.disabled} messages={editor.messages} locale={editor.locale} bind:text={fromText} ontake={part => editor.take(part)} />{/if}
         </div>
       {/if}

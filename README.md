@@ -66,7 +66,7 @@ The Jurchen tab holds Unicode 18.0's 914 characters and 51 radicals and Alari's 
 sequences, with outlines from
 [Alari Xuwasun Jurchen](https://dorontu.com/#/cloud) bundled for previews and export with the
 `IDS Jurchen` face. Narrow the characters by radical, or filter them by Alari's stroke code, the
-reading in Unicode's records, numeric value or code point. Twenty-two of the characters carry an
+reading in Unicode's records, numeric value or code point. Forty-four of the characters carry an
 editorial IDS, printed on the tile and in their title, and the tab says these are ours, since no
 source gives them.
 
@@ -96,7 +96,8 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
   // Vite: serve the data files as assets and pass their URLs.
   import ids from 'ids-input/data/babelstone-ids.tsv.gz?url'
   import layers from 'ids-input/data/tangut-layers.json.gz?url'
-  import additionalIds from 'ids-input/data/yi-bai-ids.tsv.gz?url'
+  import zitools from 'ids-input/data/yi-bai-ids.tsv.gz?url'
+  import corpus from 'ids-input/data/ids-corpus.json.gz?url'
   import projectIds from 'ids-input/data/ids-project.tsv.gz?url' 
   import components from 'ids-input/data/ids-components.tsv?url'
   import parts from 'ids-input/data/ids-parts.json?url'
@@ -105,7 +106,7 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
   import folds from 'ids-input/data/component-name-folds.tsv?url'
   import characters from 'ids-input/data/character-vocabulary.tsv.gz?url'
 
-  const adapter = babelStoneAdapter({ ids, layers, additionalIds: [additionalIds, projectIds], components, parts, forms, names, folds, characters })
+  const adapter = babelStoneAdapter({ ids, zitools, chise: corpus, project: projectIds, layers, components, parts, forms, names, folds, characters })
   let value = $state('')
 </script>
 
@@ -127,7 +128,7 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
 | `recentKey` | `'ids-input.recentParts'` | `localStorage` key of the palette's recent parts; `null` keeps none |
 | `keyHints` | `true` | show each operator's key in a corner of its button |
 | `preview` | snippet | `(sequence, whole)`, drawn beside the field in place of `IdsPreview` |
-| `tintMode` | `"hover"` | branch tints: `"hover"`, `"on"`, or `"off"`; also accepted by `createEditor` |
+| `tintMode` | `"hover"` | layer tints: `"hover"`, `"on"`, or `"off"`; also accepted by `createEditor` |
 | `disabled` | | |
 
 `IdsInput` shows `IdsPreview` beside the field when the adapter has a `preview` or a `drawing`.
@@ -158,7 +159,9 @@ The editor holds the tree, the chosen part and a history of named steps (`editor
 with ⿰", "Put 木"): `operator`, `put`, `merge`, `take`, `empty`, `remove`, `open`, `undo`, `redo`,
 `travel` and `keydown` change it, `change` names the last change and whether it threw something away,
 and `listen(fn)` hears each new text. `merges` lists the characters the chosen node encodes and
-`merge(char)` puts one in its place (⿱一口 as 𠮛), one more named step. `snapshot()` returns that
+`merge(char)` puts one in its place (⿱一口 as 𠮛), one more named step. In place of `㇯軍車`, the
+part tools offer `冖`, and in place of a whole `⿰光㇯軍車` they offer `⿰光冖`; the rule reads the
+first operand's description, so the alternative appears among the merges. `snapshot()` returns that
 state and history; `restore(state)` puts them back, for a host switching between documents. In the
 tree, a click chooses a part, a part dragged from the palette, the decomposition tree, a search or
 the swaps is put where it is dropped, and a part of the tree, or a whole group grabbed by its frame,
@@ -265,8 +268,10 @@ character spells it as a whole, it uses only alignment and exact enclosure opera
 has a glyph. Each part takes its own cell in the tree's reading order, so no two parts overlap. The
 cell layout gives a single top part less than a third of the height and lets it fill the width,
 shares an alignment axis below the top by the ink of its parts (one holding an empty slot keeps leaf shares), insets a side-split enclosure's inner part and a three-row middle,
-and fits each glyph by its ink. A dense description then reads as one character rather than a list
-of parts. The 108-stroke created character 「ぼんのう」 by しょかき is
+and fits each glyph by its ink. A face that lacks an enclosure's own form presses it; where it
+draws the same kind of foot elsewhere, the composer grafts it — see
+[enclosure grafts](docs/enclosure-graft.md). A dense description then reads as one character rather
+than a list of parts. The 108-stroke created character 「ぼんのう」 by しょかき is
 such a description; its [reference drawing](https://wikiwiki.jp/sosakukanji/%E3%81%BC%E3%82%93%E3%81%AE%E3%81%86%28%E3%81%97%E3%82%87%E3%81%8B%E3%81%8D%29)
 puts 苦 above, 耳/舌/鼻 left, 平/惡/意/眼 centre, 淨/染 below and 女/子/身 right.
 
@@ -554,7 +559,7 @@ each leaf's box as its local frame, or `composeDocumentSource(document, preview)
 source together. The composer's leaf ownership is used when present; without it, one non-cut part per
 component in reading order is inferred. Other drawings report themselves incomplete.
 
-`babelStoneAdapter({ ids, layers, additionalIds, overwrite, components, parts, forms, names, folds, characters, sketches })` answers
+`babelStoneAdapter({ ids, zitools, chise, project, layers, overwrite, components, parts, forms, names, folds, characters, sketches })` answers
 `structure`, `search` (a character, `U+6728` or bare hex, a name such as 絞絲, or a word or reading
 such as water or のぶん when `names` is given, and the whole characters those names belong to when
 `characters` is given), `containing`, `parts` and `sketchTemplates` from the files in `data/`.
@@ -565,13 +570,18 @@ right of 龍, as `⿷己三`), so 龍's description reads `⿰𦚏⿷己三` and
 individually; `{82}`, the top of 書, writes out as the encoded 聿, so 書 reads `⿱聿日` and 畫 and 晝
 reach the same 聿 that 建 and 律 use, through 𤱪 and 書. The parts palette lists all 121 numbered
 components by number; the 52 with a fragment draw it and insert it, and the 69 the note leaves `？`
-draw BabelStone Han PUA's glyph for the PUA code point it gives and insert that character. They sit
-in the unknown-stroke group because BabelStone gives them no stroke count. `additionalIds` adds tables in the same
-format, one URL or an array: Yi Bai's descriptions and this project's own table for characters newer
-than BabelStone's (currently empty; 𳑳, U+33473, is a 獨體字 and is not described); `overwrite` maps a
-whole description to the encoded character it draws as (`⿰𦚏𳑳` as 龍). `forms` folds the
-description search's components and opens a named component into the forms that stand for it;
-`folds` folds Chinese scripts and positional forms together before names are compared. Without them
+draw BabelStone Han PUA's glyph for the PUA code point it gives and insert that character. In the
+Sans face, 60 of them are cut from the host character's Noto Sans/Plangothic glyph; the other 9 fall
+back to the PUA glyph. They sit in the unknown-stroke group because BabelStone gives them no stroke
+count. `zitools` adds the descriptions zi.tools publishes (`data/yi-bai-ids.tsv.gz`), `project` this
+project's own (`data/ids-project.tsv.gz`, currently empty; 𳑳, U+33473, is a 獨體字 and is not
+described), and `chise` the CHISE rows of `data/ids-corpus.json.gz`, the GPL-2.0-or-later catalogue in
+[`docs/ids-corpus.md`](docs/ids-corpus.md); a host that cannot take GPL leaves `chise` out. Every
+description names the sources that give it in `sources`: BabelStone, zi.tools, CHISE, and this
+project's own Shuishu and Jurchen decompositions. One description two sources agree on is listed once
+with both. `overwrite` maps a whole description to the encoded character it draws as (`⿰𦚏𳑳` as
+龍). `forms` folds the description search's components and opens a named component into the forms
+that stand for it; `folds` folds Chinese scripts and positional forms together before names are compared. Without them
 `⺡` and `氵` are different components and a name finds only the form and the script the table
 records. The containing search builds an index in memory on first use: under Bun, about half a
 second for the most frequent components and 150 MB of heap with the table loaded; a host with a
@@ -585,11 +595,13 @@ keep their source description; malformed descriptions stay as source text. Both 
 source descriptions remain searchable. The computed reading follows shapes and does not assert a
 recorded segmentation or historical descent.
 
-Pass `additionalIds` as the URL of an IDS table in the same format, or an array of them, to add
-descriptions without replacing BabelStone's. The workshop supplies `data/yi-bai-ids.tsv.gz`, Yi
-Bai's unannotated standard subset, and its own `data/ids-project.tsv.gz` for characters newer than
-BabelStone's (empty at present; the newer character 𳑳 is a 獨體字). Extended expressions and variant
-annotations are not included.
+The three tables beside BabelStone's add descriptions without replacing them. The workshop passes
+all three: `data/yi-bai-ids.tsv.gz`, the unannotated standard subset zi.tools publishes; its own
+`data/ids-project.tsv.gz` for characters newer than BabelStone's (empty at present; the newer
+character 𳑳 is a 獨體字); and `data/ids-corpus.json.gz`, whose CHISE rows are optional because that
+file is GPL-2.0-or-later. Each description's `sources` says which of `babelstone`, `zitools`,
+`chise` and `project` give it; Shuishu's and Jurchen's editorial decompositions name `project`.
+Extended expressions and variant annotations are not included.
 
 ## Search
 
@@ -666,6 +678,14 @@ To find characters containing 木, use `㇯⬚木`; to list the components of �
 The empty slot works as a wildcard in both searches. The zi.tools spellings `㇯？木` and `㇯森？`
 also work, and `SU` can be used in place of `㇯`. These searches use the adapter's own data;
 components hidden inside a subtraction are omitted because the data does not establish which survive.
+
+A subtraction is read through the first operand's description when that description holds the
+second: `㇯軍車` is `冖`, because 軍 is `⿱冖車`. Queries, structural patterns and unknown-structure
+patterns normalize it before matching, so `⿰光㇯軍車` finds what `⿰光冖` finds. A description that is
+itself a subtraction, or that holds a placeholder, is left alone, since its operands do not stand in
+the character. A remainder no operator can write, such as a three-part node left with two parts,
+stays as typed.
+
 For a structural search of a subtraction with a wildcard, use the structural-search mode, or pass
 `{ componentLookup: false }` to `createSearch().search()` or `adapter.findByIds()`; the latter
 also finds matching subtrees inside a character.
@@ -851,7 +871,7 @@ from `data/unicode-outlines/030.json.gz`; Node's fetch does not read local file 
 `hasUnicodeGlyph(component)` reports exact bundled coverage. Fallback glyphs are monochrome,
 with the source font's design; they do not imitate a selected serif or handwritten face.
 
-The demo draws Sans from `https://glyphatlas.org/atlas/composer/bd0829bc6fbf-sans-compose-layout-v4-f5/`,
+The demo draws Sans from `https://ids-input-composer.mkpoli.workers.dev/a83fc941166b-sans-compose-layout-v4-f6/`,
 Serif from the serif export, Fangsong from the Zhuque Fangsong export, and Kaisho from the Kureedo export; `?composer=<url>` or
 `VITE_COMPOSER_BASE` points every face at another copy of one export. A face that cannot draw a
 description draws the encoded character it names in that face, else the Sans export's drawing.
@@ -878,7 +898,7 @@ closes it, and Escape closes the submenu before the menu.
 
 The operator palette groups the operators by how many parts they take (1: ⿾ ⿿ 〾; 2: ⿰ ⿱ ⿴ ⿵
 ⿶ ⿷ ⿼ ⿸ ⿹ ⿺ ⿽ ⿻ ㇯; 3: ⿲ ⿳, `OPERATOR_GROUPS` in the core), each button showing its key (`shortcut()` writes keys as the platform does: ⌘⇧Z on Apple systems,
-Ctrl+Shift+Z elsewhere). After them a ⬚ button empties the chosen part, as the part tools' Clear part does, and shows `?`.
+Ctrl+Shift+Z elsewhere). After them a ⬚ button empties the chosen part, as the part tools' Clear button does, and shows `?`.
 
 An operator on a slot splits it, the old part first (⿰ on 失 gives ⿰失⬚); on an operator it takes
 its place and keeps its parts, refusing to drop a filled one. In the sequence field, ASCII names in
@@ -925,6 +945,9 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - `data/ids-overwrites.tsv`: descriptions drawn as an encoded character instead of a composition,
   `⿰𦚏𳳳` as 龍 and `⿷⿺己一三` as 𳳳 (JYutnet JYN00025; zi.tools); the adapter reads it with
   `overwrite`.
+- `data/open-data/`: the published descriptions and their citations, CC0 1.0
+  (<https://creativecommons.org/publicdomain/zero/1.0/>), built by `scripts/build_open_ids.mjs`
+  from the starter catalogue and `data/ids-components.tsv`.
 - `data/component-forms.tsv`: radical and positional forms, from han-compose's
   `data/vocab/han-component-forms.tsv`, drawn from Unicode's EquivalentUnifiedIdeograph.txt (Unicode
   License v3) and cjkvi-variants' `radical-variants.txt` (public domain); its header names both (26 KB).
@@ -966,6 +989,13 @@ The sources the project reads, draws on, compares with or cites are catalogued a
 examples, with each source’s author, licence, dates, category and tags. The example records keep
 their notes and citation numbers.
 
+## Open data
+
+The descriptions the project transcribed or read, each with the source behind it, are published at
+<https://ids.mkpo.li/open-data> as JSON and TSV, one row per description. The files live in
+`data/open-data/`, are built by `bun scripts/build_open_ids.mjs`, and are dedicated to the public
+domain (CC0 1.0).
+
 ## The workshop
 
 The demo is a full-width workshop with one tab for each description being edited, in a strip below
@@ -976,7 +1006,7 @@ Every panel follows the chosen tab: the sequence, its code points, the operators
 at the start; the Shape or indented Tree view and the search under it; and at the end
 the drawing in a square panel with export as SVG or PNG (256 to 2048 px) on a transparent, white, black or chosen
 background, in an ink that suits it or a chosen one, with a margin, empty slots left out unless asked
-for. Export can include empty slots on request, including through the scoped document drawing. An incomplete drawing blocks normal export until the partial checkbox is set. File → Document title sets the title saved in `.ids.json` and embedded in SVG/PNG exports; the page title follows it. Exported SVG and PNG files carry the editable document, so Open document restores the tree, IDs and transforms. Dropping one or more `.ids.json`, SVG or PNG files anywhere on the app opens each as a tab; a drop target shows while files are over the window. Adjust layout moves, scales and turns document layers without changing the sequence; arrow keys
+for. The output shows the drawing's component count and stroke total beside the code points, using the character's recorded count when it has one and marking a sum from the components with `≈`. Export can include empty slots on request, including through the scoped document drawing. An incomplete drawing blocks normal export until the partial checkbox is set. File → Document title sets the title saved in `.ids.json` and embedded in SVG/PNG exports; the page title follows it. Exported SVG and PNG files carry the editable document, so Open document restores the tree, IDs and transforms. Dropping one or more `.ids.json`, SVG or PNG files anywhere on the app opens each as a tab; a drop target shows while files are over the window. Adjust layout moves, scales and turns document layers without changing the sequence; arrow keys
 nudge, `+` and `-` scale evenly, `[` and `]` turn, and `0` resets. An edge handle scales one axis,
 a corner handle scales both, and Shift makes a corner even. The changes stay with their tab and export
 through the scoped drawing. The Layers dialog edits the same layer
@@ -1017,10 +1047,11 @@ draft; text built from a sequence's letters goes on to the editor first. A docum
 than its sequence rides along as `?doc=`, so copying the location keeps a placement and opening such
 a link keeps the token. Tabs use
 `sessionStorage` to keep each browser window's working set separate through reloads, and
-`localStorage` to seed a new window. The toolbar’s Sans/Serif/Kaisho switch
-chooses the face for Han text and Sans/Serif bundled component forms. Other composed outlines use
-the configured export’s font. Settings, the recent sequences, the theme and font choice stay
-in `localStorage`; the keys use the `ids-input:` prefix.
+`localStorage` to seed a new window. The toolbar’s Sans/Serif/Fangsong/Kaisho switch
+chooses the face for Han text and Sans/Serif bundled component forms, and shows the description
+being built in each face. Other composed outlines use the configured export’s font. Settings,
+the recent sequences, the theme and font choice stay in `localStorage`; the keys use the
+`ids-input:` prefix.
 
 ### Share cards
 
@@ -1107,7 +1138,7 @@ reused as whole glyphs); 17 of the common kanji are whole glyphs on both sides; 
 composed by this site, so their scores include composition. The rest compare type style and
 variant choice. The page explains how the three numbers are measured and why the heavier
 typeface lowers the first two. The gallery shows 48 cards at a time, with Show more for the rest,
-and filters by set and structure. The drawings are a snapshot of the 2026-10-29 run in
+and filters by set and structure. The drawings are a snapshot of the 2026-11-08 run in
 `demo/lib/comparison.json`; after a composer change, rebuild it with
 `bun scripts/build_comparison.mjs`. GlyphWiki's glyph data is free to use and the KAGE engine is
 GPL-3.0. The About dialog links the page.
@@ -1272,7 +1303,9 @@ their editor, where `root` is the containing element. The parts, search, sequenc
 tree components expose `data-character` targets; custom character controls can use
 the same attribute. Optional `data-path` identifies a tree position; without it, the
 host chooses the insertion target. `disabled` prevents insertion. Sources remain in
-the adapter records and the data documentation. The card keeps clear of surfaces marked
+the adapter records and the data documentation. The row ends with the character's
+pages on 字統网 (zi.tools), 字海 (yedict), 漢典 (zdic) and CHISE, and carries no
+caption; 字海 and 漢典 cover Han characters. The card keeps clear of surfaces marked
 `data-character-info-avoid` inside `root`, such as a shape canvas, and takes the nearest
 place outside them while the window has room. Hosts without `characterInfo` retain
 their existing titles.

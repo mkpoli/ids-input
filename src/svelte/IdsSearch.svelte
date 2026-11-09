@@ -43,7 +43,7 @@
   let copied = $state(false)
   let copying = $state(false)
   let copyFailed = $state(false)
-  $effect(() => { asked; mode; strokeLimit; shown = limit; copied = false; copyFailed = false })
+  $effect(() => { void asked; void mode; void strokeLimit; shown = limit; copied = false; copyFailed = false })
   async function copyAll() {
     const id = asks
     copying = true

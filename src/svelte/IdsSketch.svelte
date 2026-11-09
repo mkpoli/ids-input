@@ -98,7 +98,7 @@
         onProgress: (count, total) => { if (live) progress = { done: count, total } },
       })).then(done, () => done([]))
     }
-    if (prepared) prepared().then(found => { if (live) found.length ? done(found) : build() }, () => { if (live) build() })
+    if (prepared) prepared().then(found => { if (live) { if (found.length) done(found); else build() } }, () => { if (live) build() })
     else build()
     return () => { live = false }
   })

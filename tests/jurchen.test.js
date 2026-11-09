@@ -84,6 +84,16 @@ describe('Jurchen in the editor', () => {
     expect(drawn.d.length).toBeGreaterThan(10)
   })
 
+  it('draws a selector no record names as the character, and keeps a record the selector has', async () => {
+    const source = () => jurchenSource({ load: async () => outlines })
+    const bare = await compose(source(), FIRST, { separate: true })
+    const selected = await compose(source(), `${FIRST}\uFE00`, { separate: true })
+    expect(selected.d).toBe(bare.d)
+    expect((await compose(source(), `⿰${FIRST}\uFE00${TUMEN}`, { separate: true })).origins).toHaveLength(2)
+    expect(outlines.records[VARIANT]).toBeDefined()
+    expect((await compose(source(), VARIANT, { separate: true })).origins).toEqual([`glyph ${VARIANT}`])
+  })
+
   it('adds the parts to the palette and a reading to the search', async () => {
     const adapter = jurchenAdapter({ data, palette: [] })
     expect(await adapter.parts()).toHaveLength(1502)
@@ -150,24 +160,27 @@ describe('Jurchen editorial descriptions', () => {
   const built = data.parts.filter(part => part.ids)
   const SAMPLE = '\u{18F6A}', TOP = '\u{191BA}', BOTTOM = '\u{191C8}'
 
-  it('holds the 22 of ids.json, each two parts of the block', () => {
-    expect(built).toHaveLength(22)
-    expect(data.ids.count).toBe(22)
+  it('holds the 44 of ids.json, each two parts of the block', () => {
+    expect(built).toHaveLength(44)
+    expect(data.ids.count).toBe(44)
     expect(data.ids.note.length).toBeGreaterThan(0)
     const known = new Set(data.parts.map(part => part.part))
     for (const part of built) {
       expect(part.jurGroup).toBe('character')
       const [op, ...rest] = [...part.ids]
-      expect(['⿰', '⿱']).toContain(op)
+      expect(['⿰', '⿱', '⿷', '⿸']).toContain(op)
       expect(rest).toHaveLength(2)
       expect(rest.every(char => known.has(char) && char !== part.part)).toBe(true)
     }
     expect(data.parts.find(part => part.part === SAMPLE).ids).toBe(`⿱${TOP}${BOTTOM}`)
+    // A dot held in a corner names the character that holds it first.
+    expect(data.parts.find(part => part.part === '\u{18EB9}').ids).toBe('⿸\u{191A8}\u{191D0}')
+    expect(data.parts.find(part => part.part === '\u{18E7A}').ids).toBe('⿷\u{18E75}\u{191D0}')
   })
 
   it('reads them as descriptions, found by their parts', async () => {
     const adapter = jurchenAdapter({ data, palette: [] })
-    expect((await adapter.table()).get(SAMPLE)).toEqual([{ text: `⿱${TOP}${BOTTOM}`, regions: '' }])
+    expect((await adapter.table()).get(SAMPLE)).toEqual([{ text: `⿱${TOP}${BOTTOM}`, regions: '', sources: ['project'] }])
     expect((await adapter.containing(TOP + BOTTOM)).items).toContain(SAMPLE)
     expect((await adapter.findByIds(TOP)).hits.map(hit => hit.char)).toContain(SAMPLE)
   })
@@ -183,10 +196,9 @@ describe('Jurchen editorial descriptions', () => {
 
   it('carries them into the search worker, and survives a missing file', async () => {
     const parts = [{ part: SAMPLE, ids: `⿱${TOP}${BOTTOM}` }, { part: TOP, ids: null }, { part: BOTTOM, ids: null }]
-    const args = ['data:text/plain,', undefined, undefined, '', undefined, '', undefined, '', undefined, undefined]
-    const search = await loadSearchWorker(...args, { format: 1, parts })
+    const search = await loadSearchWorker({ ids: 'data:text/plain,', jurchen: { format: 1, parts } })
     expect(search.search(TOP, { limit: 3 }).hits.map(hit => hit.char)).toEqual([SAMPLE])
-    const other = await loadSearchWorker(...args, { format: 2, parts: [] })
+    const other = await loadSearchWorker({ ids: 'data:text/plain,', jurchen: { format: 2, parts: [] } })
     expect(other.search(TOP, { limit: 3 }).hits).toEqual([])
   })
 
@@ -197,7 +209,7 @@ describe('Jurchen editorial descriptions', () => {
     globalThis.fetch = async (url, init) => String(url).endsWith('jurchen')
       ? (up ? new Response(Buffer.from(good, 'base64')) : new Response('', { status: 404 })) : realFetch(url, init)
     try {
-      await loadSearchWorker('data:text/plain,', undefined, undefined, '', undefined, '', undefined, '', undefined, undefined, 'https://example.invalid/jurchen')
+      await loadSearchWorker({ ids: 'data:text/plain,', jurchen: 'https://example.invalid/jurchen' })
       expect(await recovered()).toBe(false)
       up = true
       expect(await recovered()).toBe(true)

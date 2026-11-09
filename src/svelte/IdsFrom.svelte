@@ -23,7 +23,7 @@
    * @typedef {import('../adapter/types.js').IdsAdapter} IdsAdapter
    * @typedef {import('../adapter/types.js').Swap} Swap
    * @typedef {import('./lookup.svelte.js').Lookup} Lookup
-   * @typedef {{ key: string, level: number, kind: 'char' | 'node' | 'sequence' | 'status', part?: string, text?: string, regions?: string,
+   * @typedef {{ key: string, level: number, kind: 'char' | 'node' | 'sequence' | 'status', part?: string, text?: string, regions?: string, sources?: string[],
    *   take: string | null, openable: boolean, open: boolean, note?: string | null, status?: 'loading' | 'failed', swaps: Swap[] }} Row
    */
   /** @type {{ adapter: IdsAdapter, lookup?: Lookup, disabled?: boolean, messages?: Record<string, string>, locale?: string, ontake?: (part: string) => void, text?: string }} */
@@ -98,22 +98,23 @@
       out.push({ key, level, kind: 'node', text: write(part), take: write(part), openable: true, open, swaps: [] })
       if (open) parts(part, key, level + 1, ancestors)
     }
-    /** @param {{ text: string, regions: string, tree: import('../core/ids.js').Part, derived?: boolean }} found @param {string} key @param {number} level @param {string[]} ancestors */
-    const sequence = ({ text: written, regions, tree: read, derived }, key, level, ancestors) => {
+    /** @param {{ text: string, regions: string, sources?: string[], tree: import('../core/ids.js').Part, derived?: boolean }} found @param {string} key @param {number} level @param {string[]} ancestors */
+    const sequence = ({ text: written, regions, sources, tree: read, derived }, key, level, ancestors) => {
       if (typeof read === 'string') { char(read, key, level, ancestors); return }
       if (isNode(read)) {
         const open = isOpen(key, true)
-        out.push({ key, level, kind: 'sequence', text: written, regions, take: written, openable: true, open, note: derived ? 'layered' : null, swaps: [] })
+        out.push({ key, level, kind: 'sequence', text: written, regions, sources, take: written, openable: true, open, note: derived ? 'layered' : null, swaps: [] })
         if (open) parts(read, key, level + 1, ancestors)
         return
       }
       const named = namedParts(written), open = named.length > 0 && isOpen(key, true)
-      out.push({ key, level, kind: 'sequence', text: written, regions, take: null, openable: named.length > 0, open, note: 'unreadable', swaps: [] })
+      out.push({ key, level, kind: 'sequence', text: written, regions, sources, take: null, openable: named.length > 0, open, note: 'unreadable', swaps: [] })
       if (open) named.forEach((part, i) => char(part, `${key}~${i}`, level + 1, ancestors))
     }
-    for (const root of all) root.kind === 'sequence'
-      ? sequence({ text: root.text, regions: '', tree: root.tree }, root.key, 1, [])
-      : char(root.char, root.key, 1, [], true)
+    for (const root of all) {
+      if (root.kind === 'sequence') sequence({ text: root.text, regions: '', tree: root.tree }, root.key, 1, [])
+      else char(root.char, root.key, 1, [], true)
+    }
     return out
   })
 
@@ -127,7 +128,7 @@
   /** @type {string | null} */
   let handOn = null
   $effect.pre(() => {
-    rows
+    void rows
     untrack(() => {
       const active = /** @type {HTMLElement | null} */ (document.activeElement)
       const key = active?.dataset?.key
@@ -238,12 +239,18 @@
   const regionNames = regions => [...regions].filter(r => r in REGIONS).map(r => `${r} ${regionName(r)}`).join(' · ')
   /** @param {string} regions */
   const regionsTitle = regions => t('ids.from.regions', { regions: regionNames(regions) })
-  // What a row is read out as: what taking it gives, its regions, and its note.
+  const SOURCES = new Set(['babelstone', 'zitools', 'chise', 'project'])
+  /** @param {string[] | undefined} sources */
+  const sourceNames = sources => (sources ?? []).filter(source => SOURCES.has(source)).map(source => t(`ids.source.${source}`)).join(' · ')
+  /** The sources a row names that the workshop knows. @param {Row} row @returns {string[]} */
+  const shownSources = row => (row.sources ?? []).filter(source => SOURCES.has(source))
+  // What a row is read out as: what taking it gives, its regions, its sources, and its note.
   /** @param {Row} row */
   const rowLabel = row => [
     row.kind === 'status' ? statusText(row)
       : row.take ? t('ids.from.take', { part: row.take }) : row.text,
     row.regions ? regionsTitle(row.regions) : null,
+    row.sources?.length ? t('ids.from.sources', { sources: sourceNames(row.sources) }) : null,
     row.note ? t(`ids.from.${row.note}`) : null,
     row.status === 'failed' ? t('ids.from.retry') : null,
     row.swaps?.length ? t('ids.from.swapsHint') : null,
@@ -313,6 +320,7 @@
           {:else}
             <span class="from-take" lang="ja" aria-hidden="true">{#if row.kind === 'char'}{row.part}{:else}{@render written(row.text ?? '')}{/if}</span>
             {#if row.regions}<span class="from-regions" aria-hidden="true" title={regionsTitle(row.regions)}>{row.regions}</span>{/if}
+            {#if shownSources(row).length}<span class="from-sources" aria-hidden="true" title={t('ids.from.sources', { sources: sourceNames(shownSources(row)) })}>{#each shownSources(row) as source (source)}<span class="from-source">{t(`ids.source.${source}`)}</span>{/each}</span>{/if}
             {#if row.note && (row.note !== 'atomic' || row.level === 1)}<span class="from-note" aria-hidden="true">{t(`ids.from.${row.note}`)}</span>{/if}
             {#if row.swaps.length}
               <span class="from-swaps" aria-hidden="true" title={t('ids.swaps.label', { part: row.part ?? '' })}>
@@ -382,6 +390,8 @@
   .off .from-take{color:var(--_muted)}
   .from-unencoded{text-decoration:underline dotted;font-family:ui-monospace,monospace;font-size:12px;color:var(--_muted);cursor:help}
   .from-regions{font-size:10px;letter-spacing:.08em;padding:1px 4px;border-radius:4px;background:var(--_surface-selected);color:var(--_muted);font-variant-numeric:tabular-nums;cursor:help}
+  .from-sources{display:inline-flex;gap:3px;margin-inline-start:2px;cursor:help}
+  .from-source{padding:0 4px;border:1px solid var(--_line);border-radius:4px;font-size:10px;line-height:15px;color:var(--_muted);white-space:nowrap}
   .from-note{margin:0;font-size:11px;color:var(--_muted)}
   .from-note.fault{color:var(--_fault)}
   .from-retry{padding:1px 8px;font-size:12px;border:1px solid var(--_line);border-radius:5px;background:var(--_surface)}

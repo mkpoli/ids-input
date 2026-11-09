@@ -1,6 +1,7 @@
 <script>
   // A public gallery of the composer beside KAGE: the same IDS drawn by both, with the measured
   // agreement. Two sets: 44 unencoded KRM headwords and 20 common-use kanji.
+  import SiteSelect from './ui/SiteSelect.svelte'
   import { translator } from '../src/svelte/index.js'
   import { LOCALES, appMessages } from './lib/locales.js'
   import { applyTheme, storedTheme } from './lib/theme.js'
@@ -63,10 +64,7 @@
 
 <div class="page">
   <header class="bar">
-    <a class="brand" href="./" aria-label={t('app.title')}>
-      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="4" fill="var(--ui-color-accent)" /><path d="M7 7h4v10H7zM13 7h4v4h-4zM13 13h4v4h-4z" fill="var(--ui-color-on-accent)" /></svg>
-      <span>{t('app.title')}</span>
-    </a>
+    <SiteSelect title={t('app.title')} label={t('app.sitesLabel')} more={t('app.sitesMore')} {locale} href="./" />
     <span class="slash" aria-hidden="true">/</span>
     <h1>{t('compare.title')}</h1>
     <div class="end">
@@ -128,6 +126,7 @@
             <h2 class="seq" lang="zh">{entry.sequence}</h2>
             <span class="badge">{t('compare.score.f1')} {two(entry.f1)}</span>
           </div>
+          {#if entry.note}<p class="reading">{entry.note}</p>{/if}
           <div class="drawings">
             <figure>
               <figcaption>{t('compare.ours')}</figcaption>
@@ -172,7 +171,6 @@
   .page{display:flex;flex-direction:column;min-height:100dvh}
   .bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px max(18px,env(safe-area-inset-right)) 10px max(18px,env(safe-area-inset-left));
     border-bottom:1px solid var(--ui-color-border);background:color-mix(in srgb,var(--ui-color-canvas) 88%,transparent);backdrop-filter:blur(10px);position:sticky;top:0;z-index:10}
-  .brand{display:flex;align-items:center;gap:8px;color:var(--ui-color-ink);text-decoration:none;font-weight:650;font-size:15px;white-space:nowrap}
   .slash{color:var(--ui-color-border-strong)}
   h1{margin:0;font-size:15px;font-weight:600;color:var(--ui-color-ink-muted);white-space:nowrap}
   .end{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap}
@@ -200,6 +198,7 @@
   .card{display:flex;flex-direction:column;gap:9px;padding:13px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-xl);background:var(--ui-color-surface);box-shadow:var(--ui-shadow-1)}
   .head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
   .seq{margin:0;font-family:var(--cjk);font-size:24px;font-weight:400;line-height:1.2;overflow-wrap:anywhere}
+  .reading{margin:0;color:var(--ui-color-ink-muted);font-size:12px;line-height:1.45}
   .badge{font:600 11.5px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--ui-color-accent);background:var(--ui-color-accent-soft);padding:4px 7px;border-radius:var(--ui-radius-pill);white-space:nowrap}
   .drawings{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   figure{margin:0;display:flex;flex-direction:column;gap:3px}

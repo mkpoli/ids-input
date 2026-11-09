@@ -34,8 +34,8 @@
    * @typedef {import('../adapter/types.js').IdsAdapter} IdsAdapter
    * @typedef {import('../adapter/types.js').PalettePart} PalettePart
    */
-  /** @type {{ adapter: IdsAdapter, disabled?: boolean, messages?: Record<string, string>, locale?: string, recentKey?: string | null, onpick?: (part: string) => unknown }} */
-  let { adapter, disabled = false, messages, locale = 'en', recentKey = 'ids-input.recentParts', onpick } = $props()
+  /** @type {{ adapter: IdsAdapter, disabled?: boolean, messages?: Record<string, string>, locale?: string, recentKey?: string | null, equivalents?: Map<string, string[]>, onpick?: (part: string) => unknown }} */
+  let { adapter, disabled = false, messages, locale = 'en', recentKey = 'ids-input.recentParts', equivalents, onpick } = $props()
   const t = $derived(translator(messages, locale))
   /** @type {HTMLElement | null} */
   let partsRoot = $state(null)
@@ -136,7 +136,7 @@
   // The stroke count where the single character chips stop.
   const HAN_TAIL = 23
   let hangulGroup = $state(/** @type {'jamo' | 'compose' | 'syllable'} */ ('jamo')), hangulPage = $state(0)
-  $effect(() => { tab; hangulGroup; filter; hangulPage = 0 })
+  $effect(() => { void tab; void hangulGroup; void filter; hangulPage = 0 })
   const hangulKeys = $derived.by(() => {
     const syllables = hangulGroup === 'syllable'
     const base = syllables ? hangulSyllables : hangulGroup === 'jamo' ? hangul : []
@@ -191,7 +191,7 @@
       .catch(() => { hanLoading = false; hanFailed = true })
   })
   function retryHan() { hanLoading = false; hanFailed = false }
-  $effect(() => { tab; characters; hanCount; filter; hanPage = 0 })
+  $effect(() => { void tab; void characters; void hanCount; void filter; hanPage = 0 })
   /** @type {Map<string, number | null>} */
   const hanStrokes = $derived(new Map((hanKeys ?? []).map((key, index) => [key, hanStrokesData?.[index] ?? null])))
   const hanCounts = $derived([...new Set([...hanStrokes.values()].filter(count => count != null))].sort((a, b) => /** @type {number} */ (a) - /** @type {number} */ (b)))
@@ -309,7 +309,7 @@
       .catch(() => { otherLoading = false; otherFailed = true })
   })
   function retryOther() { otherLoading = false; otherFailed = false }
-  $effect(() => { tab; otherScript; filter; otherPage = 0 })
+  $effect(() => { void tab; void otherScript; void filter; otherPage = 0 })
   const otherKeys = $derived([...new Set([...(partsByScript.get(otherScript) ?? []).map(part => part.part), ...(otherData?.[otherScript] ?? [])])])
   const otherMatches = $derived.by(() => {
     const term = filter.trim()
@@ -324,7 +324,7 @@
     .map(part => byPart.get(part) ?? { part, kind: /** @type {const} */ ('extra') }))
 
   let alphabetPage = $state(0)
-  $effect(() => { tab; filter; alphabetPage = 0 })
+  $effect(() => { void tab; void filter; alphabetPage = 0 })
   const alphabetKeys = $derived.by(() => [...new Set([...alphabet, ...(partsByScript.get('latin') ?? []).map(part => part.part), ...(partsByScript.get('cyrillic') ?? []).map(part => part.part)])])
   const alphabetMatches = $derived.by(() => {
     const term = filter.trim()
@@ -354,7 +354,7 @@
   // The Components views page like the character list: frequent parts, stroke symbols or one count, in
   // first-stroke order, 120 at a time.
   let componentPage = $state(0)
-  $effect(() => { tab; count; partTail; characters; filter; componentPage = 0 })
+  $effect(() => { void tab; void count; void partTail; void characters; void filter; componentPage = 0 })
   const componentList = $derived.by(() => {
     /** @type {{ part: PalettePart, cls: string | null | undefined }[]} */
     const list = []
@@ -411,7 +411,7 @@
   })
   /** @type {number | null | undefined} */
   let tangutStroke = $state(undefined)
-  $effect(() => { tab; filter; tangutStroke; tangutPage = 0 })
+  $effect(() => { void tab; void filter; void tangutStroke; tangutPage = 0 })
   const tangutKeys = $derived([...new Set([...(partsByScript.get('tangut') ?? []).map(part => part.part), ...(tangutData ?? [])])])
   const tangutCounts = $derived([...new Set(Object.values(tangutStrokes ?? {}))].sort((a, b) => a - b))
   const tangutUncounted = $derived(tangutKeys.filter(key => tangutStrokes?.[key] == null).length)
@@ -459,7 +459,7 @@
   const gongcheShown = $derived(gongcheGroups(query))
   const filtered = $derived.by(() => {
     if (!query || !parts || tab === 'other') return null
-    if (tab === 'alphabet') { const chars = new Set([...query]); return alphabet.filter(part => chars.has(part)).map(part => byPart.get(part) ?? { part, kind: /** @type {const} */ ('extra') }) }
+    if (tab === 'alphabet') { const chars = new Set(query); return alphabet.filter(part => chars.has(part)).map(part => byPart.get(part) ?? { part, kind: /** @type {const} */ ('extra') }) }
     if (tab === 'seal') return sealParts.filter(part => [...query].includes(part.part) || isSequence(part.part) && part.part.includes(query) || part.modern?.some(char => [...query].includes(char)))
     if (tab === 'shuishu') {
       // A code point written U+1B300, or as bare hex when that is all there is.
@@ -482,7 +482,7 @@
     }
     // A numbered reference is its own query, not the digits inside it.
     if (/^\{\d+\}$/.test(query)) return parts.filter(part => part.part === query || part.aliases?.some(alias => alias.includes(query)))
-    const chars = new Set([...query])
+    const chars = new Set(query)
     return adjacentVariants(parts.filter(part => part.part === query || !isSequence(query) && chars.has(part.part) || isSequence(part.part) && part.part.includes(query) || part.fragment?.includes(query) || part.glyph === query || query.length >= 3 && part.description?.includes(query) || part.aliases?.some(alias => alias.includes(query))))
   })
 
@@ -580,10 +580,27 @@
     if (!(event.ctrlKey || event.metaKey) || event.altKey) return
     const button = /** @type {HTMLElement} */ (event.currentTarget)
     const key = event.key.toLowerCase()
-    const target = key === 'a' ? button.closest('.parts-panel')
-      : key === 'c' && window.getSelection()?.isCollapsed ? button.querySelector('.part-text') : null
+    // A focused part copies itself in one step, where the browser offers the clipboard (an http
+    // origin does not); elsewhere it selects the part so the browser's own copy takes it.
+    if (key === 'c' && window.getSelection()?.isCollapsed) {
+      const text = button.querySelector('.part-text')?.textContent
+      if (!text) return
+      if (navigator.clipboard?.writeText) {
+        event.preventDefault()
+        navigator.clipboard.writeText(text).catch(() => {})
+        return
+      }
+      const range = document.createRange(), selection = window.getSelection()
+      range.selectNodeContents(/** @type {Node} */ (button.querySelector('.part-text')))
+      selection?.removeAllRanges()
+      selection?.addRange(range)
+      return
+    }
+    if (key !== 'a') return
+    // The page of parts, without the pager and the stroke counts around it.
+    const target = button.closest('.parts-grid')
     if (!target) return
-    if (key === 'a') event.preventDefault()
+    event.preventDefault()
     const range = document.createRange(), selection = window.getSelection()
     range.selectNodeContents(target)
     selection?.removeAllRanges()
@@ -619,6 +636,7 @@
       nko ? [nko.name, nko.form, nko.code].filter(Boolean).join(' · ') : tab === 'hangul' ? substituteNames[part.part] : null,
       romanization,
       syllableIds ? `${t('parts.hangulIds')}: ${syllableIds}` : null,
+      equivalents?.get(part.part)?.length ? t('parts.equivalents', { names: (equivalents.get(part.part) ?? []).join(' ') }) : null,
       ...(part.aliases ?? []),
       ...(part.modern ?? []),
       part.sealBasis === 'cjk-ids' ? t('parts.seal.inferred', { ids: part.modernIds?.join(' / ') ?? '' }) : part.sealBasis === 'crosswalk' ? t('parts.seal.crosswalk') : null,
@@ -661,7 +679,8 @@
           <span class="part-text visually-hidden">{part.fragment}</span>
           <span class="numbered-ref" aria-hidden="true">{part.part}</span>
         {:else if part.glyph}
-          <span class="part-text">{part.glyph}</span>
+          <IdsPartIcon sequence={part.glyph} {adapter} />
+          <span class="part-text visually-hidden">{part.glyph}</span>
           <span class="numbered-ref" aria-hidden="true">{part.part}</span>
         {:else if isSequence(part.part)}
           <IdsPartIcon sequence={part.part} {adapter} />

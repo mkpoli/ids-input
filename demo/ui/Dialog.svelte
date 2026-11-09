@@ -14,7 +14,10 @@
     mobile = matchMedia('(max-width: 640px)').matches
     const rect = anchor?.getBoundingClientRect()
     top = rect ? rect.bottom + 8 : 52
-    right = rect ? Math.max(8, innerWidth - rect.right) : 16
+    // The drawer is 380px wide, or the window less its margins; a trigger near the left edge would
+    // otherwise put its right edge against that trigger and carry the drawer off the left side.
+    const width = Math.min(380, Math.max(0, innerWidth - 16))
+    right = rect ? Math.max(8, Math.min(innerWidth - rect.right, innerWidth - width - 8)) : 16
   }
   $effect(() => {
     if (!dialog) return

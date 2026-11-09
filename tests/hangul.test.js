@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import {
   HANGUL_FINALS, HANGUL_INITIALS, HANGUL_MEDIALS, HANGUL_TONE_MARKS, composeHangul, composeJamo, findSyllablesByRomanization, hangulClusterAt, jamoClass,
-  normalizeRomanization, romanizeHangul,
+  normalizeRomanization, romanizeHangul, toConjoiningJamo,
 } from '../src/core/hangul.js'
 import { descriptionEnd, parse, write } from '../src/core/ids.js'
 
@@ -106,5 +106,12 @@ describe('Romanized syllables', () => {
     expect(findSyllablesByRomanization('zzz')).toEqual([])
     expect(findSyllablesByRomanization('kŏn')).toContain('건')
     expect(normalizeRomanization('KŎN')).toBe('keon')
+  })
+})
+
+describe('a letter taken as a jamo', () => {
+  it('takes one letter at a time', () => {
+    expect(toConjoiningJamo('ㄱx', 'L')).toBeNull()
+    expect(toConjoiningJamo('ㄱ', 'L')).toBe('\u1100')
   })
 })

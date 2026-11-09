@@ -366,7 +366,7 @@
   .leading{display:grid;place-items:center;flex:none;width:40px;height:40px;color:var(--ui-color-ink);font-family:var(--cjk);font-size:26px;line-height:1}
   .leading.spacer{visibility:hidden}
   .label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .label:is(:lang(ja),:lang(txg),:lang(swi)){font-family:var(--cjk)}
+  .label:is(:lang(ja),:lang(txg),:lang(swi),:lang(juc)){font-family:var(--cjk)}
   .item.rich .label{overflow:visible;text-overflow:clip;white-space:normal;line-height:1.35;word-break:break-word}
   .note{flex:none;color:var(--ui-color-ink-muted);font:var(--ui-weight-medium) var(--ui-text-2xs)/var(--ui-leading-normal) var(--ui-font-mono);letter-spacing:.02em;white-space:nowrap}
   .note.unencoded{font:inherit;font-size:var(--ui-text-xs);font-style:italic}
@@ -384,16 +384,13 @@
   .ui-empty{margin:var(--ui-space-sm) var(--ui-space-md);min-block-size:0;padding:var(--ui-space-lg) var(--ui-space-md)}
   .jump{display:flex;flex-wrap:wrap;gap:var(--ui-space-2xs);padding:1px 1px var(--ui-space-3xs)}
   .ui-chip{flex:none}
-  .view:focus-visible,.mode:focus-visible,.ui-chip:focus-visible{outline-offset:calc(-1 * var(--ui-ring-width))}
+  .ui-chip:focus-visible{outline-offset:calc(-1 * var(--ui-ring-width))}
   .ui-menu-item[aria-checked="true"]::before,.ui-menu-item[aria-current="true"]::before{display:none}
   .menu-head{position:sticky;top:calc(-1 * var(--ui-space-xs));z-index:2;display:flex;flex-direction:column;gap:var(--ui-space-xs);margin:0 0 var(--ui-space-xs);background:var(--ui-color-surface)}
-  .views{padding:var(--ui-space-3xs)}
-  .views > .ui-button{min-block-size:var(--ui-control-h-sm)}
   .filter{display:flex;align-items:center;gap:var(--ui-space-xs)}
   .filter-input{flex:1}
-  .modes{flex:none;padding:var(--ui-space-3xs);background:var(--ui-color-surface-hover)}
-  .mode{padding-inline:var(--ui-space-xs);font-size:var(--ui-text-2xs)}
-  .view{flex:1;white-space:nowrap}
+  .modes{flex:none}
+  .view{white-space:nowrap}
   .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:var(--ui-space-sm);padding:var(--ui-space-2xs) var(--ui-space-xs) var(--ui-space-sm)}
   .card{display:flex;align-items:center;gap:var(--ui-space-sm);min-width:0;min-height:60px;padding:var(--ui-space-xs);border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface);color:var(--ui-color-ink);font:inherit;text-align:left;cursor:pointer}
   .card:not(:disabled):is(:hover,:focus-visible){background:var(--ui-color-surface-hover)}

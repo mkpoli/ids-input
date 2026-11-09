@@ -60,6 +60,15 @@ describe('the demo examples', () => {
             const value = { 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9, 十: 10, 百: 100, 千: 1000, 万: 10000 }[example.modern]
             expect(jurchen.parts.find(part => part.part === char)?.jurNumeric).toBe(value)
             expect(example.refs ?? group.refs).toContain(sourceNumber('jurchen-numeric'))
+          } else if ('source' in example && example.source === 'data/jurchen/ids.json') {
+            const ids = JSON.parse(readFileSync(new URL('../data/jurchen/ids.json', import.meta.url), 'utf8'))
+            expect(ids.entries[char.codePointAt(0).toString(16).toUpperCase()]).toBe(sequence)
+            const jurchen = JSON.parse(gunzipSync(readFileSync(new URL('../data/jurchen.json.gz', import.meta.url))))
+            const part = jurchen.parts.find(part => part.part === char)
+            if ('reading' in example) expect(example.reading).toBe(part?.jurReading)
+            expect(example.refs).toContain(sourceNumber('jurchen-ids'))
+            expect(example.refs).toContain(sourceNumber('jurchen-numeric'))
+            expect(drawings.drawings[sequence]?.drawn.d.length).toBeGreaterThan(10)
           } else if ('source' in example && example.source === 'data/shuishu.json.gz') {
             const shui = JSON.parse(gunzipSync(readFileSync(new URL('../data/shuishu.json.gz', import.meta.url))))
             expect(shui.parts.map(part => part.part)).toContain(char)
@@ -89,6 +98,10 @@ describe('the demo examples', () => {
           // BabelStone assigns this description to 𦜳, a 肉-radical character; the dictionary entry
           // the example cites is a different, unencoded character.
           expect(found).toEqual(['𦜳'])
+        } else if (sequence === '⿰米林') {
+          // BabelStone assigns this description to 𮇥 (U+2E1E5), a G-region character; the Navy
+          // form is a different, unencoded character.
+          expect(found).toEqual(['𮇥'])
         } else {
           expect(found).toEqual([])
         }
@@ -120,7 +133,7 @@ describe('the demo examples', () => {
     const group = EXAMPLE_GROUPS.find(group => group.key === 'ligature')
     expect(group.examples.map(example => example.sequence)).toEqual([
       '⿺辶⿱宀⿱⿰王尔⿲隹貝招', '⿱⿰日日⿲有見財', '⿰⿱日斗⿱進金', '⿳𦥯⿲女子乚皿',
-      '⿳五⿲矢口隹龰', '⿱黃⿱金⿳艹田⿵冂山', '⿳士⿲女口意祥',
+      '⿳五⿲矢口隹龰', '⿱黄⿱金⿱田⿵冂山', '⿳士⿲女口意祥',
       '⿱艹⿰马尼', '⿰⿳⿰SIR木阝',
       '⿱⿰⿱コン⿱クリ土', '⿱⿲ンメセ土', '⿸广⿰KO', '⿱宀K', '⿻Mo',
     ])
@@ -130,7 +143,7 @@ describe('the demo examples', () => {
     expect(refs.get('⿰⿱日斗⿱進金')).toEqual([sourceNumber('uhk-hetizi')])
     expect(refs.get('⿳𦥯⿲女子乚皿')).toEqual([sourceNumber('uhk-hetizi'), sourceNumber('zi-tools-kongmeng')])
     expect(refs.get('⿳五⿲矢口隹龰')).toEqual([sourceNumber('uhk-hetizi')])
-    expect(refs.get('⿱黃⿱金⿳艹田⿵冂山')).toEqual([sourceNumber('uhk-hetizi'), sourceNumber('gmw-zuhezi')])
+    expect(refs.get('⿱黄⿱金⿱田⿵冂山')).toEqual([sourceNumber('uhk-hetizi'), sourceNumber('gmw-zuhezi')])
     expect(refs.get('⿳士⿲女口意祥')).toEqual([sourceNumber('fznews-jixiang')])
     expect(refs.get('⿱艹⿰马尼')).toEqual([sourceNumber('zh-yue-hetizi')])
     expect(refs.get('⿰⿳⿰SIR木阝')).toEqual([sourceNumber('zh-yue-hetizi')])
@@ -138,6 +151,34 @@ describe('the demo examples', () => {
       expect(refs.get(sequence)).toEqual([sourceNumber('geba-wp')])
     }
     for (const example of group.examples) expect(example.char).toBe('')
+  })
+  it('keeps the Navy characters with their sources', () => {
+    const group = EXAMPLE_GROUPS.find(group => group.key === 'navy')
+    expect(group.examples.map(example => example.sequence)).toEqual([
+      '⿰艦ツ', '⿰掌キ', '⿲木十木', '⿰車ト', '⿰米林',
+    ])
+    const refs = new Map(group.examples.map(example => [example.sequence, example.refs]))
+    const ships = [sourceNumber('script-hybrid'), sourceNumber('x-cincpac-images')]
+    expect(refs.get('⿰艦ツ')).toEqual(ships)
+    expect(refs.get('⿰掌キ')).toEqual(ships)
+    expect(refs.get('⿲木十木')).toEqual([
+      sourceNumber('jsccc8-navy'), sourceNumber('note-kaigun-kamome'), sourceNumber('x-kaigun-kikanju'),
+    ])
+    expect(refs.get('⿰車ト')).toEqual([sourceNumber('jsccc8-navy'), sourceNumber('x-kaigun-truck')])
+    expect(refs.get('⿰米林')).toEqual([sourceNumber('jsccc8-navy'), sourceNumber('x-kaigun-hayashi')])
+  })
+  it('keeps ⿰甫舎 as the 舗 variant its post records', () => {
+    expect(EXAMPLES.find(example => example.sequence === '⿰甫舎')).toEqual({
+      sequence: '⿰甫舎', refs: [sourceNumber('x-mkpoli-u820e')], char: '舗', parts: '甫舎',
+    })
+  })
+  it('keeps the created characters with their source', () => {
+    const group = EXAMPLE_GROUPS.find(group => group.key === 'created')
+    expect(group.refs).toEqual([sourceNumber('x-egasmb')])
+    expect(group.examples.map(example => example.sequence)).toEqual([
+      '⿱⿰不目心', '⿲上丿王', '⿰𭃂尤', '⿰另上',
+    ])
+    expect(group.examples.every(example => example.char === '')).toBe(true)
   })
   it("writes out 龍's numbered right part", () => {
     expect(table.get('龍').map(entry => entry.text)).toContain('⿰𦚏⿷己三')
@@ -149,7 +190,7 @@ describe('the demo examples', () => {
 })
 
 it('keeps all Tangut examples in a separate section', () => {
-  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'sign', 'erjian', 'geba', 'ligature', 'korean', 'hangul', 'gugyeol', 'kokuji', 'ghost', 'nom', 'seal', 'jurchen', 'shuishu', 'tangut'])
+  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'sign', 'erjian', 'geba', 'navy', 'ligature', 'created', 'korean', 'hangul', 'gugyeol', 'kokuji', 'ghost', 'nom', 'seal', 'jurchen', 'shuishu', 'tangut'])
   const tangut = EXAMPLE_GROUPS.find(group => group.key === 'tangut').examples
   expect(tangut.every(example => onlyTangut(example.sequence))).toBe(true)
   expect(EXAMPLE_GROUPS.filter(group => group.key !== 'tangut').flatMap(group => group.examples).some(example => onlyTangut(example.sequence))).toBe(false)
@@ -203,6 +244,8 @@ it('reads the Korean gukja as the source does', () => {
     '⿱呼乙': '홀', '⿱禾乙': '활',
     // The article's last row gives 𬼝 no reading, so it carries none.
     '⿱去乙': undefined,
+    // 韓國漢字字典, through the post's photograph of the entry.
+    '⿲意情意': '의정의',
   }
   expect(korean.map(example => example.sequence).sort()).toEqual(Object.keys(readings).sort())
   for (const example of korean) {
@@ -210,10 +253,13 @@ it('reads the Korean gukja as the source does', () => {
     expect(Object.hasOwn(example, 'reading')).toBe(readings[example.sequence] !== undefined)
   }
   expect(korean.find(example => example.sequence === '⿱去乙')).toEqual({ sequence: '⿱去乙', char: '𬼝' })
+  expect(korean.find(example => example.sequence === '⿲意情意')).toEqual({
+    sequence: '⿲意情意', refs: [sourceNumber('x-jumanjikyo')], char: '', reading: '의정의',
+  })
   for (const shape of ['乙', '𠃍', '㇣', '𠃊', '𠮟', '口', '巴']) {
     expect(korean.some(example => example.sequence.includes(shape))).toBe(true)
   }
-  expect(korean.filter(example => !example.char)).toHaveLength(20)
+  expect(korean.filter(example => !example.char)).toHaveLength(21)
   expect(korean.filter(example => example.reading === '갈')).toHaveLength(3)
   expect(korean.filter(example => example.reading === '솔')).toHaveLength(5)
   expect(korean.filter(example => example.reading === '곳')).toHaveLength(4)

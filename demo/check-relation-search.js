@@ -16,7 +16,7 @@ try{
   await field.fill('⿰⬚⬚');await page.locator('.ids-tree .ids-part.empty').first().click()
   // The tab's own click action never settles for Playwright; a pointer click lands on it.
   await tabs.getByRole('tab',{name:'Find',exact:true}).click({force:true})
-  const active=page.locator('.ids-pick-panel:not([hidden])'),input=active.locator('.ids-find input[type="search"]'),hits=active.locator('.ids-hit')
+  const active=page.locator('.ids-pick-panel:not([hidden])'),input=active.locator('.ids-find input[type="search"]')
   await input.fill('horse');await active.locator('.ids-hit[data-character="馬"]').waitFor()
   if(!process.env.IDS_SEARCH_BEFORE)for(const char of ['𘆽','🐎',horseSeal])await active.locator(`[data-character="${char}"]`).waitFor()
   await page.evaluate(()=>document.fonts.ready)

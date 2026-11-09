@@ -2,7 +2,7 @@
 // Persisted editing sessions. A tab or draft keeps the current document, the chosen layer and every
 // ID the session has issued, so a reload keeps identity without keeping the in-memory undo history.
 // The file format is the document itself (`writeDocument`); this envelope is for host storage.
-import { DocumentError, allocatorFor, assertDocument, createDocumentSession, fromSequence, readDocument, toSequence, writeDocument } from './index.js'
+import { DocumentError, allocatorFor, assertDocument, createDocumentSession, fromSequence, readDocument, toSequence } from './index.js'
 import { inspectJson } from './json.js'
 
 export const SESSION_FORMAT = 'ids-input/session'

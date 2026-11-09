@@ -126,7 +126,7 @@ export function partOf(record, quant = 4) {
     const l = new Float64Array(lo.length), h = new Float64Array(lo.length)
     for (let i = 0; i < lo.length; i++) { l[i] = lo[i] / quant; h[i] = (lo[i] + d[i]) / quant }
     // A contour whose light master repeats its first point as its last closes there; the heavy master
-    // of the serif and Kaisho exports does not, so interpolating toward it tears the contour open.
+    // of the serif and Kaisho host records does not, so interpolating toward it tears the contour open.
     // One closing on an implied point starts on a control point instead, so it is left alone.
     const n = l.length
     if (n >= 4 && !cmds.at(-1)[2] && l[0] === l[n - 2] && l[1] === l[n - 1]) { h[0] = h[n - 2]; h[1] = h[n - 1] }
@@ -171,6 +171,16 @@ export function rings(contours, points, steps = 6) {
     const ring = []
     let last = null
     for (const [kind, seg] of segments(contour.ops, points[k])) {
+      if (kind === 'C') {
+        const [one, two, on] = seg
+        for (let s = 1; s <= steps; s++) {
+          const t = s / steps, u = 1 - t
+          ring.push(u * u * u * last[0] + 3 * u * u * t * one[0] + 3 * u * t * t * two[0] + t * t * t * on[0],
+            u * u * u * last[1] + 3 * u * u * t * one[1] + 3 * u * t * t * two[1] + t * t * t * on[1])
+        }
+        last = on
+        continue
+      }
       if (kind !== 'Q') { last = seg[0]; ring.push(last[0], last[1]); continue }
       const [off, on] = seg
       for (let s = 1; s <= steps; s++) {

@@ -1,0 +1,11 @@
+# Linear IDS scopes
+
+The sequence field uses native input selection, caret and composition. A text overlay keeps each IDS token in the configured font. SVG scope lines sit below that text and follow the input's horizontal scroll.
+
+Scope geometry uses the paths and UTF-16 subtree ranges from [tokens.js](../src/svelte/tokens.js). Rendered token bounds supply widths, including operator notes, variation selectors and emoji. Each operator sends a rounded curved lead from one pixel inside its measured glyph ink, stopping one gap before its first operand; adjacent operand segments keep the same gap. Subtree height assigns compact lanes, with the root below its descendants. Invalid drafts have no structural lines; unfinished slots contribute no width.
+
+Lines use the workshop's inherited muted, accent and tint tokens. Their neutral stroke remains visible with tint disabled. Under tint, a layer takes one tint: the operator that opens it, its lead and its operands' segments all share it, so a nested operator reads with its own group. Hovering or choosing a leaf highlights its segment and the lead of the scope above it. Forced-colors mode draws neutral strokes in `CanvasText` and active strokes in `Highlight`. Resize observation, font-loading events and font-attribute changes refresh measurements; teardown disconnects observers, listeners and animation frames.
+
+## Source
+
+mkpoli, [ids-visualiser: src/main.ts](https://github.com/mkpoli/ids-visualiser/blob/master/src/main.ts) and [src/style.css](https://github.com/mkpoli/ids-visualiser/blob/master/src/style.css), accessed 2026-11-07. The nested text underlines inform this representation. That implementation excludes the root underline; this geometry includes root scopes, segments immediate operands and curves the leading IDC into its scope. The source links track a mutable branch.
