@@ -141,6 +141,37 @@ def split_straddlers(pieces):
     return out, cuts
 
 
+def clip_left_at_middle(pieces, left, right):
+    """Keep the left group on its side of the glyph's middle vertical line.
+
+    A left operand is drawn within its column; a piece assigned to it that reaches
+    past the middle is clipped there, and the remainder joins the right group. The
+    clip is recorded as approximate like the seam split.
+    """
+    x0, _, x1, _ = bounds_of(pieces)
+    middle = (x0 + x1) / 2
+    moved, cuts = [], []
+    for index in list(left):
+        piece = pieces[index]
+        if piece.bounds[2] <= middle:
+            continue
+        left.remove(index)
+        kept = cut.clip(piece, rect_path(piece.bounds[0] - 2, piece.bounds[1] - 2, middle, piece.bounds[3] + 2))
+        rest = cut.clip(piece, rect_path(middle, piece.bounds[1] - 2, piece.bounds[2] + 2, piece.bounds[3] + 2))
+        for half in cut.pieces_of(kept):
+            if abs(half.area) > 1.0:
+                moved.append(half)
+        for half in cut.pieces_of(rest):
+            if abs(half.area) > 1.0:
+                right.append(half)
+        cuts.append(middle)
+    if moved:
+        base = len(pieces)
+        pieces.extend(moved)
+        left.extend(range(base, base + len(moved)))
+    return cuts
+
+
 def candidates(pieces, arity):
     order = list(range(len(pieces)))
     keys = (
@@ -243,14 +274,15 @@ def main() -> int:
             if pieces[i].bounds[2] <= boundary:
                 right.remove(i)
                 left.append(i)
+        middle_cuts = clip_left_at_middle(pieces, left, right)
         out[char] = {
             "ids": ids,
             "left": cut.commands_of(cut.union_of([pieces[i] for i in left])),
             "right": cut.commands_of(cut.union_of([pieces[i] for i in right])),
         }
-        if cuts_x:
+        if cuts_x or middle_cuts:
             out[char]["approximate"] = True
-            out[char]["cutX"] = round(cuts_x[0], 3)
+            out[char]["cutX"] = round((cuts_x or middle_cuts)[0], 3)
     print(json.dumps(out, ensure_ascii=False))
     return 0
 
