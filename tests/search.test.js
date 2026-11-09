@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { createSearch, parseQuery, readForms, similarStructures, substituteSequences, tokens } from '../src/core/index.js'
+import { createSearch, equivalences, parseQuery, readForms, similarStructures, substituteSequences, tokens } from '../src/core/index.js'
 
 
 // A few descriptions, as BabelStone writes them (regions dropped).
@@ -357,6 +357,15 @@ it('finds 𭛝 from the katakana ヱ through its component 𠀄', () => {
   expect(index.search('⿰彳ヱ')).toEqual(index.search('⿰彳𠀄'))
   expect(index.search('⿰彳ヱ').hits.map(hit => hit.char)).toEqual(['𭛝'])
   expect(parseQuery('ヱ').terms[0].leaves).toEqual(['𠀄'])
+})
+
+
+it('lists every substitution for the appendix', () => {
+  const { kana, hangul } = equivalences()
+  expect(kana).toHaveLength(48)
+  expect(kana.find(row => row.shapes[0] === 'マ')).toMatchObject({ components: ['龴', '丅', '丁'] })
+  expect(hangul).toHaveLength(10)
+  expect(hangul.find(row => row.shapes[0] === 'ㅅ')).toMatchObject({ shapes: ['ㅅ', 'ᄉ', 'ᆺ'], components: ['人'] })
 })
 
 

@@ -946,9 +946,10 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - `data/ids-overwrites.tsv`: descriptions drawn as an encoded character instead of a composition,
   `⿰𦚏𳳳` as 龍 and `⿷⿺己一三` as 𳳳 (JYutnet JYN00025; zi.tools); the adapter reads it with
   `overwrite`.
-- `data/open-data/`: the published descriptions and their citations, CC0 1.0
+- `data/open-data/`: the published descriptions, numbered components and kana/Hangul equivalence
+  table, with their citations, CC0 1.0
   (<https://creativecommons.org/publicdomain/zero/1.0/>), built by `scripts/build_open_ids.mjs`
-  from the starter catalogue and `data/ids-components.tsv`.
+  from the starter catalogue, `data/ids-components.tsv` and the search's `equivalences()`.
 - `data/component-forms.tsv`: radical and positional forms, from han-compose's
   `data/vocab/han-component-forms.tsv`, drawn from Unicode's EquivalentUnifiedIdeograph.txt (Unicode
   License v3) and cjkvi-variants' `radical-variants.txt` (public domain); its header names both (26 KB).
@@ -1230,7 +1231,8 @@ their notes and citation numbers.
 ## Open data
 
 The descriptions the project transcribed or read, each with the source behind it, are published at
-<https://ids.mkpo.li/open-data> as JSON and TSV, one row per description. The files live in
+<https://ids.mkpo.li/open-data> as JSON and TSV, one row per description. The release also carries
+the kana and Hangul shapes the search reads as component spellings. The files live in
 `data/open-data/`, are built by `bun scripts/build_open_ids.mjs`, and are dedicated to the public
 domain (CC0 1.0).
 
