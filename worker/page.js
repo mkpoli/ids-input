@@ -20,7 +20,7 @@ export const codePoint = char => [...char].map(unit => `U+${(unit.codePointAt(0)
 export const pathOf = sequence => !sequence ? '/' : (/[./]/.test(sequence) || !parse(sequence, { open: true }).tree)
   ? `/?ids=${encodeURIComponent(sequence)}` : `/${encodeURIComponent(sequence)}`
 
-const RESERVED = new Set(['embed', 'compare', 'engines', 'sources', 'open-data', 'design', 'index', 'og'])
+const RESERVED = new Set(['embed', 'compare', 'engines', 'sources', 'open-data', 'equivalences', 'design', 'index', 'og'])
 const bad = (error, status = 400) => ({ error, status })
 
 /** Classify requests without loading fonts or rendering. Bounds never truncate a sequence. */

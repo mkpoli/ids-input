@@ -6,6 +6,7 @@ import { gunzipSync } from 'node:zlib'
 import { parse } from '../src/core/ids.js'
 
 const corpus = JSON.parse(gunzipSync(readFileSync(new URL('../data/ids-corpus.json.gz', import.meta.url))).toString('utf8'))
+const equivalences = JSON.parse(readFileSync(new URL('../data/ids-equivalences.json', import.meta.url), 'utf8'))
 const rows = corpus.descriptions.rows
 const column = name => corpus.descriptions.columns.indexOf(name)
 const subject = column('subject'), text = column('text'), resolved = column('resolved')
@@ -63,6 +64,21 @@ describe('the merged corpus', () => {
     }
     expect(corpus.equivalences.rows.find(row => row[0] === 'bsp:7' && row[1] === 'chise:CDP-8BD0')?.[3]).toBe('verified')
     expect(corpus.equivalences.rows.some(row => row[0].startsWith('ucs:') || row[1].startsWith('ucs:'))).toBe(false)
+  })
+
+  it('publishes the equivalence table the appendix reads, with display characters and descriptions', () => {
+    expect(equivalences.format).toBe('ids-input/equivalences')
+    expect(equivalences.licence).toBe('GPL-2.0-or-later')
+    expect(equivalences.rows.length).toBe(corpus.counts.equivalences)
+    for (const row of equivalences.rows) {
+      const [a, b, aChar, bChar, aDescription] = row
+      expect(a.startsWith('bsp:') && b.startsWith('chise:')).toBe(true)
+      expect([...aChar].length).toBe(1)
+      expect([...bChar].length).toBe(1)
+      expect(aDescription).toBeTruthy()
+    }
+    const seven = equivalences.rows.find(row => row[0] === 'bsp:7' && row[1] === 'chise:CDP-8BD0')
+    expect(seven?.[7]).toBe('verified')
   })
 
   it('resolves every name its descriptions use', () => {
