@@ -4,3 +4,9 @@
 # Currently empty: the newer character this project knows, 𳑳 (U+33473), is a 獨體字 with no IDS
 # decomposition, so it is listed in `ids-characters.tsv` instead. Add a line here only for a
 # character that decomposes.
+
+# Curated corrections: a source description writes a base character where the glyph's left column
+# uses its positional form. The source's description stays in its own table as an alternative; this
+# row is the project's reading of the glyph. One line per character, char<TAB>IDS<TAB>source.
+𣲍	⿰氵兀	CHISE IDS ⿰水兀; curated, the glyph's left column is 氵 (BabelStone and Yi Bai give ⿰氵兀; source kept)
+𣴀	⿰氵刕	CHISE IDS ⿰水刕; curated, the glyph's left column is 氵 (BabelStone and Yi Bai give ⿰氵刕; source kept)
