@@ -230,6 +230,7 @@
       {#if visible.length === 0}
         <p class="empty">{t('appendix.empty')}</p>
       {:else}
+        <p class="glyph-note">{t('appendix.glyphNote')}</p>
         <div class="table-wrap">
           <table>
             <thead>
@@ -284,7 +285,6 @@
             </tbody>
           </table>
         </div>
-        <p class="glyph-note">{t('appendix.glyphNote')}</p>
       {/if}
 
       <section class="add" aria-labelledby="add-title">
