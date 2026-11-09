@@ -434,5 +434,12 @@
   "appendix.prev": "前へ",
   "appendix.next": "次へ",
   "appendix.one": "片方",
-  "appendix.mine": "追加した対応"
+  "appendix.mine": "追加した対応",
+  "appendix.custom.title": "独自の部品を追加",
+  "appendix.custom.name": "名前",
+  "appendix.custom.ids": "IDS（任意）",
+  "appendix.custom.add": "追加",
+  "appendix.custom.invalid": "名前には英数字・ピリオド・プラス・ハイフンを使います。",
+  "appendix.custom.exists": "その部品はすでにあります。",
+  "appendix.custom.hint": "このブラウザに保存され、対応では custom:名前 として参照できます。"
 }

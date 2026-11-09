@@ -434,5 +434,12 @@
   "appendix.prev": "上一页",
   "appendix.next": "下一页",
   "appendix.one": "一侧",
-  "appendix.mine": "我的对应"
+  "appendix.mine": "我的对应",
+  "appendix.custom.title": "添加自定义部件",
+  "appendix.custom.name": "名称",
+  "appendix.custom.ids": "IDS（可选）",
+  "appendix.custom.add": "添加",
+  "appendix.custom.invalid": "名称请使用字母、数字、点、加号或连字符。",
+  "appendix.custom.exists": "该部件已存在。",
+  "appendix.custom.hint": "保存在此浏览器中；对应可用 custom:名称 引用。"
 }

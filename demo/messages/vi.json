@@ -434,5 +434,12 @@
   "appendix.prev": "Trước",
   "appendix.next": "Sau",
   "appendix.one": "Một bên",
-  "appendix.mine": "Cặp của bạn"
+  "appendix.mine": "Cặp của bạn",
+  "appendix.custom.title": "Thêm thành phần tùy chỉnh",
+  "appendix.custom.name": "Tên",
+  "appendix.custom.ids": "IDS (tùy chọn)",
+  "appendix.custom.add": "Thêm",
+  "appendix.custom.invalid": "Tên dùng chữ, số, dấu chấm, dấu cộng hoặc gạch nối.",
+  "appendix.custom.exists": "Thành phần đó đã có.",
+  "appendix.custom.hint": "Lưu trong trình duyệt này; cặp có thể gọi nó là custom:tên."
 }

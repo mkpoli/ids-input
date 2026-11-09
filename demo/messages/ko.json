@@ -434,5 +434,12 @@
   "appendix.prev": "이전",
   "appendix.next": "다음",
   "appendix.one": "한쪽",
-  "appendix.mine": "내 대응"
+  "appendix.mine": "내 대응",
+  "appendix.custom.title": "사용자 구성 요소 추가",
+  "appendix.custom.name": "이름",
+  "appendix.custom.ids": "IDS(선택)",
+  "appendix.custom.add": "추가",
+  "appendix.custom.invalid": "이름에는 영문, 숫자, 마침표, 더하기, 하이픈을 쓸 수 있습니다.",
+  "appendix.custom.exists": "그 구성 요소는 이미 있습니다.",
+  "appendix.custom.hint": "이 브라우저에 저장되며, 대응에서 custom:이름으로 참조할 수 있습니다."
 }

@@ -11,11 +11,12 @@ export function parseSide(text) {
   if (/^\d+$/.test(value)) return `bsp:${Number(value)}`
   const entity = /^&([A-Za-z0-9_.+-]+);$/.exec(value)
   if (entity) return `chise:${entity[1]}`
-  const cid = /^(bsp|chise|ucs):(.+)$/i.exec(value)
+  const cid = /^(bsp|chise|ucs|custom):(.+)$/i.exec(value)
   if (cid) {
     const [scheme, rest] = [cid[1].toLowerCase(), cid[2].trim()]
     if (scheme === 'bsp' && /^\d+$/.test(rest)) return `bsp:${Number(rest)}`
     if (scheme === 'chise' && /^[A-Za-z0-9_.+-]+$/.test(rest)) return `chise:${rest}`
+    if (scheme === 'custom' && /^[A-Za-z0-9_.+-]+$/.test(rest)) return `custom:${rest}`
     if (scheme === 'ucs' && /^[0-9A-Fa-f]{1,6}$/.test(rest)) {
       const point = Number.parseInt(rest, 16)
       if (point <= 0x10ffff && !(point >= 0xd800 && point <= 0xdfff)) return `ucs:${rest.toUpperCase()}`

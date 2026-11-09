@@ -436,5 +436,12 @@
   "appendix.prev": "Previous",
   "appendix.next": "Next",
   "appendix.one": "One side",
-  "appendix.mine": "Your pairs"
+  "appendix.mine": "Your pairs",
+  "appendix.custom.title": "Add a custom component",
+  "appendix.custom.name": "Name",
+  "appendix.custom.ids": "IDS (optional)",
+  "appendix.custom.add": "Add",
+  "appendix.custom.invalid": "Use letters, digits, dots, plus or hyphen for the name.",
+  "appendix.custom.exists": "That component is already here.",
+  "appendix.custom.hint": "Stored in this browser; pairs can name it as custom:name."
 }

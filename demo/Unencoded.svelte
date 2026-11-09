@@ -49,18 +49,26 @@
       .map(row => ({ a: row.a, b: row.b, note: row.note }))
     : [])
   $effect(() => save('equivalences', mine.length ? mine : undefined))
+  /** Components a reader defines by name, with an optional IDS. @type {{ name: string, ids: string }[]} */
+  const storedComponents = load('custom-components', [])
+  let customs = $state(Array.isArray(storedComponents)
+    ? storedComponents.filter(row => row && typeof row.name === 'string' && typeof row.ids === 'string')
+      .map(row => ({ name: row.name, ids: row.ids }))
+    : [])
+  $effect(() => save('custom-components', customs.length ? customs : undefined))
   const customRows = $derived.by(() => {
     const known = new Set((doc?.rows ?? []).map(row => row.cid))
     const rows = new Map()
+    /** @param {string} cid @param {string} label @param {string | null} description */
+    const add = (cid, label, description) => {
+      if (known.has(cid) || rows.has(cid)) return
+      const equivalents = mine.filter(pair => pair.a === cid || pair.b === cid)
+        .map(pair => ({ cid: pair.a === cid ? pair.b : pair.a, status: 'yours', note: pair.note }))
+      rows.set(cid, { cid, char: null, kind: 'custom', label, description, fragment: null, uses: 0, equivalents, yours: true })
+    }
+    for (const component of customs) add(`custom:${component.name}`, component.name, component.ids || null)
     for (const pair of mine) {
-      for (const cid of [pair.a, pair.b]) {
-        if (known.has(cid) || rows.has(cid)) continue
-        const other = cid === pair.a ? pair.b : pair.a
-        rows.set(cid, {
-          cid, char: null, kind: 'custom', label: cid.replace(/^(?:chise|bsp|ucs):/, ''), description: null, fragment: null, uses: 0,
-          equivalents: [{ cid: other, status: 'yours', note: pair.note }], yours: true,
-        })
-      }
+      for (const cid of [pair.a, pair.b]) add(cid, cid.replace(/^(?:chise|bsp|ucs|custom):/, ''), null)
     }
     return [...rows.values()]
   })
@@ -102,6 +110,26 @@
   function sansOf(row) {
     if (!row.char || row.kind === 'entity') return null
     return componentDrawing(row.char, 'sans')
+  }
+
+  let customForm = $state({ name: '', ids: '' })
+  let customError = $state('')
+  /** @param {SubmitEvent} event */
+  function addCustom(event) {
+    event.preventDefault()
+    const name = customForm.name.trim().replace(/\s+/g, '-')
+    if (!/^[A-Za-z0-9_.+-]+$/.test(name)) { customError = t('appendix.custom.invalid'); return }
+    if (customs.some(row => row.name === name)) { customError = t('appendix.custom.exists'); return }
+    customs = [...customs, { name, ids: customForm.ids.trim() }]
+    customForm = { name: '', ids: '' }
+    customError = ''
+    page = 1
+  }
+  /** @param {string} name */
+  function removeCustom(name) {
+    const cid = `custom:${name}`
+    customs = customs.filter(row => row.name !== name)
+    mine = mine.filter(pair => pair.a !== cid && pair.b !== cid)
   }
 
   let form = $state({ a: '', b: '', note: '' })
@@ -230,7 +258,7 @@
                 <td class="kind">{kindLabel(row)}</td>
                 <td class="equivalent">{equivalentText(row)}</td>
                 <td class="uses">{row.uses || '—'}</td>
-                <td>{#if row.yours && mine.some(pair => pair.a === row.cid || pair.b === row.cid)}<button type="button" class="remove" onclick={() => { const pair = mine.find(p => p.a === row.cid || p.b === row.cid); if (pair) remove(pair.a, pair.b) }} aria-label={t('appendix.remove')} title={t('appendix.remove')}>×</button>{/if}</td>
+                <td>{#if row.yours}<button type="button" class="remove" onclick={() => { if (row.cid.startsWith('custom:')) removeCustom(row.cid.slice(7)); else { const pair = mine.find(p => p.a === row.cid || p.b === row.cid); if (pair) remove(pair.a, pair.b) } }} aria-label={t('appendix.remove')} title={t('appendix.remove')}>×</button>{/if}</td>
               </tr>
             {/each}
           </tbody>
@@ -259,6 +287,17 @@
         </ul>
       </section>
     {/if}
+
+    <section class="custom" aria-labelledby="custom-title">
+      <h2 id="custom-title">{t('appendix.custom.title')}</h2>
+      <form onsubmit={addCustom}>
+        <label>{t('appendix.custom.name')}<input bind:value={customForm.name} placeholder="my-part" autocomplete="off" spellcheck="false" /></label>
+        <label class="note-input">{t('appendix.custom.ids')}<input bind:value={customForm.ids} placeholder="⿰…" autocomplete="off" spellcheck="false" /></label>
+        <button type="submit" class="primary">{t('appendix.custom.add')}</button>
+      </form>
+      {#if customError}<p class="error" role="alert">{customError}</p>{/if}
+      <p class="hint">{t('appendix.custom.hint')}</p>
+    </section>
 
     <section class="add" aria-labelledby="add-title">
       <h2 id="add-title">{t('appendix.form.title')}</h2>
@@ -322,7 +361,8 @@
   .mine li{display:flex;align-items:baseline;gap:8px;font-size:12.5px}
   .pair-name{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
   .pair-note{color:var(--ids-muted);font-size:11.5px}
-  .add{margin-top:26px;padding-top:18px;border-top:1px solid var(--ids-line)}
+  .custom{margin-top:22px;padding-top:14px;border-top:1px solid var(--ids-line)}
+  .add{margin-top:22px;padding-top:14px;border-top:1px solid var(--ids-line)}
   h2{font-size:13px;margin:0 0 10px}
   form{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
   form label{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--ids-muted)}

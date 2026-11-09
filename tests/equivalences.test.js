@@ -30,6 +30,7 @@ describe('equivalence input', () => {
     expect(parseSide('ucs:D800')).toBeNull()
     expect(parseSide('ucs:110000')).toBeNull()
     expect(parseSide('&CDP 8BD0;')).toBeNull()
+    expect(parseSide('custom:my-part')).toBe('custom:my-part')
     expect(parseSide('two')).toBeNull()
   })
 
