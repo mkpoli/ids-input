@@ -1142,11 +1142,15 @@ catalog cannot be loaded. A configured composer export or font can have differen
 
 ## `kana-strokes.json.gz`
 
-The stroke count of every kana KanjiVG draws, and of the halfwidth forms of them: 231 keys in
-code-point order, hiragana U+3041–U+3096, katakana U+30A1–U+30FA, then halfwidth katakana
-U+FF66–U+FF9D, with a count for each (`strokes`, one entry per key), the pinned `revision` and its
-`source`. A halfwidth form is the same kana drawn narrow, so it takes the count of the kana NFKC
-decomposes it to; ｰ has none, since ー lies outside the counted ranges.
+The stroke count of every kana KanjiVG draws, and of the forms it leaves to other sources: 247 keys
+in code-point order, hiragana U+3041–U+3096, katakana U+30A1–U+30FA, the Ainu small katakana
+U+31F0–U+31FF, then halfwidth katakana U+FF66–U+FF9D, with a count for each (`strokes`, one entry
+per key), the pinned `revision` and its `source`.
+
+Two kinds are derived from the kana they write. A halfwidth form is the same kana drawn narrow, so
+it takes the count of the kana NFKC decomposes it to; ｰ has none, since ー lies outside the counted
+ranges. An Ainu small katakana is the same letter drawn small, named for it (KATAKANA LETTER SMALL
+KU is ク), so it takes that letter's count.
 
 KanjiVG draws one path per stroke, in writing order, so the number of paths is the count: あ three,
 イ two, マ two, フ one. That is every kana in both ranges, and the build says which ones KanjiVG does
