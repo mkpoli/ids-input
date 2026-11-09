@@ -110,6 +110,23 @@ def compress_chang(outlines, style):
         return round(target[i] + (y-source[i]) * (target[i+1]-target[i]) / (source[i+1]-source[i]), 2)
     return [[ops, [ymap(v) if i % 2 else v for i,v in enumerate(points)]] for ops,points in outlines]
 
+
+def huang_body(cs):
+    """黄 without its last two strokes, which 金's top stands in for.
+
+    黄 is ⿳龷由八; drop the 八 and the body is ⿱龷由. IDS cannot show two components
+    sharing a stroke, so the example names the body and this form keeps it where 黄
+    draws it, rather than letting the composer lay 龷 and 由 out afresh.
+    """
+    body = []
+    for contour in cs('黄'):
+        ys = [p[1] for _, values in contour for p in values if p is not None]
+        xs = [p[0] for _, values in contour for p in values if p is not None]
+        if min(ys) > 330 and max(ys) < 460 and max(xs) - min(xs) > 180:
+            continue                      # the 八: two wide, short strokes along the bottom
+        body.append(contour)
+    return body
+
 def wan_shan(cs, style):
     if style in ('kaisho', 'fangsong'):
         return wan_shan_brush(cs, style)
@@ -414,6 +431,7 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
             forms['⿳田'+dots_seq+bottom]=[group(cs(ch))]
     forms['⿳艹田⿵冂山'] = wan_shan(cs, style)
     forms['⿱田⿵冂山'] = globals()['WAN_WITHOUT_CAO']
+    forms['⿱龷由'] = [group(huang_body(cs))]
     # The top of the KRM vulgar 處 (K07097330): ⺊'s dot as a bar, the stem centred on the cover
     # and joined to it. One component, reused as the top of ⿳⺊冖人 and its relatives.
     forms['⿱⺊冖'] = seal_dot_top(cs, style)

@@ -133,7 +133,7 @@ describe('the demo examples', () => {
     const group = EXAMPLE_GROUPS.find(group => group.key === 'ligature')
     expect(group.examples.map(example => example.sequence)).toEqual([
       '⿺辶⿱宀⿱⿰王尔⿲隹貝招', '⿱⿰日日⿲有見財', '⿰⿱日斗⿱進金', '⿳𦥯⿲女子乚皿',
-      '⿳五⿲矢口隹龰', '⿱黄⿱金⿱田⿵冂山', '⿳士⿲女口意祥',
+      '⿳五⿲矢口隹龰', '⿱⿱龷由⿱金⿱田⿵冂山', '⿳士⿲女口意祥',
       '⿱艹⿰马尼', '⿰⿳⿰SIR木阝',
       '⿱⿰⿱コン⿱クリ土', '⿱⿲ンメセ土', '⿸广⿰KO', '⿱宀K', '⿻Mo',
     ])
@@ -143,7 +143,7 @@ describe('the demo examples', () => {
     expect(refs.get('⿰⿱日斗⿱進金')).toEqual([sourceNumber('uhk-hetizi')])
     expect(refs.get('⿳𦥯⿲女子乚皿')).toEqual([sourceNumber('uhk-hetizi'), sourceNumber('zi-tools-kongmeng')])
     expect(refs.get('⿳五⿲矢口隹龰')).toEqual([sourceNumber('uhk-hetizi')])
-    expect(refs.get('⿱黄⿱金⿱田⿵冂山')).toEqual([sourceNumber('uhk-hetizi'), sourceNumber('gmw-zuhezi')])
+    expect(refs.get('⿱⿱龷由⿱金⿱田⿵冂山')).toEqual([sourceNumber('uhk-hetizi'), sourceNumber('gmw-zuhezi')])
     expect(refs.get('⿳士⿲女口意祥')).toEqual([sourceNumber('fznews-jixiang')])
     expect(refs.get('⿱艹⿰马尼')).toEqual([sourceNumber('zh-yue-hetizi')])
     expect(refs.get('⿰⿳⿰SIR木阝')).toEqual([sourceNumber('zh-yue-hetizi')])
