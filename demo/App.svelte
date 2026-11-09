@@ -76,21 +76,45 @@
 
   /** The BabelStone numbers' CHISE equivalents, for the palette's hover text. @type {Map<string, string[]>} */
   let equivalents = $state(new Map())
+  /** The corpus's equivalence rows, kept so a change to the reader's list can rebuild the map.
+   * @type {any[][]} */
+  let equivalenceRows = $state([])
+  const rebuildEquivalents = () => {
+    const map = new Map()
+    for (const [a, b, , , , , , status] of equivalenceRows) {
+      if (!a.startsWith('bsp:') || status !== 'verified') continue
+      const key = `{${a.slice(4)}}`
+      const names = map.get(key) ?? []
+      names.push(b.replace(/^chise:/, ''))
+      map.set(key, names)
+    }
+    // A reader's own pairs from the appendix join the corpus ones; a pair without both a number
+    // and a CHISE name has nothing to say on a numbered part.
+    try {
+      const stored = JSON.parse(localStorage.getItem('ids-input:equivalences') ?? '[]')
+      for (const row of Array.isArray(stored) ? stored : []) {
+        const sides = [String(row?.a ?? ''), String(row?.b ?? '')]
+        const number = sides.map(side => /^bsp:(\d+)$/.exec(side)).find(Boolean)
+        const entity = sides.map(side => /^chise:(.+)$/.exec(side)).find(Boolean)
+        if (!number || !entity) continue
+        const key = `{${number[1]}}`
+        const names = map.get(key) ?? []
+        if (!names.includes(entity[1])) names.push(entity[1])
+        map.set(key, names)
+      }
+    } catch { /* A malformed stored list leaves the corpus pairs. */ }
+    equivalents = map
+  }
   onMount(async () => {
     try {
       const response = await fetch(equivalencesUrl)
-      if (!response.ok) return
-      const doc = await response.json()
-      const map = new Map()
-      for (const [a, b, , , , , , status] of doc.rows) {
-        if (!a.startsWith('bsp:') || status !== 'verified') continue
-        const key = `{${a.slice(4)}}`
-        const names = map.get(key) ?? []
-        names.push(b.replace(/^chise:/, ''))
-        map.set(key, names)
-      }
-      equivalents = map
+      if (response.ok) equivalenceRows = (await response.json()).rows ?? []
     } catch { /* The palette works without the equivalents. */ }
+    rebuildEquivalents()
+    // The appendix writes the reader's list under this key; another tab's change reaches this one.
+    const onStorage = (/** @type {StorageEvent} */ event) => { if (event.key === 'ids-input:equivalences') rebuildEquivalents() }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
   })
 
   const params = new URLSearchParams(location.search)
