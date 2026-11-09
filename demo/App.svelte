@@ -1470,6 +1470,8 @@
                     <span class="encoded-character substituted-character" lang="ja" title={substituted.sequence}>
                       <span class="substituted-sequence">{editor.whole}</span>
                       <span class="substituted-arrow" aria-hidden="true">→</span>
+                      <span class="substituted-canonical">{substituted.sequence}</span>
+                      <span class="substituted-arrow" aria-hidden="true">→</span>
                       <span class="substituted-glyph">{substituted.char}</span>
                       <code>{cp(substituted.char)}</code>
                       <button type="button" title={t('app.copyChar', { char: substituted.char })} aria-label={t('app.copyChar', { char: substituted.char })} onclick={() => copy(substituted.char)}><Icon name="copy" size={13} /></button>
@@ -1703,7 +1705,7 @@
   .large-close:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:2px}
   .encoded-character{display:inline-flex;align-items:center;gap:2px;color:var(--ui-color-ink-muted)}
   .substituted-character{gap:4px;max-width:100%;font-family:var(--ids-font);font-size:13px}
-  .substituted-sequence{max-width:10em;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .substituted-sequence,.substituted-canonical{max-width:10em;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
   .substituted-arrow{flex:none}
   .substituted-glyph{font-size:16px;color:var(--ui-color-ink)}
   .encoded-character code{font:11px ui-monospace,monospace}
