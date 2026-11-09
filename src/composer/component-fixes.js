@@ -177,21 +177,6 @@ export function dotIn(composer, band) {
 export const COMPONENT_FIXES = {
   // 𠷃 (BabelStone: ⿰口⿳穴𠆢又) has a broad, shallow 又. Its component's
   // proportions also occur in 𥔉. Keep both inner parts within 穴's outer span.
-  '⿳穴𠆢又': {
-    glyphs: { '𠷃': '18e21d569405fb626234310bc145e3f861505264b37a2389329c6325a47c089a' },
-    apply(parts, composer) {
-      // A native whole glyph already carries its own regional form.
-      if (parts.length !== 3) return parts
-      const frame = [328, -71, 974, 845]
-      const target = union(parts.map(boxOf))
-      const boxes = [[328, 457, 974, 845], [385, 267, 917, 544], [385, -71, 917, 273]]
-      const host = partOf(composer.glyphRecord('𠷃'))
-      const you = derived(host, [host.contours[4]])
-      return parts.map((part, i) => i === 2
-        ? placed(you, you.box, mapped(boxes[i], frame, target), 0, 'construct 𠷃 又')
-        : { ...part, source: part.part.box, target: mapped(boxes[i], frame, target) })
-    },
-  },
 
   // As in 堇's lower body, 口 crosses the stem above both of 土's horizontal bars.
   '⿻口土': {
@@ -227,32 +212,6 @@ export const COMPONENT_FIXES = {
   },
   // A whole 鰥 cut stretches the left strokes and carries a sweeping lower stroke.
   // Keep 遝’s left strokes and stem, and replace both right strokes with compact 丶 glyphs.
-  '⿲𰀪丨⿱丶丶': {
-    glyphs: { '鰥': '0a96f41e4dfd5fba37c9fdc66c5b0342cc3d84b830e3d8c299e86da38434fe95',
-      '遝': '5ee607a1a197fb0a7402a0d2a273dd88f2e67a2dc275468db550229a2cad4fd9',
-      '丶': '3f6db1c682c48dbf567323805ff695a723fb3b20bf05570ddc178a684c4cbbb7' },
-    apply(parts, composer) {
-      const compactDot = band => {
-        const cx = centreX(band), cy = centreY(band)
-        const w = widthOf(band) * 0.9, h = heightOf(band) * 0.9
-        const dot = dotIn(composer, [cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2])
-        return dot
-      }
-      const whole = partFrom(parts, 'instance 鰥')
-      if (whole && whole.part.contours.length === 5) {
-        const glyph = composer.glyph('遝')
-        if (!glyph) return parts
-        const contours = [4, 5, 6, 11, 12].map(index => glyph.contours[index])
-        const source = union(contours.map(contour => pointsBox(contour.light)))
-        const dots = [5, 6].map(index => compactDot(mapped(pointsBox(glyph.contours[index].light), source, whole.target)))
-        if (dots.some(dot => !dot)) return parts
-        const piece = derived(glyph, [4, 11, 12].map(index => glyph.contours[index]), source)
-        return [{ ...placed(piece, source, whole.target, composer.ink('遝'), 'body 遝'), fixed: true }, ...dots]
-      }
-      const dots = parts.filter(part => part.origin.endsWith(' 遝') && heightOf(part.target) < 0.6 * (composer.face[3] - composer.face[1]))
-      return parts.map(part => dots.includes(part) ? compactDot(part.target) ?? part : part)
-    },
-  },
   // ⿻日丿: the 丿 comes from 屮, where it stands as tall as the glyph; over 日 it runs out above
   // the top horizontal. It is cut off at the underside of that bar.
   '⿻日丿': {
@@ -286,24 +245,6 @@ export const COMPONENT_FIXES = {
   },
   // ⿻一止 keeps a visible stem above the bar. 正's joined top is only a reference
   // for stroke weight; the overlay must retain the protruding head of 止.
-  '⿻一止': {
-    glyphs: { '吏': '5a7ffe78ecbf47ea93467018d4150f9b0bee5632590a68d7ad17a278a5165fe1',
-      '止': 'd9cf7eaf2648b8013a21bd390043e9d8f757f7af0f35af748ec96357a65ea6d0' },
-    apply(parts, composer, region = composer.face) {
-      const bar = partFrom(parts, 'overlay 吏'), stop = partFrom(parts, 'glyph 止')
-      if (!bar || !stop) return parts
-      const face = region, height = face[3] - face[1]
-      const target = [bar.target[0], face[1] + 0.60 * height, bar.target[2], face[1] + 0.678 * height]
-      // Lower the side strokes with 正's bar, while keeping the central stem's head.
-      const sideBar = stop.part.contours.map((contour, index) => ({ index, box: boxIn(stop, contour) }))
-        .filter(({ box }) => widthOf(box) > 3 * heightOf(box) && box[1] > face[1] + 0.3 * height)
-      let body = raised(stop, sideBar.map(({ index }) => index), 0.02 * height)
-      const left = body.part.contours.map((contour, index) => ({ index, box: boxIn(body, contour) }))
-        .filter(({ box }) => heightOf(box) > 3 * widthOf(box) && centreX(box) < centreX(boxOf(body)) - 0.1 * widthOf(boxOf(body)))
-      body = clippedAbove(body, left.map(({ index }) => index), target[1] - 0.04 * height)
-      return parts.map(part => part === bar ? { ...part, target } : part === stop ? body : part)
-    },
-  },
   // ⿱𠂉一: the cut of 監's right side leaves the 一 short; as the component's lower line it runs
   // out to the face's right edge, five percent in from the left.
   '⿱𠂉一': {
@@ -320,55 +261,11 @@ export const COMPONENT_FIXES = {
   },
   // ⿱𠂉丶: the 丶 is taken from 遝, whose lower dot is a 捺, and fills the band as one. The 丶
   // glyph is reduced within the local face and lifted, as 今 and 厶 set the dot.
-  '⿱𠂉丶': {
-    glyphs: { '遝': '5ee607a1a197fb0a7402a0d2a273dd88f2e67a2dc275468db550229a2cad4fd9',
-      '丶': '3f6db1c682c48dbf567323805ff695a723fb3b20bf05570ddc178a684c4cbbb7' },
-    apply(parts, composer, region = composer.face) {
-      const cut = partFrom(parts, 'learned 遝')
-      if (!cut) return parts
-      const [x, y, right, top] = region, width = right - x, height = top - y
-      // A detached dot occupies roughly a quarter of the face, as in 今.
-      const dot = dotIn(composer, [x + 0.25 * width, y + 0.26 * height,
-        x + 0.50 * width, y + 0.48 * height])
-      return dot ? parts.map(part => part === cut ? dot : part) : parts
-    },
-  },
   // ⿸⿹丅丿丨: the 丿 fills the left of the cell, so the opening the ⿹ leaves is the right side of
   // 丅's vertical. 丨 stands there, its head under the bar and its foot off the cell's bottom. Every
   // sample sets the fourth stroke right of the stem: in 𡉹 the stem runs x225–289 and the stroke
   // x352–416.
-  '⿸⿹丅丿丨': {
-    glyphs: { '丅': '78dcd9aa0146cd9317b3cb7455389db2cc8f21df17d072493358c5efb0ed98fd',
-      '丿': 'be6e7c77ed22a138be59cae82446668db20e3f4a9ecd6cf3beaa3e60b9777751',
-      '介': 'ef824bfb7b947774a641c0857cef37ea8e2bda4fffbeba4f38fe1a7e191e78aa' },
-    apply(parts) {
-      const stem = partFrom(parts, 'glyph 丅'), line = partFrom(parts, 'learned 介')
-      if (!stem || !line) return parts
-      const narrow = stem.part.contours.map(contour => boxIn(stem, contour))
-        .filter(box => heightOf(box) > 0.6 * (stem.target[3] - stem.target[1]))
-      if (!narrow.length) return parts
-      const vertical = narrow[0], stemWidth = widthOf(vertical), stemHeight = heightOf(vertical)
-      const width = stemWidth, height = 0.63 * stemHeight
-      const left = vertical[2] + (63 / 64) * stemWidth, bottom = vertical[1] + 0.14 * stemHeight
-      const target = [left, bottom, left + width, bottom + height]
-      return parts.map(part => part === line ? { ...part, target, fixed: true } : part)
-    },
-  },
   // The vertical hook projects above the bent bar, including when used inside C078.
-  '⿻乛亅': {
-    glyphs: { '乛': 'a69b2b57b6cd11538bdc7c7167de84cd8a7230733fde05a719ad938a26e8eeee',
-      '亅': '94220e40be5cc0d543297333f960bf55dee8a8f099224a03ca973429aeeab603' },
-    apply(parts) {
-      const bar = partFrom(parts, 'glyph 乛'), hook = partFrom(parts, 'glyph 亅')
-      if (!bar || !hook) return parts
-      // Lower the bar to expose the head without extending the glyph's bounds.
-      const drop = 0.16 * widthOf(bar.target)
-      const lowered = [bar.target[0], bar.target[1] - drop, bar.target[2], bar.target[3] - drop]
-      const target = [...hook.target]
-      target[3] = Math.max(target[3], lowered[3] + 0.22 * widthOf(bar.target))
-      return parts.map(part => part === hook ? { ...part, target } : part === bar ? { ...part, target: lowered } : part)
-    },
-  },
   // 㐧 supplies the proportions: a long projecting hook head and a diagonal
   // starting under the bar. The generic surround shrinks this body twice.
   '⿹⿻乛亅㇒': {
@@ -422,23 +319,6 @@ export const COMPONENT_FIXES = {
   // its legs while the wood under it starts at the bar's underside, leaving a band of white inside
   // the roof. The 冖 is raised to 𰀉's lowest bar where it stands short, and the 木 is stretched to
   // the bar's underside, so the three join and the wood still reaches the face's foot.
-  '⿳𰀉冖木': {
-    glyphs: { '叓': 'd518332db933c21ab9524e60429616fe716ac680b130fe826348294465fd9f71',
-      '舜': '71d5ba49d5a9f766ee3fb5f0b0fc40374c3ee00bf62100d2e459265ba8f89969',
-      '琹': 'f38ee20229faae11653c6b21024c1b7df32880d944f7a95bdf55a9e6043fcd08' },
-    apply(parts) {
-      const [top, middle, bottom] = ['host 叓', 'host 舜', 'host 琹'].map(origin => partFrom(parts, origin))
-      if (!top || !middle || !bottom) return parts
-      const gap = wideBottom(top) - boxOf(middle)[3]
-      const roof = gap > 0 ? { ...middle, target: [middle.target[0], middle.target[1] + gap,
-        middle.target[2], middle.target[3] + gap] } : middle
-      // The 木 rises to the bar's underside at the cell's centre, not to the roof's legs' feet.
-      const underside = inkBottomAt(roof, centreX(boxOf(roof)))
-      if (!(underside > boxOf(bottom)[3])) return gap > 0 ? parts.map(part => part === middle ? roof : part) : parts
-      const joined = { ...bottom, target: [bottom.target[0], bottom.target[1], bottom.target[2], underside] }
-      return parts.map(part => part === middle ? roof : part === bottom ? joined : part)
-    },
-  },
   // ⿱𰀁口: the 口 is cut from 吂, where it fills the band below as a narrow, shallow box, so
   // under 𰀁 the top overhangs it as 亮 and 凉 never let it. The 口 takes the cell's foot and the
   // width and height 亮's 口 has; 𰀁 keeps a short stem below its lower bar, clear of 口.
@@ -489,31 +369,6 @@ export const COMPONENT_FIXES = {
   // ⿹丅丿: the ⿹ leaves its opening at the lower left, but 丿 is set on the right, floating clear
   // of the cross. In 第 and 弔's 𢎨 the falling stroke stands left of the stem, below the bar: a
   // short, shallow ㇒, not a 刀 cut squeezed upright. It is drawn from the ㇒ glyph at that lean.
-  '⿹丅丿': {
-    glyphs: { '丅': '78dcd9aa0146cd9317b3cb7455389db2cc8f21df17d072493358c5efb0ed98fd',
-      '㇒': '68a459122af849188e5157353eaa9e3225ef69ba5a86867624c85237cafaa6bd' },
-    apply(parts, composer) {
-      const stem = partFrom(parts, 'glyph 丅')
-      const slash = parts.find(part => part.origin === 'learned 刀' || part.origin === 'glyph 丿' || part.origin === 'glyph ㇒')
-      if (!stem || !slash) return parts
-      const glyph = composer.glyph('㇒')
-      const bars = barsOf(stem)
-      const narrow = stem.part.contours.map(contour => boxIn(stem, contour))
-        .filter(box => heightOf(box) > 0.6 * (stem.target[3] - stem.target[1]))
-      if (!glyph || !bars.length || !narrow.length) return parts
-      // 第's falling stroke starts below the midpoint of the stem and runs to its lower left.
-      // 丅's top bar must remain separate from that lower diagonal.
-      const bar = bars[0].box, barWidth = widthOf(bar)
-      const vertical = narrow[0], right = vertical[2]
-      const width = Math.min(0.662 * barWidth, right - stem.target[0])
-      const height = 0.29 * barWidth
-      if (!(width > 0 && height > 0)) return parts
-      const top = vertical[1] + 0.43 * heightOf(vertical)
-      const target = [right - width, top - height, right, top]
-      const piece = placed(glyph, glyph.box, target, composer.ink('㇒'), 'glyph ㇒')
-      return parts.map(part => part === slash ? piece : part)
-    },
-  },
   // ⿵𠆢丶: the 丶 is cut from a 捺 and fills its band as a long slash. Under 𠆢 it is the dot
   // of 厶, as 能 and 熊 set it; the 丶 glyph stands in, sized to the band and standing on its foot.
   '⿵𠆢丶': {
@@ -528,63 +383,8 @@ export const COMPONENT_FIXES = {
     },
   },
   // 𡱃 compresses the cap above a taller 巾; the centre stem reaches its falling tip.
-  '⿱𠂊巾': {
-    glyphs: { '𠂊': '41f8902e69fb7c48109d0935dde0b3fc82a67acaa6da876c97c8e2c15e8cab1e',
-      '帋': '1596238105c1de5b9b639639250b978536c88d6505541c66ec518f7dd53cac60' },
-    apply(parts) {
-      const cap = partFrom(parts, 'glyph 𠂊'), body = partFrom(parts, 'learned 帋')
-      if (!cap || !body) return parts
-      const height = cap.target[3] - body.target[1]
-      const CAP_HEIGHT = 0.36 * height, BODY_HEIGHT = 0.65 * height
-      const capTarget = [cap.target[0], cap.target[3] - CAP_HEIGHT, cap.target[2], cap.target[3]]
-      const bodyTarget = [body.target[0], body.target[1], body.target[2], body.target[1] + BODY_HEIGHT]
-      return parts.map(part => part === cap ? { ...part, target: capTarget } : part === body ? { ...part, target: bodyTarget } : part)
-    },
-  },
   // 監 supplies either a single right-hand cut or two separate strokes. Split the cut before
   // sizing the pair, so 臣 stays compact and the lower 一 spans the right column.
-  '⿰臣⿱𠂉一': {
-    glyphs: { '監': 'ebb232713029973e133aa40ab2ba06f184299665b61e1e10640a9e78a0cf0094' },
-    apply(parts, composer) {
-      if (parts.length === 2) {
-        const court = parts.reduce((a, b) => a.target[0] < b.target[0] ? a : b)
-        const right = parts.find(part => part !== court)
-        const bars = right.part.contours.map((contour, index) => ({ index, box: pointsBox(contour.light) }))
-          .filter(({ box }) => widthOf(box) > 3 * heightOf(box)).sort((a, b) => a.box[1] - b.box[1])
-        if (!bars.length) return parts
-        const lower = bars[0].index
-        const bar = revised(right, [right.part.contours[lower]])
-        const cap = withoutContours(right, [lower])
-        // Tight source boxes let each cut occupy its own target without the other's whitespace.
-        parts = [court, cap, bar].map(part => {
-          const source = union(part.part.contours.map(contour => pointsBox(contour.light)))
-          return { ...part, target: boxOf(part), source }
-        })
-      }
-      if (parts.length !== 3) return parts
-      const court = parts.reduce((a, b) => a.target[0] < b.target[0] ? a : b)
-      const others = parts.filter(part => part !== court)
-      // The 一 is the wide, flat part of the right column; the 𠂉 is the other.
-      const flat = (part) => (part.target[2] - part.target[0]) / Math.max(part.target[3] - part.target[1], 1)
-      const bar = others.reduce((a, b) => flat(a) > flat(b) ? a : b)
-      const cap = others.find(part => part !== bar)
-      const left = court.target[0], right = Math.max(...parts.map(part => part.target[2]))
-      const width = right - left, height = court.target[3] - court.target[1]
-      const top = Math.max(court.target[3], cap.target[3])
-      const column = left + width * 0.50
-      const courtTarget = [left, top - height * 0.80, left + width * 0.40, top]
-      const capTarget = [column, top - height * 0.40, right, top]
-      // Leave a small gap below the falling tip, as in 監's right column.
-      const barTop = capTarget[1] - height * 0.035
-      const barTarget = [column, barTop - height * 0.075, right, barTop]
-      // The whole description is centred in the face after its parts are set.
-      const face = composer?.face
-      const drawn = [courtTarget, capTarget, barTarget]
-      const dy = face ? ((face[1] + face[3]) - (Math.min(...drawn.map(b => b[1])) + Math.max(...drawn.map(b => b[3])))) / 2 : 0
-      const shift = (box) => [box[0], box[1] + dy, box[2], box[3] + dy]
-      return parts.map(part => ({ ...part, target: shift(part === court ? courtTarget : part === cap ? capTarget : barTarget) }))
-    },
-  },
 
 }
 

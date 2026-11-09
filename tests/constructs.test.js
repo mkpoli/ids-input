@@ -78,32 +78,6 @@ describe('a stack cut from an enclosing host', () => {
   })
 })
 
-describe('a known construct', () => {
-  it('carries the body cut from its host', () => {
-    const spec = CONSTRUCTS['⿳山𠚍禸']
-    expect(spec.host).toBe('𱵺')
-    expect(spec.keep).toBe('bottom')
-    expect(spec.keepParts).toBe(1)
-    expect(spec.body.p).toHaveLength(5)
-  })
-
-  it('keeps the prefix and fits the body to the replaced parts', () => {
-    const top = placed(makePart([rect(0, 500, 1000, 800)]), [0, 500, 1000, 800], [0, 500, 1000, 800], 0, 'top')
-    const rest = placed(makePart([rect(100, 0, 900, 400)]), [100, 0, 900, 400], [100, 0, 900, 400], 0, 'rest')
-    const out = constructParts(CONSTRUCTS['⿳山𠚍禸'], [top, rest])
-    expect(out).toHaveLength(2)
-    expect(out[0]).toBe(top)
-    expect(out[1].origin).toBe('construct 𱵺 bottom')
-    expect(out[1].target).toEqual([100, 0, 900, 400])
-  })
-
-  it('leaves a drawing with nothing to replace alone', () => {
-    const only = placed(makePart([rect(0, 0, 10, 10)]), [0, 0, 10, 10], [0, 0, 10, 10], 0, 'only')
-    const out = constructParts(CONSTRUCTS['⿳山𠚍禸'], [only])
-    expect(out).toEqual([only])
-  })
-})
-
 describe('a body form', () => {
   const frame = glyph([0, 0, 100, 100],
     [0, 0, 100, 0, 100, 100, 0, 100],
@@ -213,82 +187,6 @@ describe('a variation sequence form', () => {
       hosts: () => [], places: () => [],
     })
     expect(c.compose('⿻者丶').map(part => part.origin)).toEqual(['glyph 者', 'glyph 丶'])
-  })
-})
-
-describe('a whole composition cut from its encoded characters', () => {
-  const field = (box, origin, branch) => {
-    const part = placed(makePart([rect(...box)]), box, box, 0, origin)
-    part.branch = [branch]
-    return part
-  }
-  const yu = () => new Composer({
-    manifest: { constants, spelled: [] }, layout: null,
-    rec: key => notoYu[key] ?? null, hosts: () => [], places: () => [],
-  })
-
-  it('names the glyph each cut comes from', () => {
-    for (const [sequence, host, cuts] of [
-      ['⿱⿵入一⿰⺝刂', '兪', [['兪', '兪 top', [0, 1, 2, 3]], ['俞', '俞 月刂 frame', [2, 3, 4, 7]], ['⺝', '⺝ upper bar', [1]], ['⺝', '⺝ lower bar', [2]]]],
-      ['⿱⿵入一⿰⿵冂⺀刂', '兪', [['兪', '兪 top', [0, 1, 2, 3]], ['兪', '兪 肉', [4, 5, 6, 7]], ['俞', '俞 刂', [2, 4]]]],
-      ['⿱亼⿰⺝刂', '俞', [['俞', '俞 top', [0, 1]], ['俞', '俞 月刂 frame', [2, 3, 4, 7]], ['⺝', '⺝ upper bar', [1]], ['⺝', '⺝ lower bar', [2]]]],
-      ['⿱亼⿰⿵冂⺀刂', '俞', [['俞', '俞 top', [0, 1]], ['兪', '兪 肉', [4, 5, 6, 7]], ['俞', '俞 刂', [2, 4]]]],
-    ]) {
-      const spec = CONSTRUCTS[sequence]
-      expect(spec.host).toBe(host)
-      expect(spec.cuts.map(cut => [cut.host, cut.label, cut.contours])).toEqual(cuts)
-      // Each cut is made for the export's own glyph, and says so.
-      for (const cut of spec.cuts) expect(cut.digest).toBe(hexOf(JSON.stringify(notoYu[cut.host].G.p)))
-    }
-  })
-
-  it('draws the 入 form with 兪’s top and 俞’s row', () => {
-    const out = yu().compose('⿱⿵入一⿰⺝刂')
-    expect(out.map(part => part.origin)).toEqual(['construct 兪 top', 'construct 俞 月刂 frame', 'construct ⺝ upper bar', 'construct ⺝ lower bar'])
-    expect(out[0].part.contours).toHaveLength(4)
-    expect(out[1].part.contours).toHaveLength(4)
-    expect(out[2].part.contours).toHaveLength(1)
-    expect(out[3].part.contours).toHaveLength(1)
-  })
-
-  it('sits the row where the host puts it, under the 一', () => {
-    const out = yu().compose('⿱⿵入一⿰⺝刂')
-    const [top, row] = out
-    const frame = partOf(notoYu['兪'].G), source = partOf(notoYu['俞'].G)
-    const rowBox = pointsBox([2, 3, 4, 7].flatMap(i => Array.from(source.contours[i].light)))
-    expect(row.target).toEqual(mapped(rowBox, frame.box, constants.face))
-    // The top's lowest ink and the row's highest meet within a hundredth of the face.
-    expect(top.target[1] - row.target[3]).toBeLessThan((constants.face[3] - constants.face[1]) * 0.02)
-  })
-
-  it('draws the 亼 form with horizontal month bars', () => {
-    const out = yu().compose('⿱亼⿰⺝刂')
-    expect(out.map(part => part.origin)).toEqual(['construct 俞 top', 'construct 俞 月刂 frame', 'construct ⺝ upper bar', 'construct ⺝ lower bar'])
-    expect(out.flatMap(part => part.part.contours)).toHaveLength(8)
-  })
-
-  it('gives the two 肉 forms 兪’s body with 俞’s 刂', () => {
-    for (const [sequence, top, shape] of [
-      ['⿱⿵入一⿰⿵冂⺀刂', 'construct 兪 top', [4, 4, 2]],
-      ['⿱亼⿰⿵冂⺀刂', 'construct 俞 top', [2, 4, 2]],
-    ]) {
-      const out = yu().compose(sequence)
-      expect(out.map(part => part.origin)).toEqual([top, 'construct 兪 肉', 'construct 俞 刂'])
-      expect(out.map(part => part.part.contours.length)).toEqual(shape)
-    }
-  })
-
-  it('keeps the composed drawing when an export draws another host', () => {
-    const spec = CONSTRUCTS['⿱⿵入一⿰⺝刂']
-    const out = [field([0, 500, 1000, 800], 'glyph 入', 0), field([0, 0, 1000, 400], 'glyph 月', 1)]
-    const other = { ...notoYu['兪'].G, p: notoYu['兪'].G.p.slice(1) }
-    expect(constructParts(spec, out, { 兪: other, 俞: notoYu['俞'].G }, constants.face)).toBe(out)
-    expect(constructParts(spec, out, { 兪: notoYu['兪'].G, 俞: null }, constants.face)).toBe(out)
-    expect(constructParts(spec, out, null, constants.face)).toBe(out)
-  })
-
-  it('leaves 亼 drawn as its own glyph', () => {
-    expect(yu().compose('亼').map(part => part.origin)).toEqual(['glyph 亼'])
   })
 })
 
@@ -402,22 +300,6 @@ it('C061 keeps only 气’s first three strokes and closes with 乙, including b
   expect(SURROUND_CONSTRUCTS['⿳𠂉一乙'].host).toBe('𣱪')
 })
 
-it('C021 distinguishes both month variants from their flesh variants', () => {
-  const box = constants.face
-  const loose = [placed(makePart([rect(...box)]), box, box, 0, 'fallback')]
-  const records = Object.fromEntries(Object.entries(notoYu).map(([key, value]) => [key, value.G]))
-  for (const top of ['⿵入一', '亼']) {
-    const month = constructParts(CONSTRUCTS[`⿱${top}⿰⺝刂`], loose, records, box)
-    const flesh = constructParts(CONSTRUCTS[`⿱${top}⿰⿵冂⺀刂`], loose, records, box)
-    expect(month.at(-1).origin).toBe('construct ⺝ lower bar')
-    for (const contour of month.at(-1).part.contours) {
-      const b = pointsBox(contour.light)
-      expect(b[2] - b[0]).toBeGreaterThan(4 * (b[3] - b[1]))
-    }
-    expect(month.map(p => p.origin)).not.toEqual(flesh.map(p => p.origin))
-    expect(constructParts(CONSTRUCTS[`⿱${top}⿰⺝刂`], loose, { ...records, '⺝': null }, box)).toBe(loose)
-  }
-})
 
 it('C062 joins the bundled wood to the roof without moving the top or foot', async () => {
   const { componentParts } = await import('../src/composer/component-forms.js')
@@ -454,18 +336,3 @@ it('C061 retains the middle horizontal above the replacement closing stroke', as
   expect(middle[3] - middle[1]).toBeGreaterThan(50)
 })
 
-it('C021 preserves the native month frame and bar spacing when nested', () => {
-  const c = new Composer({
-    manifest: { constants, spelled: [] }, layout: null,
-    rec: key => notoYu[key] ?? null, hosts: () => [], places: () => [],
-  })
-  const root = c.compose('⿱⿵入一⿰⺝刂')
-  const nested = c.compose('⿰俞⿱⿵入一⿰⺝刂')
-  expect(nested.map(p => p.origin)).toContain('construct 俞 月刂 frame')
-  expect(nested.map(p => p.origin)).toContain('construct ⺝ upper bar')
-  const upper = root.find(p => p.origin === 'construct ⺝ upper bar')
-  const lower = root.find(p => p.origin === 'construct ⺝ lower bar')
-  expect(upper.target[1] - lower.target[3]).toBeGreaterThan(60)
-  expect(upper.target[1] - lower.target[3]).toBeLessThan(85)
-  expect(Math.abs((upper.target[3] - upper.target[1]) - (lower.target[3] - lower.target[1]))).toBeLessThan(2)
-})

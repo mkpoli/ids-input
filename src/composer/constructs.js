@@ -90,12 +90,7 @@ export const CONSTRUCTS = {
     { host: '乙', label: '乙 closing stroke', contours: [0, 1], box: [153.25, -78.75, 962.5, 447.75],
       digest: 'ad473c2c2cf293512d44377319d9421cfb26b8ca149417bebf81994b8a341679' },
   ] },
-  '⿳山𠚍禸': { host: '𱵺', keep: 'bottom', keepParts: 1, body: XIE_BOTTOM },
   '⿻十从': { host: '𢂯', keep: 'overlay', keepParts: 0, body: CONG_TEN },
-  '⿱⿵入一⿰⺝刂': { host: '兪', nested: true, cuts: [YU_IN_TOP, ...YU_MONTH_ROW] },
-  '⿱⿵入一⿰⿵冂⺀刂': { host: '兪', cuts: [YU_IN_TOP, YU_FLESH_BODY, YU_JIAN] },
-  '⿱亼⿰⺝刂': { host: '俞', nested: true, cuts: [YU_JI_TOP, ...YU_MONTH_ROW] },
-  '⿱亼⿰⿵冂⺀刂': { host: '俞', cuts: [YU_JI_TOP, YU_FLESH_BODY, YU_JIAN] },
   '⿰⿻三丨刀': JIE,
 }
 

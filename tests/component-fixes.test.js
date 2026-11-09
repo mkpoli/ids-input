@@ -62,18 +62,6 @@ describe('a composition fix', () => {
   })
 })
 
-describe('C052 ⿲𰀪丨⿱丶丶', () => {
-  it('draws both right strokes as compact dots', () => {
-    const composer = dotComposer()
-    const stem = part('glyph 𰀪', [0, 0, 1000, 1000], [38, 40, 321, 922], [[0, 0, 1000, 1000]])
-    const line = part('host 遝', [576, 49, 648, 560], [482, 40, 558, 922], [[576, 49, 648, 560]])
-    const upper = part('learned 遝', [697, 339, 924, 535], [680, 398, 967, 840], [[697, 339, 924, 535]])
-    const last = part('learned 遝', [689, 104, 937, 339], [680, -81, 967, 361], [[689, 104, 937, 339]])
-    const out = COMPONENT_FIXES['⿲𰀪丨⿱丶丶'].apply([stem, line, upper, last], composer)
-    expect(out.filter(p => p.origin === 'dot 丶')).toHaveLength(2)
-    expect(out.at(-1).origin).toBe('dot 丶')
-  })
-})
 
 describe('C087 ⿻日丿', () => {
   it('keeps 丿 under 日’s top bar', () => {
@@ -112,32 +100,7 @@ describe('C045 ⿱𠂉一', () => {
   })
 })
 
-describe('C080 ⿻一止', () => {
-  it('leaves a clear stem above 一 in the 止 overlay', () => {
-    const bar = part('overlay 吏', [71, 674, 935, 744], [65, 672, 931, 744], [[71, 674, 935, 744]])
-    const stop = part('glyph 止', [49, -30, 949, 837], [38, -81, 967, 840], [[49, -30, 949, 44], [188, 9, 265, 620]])
-    const [raised] = COMPONENT_FIXES['⿻一止'].apply([bar, stop], { face: [38, -81, 967, 840] })
-    expect(raised).not.toBe(bar)
-    // The bar keeps its span and rises to the cell's top band.
-    expect(raised.target[0]).toBe(bar.target[0])
-    expect(raised.target[2]).toBe(bar.target[2])
-    expect(stop.target[3] - raised.target[3]).toBeGreaterThan(120)
-    // The 止's head still reaches above the bar.
-    expect(stop.target[3]).toBeGreaterThan(raised.target[3])
-  })
-})
 
-describe('C046 ⿱𠂉丶', () => {
-  it('draws 丶 as a dot, not 遝’s 捺, in 𠂉丶 and the last dot of ⿲𰀪丨⿱丶丶', () => {
-    const composer = dotComposer()
-    const learned = part('learned 遝', [689, 104, 937, 339], [435, -71, 911, 365], [[689, 104, 937, 339]])
-    const [dot0] = COMPONENT_FIXES['⿱𠂉丶'].apply([learned], composer)
-    expect(dot0.origin).toBe('dot 丶')
-    expect(targetBox(dot0, dot0.part.contours[0])[3] - targetBox(dot0, dot0.part.contours[0])[1]).toBeLessThan(436)
-    // The dot stands above the band's foot, not below it.
-    expect(dot0.target[1]).toBeGreaterThan(learned.target[1] + 20)
-  })
-})
 
 describe('C078 ⿹⿻乛亅㇒', () => {
   it('fills its local face with the projecting head and joined diagonal of 㐧', () => {
@@ -158,24 +121,6 @@ describe('C078 ⿹⿻乛亅㇒', () => {
   })
 })
 
-describe('C073 ⿸⿹丅丿丨', () => {
-  it('stands the ⿸⿹ inner 丨 in the opening right of 丅’s vertical, as 𡉹 sets it', () => {
-    const stem = part('glyph 丅', [52, -80, 949, 748], [38, -81, 967, 840], [[52, 672, 949, 748], [456, -80, 536, 706]])
-    const slash = part('glyph 丿', [220, -71, 588, 815], [38, -81, 425, 725], [[220, -71, 588, 815]])
-    const line = part('learned 介', [638, -78, 715, 488], [556, -12, 631, 293], [[638, -78, 715, 488]])
-    const out = COMPONENT_FIXES['⿸⿹丅丿丨'].apply([stem, slash, line])
-    const [x0, y0, x1, y1] = out[2].target
-    const [stemX0, stemY0, stemX1, stemY1] = targetBox(stem, stem.part.contours[1])
-    // Right of 丅's vertical, in the space the 丿 leaves open.
-    expect(x0).toBeGreaterThan(stemX1 + 60)
-    expect(x1).toBeLessThan(stemX1 + 170)
-    // Standing off the cell's bottom, its head under the bar, at the height of 𡉹’s right stroke.
-    expect(y0).toBeGreaterThan(stemY0 + 40)
-    expect(y1).toBeLessThan(stemY1 - 150)
-    expect(y1 - y0).toBeCloseTo(0.63 * (stemY1 - stemY0), 6)
-    expect(x1 - x0).toBeCloseTo(stemX1 - stemX0, 6)
-  })
-})
 
 
 describe('C015 ⿰𠄠𠄠', () => {
@@ -193,22 +138,6 @@ describe('C015 ⿰𠄠𠄠', () => {
   })
 })
 
-describe('C062 ⿳𰀉冖木', () => {
-  it('raises 冖 to 𰀉’s lowest bar and stretches 木 to the bar’s underside', () => {
-    const top = part('host 叓', [38, 533, 967, 840], [38, 533, 967, 840],
-      [[462, 533, 542, 840], [38, 752, 967, 788], [143, 587, 868, 714]])
-    // A roof: a bar with a leg at either end, so its box foot is the legs, not the bar.
-    const middle = part('host 舜', [38, 405, 967, 533], [38, 405, 967, 533],
-      [[38, 464, 967, 533], [38, 405, 148, 464], [853, 405, 967, 464]])
-    const bottom = part('host 琹', [38, -81, 967, 413], [38, -81, 967, 413], [[38, 413, 967, 455], [462, -81, 538, 413]])
-    const out = COMPONENT_FIXES['⿳𰀉冖木'].apply([top, middle, bottom])
-    expect(out[1].target[3]).toBeCloseTo(587, 6)
-    expect(out[1].target[1]).toBeCloseTo(459, 6)
-    // The wood reaches the roof's bar underside at 518, not its legs' foot at 459.
-    expect(out[2].target[3]).toBeCloseTo(518, 6)
-    expect(out[2].target[1]).toBeCloseTo(-81, 6)
-  })
-})
 
 describe('C072 ⿵𦉪丅', () => {
   it('fits the complete native frame and hooks into the enclosing component', () => {
@@ -246,35 +175,7 @@ describe('C070 ⿵冂丨', () => {
   })
 })
 
-describe('C079 ⿹丅丿', () => {
-  it('sets the falling stroke halfway down 丅’s stem, as 第 does', () => {
-    const stem = part('glyph 丅', [52, -80, 949, 748], [52, -80, 949, 748],
-      [[52, 691, 949, 747], [456, -80, 537, 705]])
-    const slash = part('learned 刀', [42, -84, 475, 713], [546, -81, 963, 595], [[42, -84, 475, 713]])
-    const out = COMPONENT_FIXES['⿹丅丿'].apply([stem, slash], { glyph: () => part('glyph ㇒', [87, 255, 594, 774], [87, 255, 594, 774], [[87, 255, 594, 774]]).part, ink: () => 1000 })
-    const [x0, y0, x1, y1] = out[1].target
-    // The stroke leans like 𢎨's, not upright: wider than it is tall.
-    expect((x1 - x0) / (y1 - y0)).toBeCloseTo(1.86, 1)
-    expect(y1).toBeGreaterThan(250)
-    expect(y1).toBeLessThan(280)
-    expect(y0).toBeLessThan(30)
-    // Its right end runs under the stem rather than clear of it.
-    expect(x1).toBeGreaterThan(456)
-    expect(x1).toBeCloseTo(537)
-    expect(x0).toBeGreaterThanOrEqual(52 - 1e-6)
-  })
-})
 
-describe('C081 ⿻乛亅', () => {
-  it('leaves 亅’s top above the 乛 bar, as 才 sets it', () => {
-    const bar = part('glyph 乛', [94, 483, 930, 775], [125, 474, 902, 743],
-      [[94, 697, 869, 771], [737, 483, 930, 775]])
-    const hook = part('glyph 亅', [252, -63, 548, 808], [272, -29, 547, 774], [[252, -63, 548, 808]])
-    const out = componentFix('⿻乛亅', [bar, hook], { glyphRecord: () => null })
-    expect(out[1]).toBe(hook)
-    expect(targetBox(out[1], out[1].part.contours[0])[3]).toBeGreaterThan(743)
-  })
-})
 
 describe('C071 ⿵𠆢丶', () => {
   it('draws the dot under 𠆢 as a 丶, not the host’s 捺', () => {
@@ -289,48 +190,9 @@ describe('C071 ⿵𠆢丶', () => {
   })
 })
 
-describe('C047 ⿱𠂊巾', () => {
-  it('keeps the 巾 body at the size the pair is set with', () => {
-    const cap = part('glyph 𠂊', [85, -46, 840, 790], [128, 336, 858, 841], [[85, -46, 840, 790]])
-    const body = part('learned 帋', [153, -79, 856, 387], [153, -78, 856, 379], [[153, -79, 856, 387]])
-    const out = COMPONENT_FIXES['⿱𠂊巾'].apply([cap, body])
-    expect(out[0].target[3] - out[0].target[1]).toBeCloseTo(919 * 0.36, 6)
-    expect(out[1].target[3] - out[1].target[1]).toBeCloseTo(919 * 0.65, 6)
-    expect(out[1].target[3] - out[0].target[1]).toBeCloseTo(919 * 0.01, 6)
-  })
-})
-
-describe('C013 ⿰臣⿱𠂉一', () => {
-  it('sets the right stack apart and centres the description', () => {
-    const court = part('host 監', [126, -78, 932, 782], [38, -82, 562, 840], [[126, -78, 932, 782]])
-    const cap = part('host 監', [489, 492, 942, 836], [600, 361, 967, 840], [[489, 492, 942, 836]])
-    const bar = part('host 監', [579, 377, 917, 441], [600, 88, 967, 155], [[579, 377, 917, 441]])
-    const face = [38, 40, 967, 962]
-    const out = COMPONENT_FIXES['⿰臣⿱𠂉一'].apply([court, cap, bar], { face })
-    expect(out[0].target[2] - out[0].target[0]).toBeCloseTo(929 * 0.40, 6)
-    expect(out[1].target[3] - out[1].target[1]).toBeCloseTo(922 * 0.40, 6)
-    expect(out[1].target[2] - out[1].target[0]).toBeCloseTo(929 * 0.50, 6)
-    // The 一 sits under the 𠂉, above the column's foot.
-    expect(out[2].target[3]).toBeLessThan(out[1].target[1])
-    expect(out[2].target[3]).toBeLessThan(out[0].target[3])
-    // The whole description is centred in the face.
-    const low = Math.max(out[0].target[3], out[1].target[3], out[2].target[3])
-    const high = Math.min(out[0].target[1], out[1].target[1], out[2].target[1])
-    expect((high + low) / 2).toBeCloseTo((face[1] + face[3]) / 2, 6)
-  })
-})
 
 
-it('C013 splits a stretched host cut before extending the lower bar', () => {
-  const court = part('host 監', [0, 0, 400, 500], [0, 0, 520, 920], [[0, 0, 400, 500]])
-  const right = part('host 監', [0, 0, 450, 460], [560, 50, 930, 870],
-    [[90, 0, 430, 65], [0, 116, 200, 460], [100, 248, 450, 313]])
-  const out = COMPONENT_FIXES['⿰臣⿱𠂉一'].apply([court, right])
-  expect(out).toHaveLength(3)
-  expect(out[0].target[3] - out[0].target[1]).toBeLessThan(750)
-  expect(out[2].target[2] - out[2].target[0]).toBeGreaterThan(450)
-  expect(out[1].part.contours).toHaveLength(2)
-})
+
 
 it('C034 separates the 卝 terminals from the first 干 bar', () => {
   const cap = part('learned 𢾴', [0, 0, 1000, 300], [0, 600, 1000, 900], [[0, 0, 400, 300], [600, 0, 1000, 300]])
@@ -341,19 +203,6 @@ it('C034 separates the 卝 terminals from the first 干 bar', () => {
   expect(b.target[1]).toBe(0)
 })
 
-it('C052 preserves the left strokes while replacing both right strokes', () => {
-  const whole = part('instance 鰥', [0, 0, 1000, 1000], [30, 20, 950, 940],
-    Array.from({ length: 5 }, () => [0, 0, 1000, 1000]))
-  const glyph = part('glyph 遝', [0, 0, 1000, 1000], [0, 0, 1000, 1000],
-    Array.from({ length: 13 }, (_, i) => [i * 20, 20, i * 20 + 15, 800])).part
-  const [out, ...dots] = COMPONENT_FIXES['⿲𰀪丨⿱丶丶'].apply([whole], { ...dotComposer(), glyph: ch => ch === '遝' ? glyph : dotComposer().glyph() })
-  expect(dots).toHaveLength(2)
-  expect(dots.every(p => p.origin === 'dot 丶')).toBe(true)
-  expect(out.origin).toBe('body 遝')
-  expect(out.target).toEqual(whole.target)
-  expect(out.part.contours).toEqual([4, 11, 12].map(i => glyph.contours[i]))
-  expect(out.fixed).toBe(true)
-})
 
 it('C085 keeps the mouth bottom clear of the earth foot', () => {
   const mouth = part('glyph 口', [0, 0, 750, 790], [100, 0, 850, 790], [[0, 0, 750, 790]])
@@ -365,59 +214,9 @@ it('C085 keeps the mouth bottom clear of the earth foot', () => {
   expect(a.target[2]).toBeLessThan(b.target[2])
 })
 
-it('C060 gives 又 the broad shallow form and spacing of 𠷃', async () => {
-  const records = (await import('./fixtures/noto-c060.json')).default
-  const { partOf, mapped } = await import('../src/composer/geometry.js')
-  const frame = [328, -71, 974, 845]
-  for (const target of [[0, 0, 1000, 900], [400, -80, 950, 840]]) {
-    const parts = ['穴', '𠆢', '又'].map(ch => {
-      const g = partOf(records[ch].G)
-      return placed(g, g.box, target, 0, `glyph ${ch}`)
-    })
-    const composer = { glyphRecord: ch => records[ch]?.G ?? null }
-    const out = componentFix('⿳穴𠆢又', parts, composer)
-    expect(out[2].origin).toBe('construct 𠷃 又')
-    for (const inner of out.slice(1)) {
-      expect(inner.target[0]).toBeGreaterThan(out[0].target[0])
-      expect(inner.target[2]).toBeLessThan(out[0].target[2])
-    }
-    out[2].target.forEach((v, i) => expect(v).toBeCloseTo(mapped([385, -71, 917, 273], frame, target)[i], 0))
-    expect(out[2].part.contours.map(box)).toEqual([box(partOf(records['𠷃'].G).contours[4])])
-    out[1].target.forEach((v, i) => expect(v).toBeCloseTo(mapped([385, 267, 917, 544], frame, target)[i], 0))
-    expect(componentFix('⿳穴𠆢又', parts, { glyphRecord: () => null })).toBe(parts)
-    expect(componentFix('⿳穴𠆢又', [parts[0]], composer)).toEqual([parts[0]])
-  }
-})
 
-it('C080 lowers the crossbar while retaining a long central head', () => {
-  const bar = part('overlay 吏', [0, 0, 900, 70], [0, 700, 900, 770], [[0, 0, 900, 70]])
-  const stop = part('glyph 止', [0, 0, 900, 900], [0, 0, 900, 900],
-    [[500, 430, 850, 500], [0, 0, 900, 70], [450, 0, 520, 900], [150, 0, 220, 650]])
-  const [a, b] = COMPONENT_FIXES['⿻一止'].apply([bar, stop], { face: [0, 0, 900, 900] })
-  expect(a.target[3]).toBeLessThan(680)
-  expect(targetBox(b, b.part.contours[2])[3] - a.target[3]).toBeGreaterThan(240)
-  expect(targetBox(b, b.part.contours[0])[3]).toBeLessThan(520)
-  expect(targetBox(b, b.part.contours[3])[1]).toBe(0)
-})
 
-it('C073 keeps approximately one stem width of white before the right stroke', () => {
-  const stem = part('glyph 丅', [0, 0, 900, 900], [0, 0, 900, 900], [[0, 820, 900, 900], [400, 0, 480, 850]])
-  const line = part('learned 介', [0, 0, 80, 500], [400, 0, 480, 500], [[0, 0, 80, 500]])
-  const [, out] = COMPONENT_FIXES['⿸⿹丅丿丨'].apply([stem, line])
-  expect(out.target[0] - 480).toBeCloseTo(78.75)
-  expect(out.target[3]).toBeGreaterThan(600)
-  expect(out.target[1]).toBeGreaterThan(100)
-})
 
-it('C046 keeps a small lifted dot left of centre in a nested face', () => {
-  const composer = dotComposer()
-  const cut = part('learned 遝', [0, 0, 500, 440], [435, -71, 911, 365], [[0, 0, 500, 440]])
-  const [after] = COMPONENT_FIXES['⿱𠂉丶'].apply([cut], composer, [100, 200, 500, 700])
-  expect(after.target[2]).toBeLessThanOrEqual(300)
-  expect(after.target[0]).toBeGreaterThanOrEqual(200)
-  expect(after.target[2] - after.target[0]).toBeLessThanOrEqual(100)
-  expect(after.target[1]).toBeCloseTo(330)
-})
 
 it('C049 sets two equal bars and a stem that reaches the mouth', () => {
   const contour = (x0, y0, x1, y1) => {
@@ -436,23 +235,5 @@ it('C049 sets two equal bars and a stem that reaches the mouth', () => {
   expect(boxes[0][1]).toBeLessThanOrEqual(lower.target[3] + 1)
 })
 
-it('C079 joins a directly sourced ㇒ to the lower half of 丅', () => {
-  const stem = part('glyph 丅', [0, 0, 900, 900], [0, 0, 900, 900], [[0, 820, 900, 900], [400, 0, 480, 850]])
-  const slash = part('glyph ㇒', [0, 0, 500, 500], [600, 0, 900, 500], [[0, 0, 500, 500]])
-  const [, out] = COMPONENT_FIXES['⿹丅丿'].apply([stem, slash], { glyph: () => slash.part, ink: () => 1000 })
-  expect(out.target[2]).toBe(480)
-  expect(out.target[3]).toBeLessThan(425)
-  expect(out.target[3]).toBeGreaterThan(300)
-  expect(out.target[0]).toBe(0)
-})
 
 
-it('C081 exposes the hook head by lowering the bar without raising the bounds', () => {
-  const bar = part('glyph 乛', [0, 0, 800, 300], [100, 470, 900, 770], [[0, 0, 800, 300]])
-  const hook = part('glyph 亅', [0, 0, 280, 800], [270, -30, 550, 866], [[0, 0, 280, 800]])
-  const [a, b] = COMPONENT_FIXES['⿻乛亅'].apply([bar, hook])
-  expect(b.target.slice(0, 3)).toEqual(hook.target.slice(0, 3))
-  expect(b.target[3] - a.target[3]).toBeCloseTo(224, 0)
-  expect(a.target[3] - a.target[1]).toBe(300)
-  expect(a.target[0]).toBe(bar.target[0])
-})
