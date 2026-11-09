@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { partOf } from '../src/composer/geometry.js'
+import { partOf } from '@han-compose/composer/geometry'
 
 const int16 = values => Buffer.from(Int16Array.from(values).buffer).toString('base64')
 const closed = (tear, last = null) => {

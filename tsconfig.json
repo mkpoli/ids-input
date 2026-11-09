@@ -12,7 +12,8 @@
     "outDir": "types",
     "rootDir": "src",
     "skipLibCheck": true,
+    "types": ["bun"],
     "resolveJsonModule": true
   },
-  "include": ["src/core/**/*.js", "src/adapter/**/*.js", "src/composer/**/*.js", "src/document/**/*.js"]
+  "include": ["src/core/**/*.js", "src/adapter/**/*.js", "src/document/**/*.js"]
 }

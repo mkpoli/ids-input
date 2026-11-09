@@ -3,10 +3,10 @@ import { readFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
 import { isComponent, isJurchen, isLetter, parse, write } from '../src/core/ids.js'
 import { characterScript, groupPaletteParts, isOtherScript, partScript } from '../src/core/scripts.js'
-import { compose } from '../src/composer/loader.js'
-import { onlyBundled } from '../src/composer/local.js'
-import { hasJurchen, jurchenSource } from '../src/composer/jurchen.js'
-import { traitsOf } from '../src/composer/source.js'
+import { compose } from '@han-compose/composer/loader'
+import { onlyBundled } from '@han-compose/composer/local'
+import { hasJurchen, jurchenSource } from '@han-compose/composer/jurchen'
+import { traitsOf } from '@han-compose/composer/source'
 import { babelStoneAdapter } from '../src/adapter/babelstone.js'
 import { jurchenAdapter } from '../src/adapter/jurchen.js'
 import { characterOf, namedFor } from '../worker/render.js'
@@ -16,7 +16,7 @@ import { load as loadSearchWorker, recovered } from '../src/adapter/search-worke
 import { jurchenLabel, jurchenMatches, jurchenNames } from '../src/adapter/jurchen-data.js'
 
 const data = JSON.parse(gunzipSync(readFileSync(new URL('../data/jurchen.json.gz', import.meta.url))).toString())
-const outlines = JSON.parse(gunzipSync(readFileSync(new URL('../data/jurchen-outlines.json.gz', import.meta.url))).toString())
+const outlines = JSON.parse(gunzipSync(readFileSync(new URL('../node_modules/@han-compose/composer/data/sources/jurchen/outlines.json.gz', import.meta.url))).toString())
 const chars = data.parts.filter(part => part.jurGroup === 'character')
 const radicals = data.parts.filter(part => part.jurGroup === 'radical')
 const FIRST = '\u{18E00}', TUMEN = '\u{18E01}', VARIANT = '\u{18E01}\uFE00', RADICAL = '\u{191A0}'

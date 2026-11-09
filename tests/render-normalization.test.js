@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { createRenderNormalizer } from '../src/composer/normalization.js'
+import { createRenderNormalizer } from '@han-compose/composer/normalization'
 
 const ARITY = { '⿰': 2, '⿱': 2, '⿻': 2, '⿳': 3 }
 const parse = text => {

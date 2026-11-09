@@ -2,9 +2,9 @@
 // right vertical. The drawing ends that bar inside the vertical, as the textbooks draw it, both
 // when the character comes from its own glyph and when it comes from a host cut.
 import { describe, expect, it } from 'bun:test'
-import { BAR_FROM, Composer } from '../src/composer/compose.js'
-import { pointsBox } from '../src/composer/geometry.js'
-import { compose, createSource } from '../src/composer/loader.js'
+import { BAR_FROM, Composer } from '@han-compose/composer/compose'
+import { pointsBox } from '@han-compose/composer/geometry'
+import { compose, createSource } from '@han-compose/composer/loader'
 import { files, shards } from './fixtures/composer-export.js'
 
 const int16 = values => Buffer.from(Int16Array.from(values).buffer).toString('base64')

@@ -8,9 +8,9 @@
 // on the entries before it. The three numbers are the page's: IoU of the ink at 256 px, F1 with a
 // 4 px tolerance, and the L1 distance of the ink shares in a 3 × 3 grid.
 import { readFileSync, writeFileSync } from 'node:fs'
-import { compose, fromUrl } from '../src/composer/loader.js'
+import { compose, fromUrl } from '@han-compose/composer/loader'
 import { COMPOSER_BASE } from '../demo/lib/composer.js'
-import { count, grown, iou, pathMask } from '../src/composer/geometry.js'
+import { count, grown, iou, pathMask } from '@han-compose/composer/geometry'
 
 const args = process.argv.slice(2)
 const option = name => { const i = args.indexOf(name); return i < 0 ? null : args[i + 1] }
