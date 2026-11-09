@@ -1615,6 +1615,12 @@ export class Composer {
     const C = this.C, stem = this.stem0[0][0], frameOf = region ?? this.face
     let boxes = this.predict(op, children)
     if (region) { const frame = union(boxes); boxes = boxes.map(b => mapped(b, frame, region)) }
+    // 𭰲 (⿰氵⿵冂并) keeps about a fifth of a stem between the water and the frame; a described
+    // ⿰氵⿵冂… tends to close it to nothing.
+    if (op === '⿰' && children[0] === '氵' && Array.isArray(children[1]) && children[1][0] === '⿵') {
+      const gap = 0.02 * (this.face[2] - this.face[0]), b = boxes[1]
+      if (b[2] - b[0] > gap * 4) { b[0] = b[0] + gap; b[2] = Math.min(b[2] + gap, this.face[2]) }
+    }
     if (op in this.ENCLOSE && !region && area(boxes[0]) < C.ENCLOSING_LEAST * area(this.face)) boxes[0] = this.face.slice()
     if (C.COVERING.includes(op)) boxes[0] = union(boxes)
     if (boxes.some(b => b[2] <= b[0] || b[3] <= b[1])) return null
@@ -1729,6 +1735,15 @@ export class Composer {
     this.openUnderCover(op, children, groups)
     this.containUnderCover(op, children, groups)
     this.joinUnderCover(op, children, groups)
+    // 𭰲 (⿰氵⿵冂并) keeps a gap between the water and the frame; a described ⿰氵⿵冂… closes it.
+    if (op === '⿰' && children[0] === '氵' && Array.isArray(children[1]) && children[1][0] === '⿵') {
+      const a = union(groups[0].map(p => p.target)), b = union(groups[1].map(p => p.target))
+      const want = 0.02 * (this.face[2] - this.face[0]), gap = b[0] - a[2]
+      if (gap < want) {
+        const d = want - gap
+        for (const p of groups[1]) p.target = [p.target[0] + d, p.target[1], p.target[2] + d, p.target[3] + d]
+      }
+    }
     return this.flatten(groups)
   }
 
@@ -1881,6 +1896,15 @@ export class Composer {
     this.openUnderCover(op, children, groups)
     this.containUnderCover(op, children, groups)
     this.joinUnderCover(op, children, groups)
+    // 𭰲 (⿰氵⿵冂并) keeps a gap between the water and the frame; a described ⿰氵⿵冂… closes it.
+    if (op === '⿰' && children[0] === '氵' && Array.isArray(children[1]) && children[1][0] === '⿵') {
+      const a = union(groups[0].map(p => p.target)), b = union(groups[1].map(p => p.target))
+      const want = 0.02 * (this.face[2] - this.face[0]), gap = b[0] - a[2]
+      if (gap < want) {
+        const d = want - gap
+        for (const p of groups[1]) p.target = [p.target[0] + d, p.target[1], p.target[2] + d, p.target[3] + d]
+      }
+    }
     return this.flatten(groups)
   }
 
