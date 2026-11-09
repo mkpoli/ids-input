@@ -261,8 +261,11 @@ for (const row of rows) {
     prov: [row.prov], regions: regions(row), role: row.role, status: statusOf(row.text, resolved),
   })
 }
+// A character's descriptions lead with the Japanese-tagged reading: the face draws the Japanese
+// positional forms, and an untagged row would otherwise put the base character first.
+const regionRank = row => row.regions.includes('J') ? 0 : row.regions ? 1 : 2
 const descriptions = [...seen.values()]
-  .sort((a, b) => a.subject.localeCompare(b.subject) || a.text.localeCompare(b.text))
+  .sort((a, b) => a.subject.localeCompare(b.subject) || regionRank(a) - regionRank(b) || a.text.localeCompare(b.text))
   .map(row => [row.subject, row.text, row.resolved, row.prov, row.regions, row.role, row.status])
 
 // Every component the descriptions use, encoded or not: the numbered parts, the CHISE entities and
