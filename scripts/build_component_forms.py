@@ -112,7 +112,8 @@ def compress_chang(outlines, style):
 
 
 
-ROOF_CUT = 535          # above 王's top bar (535 in Sans) 金 draws its 𠆢 roof; below it, the body
+ROOF_CUT = 535         # 王's top bar in Sans: the roof lives above it
+APEX_CUT = 690         # the apex of 𠆢 sits above this: cutting it opens the roof into 八
 
 def move_recording(recordings, fn):
     """The same contours with every point passed through fn."""
@@ -127,36 +128,20 @@ def huang_eight(cs):
             - min(p[0] for _, args in contour for p in args) > 250]
 
 def jin_with_ba(cs, style='sans'):
-    """金 with 八 standing where its 𠆢 roof stood, kept as one component.
+    """金 with its 𠆢 opened into 八.
 
-    In Sans the roof is fused into 金's main contour and its wings dip below 王's top
-    bar, so the body is cropped below ROOF_CUT across 王's top bar and below the wings
-    outside it (in Serif the roof is already a separate contour). 黄's 八 is set into
-    the box the roof occupied above 王. Both stay in one group so the composer keeps
-    the weights 金 has instead of halving them between a roof and a body.
+    金's roof is two strokes that meet at the apex and come down on 王's top bar. Removing
+    the apex leaves those strokes standing as 八, which is how this character shares 黄's
+    last two strokes: the legs keep the weight and the angles 金 draws them with.
     """
-    eight = huang_eight(cs)
-    xs = [p[0] for c in eight for _, args in c for p in args]
-    ys = [p[1] for c in eight for _, args in c for p in args]
-    x0, x1, y0, y1 = min(xs), max(xs), min(ys), max(ys)
-    c = cs('\u91d1')
-    if style == 'sans':
-        box = (140, 540, 860, 845)
-        body, clip = pathops.Path(), pathops.Path()
-        for contour in c: replayRecording(contour, body.getPen())
-        clip.moveTo(0, -100); clip.lineTo(1000, -100); clip.lineTo(1000, 400)
-        clip.lineTo(750, 400); clip.lineTo(750, ROOF_CUT); clip.lineTo(249, ROOF_CUT)
-        clip.lineTo(249, 400); clip.lineTo(0, 400); clip.close()
-        pen = RecordingPen()
-        pathops.op(body, clip, pathops.PathOp.INTERSECTION).draw(pen)
-        cropped = [pen.value]
-    else:
-        box = (30, 500, 969, 730)
-        cropped = [c[3], c[1], c[0]]
-    kx = (box[2] - box[0]) / (x1 - x0)
-    ky = (box[3] - box[1]) / (y1 - y0)
-    placed = move_recording(eight, lambda x, y: (box[0] + (x - x0) * kx, box[1] + (y - y0) * ky))
-    return [group(placed + cropped)]
+    shape = pathops.Path()
+    for contour in cs('金'): replayRecording(contour, shape.getPen())
+    apex = pathops.Path()
+    apex.moveTo(385, APEX_CUT); apex.lineTo(615, APEX_CUT)
+    apex.lineTo(615, 1000); apex.lineTo(385, 1000); apex.close()
+    pen = RecordingPen()
+    pathops.op(shape, apex, pathops.PathOp.DIFFERENCE).draw(pen)
+    return [group([pen.value])]
 
 def huang_body(cs):
     """黄 without its last two strokes, which 金's top stands in for.
