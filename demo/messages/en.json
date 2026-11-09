@@ -119,6 +119,8 @@
   "app.prefs.fontLicence": "Licence",
   "app.prefs.fontAdd": "Add",
   "app.prefs.fontRemove": "Remove {name}",
+  "app.prefs.fontChoose": "Choose file",
+  "app.prefs.fontRemoveShort": "Remove",
   "app.share.label": "Share",
   "app.share.copied": "Link copied",
   "app.share.link": "Link",

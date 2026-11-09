@@ -39,7 +39,7 @@ try {
   console.log('PASS the font survives a reload')
 
   // Removing it takes it out of the chain and the store.
-  await page.locator('.font-list .font-remove').click()
+  await page.locator('.font-list .ui-button').click()
   await page.waitForTimeout(800)
   assert.equal(await page.locator('.font-list .font-name').count(), 0)
   const after = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--fallback-font'))
