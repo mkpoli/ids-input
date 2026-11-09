@@ -1789,8 +1789,12 @@ export class Composer {
       const hu = op === '⿸' && typeof children[0] === 'string' && children[0] === '虍'
       const [hx0, hy0, hx1, hy1] = region, hw = hx1 - hx0, hh = hy1 - hy0
       const huRoom = hu ? [hx0 + 0.30 * hw, hy0 + 0.0 * hh, hx0 + 0.97 * hw, hy0 + 0.55 * hh] : null
-      const inner = this.node(children[1], hu ? huRoom : room)
-      if (!hu) this.fit(outer, inner, region, this.stem0[0][0], C,
+      // A composed inner in a 冂 frame sits clear of the top bar and the two arms.
+      const frame = op === '⿵' && typeof children[0] === 'string' && children[0] === '冂' && Array.isArray(children[1])
+      const [fx0, fy0, fx1, fy1] = region, fw = fx1 - fx0, fh = fy1 - fy0
+      const frameRoom = frame ? [fx0 + 0.10 * fw, fy0 + 0.10 * fh, fx1 - 0.10 * fw, fy1 - 0.03 * fh] : null
+      const inner = this.node(children[1], hu ? huRoom : frame ? frameRoom : room)
+      if (!hu && !frame) this.fit(outer, inner, region, this.stem0[0][0], C,
         fallback && op === '⿽' ? { room, bounds: room } : undefined)
       return [...outer, ...inner]
     }
