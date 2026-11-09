@@ -255,7 +255,7 @@ export async function sketch(source, sequence, { fontStyle = 'sans' } = {}) {
  * `cells: true` and its parts' `origin` reads `cells <char>`.
  * Throws LookupError when a part can be drawn no way or the sequence is larger than `LIMITS`.
  */
-export async function compose(source, sequence, { exclude = [], face = null, separate = false, fontStyle = 'sans', layout = 'auto' } = {}) {
+export async function compose(source, sequence, { exclude = [], face = null, separate = false, fontStyle = 'sans', layout = 'auto', keepBars = false } = {}) {
   await source.ready()
   const arity = ch => {
     const c = source.manifest.constants
@@ -275,7 +275,7 @@ export async function compose(source, sequence, { exclude = [], face = null, sep
     const store = source.store()
     let drawn = null, failure = null, composer = null, cells = false
     try {
-      composer = new Composer(store, { exclude, face, separate, fontStyle })
+      composer = new Composer(store, { exclude, face, separate, fontStyle, keepBars })
       cells = !marks && !modifiedOperators(sequence).length
         && (layout === 'cells' || (layout === 'auto' && composer.cellsFor(tree, marks)))
       drawn = cells ? composer.cellLayout(tree) : composer.compose(description, marks)
@@ -283,7 +283,7 @@ export async function compose(source, sequence, { exclude = [], face = null, sep
       // A separated drawing can fail where the whole glyph exists. Keep the glyph rather than fail
       // the preview: a view then finds one piece and leaves it alone.
       if (separate && !cells && !store.missing.size && error instanceof LookupError) {
-        try { composer = new Composer(store, { exclude, face, fontStyle }); drawn = composer.compose(description, marks) } catch (again) { failure = again }
+        try { composer = new Composer(store, { exclude, face, fontStyle, keepBars }); drawn = composer.compose(description, marks) } catch (again) { failure = again }
       } else failure = error
     }
     // A pass that met data not loaded yet only gathers what to load (`Composer.partial`); the drawing

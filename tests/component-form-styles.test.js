@@ -1,6 +1,7 @@
 import { expect, it } from 'bun:test'
 import data from '../src/composer/component-forms.json'
 import { componentDrawing, componentParts, componentRecord, containsComponentForm, isComponentForm, isGroupedForm } from '../src/composer/component-forms.js'
+import { pointsBox } from '../src/composer/geometry.js'
 import { onlyBundled } from '../src/composer/local.js'
 import { compose } from '../src/composer/loader.js'
 import { constants } from './fixtures/composer-export.js'
@@ -16,6 +17,20 @@ it('does not use Noto-only forms for Kaisho capabilities or outlines', () => {
     expect(componentParts(text, undefined, 'kaisho')).toBeNull()
     expect(componentDrawing(text, 'kaisho')).toBeNull()
     expect(onlyBundled(text, false, false, 'kaisho')).toBe(false)
+  }
+})
+
+it('sets 尸氺\'s 氺 in the opening of the frame', () => {
+  // 犀 sets 氺 above 牛, so its upper cut leaves 氺 short of the opening and of the foot.
+  for (const style of ['sans', 'serif']) {
+    const form = componentParts('⿸尸氺', undefined, style)[0].part
+    const boxes = form.contours.map(contour => pointsBox(contour.light))
+    const [x0, y0, x1, y1] = form.box, width = x1 - x0, height = y1 - y0
+    // The strokes right of the left leg and below the top bars are the 氺.
+    const strokes = boxes.filter(box => box[0] > x0 + 0.15 * width && (box[1] + box[3]) / 2 < y0 + 0.65 * height)
+    const left = Math.min(...strokes.map(box => box[0])), right = Math.max(...strokes.map(box => box[2]))
+    expect((right - left) / width).toBeGreaterThan(0.8)
+    expect(Math.min(...strokes.map(box => box[1]))).toBeLessThan(y0 + 0.15 * height)
   }
 })
 

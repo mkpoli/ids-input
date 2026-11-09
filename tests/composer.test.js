@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto'
 import { gzipSync } from 'node:zlib'
 import { createDrawer } from '../src/composer/client.js'
 import { LIMITS, compose, createSource, size, sketch, svgBox, tooLarge } from '../src/composer/loader.js'
-import { Composer, composableDescription, fitInside, parseTree } from '../src/composer/compose.js'
+import { CLOSED_NESTED, Composer, composableDescription, fitInside, parseTree } from '../src/composer/compose.js'
 import { badge, groupParts, placeholder } from '../src/core/preview.js'
 import { files, layout, ops, shards } from './fixtures/composer-export.js'
 import notoRightEnclosure from './fixtures/noto-right-enclosure.json' with { type: 'json' }
@@ -786,7 +786,7 @@ describe('the leading component under a cover', () => {
   const net = branch => part(branch, [50, 300, 950, 360], [50, 160, 110, 360], [890, 160, 950, 360], [50, 160, 950, 220])
   const clear = (child, ...lower) =>
     Composer.prototype.clearUnderCover.call(
-      { partial: false, C: constants, topOperand: Composer.prototype.topOperand, hang: Composer.prototype.hang },
+      { partial: false, C: constants, topOperand: Composer.prototype.topOperand, hang: Composer.prototype.hang, closed: Composer.prototype.closed },
       '⿱', ['宀', child], [[cover()], lower])
   const span = placedPart => [placedPart.target[0], placedPart.target[2]]
 
@@ -844,10 +844,30 @@ describe('the leading component under a cover', () => {
 
   it('closes a last operand its donor overlapped on to the one above it', () => {
     const head = net(0), bar = part(1, [50, 80, 950, 120]), tail = sweep(2)
-    tail.gap = -36
+    tail.gap = -4
     clear(['⿳', '罒', '一', '𧘇'], head, bar, tail)
-    expect(tail.target[3]).toBeCloseTo(bar.target[1])
+    expect(tail.target[3]).toBeGreaterThan(bar.target[1])
+    expect(tail.target[3]).toBeLessThan(bar.target[3])
     expect(tail.target[1]).toBe(0)
+  })
+
+  it('closes a seam the layout left by the overlap its donor drew', () => {
+    // ⿱一𧘇: the layout leaves the 𧘇 below the 一's band; 衣 draws it up into the bar.
+    const bar = part(0, [50, 300, 950, 360])
+    const tail = part(1, [450, 120, 550, 200], [100, 0, 900, 120])
+    tail.target = [100, 0, 900, 240]
+    tail.gap = -20
+    Composer.prototype.space.call({ partial: false, C: constants, closed: Composer.prototype.closed }, 1, [[bar], [tail]])
+    expect(tail.target[3]).toBeCloseTo(324)
+  })
+
+  it('nests a cut whose box already meets the one above by the overlap its donor drew', () => {
+    // ⿱日𧘇: the 𧘇's peak reaches the 日's bar, and 衷 draws it into the bar above.
+    const bar = part(0, [50, 80, 950, 120]), tail = sweep(1)
+    tail.target = [100, 20, 900, 80]
+    tail.gap = -36
+    Composer.prototype.space.call({ partial: false, C: constants, closed: Composer.prototype.closed }, 1, [[bar], [tail]])
+    expect(tail.target[3]).toBeCloseTo(116)
   })
 
   it('leaves a last operand its donor drew clear of its neighbour where it was', () => {
@@ -1098,4 +1118,321 @@ describe('the foot of a stack under a cover', () => {
       '⿱', ['宀', ['⿰', 'X', 'Y']], [[part(0, 0, [100, 500, 900, 700])], [left, right]])
     expect(top(right)).toBe(500)
   })
+})
+
+
+describe('a stack the learned layout can place', () => {
+  // ⿱⿴𦥑同冖: the component form in the tree keeps `learned` from running in `node`, so `shares`
+  // takes the learned boxes rather than splitting the ink with a band gap.
+  const shares = (atRoot) => {
+    const seen = []
+    const drawn = Composer.prototype.shares.call({
+      C: constants, AXIS: constants.AXIS, ENCLOSE: constants.ENCLOSE, INSIDE: constants.INSIDE,
+      layout: { ops: ['⿱'] }, hosted: true, partial: false,
+      learned: (op, children, region) => { seen.push(region); return ['learned'] },
+      closeUnderCover: () => {},
+    }, '⿱', ['⿴𦥑同', '冖'], [0, 0, 1000, 1000], atRoot)
+    return { seen, drawn }
+  }
+
+  it('places a rooted stack by its learned boxes', () => {
+    const { seen, drawn } = shares(true)
+    expect(seen).toEqual([null])
+    expect(drawn).toEqual(['learned'])
+  })
+
+  it('places a nested stack by its learned boxes inside its region', () => {
+    const { seen } = shares(false)
+    expect(seen).toEqual([[0, 0, 1000, 1000]])
+  })
+})
+
+describe('a short stack in a tall column of a ⿲', () => {
+  // 山 over 一 in ⿲彳⿱山一攵: two small parts in a column whose height the stack does not fill, as
+  // 微 and 徵 set them. The glyphs are boxes in the fixture's export; 木 and 口 fill their column.
+  const extra = new Map()
+  for (const [key, box] of [['彳', [250, 0, 750, 1000]], ['山', [100, 200, 900, 800]],
+    ['一', [50, 400, 950, 500]], ['攵', [100, 0, 900, 1000]]]) {
+    const name = gShard(key), file = extra.get(name) ?? {}
+    file[hex(key)] = { k: key, G: boxGlyph(box), ink: 2 * ((box[2] - box[0]) + (box[3] - box[1])), nl: 1, o: 1 }
+    extra.set(name, gzipSync(JSON.stringify(file)))
+  }
+  const source = () => createSource(async name => {
+    const body = extra.get(name) ?? files[name]
+    return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
+  })
+  const face = svgBox(constants.face), top = face[1], bottom = face[1] + face[3]
+
+  it('keeps the stack at the top of its column and leaves the rest empty', async () => {
+    const drawing = await compose(source(), '⿲彳⿱山一攵')
+    const [, mountain, bar] = drawing.parts
+    expect(mountain.origin).toBe('glyph 山')
+    expect(bar.origin).toBe('glyph 一')
+    expect(mountain.box[1]).toBeCloseTo(top, 0)
+    const gap = bar.box[1] - (mountain.box[1] + mountain.box[3])
+    expect(gap).toBeGreaterThan(face[3] * 0.05)
+    expect(gap).toBeLessThan(face[3] * 0.08)
+    expect(bar.box[1] + bar.box[3]).toBeLessThan(bottom - face[3] * 0.4)
+  })
+
+  it('leaves a stack that fills its column alone', async () => {
+    const drawing = await compose(source(), '⿲彳⿱木口攵')
+    const lower = drawing.parts[2]
+    expect(lower.origin).toBe('glyph 口')
+    expect(lower.box[1] + lower.box[3]).toBeGreaterThan(bottom - face[3] * 0.05)
+  })
+
+  it('puts the same stack at the top in the editor’s sketch', async () => {
+    const sketchSource = source()
+    await sketchSource.load(sketchSource.filesOf(['彳', '山', '一', '攵']))
+    const [, mountain, bar] = await sketch(sketchSource, '⿲彳⿱山一攵')
+    expect(mountain.box[1]).toBeCloseTo(top, 0)
+    expect(bar.box[1] + bar.box[3]).toBeLessThan(bottom - face[3] * 0.2)
+  })
+})
+
+describe('three stacked operands with no learned layout', () => {
+  // ⿳丅口丄: the network lays out two operands, so the fallback shares the three bands.
+  const node = (child, box) => [{ ...placed(makePart([], box.slice()), box.slice(), box.slice(), 0, 'test') }]
+  const stack = () => Composer.prototype.shares.call({
+    C: constants, AXIS: constants.AXIS, ENCLOSE: constants.ENCLOSE, INSIDE: constants.INSIDE,
+    layout: null, partial: false,
+    ink: () => 1000, hasHosts: () => false, host: () => null, node, row: node,
+    space: Composer.prototype.space, closed: Composer.prototype.closed, flatten: Composer.prototype.flatten,
+    middleWhole: () => false,
+    fitUnderCover: () => {}, clearUnderCover: () => {}, closeUnderCover: () => {}, recordJoints: () => {},
+    openUnderCover: () => {}, containUnderCover: () => {}, joinUnderCover: () => {},
+  }, '⿳', ['丅', '口', '丄'], [0, 0, 1000, 1000])
+
+  it('shares an edge under each band', () => {
+    const [top, middle, bottom] = stack()
+    expect(top.target[1]).toBeCloseTo(middle.target[3])
+    expect(middle.target[1]).toBeCloseTo(bottom.target[3])
+  })
+})
+
+describe('a stacked band', () => {
+  const rect = (x0, y0, x1, y1) => {
+    const light = new Float64Array([x0, y0, x1, y0, x1, y1, x0, y1])
+    return { ops: [], light, heavy: light.slice(), width: null }
+  }
+
+  it('keeps a cut’s proportion where the layout has no usual box for its operand', () => {
+    // ⿱卝干: the network’s top band is taller than the cut’s own proportion allows.
+    expect(Composer.prototype.cutBand.call({ C: constants }, [65, 335, 932, 839], [44, 344, 505, 529])).toBeCloseTo(348, 0)
+    expect(Composer.prototype.cutBand.call({ C: constants }, [0, 0, 1000, 400], [0, 0, 1000, 400])).toBe(0)
+  })
+
+
+  it('sets a roof below a stack on the part above', () => {
+    const above = placed(makePart([rect(0, 500, 1000, 800)]), [0, 500, 1000, 800], [0, 500, 1000, 800], 0, 'test')
+    const below = placed(makePart([rect(200, 420, 800, 460)]), [200, 420, 800, 460], [200, 420, 800, 460], 0, 'test')
+    const roof = (kids) => Composer.prototype.closeUnderCover.call({ partial: false, C: constants }, '⿱', ['⿴𦥑同', kids], [[above], [below]])
+    // ⿱⿴𦥑同冖: the seam the layout leaves between the 冖 and the block above it closes.
+    roof('冖')
+    expect(below.target[3]).toBeCloseTo(500)
+    expect(below.target[1]).toBeCloseTo(460)
+    // A wider seam is the layout's own, and another operand's top is not a roof.
+    below.target = [200, 380, 800, 420]
+    roof('冖')
+    expect(below.target).toEqual([200, 380, 800, 420])
+    below.target = [200, 420, 800, 460]
+    roof('木')
+    expect(below.target).toEqual([200, 420, 800, 460])
+  })
+
+  it('raises a stacked operand whose ink leaves a seam after weighting', () => {
+    const above = placed(makePart([rect(0, 300, 1000, 500)]), [0, 300, 1000, 500], [0, 300, 1000, 500], 0, 'test')
+    const below = placed(makePart([rect(0, 0, 1000, 280)]), [0, 0, 1000, 300], [0, 0, 1000, 300], 0, 'test')
+    Composer.prototype.settleJoints.call({ partial: false, C: constants, joints: [[[above], [below]]] })
+    expect(below.target[3]).toBeCloseTo(320)
+  })
+})
+
+describe('a seam inside another stack', () => {
+  it('closes by less of the donor overlap than a rooted stack does', () => {
+    // A nested stack takes a share of the overlap the donor drew; a rooted one takes all of it, so
+    // ⿱一𧘇 under 罒 is not crowded against the bar above it (⿱宀⿳罒一𧘇).
+    expect(CLOSED_NESTED).toBeGreaterThan(0)
+    expect(CLOSED_NESTED).toBeLessThan(1)
+  })
+})
+
+describe('a seam a donor overlap closes', () => {
+  const rect = (x0, y0, x1, y1) => {
+    const light = new Float64Array([x0, y0, x1, y0, x1, y1, x0, y1])
+    return { ops: [], light, heavy: light.slice(), width: null }
+  }
+  const part = (box, gap) => {
+    const p = makePart([rect(...box)], box.slice())
+    return { ...placed(p, p.box, p.box, 0, 'test'), ...(gap === undefined ? {} : { gap }) }
+  }
+  const space = (above, below) =>
+    Composer.prototype.space.call({ partial: false, C: constants, closed: Composer.prototype.closed }, 1, [[above], [below]])
+
+  it('leaves a wide gap alone when the overlap covers less than its share', () => {
+    // ⿱一八: the 八's cut came from 穴, where it meets a 宀 rather than the 一 above it.
+    const above = part([0, 300, 1000, 360]), below = part([0, 205, 1000, 50], -9)
+    space(above, below)
+    expect(below.target[3]).toBe(50)
+  })
+
+  it('closes a narrow seam by the overlap its donor drew', () => {
+    // ⿱一𧘇: 衣 draws the tail's peak up into the bar above it.
+    const above = part([0, 300, 1000, 360])
+    const peak = makePart([rect(450, 200, 550, 280), rect(100, 120, 900, 200)])
+    const below = { ...placed(peak, peak.box, peak.box, 0, 'test'), gap: -20 }
+    space(above, below)
+    expect(below.target[3]).toBeCloseTo(320)
+  })
+})
+
+describe('an enclosed part in a detected opening', () => {
+  const rect = (x0, y0, x1, y1) => {
+    const light = new Float64Array([x0, y0, x1, y0, x1, y1, x0, y1])
+    return { ops: [], light, heavy: light.slice(), width: null }
+  }
+  const learned = (opening, boxes = [[100, 500, 900, 700], [200, 100, 800, 500]]) => {
+    const seen = []
+    let room = null
+    const composer = {
+      C: constants, stem0: [[80]], face: constants.face, partial: false,
+      ENCLOSE: constants.ENCLOSE, AXIS: constants.AXIS,
+      predict: () => boxes, host: () => null, enclosureForm: () => null,
+      node: (child, box) => { seen.push(box); return [{ target: box.slice() }] },
+      gridTree: () => null,
+      room: () => opening,
+      held: Composer.prototype.held,
+      fit: (outer, inner, region, stem, C, options) => { room = options?.room; return false },
+      space: () => {}, fitUnderCover: () => {}, clearUnderCover: () => {}, closeUnderCover: () => {}, recordJoints: () => {},
+      openUnderCover: () => {}, containUnderCover: () => {}, joinUnderCover: () => {},
+      flatten: Composer.prototype.flatten,
+    }
+    const parts = Composer.prototype.learned.call(composer, '⿵', ['冂', '木'], null)
+    return { seen, room, parts }
+  }
+
+  it('keeps the learned box when the opening only grazes it', () => {
+    // 𦉪's hook splits a pocket off the bottom of the frame, under the 丅's learned band.
+    const { seen, room } = learned([600, 100, 700, 200])
+    expect(seen.at(-1)).toEqual([200, 100, 800, 500])
+    expect(room).toEqual([200, 100, 800, 500])
+  })
+
+  it('fills an opening that holds the learned box', () => {
+    const { seen, room } = learned([250, 160, 750, 440])
+    expect(seen.at(-1)).toEqual([250, 160, 750, 440])
+    expect(room).toEqual([250, 160, 750, 440])
+  })
+})
+
+describe('a bar laid across a lower part', () => {
+  it('stays an overlay, so the part below reaches above the bar as 正 draws it', () => {
+    const drawn = []
+    const composer = {
+      C: constants, ENCLOSE: constants.ENCLOSE, AXIS: constants.AXIS,
+      overlayTeachers: () => [], room: () => null,
+      glyph: () => null,
+      node: (child, region) => { drawn.push([child, region]); return [{ origin: child }] },
+    }
+    const parts = Composer.prototype.overlay.call(composer, ['一', '止'], [0, 0, 1000, 1000])
+    expect(parts.map(part => part.origin)).toEqual(['一', '止'])
+    expect(drawn.every(([child]) => typeof child === 'string')).toBe(true)
+    expect(drawn.at(-1)).toEqual(['止', [0, 0, 1000, 1000]])
+  })
+})
+
+describe('three stacked operands with a middle band', () => {
+  const node = (child, box) => [{ ...placed(makePart([], box.slice()), box.slice(), box.slice(), 0, 'test') }]
+  const stack = (children, inks = {}) => Composer.prototype.shares.call({
+    C: constants, AXIS: constants.AXIS, ENCLOSE: constants.ENCLOSE, INSIDE: constants.INSIDE,
+    layout: null, partial: false,
+    ink: child => inks[typeof child === 'string' ? child : ''] ?? 1000, hasHosts: () => false, host: () => null, node, row: node,
+    space: Composer.prototype.space, closed: Composer.prototype.closed, flatten: Composer.prototype.flatten,
+    middleWhole: () => false,
+    fitUnderCover: () => {}, clearUnderCover: () => {}, closeUnderCover: () => {}, recordJoints: () => {},
+    openUnderCover: () => {}, containUnderCover: () => {}, joinUnderCover: () => {},
+  }, '⿳', children, [0, 0, 1000, 1000])
+
+  it('narrows an enclosed middle band and gives it height', () => {
+    const [top, middle] = stack(['丅', '口', '丄'])
+    expect(middle.target[2] - middle.target[0]).toBeCloseTo(720)
+    expect(middle.target[3] - middle.target[1]).toBeGreaterThanOrEqual(399)
+    expect(top.target[1]).toBeCloseTo(middle.target[3])
+  })
+
+  it('keeps a cover at the full width of the region', () => {
+    const [, middle] = stack(['X', '冖', 'Y'])
+    expect(middle.target[2] - middle.target[0]).toBeCloseTo(1000)
+  })
+
+  it('caps a single top over a cover and gives the height to the bottom', () => {
+    // ⿳𰀉冖木: the 叓 cut's frame fills its band, so the 木 is squeezed under it.
+    const [top, middle, bottom] = stack(['𰀉', '冖', '木'], { 𰀉: 10000, 冖: 100, 木: 1000 })
+    expect(top.target[3] - top.target[1]).toBeCloseTo(1000 / 3, 0)
+    expect(bottom.target[3] - bottom.target[1]).toBeGreaterThan(400)
+    expect(top.target[1]).toBeCloseTo(middle.target[3])
+    expect(bottom.target[3]).toBeCloseTo(middle.target[1])
+  })
+
+  it('raises an enclosed middle band whose ink does not fill it', () => {
+    // ⿳丅口丄: the 口's cut is light, so the ink shares alone squeeze its band to a sliver.
+    const [top, middle, bottom] = stack(['丅', '口', '丄'], { 丅: 10000, 口: 100, 丄: 10000 })
+    expect(middle.target[3] - middle.target[1]).toBeGreaterThanOrEqual(399)
+    expect(top.target[1]).toBeCloseTo(middle.target[3])
+    expect(bottom.target[3]).toBeCloseTo(middle.target[1])
+  })
+})
+
+describe('a nested top band', () => {
+  const learned = (ink, boxes = [[0, 400, 1000, 900], [0, 0, 1000, 400]]) => {
+    const composer = {
+      C: constants, stem0: [[80]], face: constants.face, partial: false,
+      ENCLOSE: constants.ENCLOSE, AXIS: constants.AXIS,
+      predict: () => boxes, ink: child => Array.isArray(child) ? ink[0] : ink[1],
+      host: () => null, enclosureForm: () => null, room: () => null,
+      node: (child, box) => [{ target: box.slice() }],
+      fit: () => false, space: () => {},
+      fitUnderCover: () => {}, clearUnderCover: () => {}, closeUnderCover: () => {}, recordJoints: () => {},
+      openUnderCover: () => {}, containUnderCover: () => {}, joinUnderCover: () => {},
+      flatten: Composer.prototype.flatten,
+    }
+    return Composer.prototype.learned.call(composer, '⿱', [['⿱', '㇒', '𭕄'], '𠙻'], null)
+  }
+
+  it('leaves a top whose ink does not fill its band to the plain ink shares', () => {
+    expect(learned([300, 700])).toBeNull()
+  })
+
+  it('keeps the learned layout when the top ink fills its band', () => {
+    expect(learned([600, 400])).not.toBeNull()
+  })
+})
+
+it('C060 tucks 又 into the opening below 𠆢 instead of a separate bottom band', () => {
+  const make = box => placed(makePart([], box), box, box.slice(), 0, 'test')
+  const groups = [[[0, 600, 1000, 900]], [[0, 300, 1000, 600]], [[0, 0, 1000, 300]]].map(g => g.map(make))
+  Composer.prototype.fitUnderCover.call({ face: [0, 0, 1000, 900] }, '⿳', ['穴', '𠆢', '又'], groups)
+  const roof = groups[1][0].target, base = groups[2][0].target
+  expect(base[3]).toBeGreaterThan(roof[1] + 80)
+  expect(base[3]).toBeLessThan(roof[3])
+  expect(base[0]).toBeGreaterThan(roof[0] + 100)
+  expect(base[2]).toBeLessThan(roof[2] - 100)
+})
+
+it('C060 keeps the inner roof inside the cover before outline-specific corrections', () => {
+  const make = box => placed(makePart([], box), box, box.slice(), 0, 'test')
+  const groups = [[0, 600, 1000, 900], [0, 300, 1000, 600], [0, 0, 1000, 300]].map(b => [make(b)])
+  Composer.prototype.fitUnderCover.call({ face: [0, 0, 1000, 900] }, '⿳', ['穴', '𠆢', '又'], groups)
+  const cover = groups[0][0].target, inner = groups[1][0].target
+  expect(inner[0] - cover[0]).toBeGreaterThanOrEqual(50)
+  expect(cover[2] - inner[2]).toBeGreaterThanOrEqual(50)
+})
+
+it('draws a repeated component from the host cuts, not its own glyph', async () => {
+  const { fromUrl, compose } = await import('../src/composer/loader.js')
+  const source = fromUrl('https://glyphatlas.org/atlas/composer/bd0829bc6fbf-sans-compose-layout-v4-f5+letters/')
+  const drawn = await compose(source, '⿱丑丑', { fontStyle: 'sans' })
+  // Both halves come from 峱, one cut each; the standalone glyph would deform the bar.
+  expect(drawn.parts.map(part => part.origin)).toEqual(['host 峱', 'host 峱'])
 })
