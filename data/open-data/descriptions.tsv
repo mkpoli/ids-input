@@ -115,22 +115,22 @@ ids	char	codepoint	group	reading	modern	abbreviates	editorial	sources
 ⿱艹𢎨	苐	U+82D0	sign				false	babelstone x-eonway-sign
 ⿰设正	証	U+8A3C	sign				false	x-eonway-sign
 ⿰彳卫	衛	U+885B	sign				false	x-eonway-sign yixiwu-jianhuaziyuan chenguangyao-jianzipu zh-wp-jianhua-fangfa
-⿰忄井	警	U+8B66	erjian				false	erjian
-⿱艹么	蘑	U+8611	erjian				false	erjian
-⿱千田	臿	U+81FF	erjian				false	erjian
-⿸厂九	厩	U+53A9	erjian				false	erjian
-⿱亠公	衮	U+886E	erjian				false	erjian
-⿰彳力	律	U+5F8B	erjian				false	erjian
-⿱力十	率	U+7387	erjian				false	erjian
-⿱入寸	辱	U+8FB1	erjian				false	erjian
-⿱甲弓	弹	U+5F39	erjian				false	erjian
-⿻弓冫	弱	U+5F31	erjian				false	erjian
-⿱犬一	然	U+7136	erjian				false	erjian
-⿱大手	攀	U+6500	erjian				false	erjian
-⿰亻彐	侵	U+4FB5	erjian				false	erjian
-⿱由攵	数	U+6570	erjian				false	erjian
-⿸疒力	痢	U+75E2	erjian				false	erjian
-⿺辶欠	遣	U+9063	erjian				false	erjian
+⿰忄井	𲟱	U+327F1	erjian				false	erjian
+⿱艹么			erjian				false	erjian
+⿱千田			erjian				false	erjian
+⿸厂九			erjian				false	erjian
+⿱亠公			erjian				false	erjian
+⿰彳力			erjian				false	erjian
+⿱力十			erjian				false	erjian
+⿱入寸			erjian				false	erjian
+⿱甲弓			erjian				false	erjian
+⿻弓冫			erjian				false	erjian
+⿱犬一			erjian				false	erjian
+⿱大手			erjian				false	erjian
+⿰亻彐			erjian				false	erjian
+⿱由攵			erjian				false	erjian
+⿸疒力			erjian				false	erjian
+⿺辶欠			erjian				false	erjian
 ⿱宀R			geba			寮	false	geba-wp l2-24-125 ja-wp-geba
 ⿰亻⿱宀R			geba			僚	false	geba-wp l2-24-125
 ⿸疒R			geba			療	false	geba-wp l2-24-125

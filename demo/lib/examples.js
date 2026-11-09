@@ -5,9 +5,10 @@
 //
 // `abbreviates` names the standard character a Geba form stands for; `char` is empty for a form
 // with no code point, and names the character for an encoded one. `reading` holds a Korean
-// gukja's reading in Hangul, or a Jurchen character's reading as Unicode records it.
+// gukja's reading in Hangul, or a Jurchen character's reading as Unicode records it. `standard`
+// names the 1簡字 a 二簡字 form replaces; `traditional` gives its 繁體字 where it differs.
 /**
- * @typedef {{ sequence: string, refs?: number[], char: string, parts?: string, abbreviates?: string, reading?: string, modern?: string, source?: string, editorial?: boolean }} Example
+ * @typedef {{ sequence: string, refs?: number[], char: string, parts?: string, abbreviates?: string, reading?: string, modern?: string, standard?: string, traditional?: string, source?: string, editorial?: boolean }} Example
  * @typedef {{ key: string, refs?: number[], examples: Example[] }} ExampleGroup
  */
 
@@ -149,27 +150,29 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰彳卫', refs: [59, 68, 69, 70], char: '衛', parts: '彳卫' },
   ] },
   // 二简字 from the draft's table as West records it, written with each component's own description,
-  // since a component runs its own description in its own IDS. Each names the character it writes,
-  // which BabelStone has no row for. 弹 keeps 单's IDS ⿱丷甲, so its arrow strokes are not drawn.
+  // since a component runs its own description in its own IDS. Each form names the standard
+  // character it replaces in `standard`, which BabelStone has no row for; Unihan 18.0 gives its
+  // 繁體字. 弹 keeps 单's IDS ⿱丷甲, so its arrow strokes are not drawn. Unicode 18.0 encodes
+  // ⿰忄井 as 𲟱 (U+327F1), so that example keeps its character.
   // 多 and 皆 are left out: ⿱夕夕 and ⿱比白 are the ordinary descriptions of the modern characters,
   // which the composer then draws. 诅 (⿰讠且) is left out because 且's own description is ⿱𠃌夕.
   { key: 'erjian', refs: [3], examples: [
-    { sequence: '⿰忄井', refs: [3], char: '警' },
-    { sequence: '⿱艹么', refs: [3], char: '蘑' },
-    { sequence: '⿱千田', refs: [3], char: '臿' },
-    { sequence: '⿸厂九', refs: [3], char: '厩' },
-    { sequence: '⿱亠公', refs: [3], char: '衮' },
-    { sequence: '⿰彳力', refs: [3], char: '律' },
-    { sequence: '⿱力十', refs: [3], char: '率' },
-    { sequence: '⿱入寸', refs: [3], char: '辱' },
-    { sequence: '⿱甲弓', refs: [3], char: '弹' },
-    { sequence: '⿻弓冫', refs: [3], char: '弱' },
-    { sequence: '⿱犬一', refs: [3], char: '然' },
-    { sequence: '⿱大手', refs: [3], char: '攀' },
-    { sequence: '⿰亻彐', refs: [3], char: '侵' },
-    { sequence: '⿱由攵', refs: [3], char: '数' },
-    { sequence: '⿸疒力', refs: [3], char: '痢' },
-    { sequence: '⿺辶欠', refs: [3], char: '遣' },
+    { sequence: '⿰忄井', refs: [3], char: '𲟱', standard: '警' },
+    { sequence: '⿱艹么', refs: [3], char: '', standard: '蘑' },
+    { sequence: '⿱千田', refs: [3], char: '', standard: '臿' },
+    { sequence: '⿸厂九', refs: [3], char: '', standard: '厩', traditional: '廄' },
+    { sequence: '⿱亠公', refs: [3], char: '', standard: '衮', traditional: '袞' },
+    { sequence: '⿰彳力', refs: [3], char: '', standard: '律' },
+    { sequence: '⿱力十', refs: [3], char: '', standard: '率' },
+    { sequence: '⿱入寸', refs: [3], char: '', standard: '辱' },
+    { sequence: '⿱甲弓', refs: [3], char: '', standard: '弹', traditional: '彈' },
+    { sequence: '⿻弓冫', refs: [3], char: '', standard: '弱' },
+    { sequence: '⿱犬一', refs: [3], char: '', standard: '然' },
+    { sequence: '⿱大手', refs: [3], char: '', standard: '攀' },
+    { sequence: '⿰亻彐', refs: [3], char: '', standard: '侵' },
+    { sequence: '⿱由攵', refs: [3], char: '', standard: '数', traditional: '數' },
+    { sequence: '⿸疒力', refs: [3], char: '', standard: '痢' },
+    { sequence: '⿺辶欠', refs: [3], char: '', standard: '遣' },
   ] },
 
   // `abbreviates` names the standard character a Geba form stands for. `char` is empty for a form

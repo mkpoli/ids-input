@@ -8,7 +8,7 @@
   },
   "counts": {
     "descriptions": 584,
-    "unencoded": 115,
+    "unencoded": 130,
     "editorial": 65,
     "groups": 20,
     "sources": 77,
@@ -55,7 +55,7 @@
       "key": "erjian",
       "title": "Erjian forms",
       "count": 16,
-      "unencoded": 0
+      "unencoded": 15
     },
     {
       "key": "geba",
@@ -139,12 +139,12 @@
   "files": [
     {
       "name": "descriptions.json",
-      "bytes": 223750,
+      "bytes": 224408,
       "type": "application/json"
     },
     {
       "name": "descriptions.tsv",
-      "bytes": 36296,
+      "bytes": 36163,
       "type": "text/tab-separated-values"
     },
     {
@@ -154,7 +154,7 @@
     },
     {
       "name": "README.md",
-      "bytes": 16144,
+      "bytes": 16145,
       "type": "text/markdown"
     }
   ]

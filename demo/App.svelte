@@ -587,9 +587,12 @@
   let encoded = $state(/** @type {string[]} */ ([]))
   $effect(() => {
     const text = editor.tree === null ? '' : editor.whole, ask = adapter.encoded
-    const known = EXAMPLES.filter(example => example.sequence === text && example.char).map(example => example.char)
+    const example = EXAMPLES.find(example => example.sequence === text)
+    const known = example?.char ? [example.char] : []
     encoded = known
-    if (!editor.usable || !text || !ask) return
+    // An example that names a standard and no character is a form the project reads as unencoded;
+    // the index's reading of the same IDS does not override it.
+    if (!editor.usable || !text || !ask || example?.standard && !example.char) return
     let live = true
     ask(text).then(found => { if (live) encoded = [...new Set([...known, ...found])] }, () => {})
     return () => { live = false }
@@ -1130,14 +1133,20 @@
     } catch { note(t('app.edit.pasteFailed')) }
   }
   function selectAll() { if (editor.tree !== null) { editor.choose([], { toggle: false }); editor.focusChosen(work) } }
-  /** @param {{ sequence: string, char: string, refs?: number[], abbreviates?: string, modern?: string, reading?: string }} example @param {string} lang @param {number[]} [groupRefs] @param {string} [readingLang] */
-  function exampleItem(example, lang, groupRefs = [], readingLang = 'ja') {
+  /** @param {{ sequence: string, char: string, refs?: number[], abbreviates?: string, modern?: string, standard?: string, traditional?: string, reading?: string }} example @param {string} lang @param {number[]} [groupRefs] @param {string} [readingLang] @param {string} [groupKey] */
+  function exampleItem(example, lang, groupRefs = [], readingLang = 'ja', groupKey = '') {
     const point = example.char ? cp(example.char) : ''
+    const standard = example.standard ?? example.char
+    const traditional = example.traditional ?? standard
     const target = example.char || example.abbreviates || ''
     const citation = (example.refs ?? groupRefs).map(/** @param {number} n */ n => `[${n}]`).join('')
-    const noteText = example.abbreviates ? `${example.abbreviates} · ${t('app.examples.abbreviation')}` : example.char ? [example.modern, point].filter(Boolean).join(' · ') : t('app.examples.none')
+    // A 二簡字 form names the standard it replaces. Where the form itself is unencoded, its note
+    // names that standard without marking a code point; where it is encoded, the note names the form.
+    const replaces = groupKey === 'erjian' && standard ? `${standard}${traditional === standard ? '' : ` ${traditional}`}` : ''
+    const encodedForm = groupKey === 'erjian' && example.char ? `${point}${replaces ? ` · ${replaces}` : ''}` : ''
+    const noteText = example.abbreviates ? `${example.abbreviates} · ${t('app.examples.abbreviation')}` : groupKey === 'erjian' && standard ? (encodedForm || replaces) : example.char ? [example.modern, point].filter(Boolean).join(' · ') : t('app.examples.none')
     return {
-      leading: target || undefined,
+      leading: groupKey === 'erjian' && example.char ? undefined : target || undefined,
       label: example.sequence,
       sequence: example.sequence,
       note: [noteText, citation].filter(Boolean).join(' '),
@@ -1146,13 +1155,13 @@
       unencoded: !example.char,
       lang,
       drawing: prepared.get(example.sequence),
-      hint: [example.abbreviates ? `${example.abbreviates}　${example.sequence}　${t('app.examples.abbreviation')}` : example.char ? `${example.char}${example.sequence === example.char ? '' : `　${example.sequence}`}　${point}` : `${example.sequence}　${t('app.examples.none')}`, citation].filter(Boolean).join('　'),
+      hint: [groupKey === 'erjian' && example.char ? `${example.sequence}　${point}${replaces ? `　${replaces}` : ''}` : replaces ? `${example.sequence}　${replaces}　${t('app.examples.none')}` : example.abbreviates ? `${example.abbreviates}　${example.sequence}　${t('app.examples.abbreviation')}` : example.char ? `${example.char}${example.sequence === example.char ? '' : `　${example.sequence}`}　${point}` : `${example.sequence}　${t('app.examples.none')}`, citation].filter(Boolean).join('　'),
       run: () => addTab(canonical(example.sequence)),
     }
   }
   const exampleItems = $derived(EXAMPLE_GROUPS.flatMap(group => [
     { heading: t(`app.examples.${group.key}`) },
-    ...group.examples.map(example => exampleItem(example, hasTangut(example.sequence) ? 'txg' : isShuishu(example.sequence) ? 'swi' : isJurchen(example.sequence) ? 'juc' : 'ja', group.refs, ['korean', 'hangul', 'gugyeol'].includes(group.key) ? 'ko' : group.key === 'nom' ? 'vi' : group.key === 'jurchen' ? 'juc' : 'ja')),
+    ...group.examples.map(example => exampleItem(example, hasTangut(example.sequence) ? 'txg' : isShuishu(example.sequence) ? 'swi' : isJurchen(example.sequence) ? 'juc' : 'ja', group.refs, ['korean', 'hangul', 'gugyeol'].includes(group.key) ? 'ko' : group.key === 'nom' ? 'vi' : group.key === 'jurchen' ? 'juc' : 'ja', group.key)),
   ]))
   const exampleView = $derived({
     list: t('app.examples.list'), cards: t('app.examples.cards'), cardsSelected: exampleCards,
