@@ -174,9 +174,9 @@
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previews = new Map()
   /** @param {string} at @param {boolean} split @param {'sans' | 'serif' | 'fangsong' | 'kaisho'} style @param {string} [owner] A view whose drawings the others must not cancel. */
-  const previewAt = (at, split, style, owner = '') => {
-    const key = `${at}\0${split ? '1' : '0'}\0${style}\0${owner}`
-    if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split, fontStyle: style }))
+  const previewAt = (at, split, style, owner = '', preferExport = false) => {
+    const key = `${at}\0${split ? '1' : '0'}\0${style}\0${owner}\0${preferExport ? '1' : '0'}`
+    if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split, fontStyle: style, preferExport }))
     return /** @type {ReturnType<typeof composerPreview>} */ (previews.get(key))
   }
   // The drawings demo/scripts/build-example-drawings.mjs prepares for this export, one per example.
@@ -238,12 +238,12 @@
    * @param {'sans' | 'serif' | 'fangsong' | 'kaisho'} style
    * @param {string} [owner] A view with its own worker, so the editor's drawings do not cancel its own.
    */
-  function previewFor(at, split, style, owner = '') {
+  function previewFor(at, split, style, owner = '', preferExport = false) {
     const key = `${at}\0${split ? '1' : '0'}\0${style}\0${owner}`
     const known = previewsWithExamples.get(key)
     if (known) return known
-    const composed = previewAt(at, split, style, owner)
-    const serif = previewAt(COMPOSER_BASES.serif, split, 'serif', owner)
+    const composed = previewAt(at, split, style, owner, preferExport)
+    const serif = previewAt(COMPOSER_BASES.serif, split, 'serif', owner, preferExport)
     const sans = sansPreviewAt(split)
     const defaultFace = !owner && exportUrl(at) === preparedBase && style === 'sans'
     const draw = defaultFace ? sans : composed
@@ -1542,7 +1542,7 @@
 <ReportDialog bind:open={reportOpen} {endpoint} sequence={editor.whole} link={linkTo(editor.whole, location, currentDocument())}
   {drawing} {scopes} {slots} {emoji} {cut} {cutLeaf} version={documentTick} preview={() => work?.querySelector('#output-panel .ids-preview') ?? null} workspace={reportWorkspace}
   {locale} {theme} {face} composer={base} {t} />
-<LayerDialog bind:open={layerOpen} session={currentSession()} preview={previewFor(base, true, componentStyle, 'layers')} sequence={editor.whole} {t}
+<LayerDialog bind:open={layerOpen} session={currentSession()} preview={previewFor(base, true, componentStyle, 'layers', true)} sequence={editor.whole} {t}
   chosenPath={editor.chosen} structure={char => adapter.structure(char)} onchange={layerChanged}
   onchoose={path => editor.choose(path, { toggle: false })} onstructure={layerStructureChanged}
   oncanvas={() => { layerOpen = false; adjusting = true }} />

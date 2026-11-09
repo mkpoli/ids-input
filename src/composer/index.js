@@ -75,10 +75,10 @@ const CACHE = 32
  * cuts from a matching whole glyph. A sequence drawn once is answered from memory
  * next time. `warm()` starts the worker on the manifest and layout before the first drawing.
  * `worker` makes the Web Worker; the default is the module worker beside this file.
- * @param {{ base: string, separate?: boolean, fontStyle?: 'sans' | 'serif' | 'fangsong' | 'kaisho', worker?: () => WorkerLike }} options
+ * @param {{ base: string, separate?: boolean, fontStyle?: 'sans' | 'serif' | 'fangsong' | 'kaisho', preferExport?: boolean, worker?: () => WorkerLike }} options
  * @returns {ComposerPreview}
  */
-export function composerPreview({ base, separate = false, fontStyle = 'sans', worker = () => new Worker(new URL('./worker.js', import.meta.url), { type: 'module' }) }) {
+export function composerPreview({ base, separate = false, fontStyle = 'sans', preferExport = false, worker = () => new Worker(new URL('./worker.js', import.meta.url), { type: 'module' }) }) {
   /** @type {ReturnType<typeof createDrawer> | null} */
   let drawer = null
   let asking = 0
@@ -125,7 +125,7 @@ export function composerPreview({ base, separate = false, fontStyle = 'sans', wo
       const answer = await asked.draw(prepared.sequence, leaves => {
         sketch = leaves.map(leaf => ({ ...leaf, empty: prepared.slotLeaves.some((index, slot) => index === leaf.index && prepared.slots[slot]) ? false : leaf.empty }))
         if (!signal?.aborted) onSketch?.(sketch)
-      }, { separate, fontStyle })
+      }, { separate, fontStyle, preferExport })
       if (answer.status === 'composed') {
         const drawn = answer.drawn
         const emoji = (drawn.slots ?? []).flatMap(slot => {
