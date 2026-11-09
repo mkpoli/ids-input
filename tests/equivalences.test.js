@@ -13,17 +13,23 @@ describe('equivalence input', () => {
     expect(parseSide('&CDP-8BD0;')).toBe('chise:CDP-8BD0')
     expect(parseSide('CDP-8BD0')).toBe('chise:CDP-8BD0')
     expect(parseSide('chise:CDP-8BD0')).toBe('chise:CDP-8BD0')
+    expect(parseSide('&U-i001+4E23;')).toBe('chise:U-i001+4E23')
+    expect(parseSide('U-i001+4E23')).toBe('chise:U-i001+4E23')
   })
 
   it('reads a character as itself or as a code point', () => {
     expect(parseSide('叀')).toBe('ucs:53C0')
     expect(parseSide('ucs:53c0')).toBe('ucs:53C0')
+    expect(parseSide('ucs:41')).toBe('ucs:41')
   })
 
   it('refuses text that names no component', () => {
     expect(parseSide('')).toBeNull()
     expect(parseSide('bsp:')).toBeNull()
-    expect(parseSide('ucs:123')).toBeNull()
+    expect(parseSide('ucs:1234567')).toBeNull()
+    expect(parseSide('ucs:D800')).toBeNull()
+    expect(parseSide('ucs:110000')).toBeNull()
+    expect(parseSide('&CDP 8BD0;')).toBeNull()
     expect(parseSide('two')).toBeNull()
   })
 

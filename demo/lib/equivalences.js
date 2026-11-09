@@ -9,17 +9,20 @@ export function parseSide(text) {
   const braced = /^\{(\d+)\}$/.exec(value)
   if (braced) return `bsp:${Number(braced[1])}`
   if (/^\d+$/.test(value)) return `bsp:${Number(value)}`
-  const entity = /^&([^;]+);$/.exec(value)
+  const entity = /^&([A-Za-z0-9_.+-]+);$/.exec(value)
   if (entity) return `chise:${entity[1]}`
   const cid = /^(bsp|chise|ucs):(.+)$/i.exec(value)
   if (cid) {
     const [scheme, rest] = [cid[1].toLowerCase(), cid[2].trim()]
     if (scheme === 'bsp' && /^\d+$/.test(rest)) return `bsp:${Number(rest)}`
-    if (scheme === 'chise' && /^[A-Za-z0-9_.-]+$/.test(rest)) return `chise:${rest}`
-    if (scheme === 'ucs' && /^[0-9A-Fa-f]{4,6}$/.test(rest)) return `ucs:${rest.toUpperCase()}`
+    if (scheme === 'chise' && /^[A-Za-z0-9_.+-]+$/.test(rest)) return `chise:${rest}`
+    if (scheme === 'ucs' && /^[0-9A-Fa-f]{1,6}$/.test(rest)) {
+      const point = Number.parseInt(rest, 16)
+      if (point <= 0x10ffff && !(point >= 0xd800 && point <= 0xdfff)) return `ucs:${rest.toUpperCase()}`
+    }
     return null
   }
-  if (/^[A-Za-z][A-Za-z0-9]*(?:[-_.][A-Za-z0-9]+)+$/.test(value)) return `chise:${value}`
+  if (/^(?=.*[-_.+])[A-Za-z][A-Za-z0-9_.+-]*$/.test(value)) return `chise:${value}`
   const chars = [...value]
   return chars.length === 1 ? `ucs:${(chars[0].codePointAt(0) ?? 0).toString(16).toUpperCase()}` : null
 }
