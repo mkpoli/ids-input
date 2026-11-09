@@ -150,13 +150,31 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰彳卫', refs: [59, 68, 69, 70], char: '衛', parts: '彳卫' },
   ] },
   // 二简字 from the draft's table as West records it, written with each component's own description,
-  // since a component runs its own description in its own IDS. Each form names the standard
-  // character it replaces in `standard`, which BabelStone has no row for; Unihan 18.0 gives its
-  // 繁體字. 弹 keeps 单's IDS ⿱丷甲, so its arrow strokes are not drawn. Unicode 18.0 encodes
+  // since a component runs its own description in its own IDS. The table-2 forms below name the standard
+  // character they replace in `standard`, and BabelStone has no row for the form itself; Unihan
+  // 18.0 gives each 繁體字. 弹 keeps 单's IDS ⿱丷甲, so its arrow strokes are not drawn. Unicode 18.0 encodes
   // ⿰忄井 as 𲟱 (U+327F1), so that example keeps its character.
   // 多 and 皆 are left out: ⿱夕夕 and ⿱比白 are the ordinary descriptions of the modern characters,
   // which the composer then draws. 诅 (⿰讠且) is left out because 且's own description is ⿱𠃌夕.
-  { key: 'erjian', refs: [3], examples: [
+  // Table 1 forms that are already encoded characters: 停→仃, 街→亍, 酒→氿, 舞→午, 道→辺,
+  // 建→迠, 蛋→旦, 嘴→咀, 副→付, 信→伩, 算→祘, 菜→𦬁, 赛→𡧳, 鞋→𰆻 and 整→𰋞. Each `char` is
+  // that encoded form, and its description is BabelStone's; `standard` is the character it replaces.
+  { key: 'erjian', refs: [1, 3], examples: [
+    { sequence: '⿰亻丁', refs: [1, 3], char: '仃', standard: '停' },
+    { sequence: '⿱一丁', refs: [1, 3], char: '亍', standard: '街' },
+    { sequence: '⿰氵九', refs: [1, 3], char: '氿', standard: '酒' },
+    { sequence: '⿱𠂉十', refs: [1, 3], char: '午', standard: '舞' },
+    { sequence: '⿺辶刀', refs: [1, 3], char: '辺', standard: '道' },
+    { sequence: '⿺辶占', refs: [1, 3], char: '迠', standard: '建' },
+    { sequence: '⿱日一', refs: [1, 3], char: '旦', standard: '蛋' },
+    { sequence: '⿰口且', refs: [1, 3], char: '咀', standard: '嘴' },
+    { sequence: '⿰亻寸', refs: [1, 3], char: '付', standard: '副' },
+    { sequence: '⿰亻文', refs: [1, 3], char: '伩', standard: '信' },
+    { sequence: '⿰示示', refs: [1, 3], char: '祘', standard: '算' },
+    { sequence: '⿱艹才', refs: [1, 3], char: '𦬁', standard: '菜' },
+    { sequence: '⿱宀西', refs: [1, 3], char: '𡧳', standard: '赛', traditional: '賽' },
+    { sequence: '⿰又圭', refs: [1, 3], char: '𰆻', standard: '鞋' },
+    { sequence: '⿱大正', refs: [1, 3], char: '𰋞', standard: '整' },
     { sequence: '⿰忄井', refs: [3], char: '𲟱', standard: '警' },
     { sequence: '⿱艹么', refs: [3], char: '', standard: '蘑' },
     { sequence: '⿱千田', refs: [3], char: '', standard: '臿' },

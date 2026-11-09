@@ -19,6 +19,14 @@ for (const [char, sequences] of table) for (const { text } of sequences) {
   if (chars) { if (!chars.includes(char)) chars.push(char) } else described.set(text, [char])
 }
 
+/** The Erjian forms that are already encoded, and the character each one is. */
+const ENCODED_ERJIAN = new Map([
+  ['⿰忄井', '𲟱'], ['⿰亻丁', '仃'], ['⿱一丁', '亍'], ['⿰氵九', '氿'], ['⿱𠂉十', '午'],
+  ['⿺辶刀', '辺'], ['⿺辶占', '迠'], ['⿱日一', '旦'], ['⿰口且', '咀'], ['⿰亻寸', '付'],
+  ['⿰亻文', '伩'], ['⿰示示', '祘'], ['⿱艹才', '𦬁'], ['⿱宀西', '𡧳'], ['⿰又圭', '𰆻'],
+  ['⿱大正', '𰋞'],
+])
+
 describe('the demo examples', () => {
   it('read as whole descriptions', () => {
     for (const { sequence, char } of EXAMPLES) {
@@ -37,13 +45,16 @@ describe('the demo examples', () => {
         const { sequence, char } = example
         const found = described.get(sequence) ?? []
         if (group.key === 'erjian') {
-          // A 二簡字 form names the standard it replaces in `standard`. BabelStone has no row for
-          // it; ⿰忄井 is the one form Unicode 18.0 encodes, as 𲟱 (U+327F1).
-          expect(char).toBe(sequence === '⿰忄井' ? '𲟱' : '')
-          expect(example.refs).toEqual([sourceNumber('erjian')])
+          // A 二簡字 form names the standard it replaces in `standard`; some forms are already
+          // encoded characters, whose BabelStone descriptions give the IDS.
+          expect(char).toBe(ENCODED_ERJIAN.get(sequence) ?? '')
+          expect(example.refs).toContain(sourceNumber('erjian'))
+          if (char && sequence !== '⿰忄井') expect(example.refs).toContain(sourceNumber('babelstone'))
           expect([...example.standard]).toHaveLength(1)
           expect([...(example.traditional ?? example.standard)]).toHaveLength(1)
-          expect(found).toEqual([])
+          if (sequence === '⿰忄井') expect(found).toEqual([])
+          else if (char) expect(found).toContain(char)
+          else expect(found).toEqual([])
         } else if (group.key === 'geba') {
           expect(group.refs ?? []).toContain(sourceNumber('geba-wp'))
           const name = char || example.abbreviates
@@ -123,9 +134,9 @@ describe('the demo examples', () => {
   it('gives each Erjian standard its 繁體字', () => {
     const group = EXAMPLE_GROUPS.find(group => group.key === 'erjian')
     const differing = Object.fromEntries(group.examples.filter(example => example.traditional).map(example => [example.standard, example.traditional]))
-    expect(differing).toEqual({ 厩: '廄', 衮: '袞', 弹: '彈', 数: '數' })
+    expect(differing).toEqual({ 厩: '廄', 衮: '袞', 弹: '彈', 数: '數', 赛: '賽' })
     for (const example of group.examples) {
-      expect(example.char).toBe(example.sequence === '⿰忄井' ? '𲟱' : '')
+      expect(example.char).toBe(ENCODED_ERJIAN.get(example.sequence) ?? '')
       expect([...example.standard]).toHaveLength(1)
       expect([...(example.traditional ?? example.standard)]).toHaveLength(1)
     }

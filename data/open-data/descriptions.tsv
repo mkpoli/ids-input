@@ -115,6 +115,21 @@ ids	char	codepoint	group	reading	modern	abbreviates	editorial	sources
 ⿱艹𢎨	苐	U+82D0	sign				false	babelstone x-eonway-sign
 ⿰设正	証	U+8A3C	sign				false	x-eonway-sign
 ⿰彳卫	衛	U+885B	sign				false	x-eonway-sign yixiwu-jianhuaziyuan chenguangyao-jianzipu zh-wp-jianhua-fangfa
+⿰亻丁	仃	U+4EC3	erjian				false	babelstone erjian
+⿱一丁	亍	U+4E8D	erjian				false	babelstone erjian
+⿰氵九	氿	U+6C3F	erjian				false	babelstone erjian
+⿱𠂉十	午	U+5348	erjian				false	babelstone erjian
+⿺辶刀	辺	U+8FBA	erjian				false	babelstone erjian
+⿺辶占	迠	U+8FE0	erjian				false	babelstone erjian
+⿱日一	旦	U+65E6	erjian				false	babelstone erjian
+⿰口且	咀	U+5480	erjian				false	babelstone erjian
+⿰亻寸	付	U+4ED8	erjian				false	babelstone erjian
+⿰亻文	伩	U+4F29	erjian				false	babelstone erjian
+⿰示示	祘	U+7958	erjian				false	babelstone erjian
+⿱艹才	𦬁	U+26B01	erjian				false	babelstone erjian
+⿱宀西	𡧳	U+219F3	erjian				false	babelstone erjian
+⿰又圭	𰆻	U+301BB	erjian				false	babelstone erjian
+⿱大正	𰋞	U+302DE	erjian				false	babelstone erjian
 ⿰忄井	𲟱	U+327F1	erjian				false	erjian
 ⿱艹么			erjian				false	erjian
 ⿱千田			erjian				false	erjian

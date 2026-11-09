@@ -7,7 +7,7 @@
     "note": "This project’s selection, arrangement, source notes and editorial readings are dedicated to the public domain. Source-derived material keeps the terms its record names, where the project records one."
   },
   "counts": {
-    "descriptions": 584,
+    "descriptions": 599,
     "unencoded": 130,
     "editorial": 65,
     "groups": 20,
@@ -54,7 +54,7 @@
     {
       "key": "erjian",
       "title": "Erjian forms",
-      "count": 16,
+      "count": 31,
       "unencoded": 15
     },
     {
@@ -139,12 +139,12 @@
   "files": [
     {
       "name": "descriptions.json",
-      "bytes": 224408,
+      "bytes": 228698,
       "type": "application/json"
     },
     {
       "name": "descriptions.tsv",
-      "bytes": 36163,
+      "bytes": 36997,
       "type": "text/tab-separated-values"
     },
     {
