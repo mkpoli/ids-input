@@ -277,6 +277,14 @@ const VARIANT_CUTS = {
 // reads as a whole character beside the right operand.
 const LEFT_BODY_HOSTS = new Set(['射', '躬', '躭'])
 
+// The left column's positional forms: a description that writes the base character on the left of
+// ⿰ draws the form the column uses. CJKVI's radical-variants table names most of them; ⺼ is the
+// Kangxi flesh radical.
+const LEFT_FORMS = new Map(Object.entries({
+  人: '亻', 手: '扌', 水: '氵', 牛: '牜', 犬: '犭', 示: '礻', 糸: '糹', 衣: '衤',
+  言: '訁', 辵: '辶', 金: '釒', 食: '飠', 玉: '𤣩', 王: '𤣩', 足: '𧾷', 肉: '⺼',
+}))
+
 // Kureedo draws no ⿺电; its ⿺巴 form (巴 round 三 in 𠀧, Kureedo's SIL OFL 1.1 face) presses the
 // box of such a glyph to this share of the width and draws its foot out to the right edge.
 const ENCLOSURE_SHARE = 0.485
@@ -1613,26 +1621,21 @@ export class Composer {
 
   learned(op, children, region, ownParts = false) {
     const C = this.C, stem = this.stem0[0][0], frameOf = region ?? this.face
+    // A base character written on the left takes the column's positional form; the export's record
+    // of that form gives the learned layout its narrower metrics.
+    if (op === '⿰' && !this.separate && typeof children[0] === 'string') {
+      const form = LEFT_FORMS.get(keyOf(children[0]))
+      if (form && this.glyph(form)) children = [form, children[1]]
+    }
     let boxes = this.predict(op, children)
     if (region) { const frame = union(boxes); boxes = boxes.map(b => mapped(b, frame, region)) }
     if (op in this.ENCLOSE && !region && area(boxes[0]) < C.ENCLOSING_LEAST * area(this.face)) boxes[0] = this.face.slice()
     if (C.COVERING.includes(op)) boxes[0] = union(boxes)
     if (boxes.some(b => b[2] <= b[0] || b[3] <= b[1])) return null
-    // 王 as the left part of a compound body takes its combining form and a narrow column.
-    const wangLeft = !region && op === '⿰' && children[0] === '王'
-    if (wangLeft) {
-      const frame = union(boxes), split = frame[0] + 0.28 * (frame[2] - frame[0])
-      boxes[0] = [frame[0], frame[1], split, frame[3]]
-      boxes[1] = [split, frame[1], frame[2], frame[3]]
-    }
     const groups = []
     for (let i = 0; i < children.length; i++) {
       const child = children[i]
       let box = boxes[i]
-      if (wangLeft && i === 0) {
-        const glyph = this.glyph('𤣩')
-        if (glyph) { groups.push([this.place(glyph, box, this.ink('𤣩'), 'glyph 𤣩')]); continue }
-      }
       if (this.AXIS[op] === 0 && child === '\u{F2A9}' && this.fontStyle === 'sans') {
         groups.push(this.node(child, box, false, true))
         continue
@@ -1648,15 +1651,12 @@ export class Composer {
         }
       }
       // An operand drawn from its own glyph keeps the part inside its box, where a host cut can carry
-      // the rest of that character in with it. A glyph the box would deform beyond STRETCH is no
-      // form for that place (示's square glyph in a left column); 身 also takes the left column's
-      // narrow form from 射, 躬 or 躭.
+      // the rest of that character in with it. 身 is the exception: it takes the left column's form
+      // from 射, 躬 or 躭.
       if (ownParts && typeof child === 'string' && !this.excluded(child)
         && !(op === '⿰' && i === 0 && keyOf(child) === '身' && this.hasLeftBody(child))) {
         const own = this.glyph(child)
-        // The left column is where a square glyph loses its form; a right or upper operand keeps
-        // its own glyph, which the box's size matches.
-        if (own && (i > 0 || stretchOf(own.box, box) <= C.STRETCH)) {
+        if (own) {
           groups.push([this.place(own, box, this.ink(child), `glyph ${child}`)])
           continue
         }

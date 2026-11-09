@@ -118,25 +118,19 @@ it('draws a left 身 from a host cut, not its own glyph', () => {
   expect(groups[1].origin).toBe('glyph 牚')
 })
 
-it('draws an operand from its own glyph only when the box does not deform it', () => {
-  const base = { op: '⿰', j: 1, v: 1, d: 0, k: [0], r: 0 }
-  const evidence = { 示: glyph('示', [50, -80, 950, 840], 5000), 口: glyph('口', [100, -80, 900, 840], 5000),
-    祚: glyph('祚', [30, -80, 470, 840], 5000) }
-  const c = new Composer({ manifest: { constants, spelled: [], files: { hosts: { bytes: 1 } } }, layout,
-    rec: key => evidence[key] ?? null,
-    hosts: (key, place) => key === '示' && place === 'L' ? [{ ...base, h: '祚', ok: [], si: 5000, b: [30, -80, 470, 840] }] : [],
-    places: () => [] })
-  c.predict = () => [[30, -80, 470, 840], [500, -80, 960, 840]]
-  expect(c.learned('⿰', ['示', '口'], null, true)[0].origin).toBe('learned 祚')
-})
-
-it('draws 王 in its combining form before a single right operand', () => {
-  const evidence = { 王: glyph('王', [50, -80, 950, 840], 4000), 木: glyph('木', [100, -80, 900, 840], 4000),
+it('writes a base character on the left in its positional form', () => {
+  const evidence = { 水: glyph('水', [50, -80, 950, 840], 5000), 手: glyph('手', [50, -80, 950, 840], 5000),
+    口: glyph('口', [100, -80, 900, 840], 5000), 木: glyph('木', [100, -80, 900, 840], 5000),
+    氵: glyph('氵', [30, -80, 300, 840], 2000), 扌: glyph('扌', [30, -80, 320, 840], 2000),
     '𤣩': glyph('𤣩', [30, -80, 360, 840], 3000) }
   const c = new Composer({ manifest: { constants, spelled: [], files: { hosts: { bytes: 0 } } }, layout,
     rec: key => evidence[key] ?? null, hosts: () => [], places: () => [] })
   c.predict = () => [[30, -80, 360, 840], [400, -80, 960, 840]]
+  expect(c.learned('⿰', ['水', '口'], null)[0].origin).toBe('glyph 氵')
+  expect(c.learned('⿰', ['手', '口'], null)[0].origin).toBe('glyph 扌')
   expect(c.learned('⿰', ['王', '木'], null)[0].origin).toBe('glyph 𤣩')
+  // The right operand keeps the character it names.
+  expect(c.learned('⿰', ['口', '水'], null)[1].origin).toBe('glyph 水')
 })
 
 it('uses the same preferred donor keys when only a source-spelling host exists', () => {
