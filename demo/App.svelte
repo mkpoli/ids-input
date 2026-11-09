@@ -89,6 +89,21 @@
         names.push(b.replace(/^chise:/, ''))
         map.set(key, names)
       }
+      // A reader's own pairs from the appendix join the corpus ones; a pair without both a number
+      // and a CHISE name has nothing to say on a numbered part.
+      try {
+        const stored = JSON.parse(localStorage.getItem('ids-input:equivalences') ?? '[]')
+        for (const row of Array.isArray(stored) ? stored : []) {
+          const sides = [String(row?.a ?? ''), String(row?.b ?? '')]
+          const number = sides.map(side => /^bsp:(\d+)$/.exec(side)).find(Boolean)
+          const entity = sides.map(side => /^chise:(.+)$/.exec(side)).find(Boolean)
+          if (!number || !entity) continue
+          const key = `{${number[1]}}`
+          const names = map.get(key) ?? []
+          if (!names.includes(entity[1])) names.push(entity[1])
+          map.set(key, names)
+        }
+      } catch { /* A malformed stored list leaves the corpus pairs. */ }
       equivalents = map
     } catch { /* The palette works without the equivalents. */ }
   })
