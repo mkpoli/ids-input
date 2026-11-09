@@ -53,6 +53,7 @@ jobs:
         run: |
           version=$(jq -r .version package.json)
           [ "$GITHUB_REF_NAME" = "desktop-v$version" ] || { echo "::error::$GITHUB_REF_NAME does not match package.json $version"; exit 1; }
+      - uses: ./.github/actions/composer
       - run: bun install --frozen-lockfile
       # The export changes only with COMPOSER_BASE; the fetch fills in whatever the cache lacks.
       - uses: actions/cache@v4
