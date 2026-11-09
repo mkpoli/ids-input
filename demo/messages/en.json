@@ -427,5 +427,8 @@
   "appendix.form.exists": "The table already has this pair.",
   "appendix.basisValue.alignment": "alignment",
   "appendix.basisValue.reader": "reader",
-  "appendix.glyph": "Glyph"
+  "appendix.glyph": "Glyph",
+  "appendix.glyphTitle.babel": "BabelStone Han PUA",
+  "appendix.glyphTitle.ours": "Sans cut, this project",
+  "appendix.glyphNote": "Left: BabelStone Han PUA. Right: this project’s Sans cut."
 }

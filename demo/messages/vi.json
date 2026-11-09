@@ -425,5 +425,8 @@
   "appendix.form.exists": "Bảng đã có cặp này.",
   "appendix.basisValue.alignment": "đối chiếu",
   "appendix.basisValue.reader": "bạn thêm",
-  "appendix.glyph": "Hình"
+  "appendix.glyph": "Hình",
+  "appendix.glyphTitle.babel": "BabelStone Han PUA",
+  "appendix.glyphTitle.ours": "Hình Sans của dự án",
+  "appendix.glyphNote": "Bên trái: BabelStone Han PUA. Bên phải: hình Sans của dự án."
 }

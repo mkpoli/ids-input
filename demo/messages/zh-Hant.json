@@ -425,5 +425,8 @@
   "appendix.form.exists": "該對應已在表中。",
   "appendix.basisValue.alignment": "對齊",
   "appendix.basisValue.reader": "讀者新增",
-  "appendix.glyph": "字形"
+  "appendix.glyph": "字形",
+  "appendix.glyphTitle.babel": "BabelStone Han PUA",
+  "appendix.glyphTitle.ours": "本專案的Sans字形",
+  "appendix.glyphNote": "左為BabelStone Han PUA，右為本專案的Sans字形。"
 }
