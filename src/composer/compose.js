@@ -2103,6 +2103,12 @@ export class Composer {
         }
       }
     }
+    // A described ⿺爪… draws the inner a little low and small next to 爬's designed frame.
+    if (op === '⿺' && children[0] === '爪' && groups[1]?.length) {
+      const box = union(groups[1].map(p => p.target)), cx = (box[0] + box[2]) / 2, cy = (box[1] + box[3]) / 2
+      const down = 0.12 * (this.face[3] - this.face[1])
+      for (const p of groups[1]) p.target = [cx + (p.target[0] - cx) * 1.15, cy + (p.target[1] - cy) * 1.15 - down, cx + (p.target[2] - cx) * 1.15, cy + (p.target[3] - cy) * 1.15 - down]
+    }
     this.recordJoints(op, groups)
     return this.flatten(groups)
   }
@@ -2366,6 +2372,12 @@ export class Composer {
           p.target = [cx + (p.target[0] - cx) * 0.90, cy + (p.target[1] - cy) * 0.90 + lift + (upper ? split : -split), cx + (p.target[2] - cx) * 0.90, cy + (p.target[3] - cy) * 0.90 + lift + (upper ? split : -split)]
         }
       }
+    }
+    // A described ⿺爪… draws the inner a little low and small next to 爬's designed frame.
+    if (op === '⿺' && children[0] === '爪' && groups[1]?.length) {
+      const box = union(groups[1].map(p => p.target)), cx = (box[0] + box[2]) / 2, cy = (box[1] + box[3]) / 2
+      const down = 0.12 * (this.face[3] - this.face[1])
+      for (const p of groups[1]) p.target = [cx + (p.target[0] - cx) * 1.15, cy + (p.target[1] - cy) * 1.15 - down, cx + (p.target[2] - cx) * 1.15, cy + (p.target[3] - cy) * 1.15 - down]
     }
     this.recordJoints(op, groups)
     return this.flatten(groups)
