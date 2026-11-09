@@ -48,7 +48,11 @@
   const corpusRows = $derived(doc ? doc.rows.map(corpusRow) : [])
 
   /** A reader's own pairs, as typed and parsed. @type {{ a: string, b: string, note: string }[]} */
-  let mine = $state(load('equivalences', []))
+  const stored = load('equivalences', [])
+  let mine = $state(Array.isArray(stored)
+    ? stored.filter(row => row && typeof row.a === 'string' && typeof row.b === 'string' && typeof row.note === 'string')
+      .map(row => ({ a: row.a, b: row.b, note: row.note }))
+    : [])
   $effect(() => save('equivalences', mine.length ? mine : undefined))
   const mineRows = $derived(mine.map(row => /** @type {Row} */ ({
     a: row.a, b: row.b, aChar: null, bChar: null, aDescription: null, bDescription: null,
@@ -93,6 +97,7 @@
     const pair = parsePair(form.a, form.b)
     if (!pair) { formError = parseSide(form.a) && parseSide(form.b) ? t('appendix.form.same') : t('appendix.form.invalid'); return }
     const [one, two] = pair
+    if (corpusRows.some(row => row.a === one && row.b === two)) { formError = t('appendix.form.exists'); return }
     const note = form.note.trim()
     const existing = mine.find(row => row.a === one && row.b === two)
     if (existing) existing.note = note

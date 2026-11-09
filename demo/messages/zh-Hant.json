@@ -421,5 +421,6 @@
   "appendix.state.verified": "已驗證",
   "appendix.state.candidate": "候選",
   "appendix.state.yours": "我的",
-  "app.about.openEquivalences": "開啟等價表"
+  "app.about.openEquivalences": "開啟等價表",
+  "appendix.form.exists": "該對應已在表中。"
 }

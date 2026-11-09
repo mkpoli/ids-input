@@ -421,5 +421,6 @@
   "appendix.state.verified": "Đã xác minh",
   "appendix.state.candidate": "Ứng viên",
   "appendix.state.yours": "Của tôi",
-  "app.about.openEquivalences": "Mở bảng tương đương"
+  "app.about.openEquivalences": "Mở bảng tương đương",
+  "appendix.form.exists": "Bảng đã có cặp này."
 }

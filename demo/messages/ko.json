@@ -421,5 +421,6 @@
   "appendix.state.verified": "검증됨",
   "appendix.state.candidate": "후보",
   "appendix.state.yours": "내 항목",
-  "app.about.openEquivalences": "동등 표 열기"
+  "app.about.openEquivalences": "동등 표 열기",
+  "appendix.form.exists": "이 대응은 이미 표에 있습니다."
 }

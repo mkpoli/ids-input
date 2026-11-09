@@ -421,5 +421,6 @@
   "appendix.state.verified": "検証済み",
   "appendix.state.candidate": "候補",
   "appendix.state.yours": "追加分",
-  "app.about.openEquivalences": "等価の一覧を開く"
+  "app.about.openEquivalences": "等価の一覧を開く",
+  "appendix.form.exists": "この対応はすでに一覧にあります。"
 }

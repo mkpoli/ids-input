@@ -423,5 +423,6 @@
   "appendix.state.verified": "Verified",
   "appendix.state.candidate": "Candidate",
   "appendix.state.yours": "Yours",
-  "app.about.openEquivalences": "Open the equivalence table"
+  "app.about.openEquivalences": "Open the equivalence table",
+  "appendix.form.exists": "The table already has this pair."
 }
