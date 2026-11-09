@@ -7,16 +7,6 @@
 import { derived, mapped, partInk, partOf, placed, pointsBox, union } from './geometry.js'
 import { hexOf } from './sha256.js'
 
-/** The top of 𢂯 (⿱⿻十从巾): the 十 with a 人 on either side, the legs below the bar. */
-const CONG_TEN = {
-  b: [59, 332, 936, 840],
-  p: [
-    ['MQ2LQ2Q2LQ2Q2Q2', '7ADoBRQDhAfMA4QK8ARMCrAEXAlUBIgIYAWsByQG5AZYBRwGtATQBtgDmAcIAywG1AEwBXABlAXsAOgF', '+v4rAXj/TACN/5gAvgBmAJEA1f+7ACYAaABhANkA/v/6/0T/lP+j/yYAMv93AKr/9v9Q/6D/mf+u/5L/'],
-    ['MLLLLLLLLLLL', 'JAHgCiQB+AssB/gLLAcgDWQIIA1kCPgLoA74C6AO4ApkCOAKZAj0BSwH9AUsB+AK', 'Z/99/2f/gwBn/4MAZ/+DAJkAgwCZAIMAmQCDAJkAff+ZAH3/mQB9/2f/ff9n/33/'],
-    ['MQ2LQ2Q2LQ2Q2Q2', 'AAloBrgK4AdAC4gKZAxUCigMTAnMC2wI8AxEB3QOMAa0DWwFZAxoBlQLeAfECnwGAArEBYwJHAYACWgG', '5P4cAXT/RgCH/5cAuQBpAJMA2P+0AB4AZABkAOsAEgAPAFP/m/+d/yEAK/96AK7/CwBV/63/kv+3/43/'],
-  ],
-  w: [77.94, 69.87],
-}
 
 /** The bottom of 𱵺 (⿳𠆳𠚍禸): 𠚍禸, 离's lower body. */
 const XIE_BOTTOM = {"b":[135.0,-69.0,872.0,538.0],"p":[["MLQ2LQ2","SATUBugEIAeoBcgGIAZkBoAFDAYQBXAGSATUBg==","U//6AP//awBMAFMA+QDw/+3/iv+w/6//wf+p/w=="],["MLQ2Q2LQ2Q2LQ2Q2Q2Q2Q2","0AScB3QF+AfABnQH4AfwBuAIhAeoCSwIiArsB6AJOAeYCJwGxAkMBsAKfAUUChAFHAmkBegHPAacBogFGAX4BNwEMAV0BGgF+AXwBTAHlAYYBhQH0AScBw==","O//xAPb/awA3AFkA+f9tAK//UADf/2sAMgEpAE8AsP8rAQkAQQBWABIBBAACAI7/vf+r/wMAk/86AKj/3/+Q/63/sf+k/hMAyP9ZAMH++v/I/6f/yv+m/w=="],["MLQ2LQ2","sAYQCEQHaAgACBQIhAi0B/AHVAd4B6wHsAYQCA==","Mv/uAPf/bQBHAFQA+QD7//v/iv+2/63/wf+p/w=="],["MLQ2LQ2","lAnIBjQKHAfwCsAGcAtYBtAKAAZgCmAGlAnIBg==","Rf/1AP7/bQBMAFIA+wDw/+7/i/+x/6//wP+q/w=="],["MLQ2LLQ2LQ2LQ2LQ2Q2Q2LQ2Q2Q2LLLLLQ2LLLLLQ2LQ2LLLLLLQ2LLQ3Q2Q2Q3","LAzQ/zQM0P90DND/dAwEAHQMcAIgB3AClAa4AQAGFAGYCVQBTAmwAfAIEALICVwC7ApAAYALSACUCvD/ZApEACgKmABEBkwApAU4AAQFIADkBBAA5AQUAMQEgACEBAQB4AQcAVAFrAGEBeQB6AVwAjwDcAI8A+z+HALs/hwCQAN0BkADqAaUA9gG7APsAuwD7ALcB/wD3Af8A8AERAjABNQHHAUUB4AFtAfMBWwIcAXwCAwFaAjABKQLwASkC9wHvAzcB7wM7AMgCOwD6AeUA7QHQAOgDUADoA0EAKANqP9gDTj/EA0g/3wM9P7UCvz+sApo/2wK0P8YC8z/+AvM/ywM0P8=","AAAVAQAAYQBz/2EAc/8AAHP/n/9GAJ//bQDC/1IBcQDl/lQAl//A/wP/KgAkAG8AbwA9ANAAzv/B/4j/if/M/7z/m/8OAKD/EwCg/ysAov9z/2P/c//y/3z/3f82/0AArv9VAJX/PwCT/z0A7v6f/40An/+NAJ//c/+f/3P/YQCy/2EAhv8xABP/n/9z/5//c/9hAI0AYQCNAGEAhf5dALL/r//E/gQAAgBsAEsAUwABAfT/hQFGAHP/YQBz/2EAjQBhAI0An/9NAJ//dwDM//0AYQCNAGEAjQAAAI0A5v9eAK7/KACj/xMAn/+a/6D/gP/V//j+ZQACAGEA+/9hAPX/YQA="]],"w":[71.66,51.79]}
@@ -90,7 +80,6 @@ export const CONSTRUCTS = {
     { host: '乙', label: '乙 closing stroke', contours: [0, 1], box: [153.25, -78.75, 962.5, 447.75],
       digest: 'ad473c2c2cf293512d44377319d9421cfb26b8ca149417bebf81994b8a341679' },
   ] },
-  '⿻十从': { host: '𢂯', keep: 'overlay', keepParts: 0, body: CONG_TEN },
   '⿰⿻三丨刀': JIE,
 }
 

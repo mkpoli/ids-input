@@ -75,30 +75,7 @@ describe('C087 ⿻日丿', () => {
   })
 })
 
-describe('C082 ⿻二丿', () => {
-  it('raises 二’s lower line under a 丿, keeping its width', () => {
-    const two = part('glyph 二', [57, 20, 945, 697], [38, 188, 967, 725],
-      [[142, 616, 860, 697], [57, 20, 945, 104]])
-    const slash = part('overlay 屮', [168, -82, 537, 832], [84, -81, 547, 840], [[168, -82, 537, 832]])
-    const out = COMPONENT_FIXES['⿻二丿'].apply([two, slash])
-    // The lower bar keeps 二's width and rises towards the upper line.
-    const before = targetBox(two, two.part.contours[1])
-    const after = targetBox(out[0], out[0].part.contours[1])
-    expect(after[2] - after[0]).toBeCloseTo(before[2] - before[0], 6)
-    expect(after[1]).toBeLessThan(before[1])
-  })
-})
 
-describe('C045 ⿱𠂉一', () => {
-  it('runs 監’s short 一 out to the face’s right edge', () => {
-    const piece = part('instance 監', [489, 377, 942, 836], [38, -81, 967, 840],
-      [[579, 377, 917, 441], [490, 493, 693, 836], [590, 624, 942, 689]])
-    const out = COMPONENT_FIXES['⿱𠂉一'].apply([piece])
-    const lower = out[0].part.contours.map(contour => targetBox(out[0], contour)).sort((a, b) => a[1] - b[1])[0]
-    expect(lower[0]).toBeCloseTo(38 + 0.05 * (967 - 38), 6)
-    expect(lower[2]).toBeCloseTo(967, 6)
-  })
-})
 
 
 
@@ -177,31 +154,11 @@ describe('C070 ⿵冂丨', () => {
 
 
 
-describe('C071 ⿵𠆢丶', () => {
-  it('draws the dot under 𠆢 as a 丶, not the host’s 捺', () => {
-    const roof = part('glyph 𠆢', [37, 213, 967, 633], [41, 33, 953, 693], [[37, 213, 967, 633]])
-    const cut = part('learned 𭕴', [656, 393, 791, 570], [351, 107, 651, 480], [[656, 393, 791, 570]])
-    const out = COMPONENT_FIXES['⿵𠆢丶'].apply([roof, cut], dotComposer())
-    expect(out[0]).toBe(roof)
-    expect(out[1].origin).toBe('dot 丶')
-    const placed = targetBox(out[1], out[1].part.contours[0])
-    expect(placed[1]).toBeCloseTo(107, 6)
-    expect(placed[3] - placed[1]).toBeLessThan(480 - 107)
-  })
-})
 
 
 
 
 
-it('C034 separates the 卝 terminals from the first 干 bar', () => {
-  const cap = part('learned 𢾴', [0, 0, 1000, 300], [0, 600, 1000, 900], [[0, 0, 400, 300], [600, 0, 1000, 300]])
-  const stem = part('learned 竿', [0, 0, 1000, 600], [0, 0, 1000, 620], [[0, 500, 1000, 600]])
-  const [a, b] = COMPONENT_FIXES['⿱卝干'].apply([cap, stem])
-  expect(a.target[1] - b.target[3]).toBeGreaterThan(60)
-  expect(a.target[3]).toBe(900)
-  expect(b.target[1]).toBe(0)
-})
 
 
 it('C085 keeps the mouth bottom clear of the earth foot', () => {

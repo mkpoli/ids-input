@@ -198,18 +198,6 @@ export const COMPONENT_FIXES = {
     },
   },
   // 卝's terminals must clear 干's first bar, as the right side of 哶 does.
-  '⿱卝干': {
-    glyphs: { '𢾴': '5dc3e052a5b511c54a17c19679d78a6756f156dbfa09307123502f0185e48c30',
-      '竿': 'ed0a93ce3a2cf199af7b37f9c112a8b40b2ce037690b4e444474c9b1f49f5430' },
-    apply(parts) {
-      const cap = partFrom(parts, 'learned 𢾴'), stem = partFrom(parts, 'learned 竿')
-      if (!cap || !stem) return parts
-      const top = cap.target[3], bottom = stem.target[1], height = top - bottom
-      return parts.map(part => part === cap
-        ? { ...part, target: [cap.target[0], top - 0.30 * height, cap.target[2], top] }
-        : part === stem ? { ...part, target: [stem.target[0], bottom, stem.target[2], top - 0.38 * height] } : part)
-    },
-  },
   // A whole 鰥 cut stretches the left strokes and carries a sweeping lower stroke.
   // Keep 遝’s left strokes and stem, and replace both right strokes with compact 丶 glyphs.
   // ⿻日丿: the 丿 comes from 屮, where it stands as tall as the glyph; over 日 it runs out above
@@ -229,36 +217,10 @@ export const COMPONENT_FIXES = {
   },
   // ⿻二丿: 二 drawn on its own has its lower line sitting lower than 龵 draws the pair under a
   // 丿 — the font lifts that line towards the upper one. The lower bar keeps its width and rises.
-  '⿻二丿': {
-    glyphs: { '二': '9d4e472a9cc90b720b80a2218212a928d8893c03e2eb39ca8920661303c1182c',
-      '屮': '52041b363c2da211e721574b5136ec16e60fc243bffae7d6116ff071ac0498d1' },
-    apply(parts) {
-      const two = partFrom(parts, 'glyph 二')
-      if (!two) return parts
-      const bars = barsOf(two)
-      if (bars.length < 2) return parts
-      const lower = bars[0], upper = bars.at(-1)
-      // Raise the lower line by a tenth of the gap the two lines leave between them.
-      const rise = Math.max(0, upper.box[1] - lower.box[3]) * 0.18
-      return parts.map(part => part === two ? raised(part, [lower.index], rise) : part)
-    },
-  },
   // ⿻一止 keeps a visible stem above the bar. 正's joined top is only a reference
   // for stroke weight; the overlay must retain the protruding head of 止.
   // ⿱𠂉一: the cut of 監's right side leaves the 一 short; as the component's lower line it runs
   // out to the face's right edge, five percent in from the left.
-  '⿱𠂉一': {
-    glyphs: { '監': 'ebb232713029973e133aa40ab2ba06f184299665b61e1e10640a9e78a0cf0094' },
-    apply(parts) {
-      const piece = partFrom(parts, 'instance 監')
-      if (!piece) return parts
-      const bars = barsOf(piece)
-      if (!bars.length) return parts
-      const target = piece.target, width = target[2] - target[0]
-      return parts.map(part => part === piece
-        ? respanned(part, bars[0].index, target[0] + 0.05 * width, target[2]) : part)
-    },
-  },
   // ⿱𠂉丶: the 丶 is taken from 遝, whose lower dot is a 捺, and fills the band as one. The 丶
   // glyph is reduced within the local face and lifted, as 今 and 厶 set the dot.
   // ⿸⿹丅丿丨: the 丿 fills the left of the cell, so the opening the ⿹ leaves is the right side of
@@ -371,17 +333,6 @@ export const COMPONENT_FIXES = {
   // short, shallow ㇒, not a 刀 cut squeezed upright. It is drawn from the ㇒ glyph at that lean.
   // ⿵𠆢丶: the 丶 is cut from a 捺 and fills its band as a long slash. Under 𠆢 it is the dot
   // of 厶, as 能 and 熊 set it; the 丶 glyph stands in, sized to the band and standing on its foot.
-  '⿵𠆢丶': {
-    glyphs: { '𠆢': 'f0ce28285cd42f0a237600ccdf8a1dd636c8d83a219763495da65f6bbe87b0fe',
-      '𭕴': 'fb55f20289cd66ff1361bfcaca9dfbcfb81530c4cb1aaa2349c491f1cb45cb1b',
-      '丶': '3f6db1c682c48dbf567323805ff695a723fb3b20bf05570ddc178a684c4cbbb7' },
-    apply(parts, composer) {
-      const roof = partFrom(parts, 'glyph 𠆢'), cut = parts.find(part => part !== roof)
-      if (!roof || !cut) return parts
-      const dot = dotIn(composer, cut.target)
-      return dot ? parts.map(part => part === cut ? dot : part) : parts
-    },
-  },
   // 𡱃 compresses the cap above a taller 巾; the centre stem reaches its falling tip.
   // 監 supplies either a single right-hand cut or two separate strokes. Split the cut before
   // sizing the pair, so 臣 stays compact and the lower 一 spans the right column.
