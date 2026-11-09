@@ -395,6 +395,8 @@
   "app.sitesMore": "More writing-system projects",
   "appendix.title": "Unencoded components",
   "appendix.lead": "Every component the corpus names, the encoded ones included. An equivalent is shown where the alignment found one; pairs you add appear as custom components.",
+  "appendix.equivalents": "Kana and Hangul equivalents",
+  "appendix.equivalentsLead": "The search reads these as alternative spellings of a component. Halfwidth katakana uses its fullwidth row; a kana with a voicing mark stays literal.",
   "appendix.search": "Find a component, character or equivalent",
   "appendix.all": "All",
   "appendix.yours": "Yours",

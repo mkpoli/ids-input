@@ -393,6 +393,8 @@
   "app.sitesMore": "Các dự án khác về hệ chữ viết",
   "appendix.title": "Thành phần chưa mã hóa",
   "appendix.lead": "Mọi thành phần kho ngữ liệu đặt tên, kể cả những chữ đã mã hóa. Tương đương hiện ra khi có đối chiếu; cặp bạn thêm xuất hiện như thành phần tùy chỉnh.",
+  "appendix.equivalents": "Tương ứng katakana và Hangul",
+  "appendix.equivalentsLead": "Tìm kiếm đọc những ký tự này như cách viết khác của cùng một bộ phận. Katakana nửa độ rộng dùng hàng độ rộng đầy đủ; kana có dấu hữu thanh được tìm nguyên dạng.",
   "appendix.search": "Tìm thành phần, chữ hoặc tương đương",
   "appendix.all": "Tất cả",
   "appendix.yours": "Của tôi",

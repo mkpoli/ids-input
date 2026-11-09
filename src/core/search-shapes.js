@@ -26,13 +26,15 @@ const KANA = {
   ル: '儿几𠘧', レ: '𠄌㇗㇄乚𡿨乙', ロ: '口', ワ: '冖冂', ヲ: '丩丬山屮', ン: '冫丶',
   ヰ: '井', ヱ: '𠀄',
 }
+/** The Hangul alias families: each written shape and the component it stands for. */
+const HANGUL = [
+  ['ㅅᄉᆺ', '人'], ['ㅆᄊᆻ', '从'], ['스', '亼'], ['ㅁᄆᆷ', '口'], ['ㅇᄋᆼ', '〇'],
+  ['ㅣᅵ', '丨'], ['ㅡᅳ', '一'], ['ㄱᄀᆨ', '𠃍'], ['ㄴᄂᆫ', '𠃊'], ['ㄷᄃᆮ', '匚'],
+]
 /** @type {Readonly<Record<string, string[]>>} */
 const SHAPES = {
   ...Object.fromEntries(Object.entries(KANA).map(([kana, components]) => [kana, [...components]])),
-  ...Object.fromEntries([
-    ['ㅅᄉᆺ', '人'], ['ㅆᄊᆻ', '从'], ['스', '亼'], ['ㅁᄆᆷ', '口'], ['ㅇᄋᆼ', '〇'],
-    ['ㅣᅵ', '丨'], ['ㅡᅳ', '一'], ['ㄱᄀᆨ', '𠃍'], ['ㄴᄂᆫ', '𠃊'], ['ㄷᄃᆮ', '匚'],
-  ].flatMap(([shapes, component]) => [...shapes].map(shape => [shape, [component]]))),
+  ...Object.fromEntries(HANGUL.flatMap(([shapes, component]) => [...shapes].map(shape => [shape, [component]]))),
 }
 /** Query runs accept named targets such as 〇 without changing the renderer's component grammar. */
 export const SHAPE_COMPONENTS = new Set(Object.values(SHAPES).flat())
@@ -82,4 +84,13 @@ export function substituteSequences(text) {
   }
   const typed = write(parsed.tree)
   return [...new Set(forms(parsed.tree))].filter(sequence => sequence !== typed).slice(0, SUBSTITUTE_LIMIT)
+}
+
+
+/** The query-only substitutions grouped for an appendix: each kana, and each Hangul family. */
+export function equivalences() {
+  return {
+    kana: Object.entries(KANA).map(([kana, components]) => ({ shapes: [kana], components: [...components] })),
+    hangul: HANGUL.map(([shapes, component]) => ({ shapes: [...shapes], components: [component] })),
+  }
 }
