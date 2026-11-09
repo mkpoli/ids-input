@@ -114,11 +114,14 @@ under the Arphic Public License, the Noto and Plangothic cuts under their own SI
 
 ## `ids-project.tsv.gz`
 
-This project's own IDS descriptions for characters newer than BabelStone's Unicode 16.0 edition and
-Yi Bai's set. The source is `data/ids-project.tsv`, one line per description,
-`char<TAB>IDS<TAB>source`; `scripts/build_ids_project.py` checks each description and writes the
-compact `char<TAB>sequences` table the adapter reads with
-`babelStoneAdapter({ additionalIds })`.
+This project's own IDS descriptions: characters newer than BabelStone's Unicode 16.0 edition and
+Yi Bai's set, and curated corrections of a source description that writes a base character where the
+glyph's left column uses its positional form (沀's ⿰水予 read as ⿰氵予). The source is
+`data/ids-project.tsv`, one line per description, `char<TAB>IDS<TAB>source`;
+`scripts/build_ids_project.py` checks each description and writes the compact
+`char<TAB>sequences` table the adapter reads with `babelStoneAdapter({ additionalIds })`. The
+adapter puts these rows before the sources', so the curated reading is the one read first; the
+source's own spelling stays in the table as an alternative.
 
 The table is currently empty. The newer character this project knows, 𳑳 (U+33473), is a 獨體字 with
 no IDS decomposition; it is listed in `ids-characters.tsv` instead. Add a line here only for a

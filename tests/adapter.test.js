@@ -187,9 +187,10 @@ describe('the shipped data', () => {
     expect(ids.size).toBe(97680 + 6145)
     expect(ids.get('滑')?.map(s => s.text)).toContain('⿰氵骨')
   })
-  it('leaves the project table empty for the 獨體字', () => {
+  it('holds the curated descriptions and not the 獨體字', () => {
     const project = parseIdsTable(gunzipSync(readFileSync(new URL('../data/ids-project.tsv.gz', import.meta.url))).toString())
-    expect(project.size).toBe(0)
+    expect(project.has('𳑳')).toBe(false)
+    expect(project.get('𦘽')?.map(row => row.text)).toContain('⿰⺼女')
   })
   it('finds 滑 by 水骨\'s written forms, 氵 and 骨, and 林 and 森 by 木木', () => {
     const index = componentIndex(new Map([...ids].map(([char, sequences]) => [char, sequences.map(s => s.text)])))
