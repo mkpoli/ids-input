@@ -8,6 +8,7 @@ const read = name => readFileSync(new URL(`../data/open-data/${name}`, import.me
 const dataset = JSON.parse(read('descriptions.json'))
 const manifest = JSON.parse(read('manifest.json'))
 const readme = read('README.md')
+const llms = readFileSync(new URL('../demo/public/llms.txt', import.meta.url), 'utf8')
 const tsv = read('descriptions.tsv').trimEnd().split('\n')
 const componentsTsv = read('components.tsv').trimEnd().split('\n')
 const equivalences = JSON.parse(read('equivalences.json'))
@@ -144,6 +145,14 @@ describe('the open data release', () => {
     expect(equivalenceTsv[1].split('\t')).toEqual(['kana', 'ア', '了 ㇌ 卩 刀 丫'])
     expect(readme).toContain('## Equivalences')
     expect(readme).toContain('equivalences.tsv')
+  })
+
+  it('points scripts and agents at the files', () => {
+    expect(readme).toContain('## Use the files')
+    expect(readme).toContain('Do not scrape')
+    expect(llms).toContain('/data/open-data/manifest.json')
+    expect(llms).toContain('equivalences.json')
+    expect(llms).toContain('instead of scraping')
   })
 
   it('lists the files it ships with their sizes', () => {
