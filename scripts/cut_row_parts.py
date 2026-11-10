@@ -233,6 +233,137 @@ def template(face, texts, faces):
     return None
 
 
+def leaf_template(node, face, faces, labels):
+    """Fingerprint of a leaf operand, trying the 示 allographs for 示/礻."""
+    glyph = cut.glyph_of(node.text, labels)
+    texts = ALLOGRAPHS.get(node.text, (glyph,) if glyph else ())
+    return template(face, texts, faces)
+
+
+def row_score(node, pieces, cutter, face, faces, labels, gated):
+    """Best (score, groups) for a row node, scoring each operand at a leaf.
+
+    A nested operand is scored by its own best division (a row recursively,
+    a stack by height runs), so the ranking at every level sees leaf
+    agreements rather than a flat fallback. The middle-line gate applies at
+    every row against that row's own middle.
+    """
+    x0 = min(p.bounds[0] for p in pieces)
+    width = max(p.bounds[2] for p in pieces) - x0
+    middle = x0 + width / 2
+    limit = middle + 0.025 * width
+    arity = len(node.children)
+    best = None
+    for candidate in candidates(pieces, arity):
+        groups = close(candidate, pieces)
+        if len(groups) != arity:
+            continue
+        if gated and arity >= 2 and any(pieces[i].bounds[2] > limit for i in groups[0]):
+            continue
+        if arity == 2 and all(child.leaf for child in node.children):
+            for i in list(groups[1]):
+                if pieces[i].bounds[2] <= x0 + 0.48 * width:
+                    groups[1].remove(i)
+                    groups[0].append(i)
+        vals = []
+        for child, grp in zip(node.children, groups):
+            tiles = [pieces[i] for i in grp]
+            if child.leaf:
+                shape = leaf_template(child, face, faces, labels)
+                if shape is not None:
+                    vals.append(cut.likeness(cut.fingerprint(tiles), shape))
+            elif child.operator in ("⿰", "⿲"):
+                sub = row_score(child, tiles, cut.Cutter(tiles, labels, faces), face, faces, labels, gated)
+                if sub is not None:
+                    vals.append(sub[0])
+            elif child.operator in ("⿱", "⿳"):
+                order = sorted(range(len(tiles)), key=lambda i: (-sum(tiles[i].bounds[1::2]), tiles[i].bounds[0]))
+                best_stack = None
+                for option in cut.runs(order, len(child.children)):
+                    sv = []
+                    for grand, part in zip(child.children, option):
+                        gtiles = [tiles[i] for i in part]
+                        if grand.leaf:
+                            shape = leaf_template(grand, face, faces, labels)
+                            if shape is not None:
+                                sv.append(cut.likeness(cut.fingerprint(gtiles), shape))
+                        elif grand.operator in ("⿰", "⿲"):
+                            sub = row_score(grand, gtiles, cut.Cutter(gtiles, labels, faces), face, faces, labels, gated)
+                            if sub is not None:
+                                sv.append(sub[0])
+                    if sv:
+                        score = sum(sv) / len(sv)
+                        if best_stack is None or score > best_stack:
+                            best_stack = score
+                if best_stack is not None:
+                    vals.append(best_stack)
+        if not vals:
+            continue
+        if all(child.leaf for child in node.children):
+            score = 0.6 * vals[0] + 0.25 * vals[1] if len(vals) > 1 else 0.6 * vals[0]
+        else:
+            score = 0.6 * vals[0] + 0.15 * (sum(vals[1:]) / max(len(vals) - 1, 1)) if len(vals) > 1 else 0.6 * vals[0]
+        if best is None or score > best[0]:
+            best = (score, groups)
+    return best
+
+
+def split_row(node, pieces, cutter, face, faces, labels):
+    """Deal a row's pieces to its operands, returning groups or None."""
+    return row_score(node, pieces, cutter, face, faces, labels, True) or row_score(node, pieces, cutter, face, faces, labels, False)
+
+
+def find_shi(node, pieces, cutter, face, faces, labels):
+    """The piece indices, in `pieces` coordinates, that read as 示/礻."""
+    if node.leaf:
+        return list(range(len(pieces))) if node.text in ("示", "礻", "𱍐") else []
+    if node.operator in ("⿰", "⿲"):
+        best = split_row(node, pieces, cutter, face, faces, labels)
+        if best is None:
+            return []
+        for child, grp in zip(node.children, best[1]):
+            if not child.leaf:
+                sub = [pieces[i] for i in grp]
+                found = find_shi(child, sub, cut.Cutter(sub, labels, faces), face, faces, labels)
+                if found:
+                    return [grp[i] for i in found]
+            elif child.text in ("示", "礻", "𱍐"):
+                return list(grp)
+        return []
+    arity = len(node.children)
+    order = sorted(range(len(pieces)), key=lambda i: (-sum(pieces[i].bounds[1::2]), pieces[i].bounds[0]))
+    best = None
+    for option in cut.runs(order, arity):
+        sv = []
+        for grand, part in zip(node.children, option):
+            gtiles = [pieces[i] for i in part]
+            if grand.leaf:
+                shape = leaf_template(grand, face, faces, labels)
+                if shape is not None:
+                    sv.append(cut.likeness(cut.fingerprint(gtiles), shape))
+            elif grand.operator in ("⿰", "⿲"):
+                sub = row_score(grand, gtiles, cut.Cutter(gtiles, labels, faces), face, faces, labels, True)
+                if sub is not None:
+                    sv.append(sub[0])
+        if sv:
+            score = sum(sv) / len(sv)
+            if best is None or score > best[0]:
+                best = (score, option)
+    if best is None:
+        return []
+    for child, part in zip(node.children, best[1]):
+        if child.leaf:
+            if child.text in ("示", "礻", "𱍐"):
+                return list(part)
+        else:
+            sub = [pieces[i] for i in part]
+            found = find_shi(child, sub, cut.Cutter(sub, labels, faces), face, faces, labels)
+            if found:
+                return [part[i] for i in found]
+    return []
+
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--chars", required=True)
@@ -256,7 +387,7 @@ def main() -> int:
         except ValueError:
             out[char] = {"error": "unparsable description"}
             continue
-        if root.operator not in ("⿰", "⿲"):
+        if root.operator not in ("⿰", "⿲", "⿳", "⿱"):
             out[char] = {"error": "not a row"}
             continue
         pieces = face.pieces(char)
@@ -265,45 +396,20 @@ def main() -> int:
             continue
         pieces, cuts_x = split_straddlers(pieces)
         cutter = cut.Cutter(pieces, labels, faces)
-        x0 = min(p.bounds[0] for p in pieces)
-        width = max(p.bounds[2] for p in pieces) - x0
-        boundary = x0 + 0.48 * width
-        left_shape = template(face, ALLOGRAPHS.get(root.children[0].text, (root.children[0].text,)), faces)
-        right_text = cut.glyph_of(root.children[1].text, labels)
-        right_shape = template(face, (right_text,), faces) if right_text else None
-        middle = x0 + width / 2
-        limit = middle + 0.025 * width
-        def rank(before, gated):
-            pool = []
-            for candidate in candidates(before, len(root.children)):
-                groups = close(candidate, before)
-                if len(groups) != len(root.children):
-                    continue
-                if gated and any(before[i].bounds[2] > limit for i in groups[0]):
-                    continue
-                left_print = cutter.group_print(groups[0])
-                right_print = cutter.group_print(groups[1]) if len(groups) > 1 else None
-                shape_score = cut.likeness(left_print, left_shape) if left_shape else 0.0
-                right_score = cut.likeness(right_print, right_shape) if right_shape and right_print else shape_score
-                score = 0.6 * shape_score + 0.25 * right_score
-                pool.append((score, groups))
-            pool.sort(key=lambda row: -row[0])
-            return pool[0] if pool else None
-
-        best = rank(pieces, True) or rank(pieces, False)
-        if best is None:
+        shi = find_shi(root, pieces, cutter, face, faces, labels)
+        if not shi:
             out[char] = {"error": "no split"}
             continue
-        left, right = best[1][0], best[1][1]
-        for i in list(right):
-            if pieces[i].bounds[2] <= boundary:
-                right.remove(i)
-                left.append(i)
-        middle_cuts = clip_left_at_middle(pieces, left, right)
+        others = [i for i in range(len(pieces)) if i not in shi]
+        if any(grand.leaf and grand.text in ("示", "礻", "𱍐") for grand in getattr(root, "children", [])):
+            middle_cuts = clip_left_at_middle(pieces, list(shi), others)
+        else:
+            middle_cuts = []
         out[char] = {
             "ids": ids,
-            "left": cut.commands_of(cut.union_of([pieces[i] for i in left])),
-            "right": cut.commands_of(cut.union_of([pieces[i] for i in right])),
+            "left": cut.commands_of(cut.union_of([pieces[i] for i in shi])),
+            "right": cut.commands_of(cut.union_of([pieces[i] for i in others])),
+            "shi": sorted(shi),
         }
         if cuts_x or middle_cuts:
             out[char]["approximate"] = True
