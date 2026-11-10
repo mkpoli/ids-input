@@ -52,6 +52,11 @@ try {
     await shot('after-expanded')
     await panel.getByRole('button', { name: /Show fewer/ }).click()
     assert.equal(await panel.locator('button.hint').count(), 24, 'Show fewer restores the default')
+    const editInput = page.locator('.ids-tree .inline-edit input')
+    const inputBox = await editInput.boundingBox()
+    const collapsedBox = await panel.boundingBox()
+    const attached = (a, b) => Math.abs((a.y + a.height) - (b.y - 6)) < 2 || Math.abs(a.y - (b.y + b.height + 6)) < 2
+    assert.ok(inputBox && collapsedBox && attached(collapsedBox, inputBox), 'the collapsed panel stays beside the field')
     assert.ok(hints.includes('刂') && hints.includes('頁') && hints.includes('鳥'), 'the right slot offers 刂, 頁 and 鳥')
     assert.match(await panel.locator('button').first().getAttribute('title') ?? '', /Used in this slot by [\d,]+ characters/, 'the count is in the tooltip')
     const box = await panel.boundingBox()
@@ -78,6 +83,10 @@ try {
     assert.match(await groupTitle(page.locator('.slot-hints')), /part 1 of Above to below/, 'the top slot has its own hints')
     await page.keyboard.press('Tab')
     assert.equal(await page.evaluate(() => document.activeElement?.textContent), '艹', 'Tab reaches the first hint')
+    const secondHint = await page.locator('.slot-hints .hint').nth(1).innerText()
+    await page.keyboard.press('ArrowRight')
+    assert.equal(await page.evaluate(() => document.activeElement?.textContent), secondHint, 'the arrow keys move through the grid')
+    await page.keyboard.press('ArrowLeft')
     await page.keyboard.press('Enter')
     await page.waitForTimeout(300)
     assert.equal(await field.inputValue(), '⿱艹木', 'a keyboard pick puts the hint in the slot')
@@ -118,9 +127,46 @@ try {
     if (process.env.IDS_SLOT_HINT_SHOTS) { await phone.waitForTimeout(350); await phone.screenshot({ path: `${process.env.IDS_SLOT_HINT_SHOTS}/phone-expanded.png` }) }
     const box = await panel.boundingBox()
     assert.ok(box && box.x >= 0 && box.y >= 0 && box.x + box.width <= 390 && box.y + box.height <= 844, 'the tall panel stays inside the phone window')
+    await panel.getByRole('button', { name: /Show fewer/ }).tap()
+    const phoneInput = await phone.locator('.ids-tree .inline-edit input').boundingBox()
+    const phonePanel = await panel.boundingBox()
+    const near = (a, b) => Math.abs((a.y + a.height) - (b.y - 6)) < 2 || Math.abs(a.y - (b.y + b.height + 6)) < 2
+    assert.ok(phoneInput && phonePanel && near(phonePanel, phoneInput), 'the collapsed phone panel stays beside the field')
     await panel.getByRole('button', { name: /^刂 / }).tap()
     assert.equal(await field.inputValue(), '⿰木刂', 'a phone tap puts the hint in the slot')
+
     assert.deepEqual(errors, [], 'no page errors on the phone')
   } finally { await phone.close() }
+
+  const sparse = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, colorScheme: 'light', isMobile: true, hasTouch: true })
+  try {
+    await sparse.goto(process.env.IDS_URL ?? 'http://localhost:5186', { waitUntil: 'domcontentloaded' })
+    const field = sparse.locator('.ids-field input')
+    await field.waitFor({ timeout: 30000 })
+    await field.fill('⿾⬚')
+    await field.press('Tab')
+    await sparse.getByRole('tab', { name: 'Compose', exact: true }).click()
+    await sparse.locator('.ids-tree .ids-part.empty').first().dblclick()
+    const panel = sparse.locator('.slot-hints')
+    await panel.waitFor({ timeout: 5000 })
+    assert.equal(await panel.locator('button.hint').count(), 15, 'a sparse slot shows all its entries')
+    assert.equal(await panel.locator('button.hints-more').count(), 0, 'a sparse slot has no Show more button')
+  } finally { await sparse.close() }
+
+  const short = await browser.newPage({ viewport: { width: 390, height: 380 }, deviceScaleFactor: 2, colorScheme: 'light', isMobile: true, hasTouch: true })
+  try {
+    await short.goto(process.env.IDS_URL ?? 'http://localhost:5186', { waitUntil: 'domcontentloaded' })
+    const field = short.locator('.ids-field input')
+    await field.waitFor({ timeout: 30000 })
+    await field.fill('⿰木⬚')
+    await field.press('Tab')
+    await short.getByRole('tab', { name: 'Compose', exact: true }).click()
+    await short.locator('.ids-tree .ids-part.empty').first().dblclick()
+    const panel = short.locator('.slot-hints')
+    await panel.waitFor({ timeout: 5000 })
+    await panel.getByRole('button', { name: /Show 24 more/ }).tap()
+    const box = await panel.boundingBox()
+    assert.ok(box && box.y >= 0 && box.y + box.height <= 380, 'the expanded panel fits a short window')
+  } finally { await short.close() }
   console.log('slot hints: ok')
 } finally { await browser.close() }
