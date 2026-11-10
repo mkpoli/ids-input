@@ -36,6 +36,15 @@ def read_ids(char: str) -> str | None:
                 text = re.sub(r"\([^)]*\)$", "", description)
                 if text.startswith("⿰"):
                     return text
+    corpus = cut.ROOT / "data" / "ids-corpus.json.gz"
+    if not corpus.exists():
+        return None
+    with gzip.open(corpus, "rt", encoding="utf-8") as source:
+        document = json.load(source)
+    subject = f"ucs:{ord(char):X}"
+    for row in document["descriptions"]["rows"]:
+        if row[0] == subject and row[1].startswith("⿰"):
+            return row[1]
     return None
 
 
@@ -73,6 +82,113 @@ def close(candidate, pieces):
     return [group for group in groups if group]
 
 
+def rect_path(x0: float, y0: float, x1: float, y1: float):
+    path = cut.pathops.Path()
+    pen = path.getPen()
+    pen.moveTo((x0, y0))
+    pen.lineTo((x1, y0))
+    pen.lineTo((x1, y1))
+    pen.lineTo((x0, y1))
+    pen.closePath()
+    return path
+
+
+def bounds_of(pieces) -> tuple[float, float, float, float]:
+    return (min(p.bounds[0] for p in pieces), min(p.bounds[1] for p in pieces),
+            max(p.bounds[2] for p in pieces), max(p.bounds[3] for p in pieces))
+
+
+def seam_ink(piece, x: float) -> int:
+    crossings = 0
+    for ring in cut.rings_of(piece):
+        for index in range(len(ring) - 1):
+            (ax, ay), (bx, by) = ring[index], ring[index + 1]
+            if (ax > x) != (bx > x):
+                crossings += 1
+    return crossings
+
+
+def split_straddlers(pieces):
+    """Clip a piece that spans the row seam, and say where the cut fell.
+
+    A piece that reaches into both columns is never dealt whole to one side. It is
+    intersected with the left and right half-planes at the thinnest vertical section
+    inside the seam window, so the invented boundary lands on the stroke junction.
+    """
+    x0, y0, x1, y1 = bounds_of(pieces)
+    width = max(x1 - x0, 1.0)
+    lo, hi = x0 + 0.32 * width, x0 + 0.48 * width
+    out, cuts = [], []
+    for piece in pieces:
+        bx0, by0, bx1, by1 = piece.bounds
+        spans = (bx0 - x0) / width < 0.26 and (bx1 - x0) / width > 0.54
+        if spans:
+            best = None
+            for step in range(16):
+                x = lo + (hi - lo) * step / 15
+                ink = seam_ink(piece, x)
+                if best is None or ink < best[0]:
+                    best = (ink, x)
+            x_cut = best[1] if best else (lo + hi) / 2
+            left = cut.clip(piece, rect_path(x0 - 2, by0 - 2, x_cut, by1 + 2))
+            right = cut.clip(piece, rect_path(x_cut, by0 - 2, bx1 + 2, by1 + 2))
+            for half in cut.pieces_of(left) + cut.pieces_of(right):
+                if abs(half.area) > 1.0:
+                    out.append(half)
+            cuts.append(x_cut)
+        else:
+            out.append(piece)
+    return out, cuts
+
+
+def clip_left_at_middle(pieces, left, right):
+    """Keep the left group on its side of the glyph's middle vertical line.
+
+    A left operand is drawn within its column; a piece assigned to it that reaches
+    past the middle is clipped there, and the remainder joins the right group. The
+    clip is recorded as approximate like the seam split.
+    """
+    x0, _, x1, _ = bounds_of(pieces)
+    middle = (x0 + x1) / 2
+    moved, cuts = [], []
+    # Routing is gated on the *current* right contents, not the entry-time contents,
+    # because the loop itself appends new Path remainders.
+    for index in list(left):
+        if not isinstance(index, int):
+            continue
+        piece = pieces[index]
+        if piece.bounds[2] <= middle:
+            continue
+        left.remove(index)
+        kept = cut.clip(piece, rect_path(piece.bounds[0] - 2, piece.bounds[1] - 2, middle, piece.bounds[3] + 2))
+        rest = cut.clip(piece, rect_path(middle, piece.bounds[1] - 2, piece.bounds[2] + 2, piece.bounds[3] + 2))
+        for half in cut.pieces_of(kept):
+            if abs(half.area) > 1.0:
+                moved.append(half)
+        for half in cut.pieces_of(rest):
+            if abs(half.area) > 1.0:
+                right.append(half)
+        cuts.append(middle)
+    # Kept halves become new indexed pieces so every entry stays an int;
+    # the remainders already appended as Path objects are re-routed to
+    # their indices here.
+    if moved:
+        base = len(pieces)
+        pieces.extend(moved)
+        left.extend(range(base, base + len(moved)))
+    if any(not isinstance(entry, int) for entry in right):
+        routed = []
+        for entry in right:
+            if isinstance(entry, int):
+                routed.append(entry)
+            else:
+                base = len(pieces)
+                pieces.append(entry)
+                routed.append(base)
+        right[:] = routed
+    return cuts
+
+
 def candidates(pieces, arity):
     order = list(range(len(pieces)))
     keys = (
@@ -108,6 +224,8 @@ def candidates(pieces, arity):
 
 def template(face, texts, faces):
     for text in texts:
+        if not text or len(text) != 1:
+            continue
         for candidate in [face] + [f for f in faces if f is not face]:
             shape = candidate.whole(text)
             if shape is not None:
@@ -133,7 +251,11 @@ def main() -> int:
         if face is None:
             out[char] = {"error": "no glyph"}
             continue
-        root = cut.parse(ids)
+        try:
+            root = cut.parse(ids)
+        except ValueError:
+            out[char] = {"error": "unparsable description"}
+            continue
         if root.operator not in ("⿰", "⿲"):
             out[char] = {"error": "not a row"}
             continue
@@ -141,6 +263,7 @@ def main() -> int:
         if not pieces or len(pieces) < 2:
             out[char] = {"error": "fewer than two pieces"}
             continue
+        pieces, cuts_x = split_straddlers(pieces)
         cutter = cut.Cutter(pieces, labels, faces)
         x0 = min(p.bounds[0] for p in pieces)
         width = max(p.bounds[2] for p in pieces) - x0
@@ -148,18 +271,26 @@ def main() -> int:
         left_shape = template(face, ALLOGRAPHS.get(root.children[0].text, (root.children[0].text,)), faces)
         right_text = cut.glyph_of(root.children[1].text, labels)
         right_shape = template(face, (right_text,), faces) if right_text else None
-        best = None
-        for candidate in candidates(pieces, len(root.children)):
-            groups = close(candidate, pieces)
-            if len(groups) != len(root.children):
-                continue
-            left_print = cutter.group_print(groups[0])
-            right_print = cutter.group_print(groups[1]) if len(groups) > 1 else None
-            shape_score = cut.likeness(left_print, left_shape) if left_shape else 0.0
-            right_score = cut.likeness(right_print, right_shape) if right_shape and right_print else shape_score
-            score = 0.6 * shape_score + 0.25 * right_score
-            if best is None or score > best[0]:
-                best = (score, groups)
+        middle = x0 + width / 2
+        limit = middle + 0.025 * width
+        def rank(before, gated):
+            pool = []
+            for candidate in candidates(before, len(root.children)):
+                groups = close(candidate, before)
+                if len(groups) != len(root.children):
+                    continue
+                if gated and any(before[i].bounds[2] > limit for i in groups[0]):
+                    continue
+                left_print = cutter.group_print(groups[0])
+                right_print = cutter.group_print(groups[1]) if len(groups) > 1 else None
+                shape_score = cut.likeness(left_print, left_shape) if left_shape else 0.0
+                right_score = cut.likeness(right_print, right_shape) if right_shape and right_print else shape_score
+                score = 0.6 * shape_score + 0.25 * right_score
+                pool.append((score, groups))
+            pool.sort(key=lambda row: -row[0])
+            return pool[0] if pool else None
+
+        best = rank(pieces, True) or rank(pieces, False)
         if best is None:
             out[char] = {"error": "no split"}
             continue
@@ -168,11 +299,15 @@ def main() -> int:
             if pieces[i].bounds[2] <= boundary:
                 right.remove(i)
                 left.append(i)
+        middle_cuts = clip_left_at_middle(pieces, left, right)
         out[char] = {
             "ids": ids,
             "left": cut.commands_of(cut.union_of([pieces[i] for i in left])),
             "right": cut.commands_of(cut.union_of([pieces[i] for i in right])),
         }
+        if cuts_x or middle_cuts:
+            out[char]["approximate"] = True
+            out[char]["cutX"] = round((cuts_x or middle_cuts)[0], 3)
     print(json.dumps(out, ensure_ascii=False))
     return 0
 
