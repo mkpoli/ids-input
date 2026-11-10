@@ -24,6 +24,7 @@ jobs:
           path: cache
           key: coverage-shards-${{ hashFiles('demo/lib/composer.js') }}
           restore-keys: coverage-shards-
+      - uses: ./.github/actions/composer
       - run: bun install --frozen-lockfile
       - run: bun run coverage
       - name: Open a pull request when a report moved

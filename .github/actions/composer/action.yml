@@ -1,0 +1,33 @@
+name: Composer package
+description: Read the drawing engine's `@han-compose/composer` from han-compose at the pinned commit.
+
+# The engine lives in han-compose's `js/` folder and is not on npm yet, so every job that installs
+# this repository's dependencies reads it from a checkout at the commit below. Bump `sha` when the
+# engine changes and `bun.lock` is regenerated.
+inputs:
+  sha:
+    description: The han-compose commit holding the package
+    required: false
+    default: a1cdf2721179f911430a87efdf6512cbba52d598
+runs:
+  using: composite
+  steps:
+    - name: Check out and build the package
+      shell: bash
+      run: |
+        set -euo pipefail
+        target="$RUNNER_TEMP/han-compose"
+        git init --quiet "$target"
+        git -C "$target" remote add origin https://github.com/mkpoli/han-compose
+        git -C "$target" fetch --quiet --depth 1 origin "${{ inputs.sha }}"
+        git -C "$target" checkout --quiet FETCH_HEAD
+        cd "$target/js"
+        bun install --frozen-lockfile
+        bun run data
+        bun run types
+        # `file:../composer` resolves one level above the checkout, where this repository sits.
+        # `ln -sfn` is the portable form: BSD's ln has no long options.
+        ln -sfn "$target/js" "$(dirname "$GITHUB_WORKSPACE")/composer"
+    - name: Show the package it reads
+      shell: bash
+      run: ls -l "$(dirname "$GITHUB_WORKSPACE")/composer" && jq -r .version "$(dirname "$GITHUB_WORKSPACE")/composer/package.json"
