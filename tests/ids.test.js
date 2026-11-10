@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { EMPTY, LONGEST, OPERATORS, OPERATOR_GROUPS, applyOperator, arity, clear, descriptionEnd, entryBody, entryDescription, isComponent, isDescription, isLetter, isSequence, leaves, nextEmpty,
-  parse, partAt, paths, place, problemOf, replaceAt, samePath, swapOp, unwrap, wrap, write } from '../src/core/index.js'
+  parse, partAt, paths, place, problemOf, replaceAt, samePath, swapOp, unwrap, wrap, write, writeDraft } from '../src/core/index.js'
 
 const tree = text => parse(text, { open: true }).tree
 
@@ -162,6 +162,19 @@ describe('a draft read as the editor reads it', () => {
     for (const text of ['⿰⿱匕失⿱コ疋', '⿲亻⬚木', '⿲亻？木', '⿾疋', '⿻⬚⬚']) expect(write(tree(text))).toBe(text)
     expect(write(null)).toBe(EMPTY)
     expect(parse('⿰⬚木').problem).toBe('component')
+  })
+  it('leaves the operands a draft still misses at its end out of the field text', () => {
+    expect(writeDraft(tree('⿰亻'))).toBe('⿰亻')
+    expect(writeDraft(tree('⿳木'))).toBe('⿳木')
+    expect(writeDraft(tree('⿳⬚木'))).toBe('⿳⬚木')
+    expect(writeDraft(tree('⿲木⬚⬚'))).toBe('⿲木')
+    expect(writeDraft(tree('⿳⿳艹土⿱我弓⬚⬚'))).toBe('⿳⿳艹土⿱我弓')
+    // A slot with a part after it stays written, or that part would move into the operator before it.
+    const inner = { op: '⿰', parts: [{ op: '⿱', parts: ['木', null] }, '日'] }
+    expect(writeDraft(inner)).toBe('⿰⿱木⬚日')
+    // A mark follows the last operand, so a marked node keeps its slots written.
+    for (const text of ['⿰木⬚ˊ', '⿳木⬚⬚ˊ', '⿰⬚木ˊ']) expect(writeDraft(tree(text))).toBe(text)
+    for (const text of ['⿰亻', '⿳木', '⿳⬚木', '⿳⿳艹土⿱我弓', '⿰⿱木⬚日']) expect(tree(writeDraft(tree(text)))).toEqual(tree(text))
   })
 })
 

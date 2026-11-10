@@ -122,7 +122,7 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
 | prop | | |
 | --- | --- | --- |
 | `adapter` | required | see [Adapters](#adapters) |
-| `value` | bindable | the text in the field, `⬚` for each empty slot |
+| `value` | bindable | the text in the field; an empty slot inside the parts is `⬚`, and the operands a node still misses at the end are drawn as `⬚` without being part of the text |
 | `char` | | start from this character's first description when `value` is not a sequence |
 | `onuse(sequence)` | | called with a whole sequence; the Use button shows only when given |
 | `onchange(text, whole)` | | every change, and whether the sequence is whole |
@@ -227,12 +227,13 @@ control are in [design/README.md](design/README.md).
 ### Core
 
 ```js
-import { parse, write, applyOperator, unwrap, unalias, commandFor, createHistory, enclosedRepeatSequence, hintsAt, pyramidOnBase, pyramidRows, pyramidSequence, repeatSequence, slotHints } from 'ids-input'
+import { parse, write, writeDraft, applyOperator, unwrap, unalias, commandFor, createHistory, enclosedRepeatSequence, hintsAt, pyramidOnBase, pyramidRows, pyramidSequence, repeatSequence, slotHints } from 'ids-input'
 
 parse('⿰亻⿱七木').tree        // { op: '⿰', parts: ['亻', { op: '⿱', parts: ['七', '木'] }] }
 parse('⿰亻').problem           // 'missing'
 parse('⿰亻', { open: true })   // a draft: { tree: { op: '⿰', parts: ['亻', null] } }
 write(applyOperator(parse('⿰亻失').tree, [1], '⿱').tree)  // '⿰亻⿱失⬚'
+writeDraft(parse('⿳木').tree)  // '⿳木': the two operands still missing stay out of the field text
 unalias('lr亻ud匕失')           // '⿰亻⿱匕失'
 commandFor({ key: '&', code: 'Digit1' })  // { command: 'operator', op: '⿰' }, on any layout
 

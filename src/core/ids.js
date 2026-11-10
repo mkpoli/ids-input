@@ -324,6 +324,28 @@ export const sameTree = (a, b) => a === b || isNode(a) && isNode(b) && a.op === 
 export const write = tree => tree === null ? EMPTY
   : isNode(tree) ? tree.op + (tree.note && isModifier(tree.note) ? `[${tree.note}]` : '') + tree.parts.map(write).join('') + (tree.marks ?? '') : tree
 
+/**
+ * A tree written as the field holds it: the operands a node still misses at the end of the text stay
+ * out, and the field draws them as ⬚ slots. A missing operand with a part after it is ⬚, or that part
+ * would read as belonging to the operator before it.
+ * @param {Part} tree @returns {string}
+ */
+export function writeDraft(tree) {
+  /** @param {Part} part @param {boolean} atEnd @returns {string} */
+  const step = (part, atEnd) => {
+    if (part === null) return EMPTY
+    if (!isNode(part)) return part
+    // A node's loose marks follow its last operand: with the slots left out, a mark would be read as
+    // that operand. A marked node keeps its slots and its last child is not at the end of the text.
+    const tail = atEnd && !part.marks
+    let end = part.parts.length
+    if (tail) while (end && part.parts[end - 1] === null) end--
+    const parts = part.parts.slice(0, end).map((kid, i) => step(kid, tail && i === end - 1))
+    return part.op + (part.note && isModifier(part.note) ? `[${part.note}]` : '') + parts.join('') + (part.marks ?? '')
+  }
+  return step(tree, true)
+}
+
 
 /**
  * Every component of a tree with its path, in reading order; an empty slot has the `char` null.

@@ -2,7 +2,7 @@
 import { arity } from '../core/ids.js'
 /** @typedef {import('./tokens.js').Token} Token */
 /** @typedef {{left:number, right:number, inkLeft?:number}} Bounds */
-/** @typedef {{token:Token, box:Bounds, children:ScopeNode[], operator:boolean, height:number, right:number}} ScopeNode */
+/** @typedef {{token:Token, box:Bounds, children:ScopeNode[], operator:boolean, height:number, right:number, missing:boolean}} ScopeNode */
 /** A fixed gap keeps operand boundaries legible at every size; each segment keeps half of it from the glyph box. */
 const GAP = 5
 /** Scope lanes use subtree height: every parent sits below its children.
@@ -14,12 +14,13 @@ export function sequenceScopes(tokens, bounds) {
   /** @type {Map<string, ScopeNode>} */ const paths = new Map()
   for (let index = 0; index < tokens.length; index++) {
     const token = tokens[index], box = bounds[index]
-    if (!token.text || !box || box.right <= box.left) continue
+    // A slot the text still misses is drawn as ⬚ by the field, so it has a box of its own.
+    if (!box || box.right <= box.left) continue
     const key = token.path.join('.')
     // Loose marks reuse the root path; they do not add a second structural node.
     if (paths.has(key)) continue
     /** @type {ScopeNode} */
-    const node = {token, box, children: [], operator: Boolean(arity(Array.from(token.text)[0]) && token.end > token.tokenEnd), height: 0, right: box.right}
+    const node = {token, box, children: [], operator: arity(Array.from(token.text)[0]) > 0, height: 0, right: box.right, missing: !token.text}
     paths.set(key, node)
     nodes.push(node)
     if (token.path.length) paths.get(token.path.slice(0, -1).join('.'))?.children.push(node)
@@ -40,7 +41,8 @@ export function sequenceScopes(tokens, bounds) {
     const y = 4 + lane * 6
     const segments = children.map(child => {
       const left = child.box.left + inset, right = Math.max(left, child.right - inset)
-      return { path: child.token.path, d: `M ${left} ${y} H ${right}` }
+      // The scope of an operand the text does not carry yet says so in the warning colour.
+      return { path: child.token.path, d: `M ${left} ${y} H ${right}`, ...(child.missing ? { missing: true } : {}) }
     })
     const start = box.left + (box.inkLeft ?? 0) + 1
     const end = children[0] ? children[0].box.left + inset - GAP : box.right

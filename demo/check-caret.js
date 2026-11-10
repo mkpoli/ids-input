@@ -90,7 +90,10 @@ try {
   await field.fill('⿰木日')
   await select(3,3)
   await page.keyboard.insertText('⿱')
-  assert.equal(await field.inputValue(), '⿲木日⿱⬚⬚')
+  // The new operator's operands are missing, so the text stops at it; the field draws them as ⬚.
+  assert.equal(await field.inputValue(), '⿲木日⿱')
+  assert.deepEqual(await page.locator('.sequence-run span').allTextContents(), ['⿲', '木', '日', '⿱', '⬚', '⬚'])
+  assert.equal(await page.locator('.sequence-run span.missing').count(), 2)
   assert.deepEqual(errors, [])
   console.log('PASS caret typing, operator insertion/replacement, paste, IME, palette, undo, length limit')
 } finally { await browser.close() }

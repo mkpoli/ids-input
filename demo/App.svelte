@@ -46,7 +46,7 @@
   import { COMPOSER_BASE, COMPOSER_BASES, readFrom } from './lib/composer.js'
   import { DESKTOP, SITE } from './lib/desktop.js'
   import { addressDocument, documentFrom, linkTo, sameShare, sequenceFrom, transformed } from './lib/share.js'
-  import { canonical, makeTab, readActiveTab, readTabs, tabName, writeTabs } from './lib/tabs.js'
+  import { makeTab, readActiveTab, readTabs, sameSequence, tabName, writeTabs } from './lib/tabs.js'
   import { readRecent, remember } from './lib/recent.js'
   import { openTabSession, syncTabSession } from './lib/document-state.js'
   import { applyTheme, storedTheme } from './lib/theme.js'
@@ -504,14 +504,14 @@
   // The tabs of the workspace: one description each, the open ones and the active one kept for the
   // next visit. A tab's tree and history wait in `states` while another tab is shown.
   const stored = readTabs(), linkedDocument = documentFrom(location)
-  const linked = linkedDocument ? canonical(toSequence(linkedDocument.root)) : canonical(sequenceFrom(location))
+  const linked = linkedDocument ? toSequence(linkedDocument.root) : sequenceFrom(location)
   // Bring the old single-document autosave into the first tab on upgrade.
   if (!stored.length) {
     const previous = load('current', '')
     if (typeof previous === 'string' && previous) stored.push(makeTab(previous))
   }
   const keptTab = stored.find(tab => tab.id === readActiveTab())
-  const linkedTab = linked ? stored.find(tab => tab.sequence === linked
+  const linkedTab = linked ? stored.find(tab => sameSequence(tab.sequence, linked)
     && (!linkedDocument || sameShare(tab.document?.document, linkedDocument))) : undefined
   // A link opens its tab, or a tab of its own when none has it; of two tabs holding the same text,
   // the one kept active stays.
@@ -852,8 +852,8 @@
   }
   /** A sequence opened in the active tab when it is empty, in the tab already showing it, else in a new tab. @param {string} sequence */
   function openSequence(sequence) {
-    const text = canonical(sequence)
-    const open = tabs.find(tab => tab.sequence === text)
+    const text = sequence
+    const open = tabs.find(tab => sameSequence(tab.sequence, text))
     if (open) {
       if (!EMPTY_MARKS.includes(text)) recents = remember(text, open.document)
       activate(open.id)
@@ -865,7 +865,7 @@
       toast = null
       editor.reset(text)
       adjusting = false
-      if (editor.draft === editor.whole) tab.saved = tab.sequence
+      if (!editor.problem) tab.saved = tab.sequence
       if (!EMPTY_MARKS.includes(text)) recents = remember(text)
       store()
       return
@@ -876,7 +876,7 @@
   function openRecent(record) {
     // A recent document opens its own tab; a tab with another document for the same sequence is
     // not the one this entry stands for.
-    const open = tabs.find(tab => tab.sequence === record.sequence
+    const open = tabs.find(tab => sameSequence(tab.sequence, record.sequence)
       && (!record.document || sameShare(tab.document?.document, record.document.document)))
     if (open) {
       recents = remember(record.sequence, open.document)
@@ -1184,7 +1184,7 @@
       lang,
       drawing: prepared.get(example.sequence),
       hint: [groupKey === 'erjian' && example.char ? `${example.sequence}　${point}${replaces ? `　${replaces}` : ''}` : replaces ? `${example.sequence}　${replaces}　${t('app.examples.none')}` : example.abbreviates ? `${example.abbreviates}　${example.sequence}　${t('app.examples.abbreviation')}` : example.char ? `${example.char}${example.sequence === example.char ? '' : `　${example.sequence}`}　${point}` : `${example.sequence}　${t('app.examples.none')}`, citation].filter(Boolean).join('　'),
-      run: () => addTab(canonical(example.sequence)),
+      run: () => addTab(example.sequence),
     }
   }
   const exampleItems = $derived(EXAMPLE_GROUPS.flatMap(group => [
