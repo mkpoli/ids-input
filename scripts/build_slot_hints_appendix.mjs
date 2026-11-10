@@ -3,6 +3,7 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 
+const ALIASES = { '⿰': 'LR', '⿱': 'UD', '⿲': 'LL', '⿳': 'UU', '⿴': 'OC', '⿵': 'OD', '⿶': 'OU', '⿷': 'OR', '⿸': 'RD', '⿹': 'LD', '⿺': 'RU', '⿻': 'XX', '⿼': 'OL', '⿽': 'LU', '⿾': 'MI', '⿿': 'RO', '㇯': 'SU' }
 const NAMES = {
   '⿰': 'left to right', '⿱': 'above to below', '⿲': 'left, middle and right', '⿳': 'above, middle and below',
   '⿴': 'full surround', '⿵': 'surround from above', '⿶': 'surround from below', '⿷': 'surround from left',
@@ -28,22 +29,23 @@ export function renderAppendix(catalog) {
   lines.push('')
   lines.push('The inline editor offers the components that most often fill the slot being edited. The panel shows the first ' + catalog.default + ' by default; **Show more** reveals all ' + catalog.top + ' entries the catalogue keeps for that slot. The bars below show every stored entry, scaled to the most common component in that slot.')
   lines.push('')
-  lines.push('A Han character counts once per operator slot and component wherever its descriptions place that component, at any depth. Alternative descriptions and duplicate sources do not inflate a count. Slots are numbered from 1 in reading order: an enclosure has the enclosing part in slot 1 and the inside in slot 2, and ㇯ has the base in slot 1 and the subtracted part in slot 2.')
+  lines.push('A Han character counts once per operator slot and component wherever its descriptions place that component, at any depth. Alternative descriptions and duplicate sources do not inflate a count. Slots are numbered from 1 in reading order: an enclosure has the enclosing part in slot 1 and the inside in slot 2, and the subtraction operator SU has the base in slot 1 and the subtracted part in slot 2.')
   lines.push('')
-  lines.push('The catalogue holds ' + catalog.statistics.slots + ' slots across all ' + catalog.operators.length + ' operators and ' + catalog.statistics.hintEntries.toLocaleString('en') + ' stored entries, covering ' + catalog.statistics.coveredCharacters.toLocaleString('en') + ' of the ' + catalog.statistics.hanCharacters.toLocaleString('en') + ' Han characters in the sources. The full ranking of a busy slot such as ⿰ is much longer than ' + catalog.top + '; the catalogue keeps the most common entries so the panel stays a panel. Counts describe dictionary coverage, not usage frequency.')
+  lines.push('The catalogue holds ' + catalog.statistics.slots + ' slots across all ' + catalog.operators.length + ' operators and ' + catalog.statistics.hintEntries.toLocaleString('en') + ' stored entries, covering ' + catalog.statistics.coveredCharacters.toLocaleString('en') + ' of the ' + catalog.statistics.hanCharacters.toLocaleString('en') + ' Han characters in the sources. The full ranking of a busy slot such as LR is much longer than ' + catalog.top + '; the catalogue keeps the most common entries so the panel stays a panel. Counts describe dictionary coverage, not usage frequency.')
+  lines.push('')
+  lines.push('Headings give each operator’s zi.tools ASCII name, its symbol and its English name; 〾 has no ASCII name.')
   lines.push('')
   lines.push('Sources: [BabelStone IDS](https://www.babelstone.co.uk/CJK/IDS.TXT), file date 2025-06-27 (public domain), and [Yi Bai IDS](https://github.com/yi-bai/ids/blob/da1e9f8a09e2ec8faaf176bac99203f978282041/ids_lv1.txt), level 1 at `da1e9f8a09e2ec8faaf176bac99203f978282041` (MIT). Exact versions, hashes and headers are recorded in [`src/core/slot-hints.json`](../src/core/slot-hints.json). Regenerate this page with `bun run build:slot-hints`.')
   lines.push('')
-  lines.push('| Operator | Slot 1 | Slot 2 | Slot 3 |')
-  lines.push('| --- | --- | --- | --- |')
+  lines.push('| Operator | Name | Slots |')
+  lines.push('| --- | --- | --- |')
   for (const { op, slots } of catalog.operators) {
-    const cells = slots.map(slot => slot.hints.slice(0, 2).map(([part, count]) => `${part} ${count.toLocaleString('en')}`).join(' · '))
-    while (cells.length < 3) cells.push('—')
-    lines.push(`| ${op} | ${cells.join(' | ')} |`)
+    const name = `${ALIASES[op] ?? '—'} ${op}`
+    lines.push(`| ${name} | ${NAMES[op]} | ${slots.length} |`)
   }
   lines.push('')
   for (const { op, slots } of catalog.operators) {
-    lines.push(`## ${op} · ${NAMES[op]}`)
+    lines.push(`## ${ALIASES[op] ?? op} · ${op} · ${NAMES[op]}`)
     lines.push('')
     slots.forEach((slot, i) => {
       lines.push(`### Slot ${i + 1}`)

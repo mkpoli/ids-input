@@ -2,34 +2,36 @@
 
 The inline editor offers the components that most often fill the slot being edited. The panel shows the first 24 by default; **Show more** reveals all 48 entries the catalogue keeps for that slot. The bars below show every stored entry, scaled to the most common component in that slot.
 
-A Han character counts once per operator slot and component wherever its descriptions place that component, at any depth. Alternative descriptions and duplicate sources do not inflate a count. Slots are numbered from 1 in reading order: an enclosure has the enclosing part in slot 1 and the inside in slot 2, and ㇯ has the base in slot 1 and the subtracted part in slot 2.
+A Han character counts once per operator slot and component wherever its descriptions place that component, at any depth. Alternative descriptions and duplicate sources do not inflate a count. Slots are numbered from 1 in reading order: an enclosure has the enclosing part in slot 1 and the inside in slot 2, and the subtraction operator SU has the base in slot 1 and the subtracted part in slot 2.
 
-The catalogue holds 35 slots across all 18 operators and 1,415 stored entries, covering 101,290 of the 101,960 Han characters in the sources. The full ranking of a busy slot such as ⿰ is much longer than 48; the catalogue keeps the most common entries so the panel stays a panel. Counts describe dictionary coverage, not usage frequency.
+The catalogue holds 35 slots across all 18 operators and 1,415 stored entries, covering 101,290 of the 101,960 Han characters in the sources. The full ranking of a busy slot such as LR is much longer than 48; the catalogue keeps the most common entries so the panel stays a panel. Counts describe dictionary coverage, not usage frequency.
+
+Headings give each operator’s zi.tools ASCII name, its symbol and its English name; 〾 has no ASCII name.
 
 Sources: [BabelStone IDS](https://www.babelstone.co.uk/CJK/IDS.TXT), file date 2025-06-27 (public domain), and [Yi Bai IDS](https://github.com/yi-bai/ids/blob/da1e9f8a09e2ec8faaf176bac99203f978282041/ids_lv1.txt), level 1 at `da1e9f8a09e2ec8faaf176bac99203f978282041` (MIT). Exact versions, hashes and headers are recorded in [`src/core/slot-hints.json`](../src/core/slot-hints.json). Regenerate this page with `bun run build:slot-hints`.
 
-| Operator | Slot 1 | Slot 2 | Slot 3 |
-| --- | --- | --- | --- |
-| ⿰ | 氵 3,497 · 口 3,058 | 鳥 958 · 刂 914 | — |
-| ⿱ | 艹 3,682 · 𥫗 1,778 | 心 971 · 土 653 | — |
-| ⿲ | 彳 169 · 木 95 | 丨 179 · 言 31 | 亍 126 · 弓 71 |
-| ⿳ | 亠 334 · 艹 322 | 冖 425 · 一 415 | 一 136 · 𧘇 126 |
-| ⿴ | 囗 449 · 𦥑 149 | 同 42 · 二 30 | — |
-| ⿵ | 門 572 · 冂 288 | 丶 65 · 一 41 | — |
-| ⿶ | 凵 124 · 𩰲 13 | 又 11 · 丨 5 | — |
-| ⿷ | 匚 203 · 匸 30 | 丶 52 · 厶 50 | — |
-| ⿸ | 疒 1,071 · 广 758 | 又 79 · 丶 69 | — |
-| ⿹ | 勹 310 · 气 110 | 丿 82 · 一 50 | — |
-| ⿺ | 辶 1,208 · 走 512 | 丶 140 · 力 45 | — |
-| ⿻ | 丨 153 · 口 118 | 一 310 · 丨 229 | — |
-| ⿼ | コ 11 · 己 7 | 工 8 · 丨 7 | — |
-| ⿽ | 戈 30 · 人 6 | 丶 22 · 十 14 | — |
-| ⿾ | 臣 2 · 𠃍 2 | — | — |
-| ⿿ | 戈 2 · 虎 2 | — | — |
-| ㇯ | 心 4 · 艮 4 | 一 33 · 丶 30 | — |
-| 〾 | 一 1 · 上 1 | — | — |
+| Operator | Name | Slots |
+| --- | --- | --- |
+| LR ⿰ | left to right | 2 |
+| UD ⿱ | above to below | 2 |
+| LL ⿲ | left, middle and right | 3 |
+| UU ⿳ | above, middle and below | 3 |
+| OC ⿴ | full surround | 2 |
+| OD ⿵ | surround from above | 2 |
+| OU ⿶ | surround from below | 2 |
+| OR ⿷ | surround from left | 2 |
+| RD ⿸ | surround from upper left | 2 |
+| LD ⿹ | surround from upper right | 2 |
+| RU ⿺ | surround from lower left | 2 |
+| XX ⿻ | overlaid | 2 |
+| OL ⿼ | surround from right | 2 |
+| LU ⿽ | surround from lower right | 2 |
+| MI ⿾ | mirrored | 1 |
+| RO ⿿ | rotated | 1 |
+| SU ㇯ | subtracted | 2 |
+| — 〾 | variant | 1 |
 
-## ⿰ · left to right
+## LR · ⿰ · left to right
 
 ### Slot 1
 
@@ -141,7 +143,7 @@ Sources: [BabelStone IDS](https://www.babelstone.co.uk/CJK/IDS.TXT), file date 2
  89  ██                        虎
 ```
 
-## ⿱ · above to below
+## UD · ⿱ · above to below
 
 ### Slot 1
 
@@ -253,7 +255,7 @@ Sources: [BabelStone IDS](https://www.babelstone.co.uk/CJK/IDS.TXT), file date 2
  99  ██                        耳
 ```
 
-## ⿲ · left, middle and right
+## LL · ⿲ · left, middle and right
 
 ### Slot 1
 
@@ -420,7 +422,7 @@ Sources: [BabelStone IDS](https://www.babelstone.co.uk/CJK/IDS.TXT), file date 2
   6  █                         車
 ```
 
-## ⿳ · above, middle and below
+## UU · ⿳ · above, middle and below
 
 ### Slot 1
 
@@ -587,7 +589,7 @@ Sources: [BabelStone IDS](https://www.babelstone.co.uk/CJK/IDS.TXT), file date 2
  14  ██                        月
 ```
 
-## ⿴ · full surround
+## OC · ⿴ · full surround
 
 ### Slot 1
 
@@ -699,7 +701,7 @@ Sources: [BabelStone IDS](https://www.babelstone.co.uk/CJK/IDS.TXT), file date 2
  3  ██                        弓
 ```
 
-## ⿵ · surround from above
+## OD · ⿵ · surround from above
 
 ### Slot 1
 
@@ -811,7 +813,7 @@ Sources: [BabelStone IDS](https://www.babelstone.co.uk/CJK/IDS.TXT), file date 2
  5  ██                        圭
 ```
 
-## ⿶ · surround from below
+## OU · ⿶ · surround from below
 
 ### Slot 1
 
@@ -887,7 +889,7 @@ Sources: [BabelStone IDS](https://www.babelstone.co.uk/CJK/IDS.TXT), file date 2
  1  ██                        吕
 ```
 
-## ⿷ · surround from left
+## OR · ⿷ · surround from left
 
 ### Slot 1
 
@@ -999,7 +1001,7 @@ Sources: [BabelStone IDS](https://www.babelstone.co.uk/CJK/IDS.TXT), file date 2
  2  █                         𫜹
 ```
 
-## ⿸ · surround from upper left
+## RD · ⿸ · surround from upper left
 
 ### Slot 1
 
@@ -1111,7 +1113,7 @@ Sources: [BabelStone IDS](https://www.babelstone.co.uk/CJK/IDS.TXT), file date 2
 12  ████                      牛
 ```
 
-## ⿹ · surround from upper right
+## LD · ⿹ · surround from upper right
 
 ### Slot 1
 
@@ -1223,7 +1225,7 @@ Sources: [BabelStone IDS](https://www.babelstone.co.uk/CJK/IDS.TXT), file date 2
  4  █                         去
 ```
 
-## ⿺ · surround from lower left
+## RU · ⿺ · surround from lower left
 
 ### Slot 1
 
@@ -1335,7 +1337,7 @@ Sources: [BabelStone IDS](https://www.babelstone.co.uk/CJK/IDS.TXT), file date 2
   9  ██                        㐅
 ```
 
-## ⿻ · overlaid
+## XX · ⿻ · overlaid
 
 ### Slot 1
 
@@ -1447,7 +1449,7 @@ Sources: [BabelStone IDS](https://www.babelstone.co.uk/CJK/IDS.TXT), file date 2
   8  █                         夫
 ```
 
-## ⿼ · surround from right
+## OL · ⿼ · surround from right
 
 ### Slot 1
 
@@ -1493,7 +1495,7 @@ Sources: [BabelStone IDS](https://www.babelstone.co.uk/CJK/IDS.TXT), file date 2
 1  ███                       艹
 ```
 
-## ⿽ · surround from lower right
+## LU · ⿽ · surround from lower right
 
 ### Slot 1
 
@@ -1581,7 +1583,7 @@ Sources: [BabelStone IDS](https://www.babelstone.co.uk/CJK/IDS.TXT), file date 2
  1  █                         𬺱
 ```
 
-## ⿾ · mirrored
+## MI · ⿾ · mirrored
 
 ### Slot 1
 
@@ -1605,7 +1607,7 @@ Sources: [BabelStone IDS](https://www.babelstone.co.uk/CJK/IDS.TXT), file date 2
 1  ████████████              𨸏
 ```
 
-## ⿿ · rotated
+## RO · ⿿ · rotated
 
 ### Slot 1
 
@@ -1627,7 +1629,7 @@ Sources: [BabelStone IDS](https://www.babelstone.co.uk/CJK/IDS.TXT), file date 2
 1  ████████████              𠃛
 ```
 
-## ㇯ · subtracted
+## SU · ㇯ · subtracted
 
 ### Slot 1
 
@@ -1709,7 +1711,7 @@ Sources: [BabelStone IDS](https://www.babelstone.co.uk/CJK/IDS.TXT), file date 2
  1  █                         𰀪
 ```
 
-## 〾 · variant
+## 〾 · 〾 · variant
 
 ### Slot 1
 
