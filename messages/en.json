@@ -127,6 +127,7 @@
   "ids.preview.tooLargeNote": "Too large to draw: the boxes show the layout.",
   "ids.problem.character": "Start with an operator such as ⿰ or ⿱.",
   "ids.problem.component": "This character cannot be used as a component.",
+  "ids.problem.draft": "The field holds text that is not a description yet. Finish it or clear it first.",
   "ids.problem.drop": "{name} takes fewer parts. Empty the ones it would drop first.",
   "ids.problem.empty": "Part {n} of {name} is empty. Fill it, or type ？ for a part no character names.",
   "ids.problem.extra": "There are more parts than the operators take.",
