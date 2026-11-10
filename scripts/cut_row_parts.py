@@ -151,7 +151,11 @@ def clip_left_at_middle(pieces, left, right):
     x0, _, x1, _ = bounds_of(pieces)
     middle = (x0 + x1) / 2
     moved, cuts = [], []
+    # Routing is gated on the *current* right contents, not the entry-time contents,
+    # because the loop itself appends new Path remainders.
     for index in list(left):
+        if not isinstance(index, int):
+            continue
         piece = pieces[index]
         if piece.bounds[2] <= middle:
             continue
@@ -165,10 +169,23 @@ def clip_left_at_middle(pieces, left, right):
             if abs(half.area) > 1.0:
                 right.append(half)
         cuts.append(middle)
+    # Kept halves become new indexed pieces so every entry stays an int;
+    # the remainders already appended as Path objects are re-routed to
+    # their indices here.
     if moved:
         base = len(pieces)
         pieces.extend(moved)
         left.extend(range(base, base + len(moved)))
+    if any(not isinstance(entry, int) for entry in right):
+        routed = []
+        for entry in right:
+            if isinstance(entry, int):
+                routed.append(entry)
+            else:
+                base = len(pieces)
+                pieces.append(entry)
+                routed.append(base)
+        right[:] = routed
     return cuts
 
 
@@ -254,18 +271,26 @@ def main() -> int:
         left_shape = template(face, ALLOGRAPHS.get(root.children[0].text, (root.children[0].text,)), faces)
         right_text = cut.glyph_of(root.children[1].text, labels)
         right_shape = template(face, (right_text,), faces) if right_text else None
-        best = None
-        for candidate in candidates(pieces, len(root.children)):
-            groups = close(candidate, pieces)
-            if len(groups) != len(root.children):
-                continue
-            left_print = cutter.group_print(groups[0])
-            right_print = cutter.group_print(groups[1]) if len(groups) > 1 else None
-            shape_score = cut.likeness(left_print, left_shape) if left_shape else 0.0
-            right_score = cut.likeness(right_print, right_shape) if right_shape and right_print else shape_score
-            score = 0.6 * shape_score + 0.25 * right_score
-            if best is None or score > best[0]:
-                best = (score, groups)
+        middle = x0 + width / 2
+        limit = middle + 0.025 * width
+        def rank(before, gated):
+            pool = []
+            for candidate in candidates(before, len(root.children)):
+                groups = close(candidate, before)
+                if len(groups) != len(root.children):
+                    continue
+                if gated and any(before[i].bounds[2] > limit for i in groups[0]):
+                    continue
+                left_print = cutter.group_print(groups[0])
+                right_print = cutter.group_print(groups[1]) if len(groups) > 1 else None
+                shape_score = cut.likeness(left_print, left_shape) if left_shape else 0.0
+                right_score = cut.likeness(right_print, right_shape) if right_shape and right_print else shape_score
+                score = 0.6 * shape_score + 0.25 * right_score
+                pool.append((score, groups))
+            pool.sort(key=lambda row: -row[0])
+            return pool[0] if pool else None
+
+        best = rank(pieces, True) or rank(pieces, False)
         if best is None:
             out[char] = {"error": "no split"}
             continue
