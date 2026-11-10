@@ -114,6 +114,8 @@ def split_straddlers(pieces):
     A piece that reaches into both columns is never dealt whole to one side. It is
     intersected with the left and right half-planes at the thinnest vertical section
     inside the seam window, so the invented boundary lands on the stroke junction.
+    Among equally thin sections the cut takes the rightmost, since the leftmost
+    minimum already amputates the left operand's top.
     """
     x0, y0, x1, y1 = bounds_of(pieces)
     width = max(x1 - x0, 1.0)
@@ -127,7 +129,7 @@ def split_straddlers(pieces):
             for step in range(16):
                 x = lo + (hi - lo) * step / 15
                 ink = seam_ink(piece, x)
-                if best is None or ink < best[0]:
+                if best is None or ink <= best[0]:
                     best = (ink, x)
             x_cut = best[1] if best else (lo + hi) / 2
             left = cut.clip(piece, rect_path(x0 - 2, by0 - 2, x_cut, by1 + 2))
@@ -260,11 +262,6 @@ def row_score(node, pieces, cutter, face, faces, labels, gated):
             continue
         if gated and arity >= 2 and any(pieces[i].bounds[2] > limit for i in groups[0]):
             continue
-        if arity == 2 and all(child.leaf for child in node.children):
-            for i in list(groups[1]):
-                if pieces[i].bounds[2] <= x0 + 0.48 * width:
-                    groups[1].remove(i)
-                    groups[0].append(i)
         vals = []
         for child, grp in zip(node.children, groups):
             tiles = [pieces[i] for i in grp]
@@ -302,16 +299,20 @@ def row_score(node, pieces, cutter, face, faces, labels, gated):
         if all(child.leaf for child in node.children):
             score = 0.6 * vals[0] + 0.25 * vals[1] if len(vals) > 1 else 0.6 * vals[0]
         else:
-            base = 0.6 * vals[0] + 0.15 * (sum(vals[1:]) / max(len(vals) - 1, 1)) if len(vals) > 1 else 0.6 * vals[0]
+            score = 0.6 * vals[0] + 0.15 * (sum(vals[1:]) / max(len(vals) - 1, 1)) if len(vals) > 1 else 0.6 * vals[0]
+        # A Shi left operand never stands alone as a single stroke: penalize tiny
+        # left groups so right-side strokes cannot hide in the left group.
+        if str(node.children[0].text) in ("示", "礻", "𱍐"):
             total = sum(abs(p.area) for p in pieces)
             left_frac = sum(abs(pieces[i].area) for i in groups[0]) / total if total else 1.0
-            # A left operand never stands alone as a single stroke: penalize tiny
-            # left groups so right-side strokes cannot hide in the left group.
             if left_frac < 0.15:
-                base *= 0.3
-            score = base
-        if best is None or score > best[0]:
+                score *= 0.3
+        if best is None or score > best[0] + 0.002:
             best = (score, groups)
+        elif score >= best[0] - 0.002 and len(node.children) >= 2:
+            # Prefer the candidate with fewer pieces (left side first).
+            if len(groups[0]) < len(best[1][0]):
+                best = (score, groups)
     return best
 
 
