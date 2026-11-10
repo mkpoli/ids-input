@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { isComponent, parse, OPERATORS } from '../src/core/ids.js'
 import { hintsAt, SLOT_HINTS, SLOT_HINT_DEFAULT, SLOT_HINT_METADATA, slotHints } from '../src/core/hints.js'
 import { auditSlots, buildSlotHints, DEFAULT, TOP } from '../scripts/build_slot_hints.mjs'
+import { renderAppendix } from '../scripts/build_slot_hints_appendix.mjs'
 import { readBundledSources } from '../scripts/build_structure_templates.mjs'
 
 const descriptions = (...texts) => texts.map(text => ({ text, regions: '' }))
@@ -85,6 +86,10 @@ describe('slot hints', () => {
     const expected = JSON.parse(readFileSync(new URL('../src/core/slot-hints.json', import.meta.url), 'utf8'))
     expect(actual).toEqual(expected)
     expect(sources.every(source => /^[a-f0-9]{64}$/.test(source.compressedSha256) && /^[a-f0-9]{64}$/.test(source.textSha256))).toBe(true)
+  })
+  it('reproduces the checked-in appendix from the catalogue', () => {
+    const catalog = JSON.parse(readFileSync(new URL('../src/core/slot-hints.json', import.meta.url), 'utf8'))
+    expect(renderAppendix(catalog)).toBe(readFileSync(new URL('../docs/slot-hints.md', import.meta.url), 'utf8'))
   })
   it('answers for a leaf slot through its parent operator', () => {
     const tree = parse('⿰木⿱口⬚', { open: true }).tree
