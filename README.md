@@ -175,6 +175,12 @@ or a group by its operator button, and `Space` on another box places it; `Escape
 the indented Tree view the arrows move the focus between rows while a box is lifted. The context
 menu (right click, the Menu key or `Shift+F10`) splits or swaps with any operator, clears, removes a
 level or copies that part's sequence. "Take parts from" reads a character dropped on it.
+Double-clicking a part in either structure view edits it in place. While a single-part slot is
+edited, a panel lists the components that slot takes most often across BabelStone IDS and Yi Bai
+IDS, with the count in each button's tooltip; choosing one puts it in the slot.
+`scripts/build_slot_hints.mjs` writes `src/core/slot-hints.json`, counting each Han character once
+per slot and component across all its descriptions; these are dictionary coverage counts, not
+usage frequencies.
 
 The sequence field accepts zi.tools replacement expressions with three single components, such as
 `🔄林木火` or `RP林木火`. It opens the source character's descriptions and converts the expression
