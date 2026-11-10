@@ -175,6 +175,13 @@ or a group by its operator button, and `Space` on another box places it; `Escape
 the indented Tree view the arrows move the focus between rows while a box is lifted. The context
 menu (right click, the Menu key or `Shift+F10`) splits or swaps with any operator, clears, removes a
 level or copies that part's sequence. "Take parts from" reads a character dropped on it.
+Double-clicking a part in either structure view edits it in place. While a single-part slot is
+edited, a panel lists the components that slot takes most often across BabelStone IDS and Yi Bai
+IDS, with the count in each button's tooltip; choosing one puts it in the slot, Tab reaches the
+buttons and Escape closes the editor. `bun run build:slot-hints` writes `src/core/slot-hints.json`
+through `scripts/build_slot_hints.mjs`, counting each Han character once per operator slot and
+component at any depth of all its descriptions; these are dictionary coverage counts, not usage
+frequencies.
 
 The sequence field accepts zi.tools replacement expressions with three single components, such as
 `🔄林木火` or `RP林木火`. It opens the source character's descriptions and converts the expression
@@ -220,7 +227,7 @@ control are in [design/README.md](design/README.md).
 ### Core
 
 ```js
-import { parse, write, applyOperator, unwrap, unalias, commandFor, createHistory, enclosedRepeatSequence, pyramidOnBase, pyramidRows, pyramidSequence, repeatSequence } from 'ids-input'
+import { parse, write, applyOperator, unwrap, unalias, commandFor, createHistory, enclosedRepeatSequence, hintsAt, pyramidOnBase, pyramidRows, pyramidSequence, repeatSequence, slotHints } from 'ids-input'
 
 parse('⿰亻⿱七木').tree        // { op: '⿰', parts: ['亻', { op: '⿱', parts: ['七', '木'] }] }
 parse('⿰亻').problem           // 'missing'
@@ -239,6 +246,8 @@ repeatSequence('口', [2, 3])   // '⿱⿰口口⿲口口口'
 repeatSequence('口', [2, 1, 2])  // '⿳⿰口口口⿰口口'
 enclosedRepeatSequence('囗', '口')  // '⿴囗⿱⿰口口⿰口口'
 repeatSequence('屮', [3, 3], { bottom: '刀' })  // '⿱⿲屮屮屮⿲刀刀刀'
+slotHints('⿱', 1).slice(0, 2)  // [['心', 971], ['土', 653]], the common bottom parts
+hintsAt(parse('⿰木⬚', { open: true }).tree, [1])?.op  // '⿰'
 ```
 
 A component is a graphic Unicode code point (letter, mark, number, punctuation or symbol) or a
