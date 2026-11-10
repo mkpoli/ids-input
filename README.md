@@ -889,7 +889,8 @@ On the tree (outside text fields), keys go by where they sit, so every layout ha
 | `Backspace`, `Delete`, `?` | empty the chosen part |
 | `Ctrl/⌘+Z`, `Ctrl/⌘+Shift+Z`, `Ctrl/⌘+Y` | undo, redo |
 | `Menu`, `Shift+F10` | the chosen part's context menu |
-| any other character | goes to the part field; `Enter` puts it in the slot |
+| `Enter`, `F2` | edit the focused part in place |
+| any other character | goes to the part field, where `Enter` puts it in the slot |
 
 Elsewhere, `Ctrl/⌘+,` opens settings. Toolbar buttons show their keys
 on hover. Outside text fields, `Ctrl/⌘+X`, `Ctrl/⌘+C` and `Ctrl/⌘+V` cut, copy and paste the selected
