@@ -100,10 +100,10 @@
   {#if error}<span id={`${uid}-error`} class="error" role="status">{error}</span>{/if}
   {#if hintSet}
     <!-- svelte-ignore a11y_no_noninteractive_element_interactions -- the panel only keeps the field focused; its buttons are the controls -->
-    <div class="slot-hints" class:placed={position !== null} role="group" id={hintsId} onkeydown={hintKey} aria-label={hintTitle}
+    <div class="slot-hints" class:placed={position !== null} role="group" id={hintsId} onkeydown={hintKey} aria-labelledby={`${hintsId}-title`}
       style:left="{position?.x ?? 0}px" style:top="{position?.y ?? 0}px" style:--hint-cols={Math.min(6, hintSet.hints.length)}
-      bind:this={panel} onmousedown={event => event.preventDefault()}>
-      <p>{hintTitle}</p>
+      bind:this={panel} onpointerdown={event => event.preventDefault()}>
+      <p id={`${hintsId}-title`}>{hintTitle}</p>
       <div class="hints-grid">
         {#each hintSet.hints as [part, count] (part)}
           <button type="button" class="hint" title={`${part} · ${editor.t('ids.hints.count', { count })}`} aria-label={`${part} · ${editor.t('ids.hints.count', { count })}`}
