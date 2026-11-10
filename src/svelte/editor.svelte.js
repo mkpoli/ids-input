@@ -54,10 +54,6 @@ export function createEditor(options) {
 
   let tree = $state.raw(/** @type {Part} */ (null))
   let caret = $state(/** @type {number | null} */ (null))
-  // The field's text range, kept even when it names no part (a draft the tree cannot read yet), so
-  // an operator button can still insert at its start without discarding the text.
-  /** @type {{ start: number, end: number } | null} */
-  let range = $state(null)
   let selectionVersion = $state(0)
   let revision = $state(0)
   let hovered = $state.raw(/** @type {Path | null} */ (null))
@@ -183,7 +179,7 @@ export function createEditor(options) {
   /** Start again from `text` (a description, or nothing), forgetting the history. @param {string} start */
   function reset(start) {
     invalidateResolution()
-    history.clear(); caret = null; range = null; hovered = null; note = ''; change = null; typing = false; run = false
+    history.clear(); caret = null; hovered = null; note = ''; change = null; typing = false; run = false
     const read = parse(start, { open: true })
     // A pasted ＋ for an empty slot is written back as ⬚.
     tree = read.tree ?? null; chosen = null; piece = ''
@@ -193,7 +189,7 @@ export function createEditor(options) {
   /** @param {Part} next @param {Path | null} select @param {string} [written] */
   function commit(next, select, written) {
     invalidateResolution()
-    caret = null; range = null
+    caret = null
     hovered = null
     tree = next; chosen = select; selectionVersion++; note = ''
     // An empty tree is an empty field, not an empty slot (⬚); a slot is written inside a node.
@@ -249,7 +245,7 @@ export function createEditor(options) {
   /** Put back a state from `snapshot`, as when a host switches between documents. @param {ReturnType<typeof snapshot>} state */
   function restore(state) {
     invalidateResolution()
-    caret = null; range = null
+    caret = null
     hovered = null
     history.restore(state.history)
     tree = state.tree ?? null; chosen = state.chosen ?? null; draft = state.draft; piece = state.piece
@@ -274,25 +270,23 @@ export function createEditor(options) {
     if (applied && !next.operator && !gap) {
       const token = tokens(draft).find(token => samePath(token.path, next.path))
       caret = token?.end ?? draft.length
-      range = { start: caret, end: caret }
     }
     return applied
   }
-  /** An operator on the chosen part, or around the whole tree when nothing is chosen. When the draft
-   * cannot be read as a tree yet, insert the operator as text at the caret or the start of the
-   * selection, keeping every character after it (口匕 with ⿰ becomes ⿰口匕). Refuses when the result
-   * still cannot be read, instead of replacing the draft with empty slots.
+  /** An operator on the chosen part, or around the whole tree when nothing is chosen. A draft the
+   * tree cannot read yet holds the parts themselves, so the operator goes in front of them (口匕 with
+   * ⿰ becomes ⿰口匕), in place of the empty slots the stale tree would have shown. Refuses when the
+   * parts do not fill the operator, and leaves the draft as typed.
    * @param {string} op @param {Path | null} [at] */
   function operator(op, at) {
     if (at === undefined && caret !== null && !typed.problem) { insert(null, op); return }
     if (disabled()) return
     if (at === undefined && typed.problem) {
-      const start = Math.max(0, Math.min(caret ?? range?.start ?? 0, draft.length))
-      const rescued = draft.slice(0, start) + op + draft.slice(start)
+      const rescued = op + draft
       const found = parse(rescued, { open: true })
-      if (found.problem) { note = t(`ids.problem.${found.problem}`); return }
+      if (found.problem) { note = t('ids.problem.draft'); return }
       const applied = apply(found.tree, null, t('ids.do.type', { text: rescued }))
-      if (applied) { caret = start + op.length; range = { start: caret, end: caret } }
+      if (applied) caret = op.length
       return
     }
     at = at === undefined ? tree === null ? [] : chosen : at
@@ -390,7 +384,7 @@ export function createEditor(options) {
   }
   /** Choose the part at `path`, or none; choosing the chosen part again lets it go. @param {Path | null} path @param {{ toggle?: boolean }} [how] */
   function choose(path, { toggle = true } = {}) {
-    caret = null; range = null
+    caret = null
     selectionVersion++
     chosen = path && toggle && samePath(chosen, path) ? null : path
     note = ''
@@ -509,7 +503,6 @@ export function createEditor(options) {
     /** @param {number} start @param {number} end */
     selectText(start, end) {
       caret = start === end ? start : null
-      range = { start, end }
       const token = rangeToken(tokens(draft), start, end)
       chosen = token?.path ?? null
       piece = text(chosen ? partAt(tree, chosen) : undefined)

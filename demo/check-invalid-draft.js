@@ -1,6 +1,6 @@
 // An operator button pressed on a draft the tree cannot read yet (口匕, two components and no
-// operator) keeps the text and puts the operator in front of it, whether the caret sits before it or
-// a selection covers it, and Undo gives the draft back. Run against a served demo:
+// operator) keeps the text and puts the operator in front of it: with the caret before it, with a
+// selection over it, and straight after typing. Undo gives the draft back. Run against a served demo:
 //   IDS_URL=http://localhost:5199 CHROMIUM_PATH=/path/to/chrome bun demo/check-invalid-draft.js
 import { chromium } from 'playwright-core'
 import { strict as assert } from 'node:assert'
@@ -52,13 +52,28 @@ try {
   assert.equal(await value(), '⿰口匕', 'the operator keeps a selected run of parts')
   assert.equal(await field.getAttribute('aria-invalid'), 'false')
 
-  // A draft the operator cannot make whole stays as typed.
+  // C. Straight after typing, with the caret where the typing left it.
+  await type('口匕')
+  await leftRight.click()
+  await page.waitForFunction(() => document.querySelector('.ids-field input')?.value === '⿰口匕')
+  assert.equal(await value(), '⿰口匕', 'the operator takes the parts just typed')
+
+  // A draft the operator cannot make whole stays as typed, and says why.
   await type('口 匕')
   await select(0, 0)
   await leftRight.click()
   await page.waitForTimeout(300)
   assert.equal(await value(), '口 匕', 'an unreadable draft is left alone when the operator cannot fix it')
+  assert.match(await page.locator('.status.fault').innerText(), /not a description yet/, 'the field names the draft')
+
+  // D. A part picked from the palette does not replace the draft either.
+  await type('口匕')
+  const part = page.locator('.parts-grid .part').first()
+  await part.waitFor({ timeout: 60000 })
+  await part.click()
+  await page.waitForTimeout(300)
+  assert.equal(await value(), '口匕', 'a picked part leaves the unreadable draft alone')
 
   assert.deepEqual(errors, [], 'no page errors')
-  console.log('PASS an operator keeps an unreadable draft, before or over a selection, and Undo restores it')
+  console.log('PASS an operator keeps an unreadable draft, at the caret, over a selection, or after typing, and Undo restores it')
 } finally { await browser.close() }

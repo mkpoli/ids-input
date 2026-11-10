@@ -143,7 +143,7 @@
     expandSelection()
     if (editor.chosen === null) return false
     const start = field.selectionStart ?? 0
-    editor.take(text)
+    if (!editor.take(text)) return false
     field.value = editor.draft
     const end = Math.min(field.value.length, start + unalias(text).length)
     editor.selectText(end, end)
