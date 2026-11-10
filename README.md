@@ -178,7 +178,7 @@ level or copies that part's sequence. "Take parts from" reads a character droppe
 Double-clicking a part in either structure view edits it in place. While a single-part slot is
 edited, a panel lists the components that slot takes most often across BabelStone IDS and Yi Bai
 IDS, with the count in each button's tooltip; choosing one puts it in the slot, Tab reaches the
-buttons and Escape closes the editor. The panel shows the first 24, and **Show more** reveals all 48
+buttons and Escape closes the editor. The panel shows up to 24, and **Show more** reveals the rest, up to 48
 stored for that slot. `bun run build:slot-hints` writes `src/core/slot-hints.json` through
 `scripts/build_slot_hints.mjs` and the [ranked appendix](docs/slot-hints.md) through
 `scripts/build_slot_hints_appendix.mjs`, counting each Han character once per operator slot and

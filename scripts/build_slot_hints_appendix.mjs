@@ -27,7 +27,7 @@ export function renderAppendix(catalog) {
   const lines = []
   lines.push('# Appendix: common components by operator slot')
   lines.push('')
-  lines.push('The inline editor offers the components that most often fill the slot being edited. The panel shows the first ' + catalog.default + ' by default; **Show more** reveals all ' + catalog.top + ' entries the catalogue keeps for that slot. The bars below show every stored entry, scaled to the most common component in that slot.')
+  lines.push('The inline editor offers the components that most often fill the slot being edited. The panel shows up to ' + catalog.default + ' by default; **Show more** reveals the rest, up to all ' + catalog.top + ' entries the catalogue keeps for that slot. The bars below show every stored entry, scaled to the most common component in that slot.')
   lines.push('')
   lines.push('A Han character counts once per operator slot and component wherever its descriptions place that component, at any depth. Alternative descriptions and duplicate sources do not inflate a count. Slots are numbered from 1 in reading order: an enclosure has the enclosing part in slot 1 and the inside in slot 2, and the subtraction operator SU has the base in slot 1 and the subtracted part in slot 2.')
   lines.push('')
