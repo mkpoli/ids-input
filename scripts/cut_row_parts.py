@@ -302,7 +302,14 @@ def row_score(node, pieces, cutter, face, faces, labels, gated):
         if all(child.leaf for child in node.children):
             score = 0.6 * vals[0] + 0.25 * vals[1] if len(vals) > 1 else 0.6 * vals[0]
         else:
-            score = 0.6 * vals[0] + 0.15 * (sum(vals[1:]) / max(len(vals) - 1, 1)) if len(vals) > 1 else 0.6 * vals[0]
+            base = 0.6 * vals[0] + 0.15 * (sum(vals[1:]) / max(len(vals) - 1, 1)) if len(vals) > 1 else 0.6 * vals[0]
+            total = sum(abs(p.area) for p in pieces)
+            left_frac = sum(abs(pieces[i].area) for i in groups[0]) / total if total else 1.0
+            # A left operand never stands alone as a single stroke: penalize tiny
+            # left groups so right-side strokes cannot hide in the left group.
+            if left_frac < 0.15:
+                base *= 0.3
+            score = base
         if best is None or score > best[0]:
             best = (score, groups)
     return best
