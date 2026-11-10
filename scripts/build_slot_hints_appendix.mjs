@@ -18,7 +18,7 @@ const bars = (hints) => {
   const digits = Math.max(...hints.map(([, count]) => count.toLocaleString('en').length), 1)
   return hints.map(([part, count]) => {
     const filled = Math.max(1, Math.round(count / top * WIDTH))
-    return `${count.toLocaleString('en').padStart(digits)}  ${'█'.repeat(filled).padEnd(WIDTH)}  ${part}  `
+    return `${part}  ${count.toLocaleString('en').padStart(digits)}  ${'█'.repeat(filled)}`
   }).join('\n')
 }
 
