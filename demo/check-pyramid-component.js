@@ -102,7 +102,7 @@ try {
     await part.fill('')
     await group.locator('[data-pyramid="2"]').click()
     assert.equal(await field.inputValue(), '⿱⬚⿰', 'an empty part lays out empty slots')
-    assert.deepEqual(await page.locator('.sequence-run span').allTextContents(), ['⿱', '⬚', '⿰', '⬚', '⬚'])
+    assert.deepEqual(await page.locator('.sequence-run span').allTextContents(), ['⿱', '⬚', '⿰', '◌', '◌'])
     assert.equal(await part.getAttribute('aria-invalid'), 'false')
     // A scaffold of empty slots previews in the pyramid's cells, not as too large.
     await field.fill('')

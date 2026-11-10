@@ -14,7 +14,7 @@ export function sequenceScopes(tokens, bounds) {
   /** @type {Map<string, ScopeNode>} */ const paths = new Map()
   for (let index = 0; index < tokens.length; index++) {
     const token = tokens[index], box = bounds[index]
-    // A slot the text still misses is drawn as ⬚ by the field, so it has a box of its own.
+    // A slot the text still misses is drawn as ◌ by the field, so it has a box of its own.
     if (!box || box.right <= box.left) continue
     const key = token.path.join('.')
     // Loose marks reuse the root path; they do not add a second structural node.

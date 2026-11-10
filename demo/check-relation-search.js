@@ -41,7 +41,7 @@ try{
   assert.equal(await active.locator('[data-character="🐎"]').count(),0)
   await input.fill('🐎');await active.locator('[data-character="𘆽"]').click()
   assert.equal(await field.inputValue(),'⿰𘆽')
-  assert.deepEqual(await page.locator('.sequence-run span').allTextContents(), ['⿰', '𘆽', '⬚'])
+  assert.deepEqual(await page.locator('.sequence-run span').allTextContents(), ['⿰', '𘆽', '◌'])
   assert.deepEqual(errors,[])
   await page.close();console.log(`PASS ${scheme}: reciprocal relations, qualifiers, readings, stale queries, insertion`)
  }

@@ -326,7 +326,7 @@ export const write = tree => tree === null ? EMPTY
 
 /**
  * A tree written as the field holds it: the operands a node still misses at the end of the text stay
- * out, and the field draws them as ⬚ slots. A missing operand with a part after it is ⬚, or that part
+ * out, and the field draws them as ◌ slots. A missing operand with a part after it is ⬚, or that part
  * would read as belonging to the operator before it.
  * @param {Part} tree @returns {string}
  */

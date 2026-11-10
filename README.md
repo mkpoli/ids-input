@@ -122,7 +122,7 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
 | prop | | |
 | --- | --- | --- |
 | `adapter` | required | see [Adapters](#adapters) |
-| `value` | bindable | the text in the field; an empty slot inside the parts is `⬚`, and the operands a node still misses at the end are drawn as `⬚` without being part of the text |
+| `value` | bindable | the text in the field; an empty slot inside the parts is `⬚`, and the operands a node still misses at the end are drawn as `◌` without being part of the text |
 | `char` | | start from this character's first description when `value` is not a sequence |
 | `onuse(sequence)` | | called with a whole sequence; the Use button shows only when given |
 | `onchange(text, whole)` | | every change, and whether the sequence is whole |

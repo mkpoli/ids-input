@@ -1,6 +1,6 @@
-// An operator still missing operands draws them as ⬚ slots after the text, and their scope lines in
+// An operator still missing operands draws them as ◌ slots after the text, and their scope lines in
 // the warning colour: ⿳ has three missing, ⿳⬚ two, ⿳⬚⬚ one, and ⿳木火 one. The text itself holds only
-// what was typed, so ⬚ is drawn rather than written. Run against a served demo:
+// what was typed, so ◌ is drawn rather than written. Run against a served demo:
 //   IDS_URL=http://localhost:5199 CHROMIUM_PATH=/path/to/chrome bun demo/check-missing-slots.js
 import { chromium } from 'playwright-core'
 import { strict as assert } from 'node:assert'
@@ -32,18 +32,19 @@ try {
   await clear()
   await type('⿳')
   assert.equal(await value(), '⿳', 'the text stops at the operator')
-  assert.deepEqual(await painted(), ['⿳', '⬚', '⬚', '⬚'], 'the field draws the three slots')
+  assert.deepEqual(await painted(), ['⿳', '◌', '◌', '◌'], 'the field draws the three slots')
   assert.equal(await missing(), 3, 'all three scopes are warning-coloured')
 
   // One slot written, two missing.
   await type('⬚')
   assert.equal(await value(), '⿳⬚', 'a written slot stays in the text')
-  assert.deepEqual(await painted(), ['⿳', '⬚', '⬚', '⬚'])
+  assert.deepEqual(await painted(), ['⿳', '⬚', '◌', '◌'])
   assert.equal(await missing(), 2)
 
   // Two written, one missing.
   await type('⬚')
   assert.equal(await value(), '⿳⬚⬚')
+  assert.deepEqual(await painted(), ['⿳', '⬚', '⬚', '◌'])
   assert.equal(await missing(), 1)
   await type('木')
   assert.equal(await value(), '⿳⬚⬚木')
@@ -53,14 +54,14 @@ try {
   await clear()
   await page.locator('.ids-operators button[data-op="⿳"]').click()
   await page.waitForFunction(() => document.querySelector('.ids-field input')?.value === '⿳')
-  assert.deepEqual(await painted(), ['⿳', '⬚', '⬚', '⬚'])
+  assert.deepEqual(await painted(), ['⿳', '◌', '◌', '◌'])
   assert.equal(await missing(), 3)
 
   // A filled operand, and the missing ones after it.
   await clear()
   await type('⿳木')
   assert.equal(await value(), '⿳木')
-  assert.deepEqual(await painted(), ['⿳', '木', '⬚', '⬚'])
+  assert.deepEqual(await painted(), ['⿳', '木', '◌', '◌'])
   assert.equal(await missing(), 2)
 
   // Leaving the field keeps the text as typed rather than writing the slots out.
@@ -69,15 +70,19 @@ try {
   await page.waitForTimeout(300)
   assert.equal(await value(), '⿳木火')
   assert.equal(await missing(), 1)
-  assert.deepEqual(await painted(), ['⿳', '木', '火', '⬚'])
+  assert.deepEqual(await painted(), ['⿳', '木', '火', '◌'])
 
-  // The missing scopes take the warning colour, not the muted scope colour.
-  const strokes = await page.evaluate(() => ({
-    missing: getComputedStyle(document.querySelector('.scope-missing')).stroke,
-    plain: getComputedStyle(document.querySelector('.scope-segment:not(.scope-missing)')).stroke,
+  // The missing operands and their scopes take the warning colour, not the muted colour.
+  const styles = await page.evaluate(() => ({
+    stroke: getComputedStyle(document.querySelector('.scope-missing')).stroke,
+    plainStroke: getComputedStyle(document.querySelector('.scope-segment:not(.scope-missing)')).stroke,
+    text: getComputedStyle(document.querySelector('.sequence-paint span.missing')).color,
+    plainText: getComputedStyle(document.querySelector('.sequence-paint span:not(.missing)')).color,
   }))
-  assert.equal(strokes.missing, 'rgb(180, 35, 24)', 'a missing scope draws in the warning colour')
-  assert.notEqual(strokes.missing, strokes.plain, 'a missing scope differs from a drawn one')
+  assert.equal(styles.stroke, 'rgb(180, 35, 24)', 'a missing scope draws in the warning colour')
+  assert.equal(styles.text, 'rgb(180, 35, 24)', 'a missing operand draws in the warning colour')
+  assert.notEqual(styles.stroke, styles.plainStroke, 'a missing scope differs from a drawn one')
+  assert.notEqual(styles.text, styles.plainText, 'a missing operand differs from a typed part')
 
   // A long draft scrolls far enough to show the slots drawn after it.
   await clear()
@@ -92,5 +97,5 @@ try {
   assert.ok(visible, 'the drawn slots come into view at the end of a long draft')
 
   assert.deepEqual(errors, [], 'no page errors')
-  console.log('PASS missing operands draw as ⬚ after the typed text, their scopes in the warning colour')
+  console.log('PASS missing operands draw as ◌ after the typed text, in the warning colour')
 } finally { await browser.close() }
