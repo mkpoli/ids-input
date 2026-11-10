@@ -54,6 +54,10 @@ export function createEditor(options) {
 
   let tree = $state.raw(/** @type {Part} */ (null))
   let caret = $state(/** @type {number | null} */ (null))
+  // The field's text range, kept even when it names no part (a draft the tree cannot read yet), so
+  // an operator button can still insert at its start without discarding the text.
+  /** @type {{ start: number, end: number } | null} */
+  let range = $state(null)
   let selectionVersion = $state(0)
   let revision = $state(0)
   let hovered = $state.raw(/** @type {Path | null} */ (null))
@@ -61,7 +65,7 @@ export function createEditor(options) {
   let draft = $state(''), piece = $state(''), note = $state('')
   /** The last change, for a host to answer (an undo toast after one that throws something away). */
   let change = $state.raw(/** @type {Change | null} */ (null))
-  /** @type {import('../core/history.js').History<{ tree: Part, chosen: Path | null }>} */
+  /** @type {import('../core/history.js').History<{ tree: Part, chosen: Path | null, draft: string }>} */
   const history = createHistory(100)
   let steps = $state.raw(/** @type {{ done: string[], undone: string[] }} */ ({ done: [], undone: [] }))
   let typing = false, run = false, changes = 0
@@ -179,21 +183,22 @@ export function createEditor(options) {
   /** Start again from `text` (a description, or nothing), forgetting the history. @param {string} start */
   function reset(start) {
     invalidateResolution()
-    history.clear(); caret = null; hovered = null; note = ''; change = null; typing = false; run = false
+    history.clear(); caret = null; range = null; hovered = null; note = ''; change = null; typing = false; run = false
     const read = parse(start, { open: true })
     // A pasted ＋ for an empty slot is written back as ⬚.
     tree = read.tree ?? null; chosen = null; piece = ''
     draft = read.problem || tree === null ? start : write(tree)
     sync()
   }
-  /** @param {Part} next @param {Path | null} select */
-  function commit(next, select) {
+  /** @param {Part} next @param {Path | null} select @param {string} [written] */
+  function commit(next, select, written) {
     invalidateResolution()
-    caret = null
+    caret = null; range = null
     hovered = null
     tree = next; chosen = select; selectionVersion++; note = ''
     // An empty tree is an empty field, not an empty slot (⬚); a slot is written inside a node.
-    if (!typing) draft = next === null ? '' : write(next)
+    // A draft the tree cannot read yet (it is not a description) is put back as it was typed.
+    if (!typing) draft = written ?? (next === null ? '' : write(next))
     const part = select ? partAt(next, select) : undefined
     piece = text(part)
     if (typeof part === 'string') lookup.read(lookupChar(part))
@@ -201,16 +206,18 @@ export function createEditor(options) {
     sync()
   }
   /**
-   * A change to the tree, named for the history; a run of typing in the field is one step.
+   * A change to the tree, named for the history; a run of typing in the field is one step. `from` is
+   * the state to put back: this one, or the text a caller is about to replace (see `edit`).
    * @param {Part} next @param {Path | null} select @param {string} label @param {{ destructive?: boolean, reorder?: { from: Path, to: Path }, swap?: { from: Path, to: Path } }} [how]
+   * @param {{ tree: Part, chosen: Path | null, draft: string }} [from]
    */
-  function apply(next, select, label, { destructive = false, reorder, swap } = {}) {
+  function apply(next, select, label, { destructive = false, reorder, swap } = {}, from = { tree, chosen, draft }) {
     // A description's text can only carry marks at its end; keep them there.
     next = normalizeMarks(next)
     const valid = parse(write(next), { open: true })
     if (valid.problem) { note = t(`ids.problem.${valid.problem}`); return false }
     if (!sameTree(valid.tree, next)) { note = t('ids.problem.unwritable'); return false }
-    history.record({ tree, chosen }, { merge: typing && run, label })
+    history.record(from, { merge: typing && run, label })
     run = typing
     change = { id: ++changes, label, destructive, ...(reorder ? { reorder } : {}), ...(swap ? { swap } : {}) }
     commit(next, select)
@@ -218,23 +225,23 @@ export function createEditor(options) {
   }
   function undo() {
     run = false
-    const label = history.undoLabel(), last = history.undo({ tree, chosen })
+    const label = history.undoLabel(), last = history.undo({ tree, chosen, draft })
     if (!last) return
     change = { id: ++changes, label: label ?? '', destructive: false, undone: true }
-    commit(last.tree, last.chosen)
+    commit(last.tree, last.chosen, last.draft)
   }
   function redo() {
     run = false
-    const label = history.redoLabel(), last = history.redo({ tree, chosen })
+    const label = history.redoLabel(), last = history.redo({ tree, chosen, draft })
     if (!last) return
     change = { id: ++changes, label: label ?? '', destructive: false }
-    commit(last.tree, last.chosen)
+    commit(last.tree, last.chosen, last.draft)
   }
 
   /**
    * The editor's state, to put back later with `restore`: the tree, the chosen part, the text in the
    * field, the part field and the history.
-   * @returns {{ tree: Part, chosen: Path | null, draft: string, piece: string, history: import('../core/history.js').HistoryState<{ tree: Part, chosen: Path | null }> }}
+   * @returns {{ tree: Part, chosen: Path | null, draft: string, piece: string, history: import('../core/history.js').HistoryState<{ tree: Part, chosen: Path | null, draft: string }> }}
    */
   function snapshot() {
     return { tree, chosen, draft, piece, history: history.snapshot() }
@@ -242,7 +249,7 @@ export function createEditor(options) {
   /** Put back a state from `snapshot`, as when a host switches between documents. @param {ReturnType<typeof snapshot>} state */
   function restore(state) {
     invalidateResolution()
-    caret = null
+    caret = null; range = null
     hovered = null
     history.restore(state.history)
     tree = state.tree ?? null; chosen = state.chosen ?? null; draft = state.draft; piece = state.piece
@@ -267,14 +274,28 @@ export function createEditor(options) {
     if (applied && !next.operator && !gap) {
       const token = tokens(draft).find(token => samePath(token.path, next.path))
       caret = token?.end ?? draft.length
+      range = { start: caret, end: caret }
     }
     return applied
   }
-  /** An operator on the chosen part, or around the whole tree when nothing is chosen. @param {string} op @param {Path | null} [at] */
+  /** An operator on the chosen part, or around the whole tree when nothing is chosen. When the draft
+   * cannot be read as a tree yet, insert the operator as text at the caret or the start of the
+   * selection, keeping every character after it (口匕 with ⿰ becomes ⿰口匕). Refuses when the result
+   * still cannot be read, instead of replacing the draft with empty slots.
+   * @param {string} op @param {Path | null} [at] */
   function operator(op, at) {
     if (at === undefined && caret !== null && !typed.problem) { insert(null, op); return }
-    at = at === undefined ? tree === null ? [] : chosen : at
     if (disabled()) return
+    if (at === undefined && typed.problem) {
+      const start = Math.max(0, Math.min(caret ?? range?.start ?? 0, draft.length))
+      const rescued = draft.slice(0, start) + op + draft.slice(start)
+      const found = parse(rescued, { open: true })
+      if (found.problem) { note = t(`ids.problem.${found.problem}`); return }
+      const applied = apply(found.tree, null, t('ids.do.type', { text: rescued }))
+      if (applied) { caret = start + op.length; range = { start: caret, end: caret } }
+      return
+    }
+    at = at === undefined ? tree === null ? [] : chosen : at
     const before = at ? partAt(tree, at) : tree
     const done = applyOperator(tree, at, op)
     if (done.problem) { note = t(`ids.problem.${done.problem}`, { name: name(op) }); return }
@@ -316,6 +337,9 @@ export function createEditor(options) {
    * @param {string} written @param {Path | null} [at] @param {{ loose?: boolean }} [how]
    */
   function take(written, at, { loose = false } = {}) {
+    // With text in the field that names no tree yet, a part has no place to go: say so instead of
+    // replacing that text with a tree built from the last draft the editor could read.
+    if (at === undefined && typed.problem && draft) { note = t('ids.problem.draft'); return false }
     if (at === undefined) {
       const marks = unalias(written)
       if (loose && isMarks(marks)) {
@@ -366,7 +390,7 @@ export function createEditor(options) {
   }
   /** Choose the part at `path`, or none; choosing the chosen part again lets it go. @param {Path | null} path @param {{ toggle?: boolean }} [how] */
   function choose(path, { toggle = true } = {}) {
-    caret = null
+    caret = null; range = null
     selectionVersion++
     chosen = path && toggle && samePath(chosen, path) ? null : path
     note = ''
@@ -398,11 +422,14 @@ export function createEditor(options) {
       field.setSelectionRange(map(from), map(field.selectionEnd ?? from))
     }
     if (draft !== written) invalidateResolution()
+    // The step keeps what the field held before this input, including text the tree cannot read
+    // yet, so Undo gives the previous draft back rather than the last tree it managed to read.
+    const from = { tree, chosen, draft }
     draft = written
     const found = parse(written, { open: true })
     if (found.problem) { sync(); return }
     typing = true
-    apply(found.tree, null, t('ids.do.type', { text: written || '∅' }))
+    apply(found.tree, null, t('ids.do.type', { text: written || '∅' }), {}, from)
     typing = false
   }
   /** Leaving the field: what it holds is written back as the tree has it. */
@@ -482,6 +509,7 @@ export function createEditor(options) {
     /** @param {number} start @param {number} end */
     selectText(start, end) {
       caret = start === end ? start : null
+      range = { start, end }
       const token = rangeToken(tokens(draft), start, end)
       chosen = token?.path ?? null
       piece = text(chosen ? partAt(tree, chosen) : undefined)
