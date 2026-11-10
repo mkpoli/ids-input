@@ -37,20 +37,25 @@ export function auditSlots(table) {
       const parsed = parse(text)
       if (parsed.problem) { totals.invalidDescriptions++; continue }
       totals.validDescriptions++
-      if (!isNode(parsed.tree)) continue
-      const { op, parts } = parsed.tree
-      for (let slot = 0; slot < parts.length; slot++) {
-        const part = parts[slot]
-        if (!isHint(part)) continue
-        let bySlot = slots.get(op)
-        if (!bySlot) slots.set(op, bySlot = new Map())
-        let byPart = bySlot.get(slot)
-        if (!byPart) bySlot.set(slot, byPart = new Map())
-        let subjects = byPart.get(part)
-        if (!subjects) byPart.set(part, subjects = new Set())
-        subjects.add(char)
-        covered.add(char)
+      /** Every operator at any depth contributes, since the editor offers hints for a nested slot too. */
+      const walk = node => {
+        if (!isNode(node)) return
+        const { op, parts } = node
+        for (let slot = 0; slot < parts.length; slot++) {
+          const part = parts[slot]
+          if (isHint(part)) {
+            let bySlot = slots.get(op)
+            if (!bySlot) slots.set(op, bySlot = new Map())
+            let byPart = bySlot.get(slot)
+            if (!byPart) bySlot.set(slot, byPart = new Map())
+            let subjects = byPart.get(part)
+            if (!subjects) byPart.set(part, subjects = new Set())
+            subjects.add(char)
+            covered.add(char)
+          } else walk(part)
+        }
       }
+      walk(parsed.tree)
     }
   }
   return { slots, totals: { ...totals, coveredCharacters: covered.size } }
@@ -80,7 +85,7 @@ export function buildSlotHints(table, sources, top = TOP) {
   return {
     version: 1,
     top,
-    method: 'A Han character counts once in a slot for each single-component character its supplied descriptions place there; alternative descriptions add no duplicate. Components are ranked by the number of distinct characters using them in that slot. Counts describe corpus decompositions, not language-use frequency.',
+    method: 'A Han character counts once in an operator slot for each single-component character its supplied descriptions place there at any depth; alternative descriptions add no duplicate. Components are ranked by the number of distinct characters using them in that slot. Counts describe corpus decompositions, not language-use frequency.',
     sources,
     statistics: {
       ...totals,

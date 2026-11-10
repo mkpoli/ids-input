@@ -27,7 +27,7 @@ export const SLOT_HINT_METADATA = {
  * @returns {Hint[]}
  */
 export function slotHints(op, slot) {
-  return SLOT_HINTS.get(op)?.[slot]?.hints ?? []
+  return [...(SLOT_HINTS.get(op)?.[slot]?.hints ?? [])]
 }
 
 /**

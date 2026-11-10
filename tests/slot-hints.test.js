@@ -23,8 +23,8 @@ describe('slot hints', () => {
     }
     expect(SLOT_HINTS.size).toBe(OPERATORS.length)
     expect(SLOT_HINT_METADATA.statistics.slots).toBe(35)
-    expect(SLOT_HINT_METADATA.statistics.hintEntries).toBe(386)
-    expect(SLOT_HINT_METADATA.statistics.coveredCharacters).toBe(101052)
+    expect(SLOT_HINT_METADATA.statistics.hintEntries).toBe(415)
+    expect(SLOT_HINT_METADATA.statistics.coveredCharacters).toBe(101290)
   })
   it('offers the components the examples in the request name', () => {
     const left = slotHints('⿰', 0).map(([part]) => part)
@@ -51,6 +51,17 @@ describe('slot hints', () => {
     expect(slots.get('⿰').get(1).get('木').size).toBe(1)
     expect(slots.get('⿰').get(1).get('口').size).toBe(2)
     expect(slots.get('⿰').get(1).has('？')).toBe(false)
+  })
+  it('counts the slots of nested operators at any depth', () => {
+    const table = new Map([
+      ['戊', descriptions('⿰木⿱日月')],
+      ['己', descriptions('⿰水⿱日月')],
+    ])
+    const { slots } = auditSlots(table)
+    expect(slots.get('⿰').get(0).get('木').size).toBe(1)
+    expect(slots.get('⿰').get(0).get('水').size).toBe(1)
+    expect(slots.get('⿱').get(0).get('日').size).toBe(2)
+    expect(slots.get('⿱').get(1).get('月').size).toBe(2)
   })
   it('builds a top list per slot with ties in character order', () => {
     const table = new Map([
