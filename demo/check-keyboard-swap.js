@@ -45,7 +45,11 @@ try {
   await open('⿱⿰木口日')
   await part(1).focus()
   await page.keyboard.press('Enter')
-  assert.equal(await page.locator('.ids-part[aria-pressed="true"]').textContent(), '口', 'Enter still chooses the box')
+  const inline = page.locator('.ids-tree .inline-edit input')
+  await inline.waitFor()
+  assert.equal(await inline.inputValue(), '口', 'Enter edits the focused box in place, as a double click does')
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(100)
 
   await open('⿲木口日')
   await part(0).focus()
@@ -75,6 +79,14 @@ try {
   await page.keyboard.press(' ')
   assert.equal(await value(), '⿱⿰日口木', 'Space places the lifted row on the focused row')
 
+  await row('1').focus()
+  await page.keyboard.press('Enter')
+  const rowInline = page.locator('.ids-treelist .inline-edit input')
+  await rowInline.waitFor()
+  assert.equal(await rowInline.inputValue(), '木', 'Enter edits the focused row in place, as a double click does')
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(100)
+
   assert.deepEqual(errors, [])
-  console.log('PASS Space lifts and places a box in both views, and Escape lets it go')
+  console.log('PASS Space lifts and places a box in both views, and Enter edits the focused box or row')
 } finally { await browser.close() }

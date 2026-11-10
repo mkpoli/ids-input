@@ -6,8 +6,9 @@
   import { PART_DRAG, siblings, swappable, neighbor } from './part-drag.js'
   // The tree of `editor`'s description as boxes laid out as the operators place their parts: a row, a
   // column, the second part inside a single host, or one over the other. Compound enclosure hosts
-  // get separate panels so their descendants stay visible. A click chooses a part; a part
-  // dragged from a palette, a tree or a search is put where it is dropped, and a part of the tree
+  // get separate panels so their descendants stay visible. A click chooses a part; a double click or
+  // Enter on a focused box edits it in place; a part dragged from a palette, a tree or a search is
+  // put where it is dropped, and a part of the tree
   // dropped beside a sibling moves there or on any other part switches places with it; the context
   // menu (right click, the Menu key or Shift+F10) splits or swaps with any operator, clears, removes a
   // level or copies that part's sequence. An empty slot shows as ⬚.
@@ -203,6 +204,7 @@
     if (event.key === 'Escape' && carry) { event.preventDefault(); carry = null; return }
     if (event.key === 'Escape' && !event.isComposing && !editor.disabled && editor.chosen !== null) { event.preventDefault(); editor.choose(null); return }
     if (event.key === 'F2') { event.preventDefault(); editPart(path); return }
+    if (event.key === 'Enter' && !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.isComposing) { event.preventDefault(); editPart(path); return }
     if (event.altKey && !event.ctrlKey && !event.metaKey && !event.isComposing && ['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown'].includes(event.key)) {
       const next = neighbor(editor.tree, path, ['ArrowLeft', 'ArrowUp'].includes(event.key) ? -1 : 1)
       if (path.length && !editor.disabled) { event.preventDefault(); if (next) { editor.reorder(path, next); editor.focusChosen(rootEl) } }
