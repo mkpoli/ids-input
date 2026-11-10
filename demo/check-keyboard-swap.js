@@ -79,11 +79,15 @@ try {
   await page.keyboard.press(' ')
   assert.equal(await value(), '⿱⿰日口木', 'Space places the lifted row on the focused row')
 
+  await row('0.1').click()
+  assert.equal(await row('0.1').getAttribute('aria-selected'), 'true')
   await row('1').focus()
+  assert.equal(await row('1').getAttribute('aria-selected'), 'false')
   await page.keyboard.press('Enter')
   const rowInline = page.locator('.ids-treelist .inline-edit input')
   await rowInline.waitFor()
   assert.equal(await rowInline.inputValue(), '木', 'Enter edits the focused row in place, as a double click does')
+  assert.equal(await row('1').getAttribute('aria-selected'), 'true', 'Enter chooses the focused row')
   await page.keyboard.press('Escape')
   await page.waitForTimeout(100)
 
