@@ -5,18 +5,24 @@
 //
 //   bun run build:example-drawings
 import { readFileSync, writeFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { gunzipSync } from 'node:zlib'
-import { hasTangut, tangutSource } from '../../src/composer/tangut.js'
-import { hasBopomofo, bopomofoSource } from '../../src/composer/bopomofo.js'
-import { hasSmallSeal, smallSealSource } from '../../src/composer/small-seal.js'
-import { hasShuishu, shuishuSource } from '../../src/composer/shuishu.js'
-import { hasJurchen, jurchenSource } from '../../src/composer/jurchen.js'
-import { onlyBundled } from '../../src/composer/local.js'
-import { bundledSource } from '../../src/composer/bundled.js'
-import { compose, fromUrl } from '../../src/composer/loader.js'
+import { hasTangut, tangutSource } from '@han-compose/composer/tangut'
+import { hasBopomofo, bopomofoSource } from '@han-compose/composer/bopomofo'
+import { hasSmallSeal, smallSealSource } from '@han-compose/composer/small-seal'
+import { hasShuishu, shuishuSource } from '@han-compose/composer/shuishu'
+import { hasJurchen, jurchenSource } from '@han-compose/composer/jurchen'
+import { onlyBundled } from '@han-compose/composer/local'
+import { bundledSource } from '@han-compose/composer/bundled'
+import { compose, fromUrl } from '@han-compose/composer/loader'
 import { EXAMPLES, EXAMPLE_GROUPS } from '../lib/examples.js'
 import { COMPOSER_BASE } from '../lib/composer.js'
 
+// The outlines the engine carries, where its package keeps them.
+const DATA = join(dirname(fileURLToPath(import.meta.resolve('@han-compose/composer/package.json'))), 'data')
+const bundledOutlines = path => JSON.parse(gunzipSync(readFileSync(join(DATA, path))))
+// A draft form names the character it stood for, so its example is drawn from the description.
 const DRAFTED = new Map(EXAMPLE_GROUPS.filter(group => ['sign', 'erjian'].includes(group.key))
   .flatMap(group => group.examples.map(example => [example.sequence, group.key])))
 const source = fromUrl(COMPOSER_BASE)
@@ -24,12 +30,12 @@ const source = fromUrl(COMPOSER_BASE)
 // whole sequence that matches a component form, then skips its parts, so the export stays behind
 // the source for the character's own glyph.
 const bundled = bundledSource({ load: async () => ({ records: {} }), matches: () => false, fallback: source })
-const loadTangut = async () => JSON.parse(gunzipSync(readFileSync(new URL('../../data/tangut-outlines.json.gz', import.meta.url))))
+const loadTangut = async () => bundledOutlines('sources/tangut/outlines.json.gz')
 const tangut = tangutSource({ load: loadTangut })
 const mixed = tangutSource({ load: loadTangut, fallback: source })
-const loadShuishu = async () => JSON.parse(gunzipSync(readFileSync(new URL('../../data/shuishu-outlines.json.gz', import.meta.url))))
-const loadJurchen = async () => JSON.parse(gunzipSync(readFileSync(new URL('../../data/jurchen-outlines.json.gz', import.meta.url))))
-const loadBopomofo = async () => JSON.parse(gunzipSync(readFileSync(new URL('../../data/bopomofo-outlines.json.gz', import.meta.url))))
+const loadShuishu = async () => bundledOutlines('sources/shuishu/outlines.json.gz')
+const loadJurchen = async () => bundledOutlines('sources/jurchen/outlines.json.gz')
+const loadBopomofo = async () => bundledOutlines('sources/bopomofo/outlines.json.gz')
 const bopomofoSources = new Map()
 await source.ready()
 
@@ -137,7 +143,7 @@ for (const example of EXAMPLES) {
       if (!bopomofoSources.has(selected)) bopomofoSources.set(selected, bopomofoSource({ load: loadBopomofo, fallback: selected }))
       selected = bopomofoSources.get(selected)
     }
-    if (hasSmallSeal(example.sequence)) selected = smallSealSource({load: async () => JSON.parse(gunzipSync(readFileSync(new URL('../../data/small-seal-outlines.json.gz', import.meta.url)))), fallback: selected})
+    if (hasSmallSeal(example.sequence)) selected = smallSealSource({load: async () => JSON.parse(gunzipSync(readFileSync(new URL('../../node_modules/@han-compose/composer/data/sources/small-seal/outlines.json.gz', import.meta.url)))), fallback: selected})
     if (hasShuishu(example.sequence)) selected = shuishuSource({ load: loadShuishu, fallback: selected })
     if (hasJurchen(example.sequence)) selected = jurchenSource({ load: loadJurchen, fallback: selected })
     // A draft form names the character it stood for, not the one its parts spell out: the examples of

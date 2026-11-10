@@ -106,7 +106,7 @@ header calls it SIL OFL 1.1, its conditions differ from the standard SIL license
 The derivative family is named IDS Seal and retains Kaiyuan Small Seal in the
 Compatible Fullname field. The license and copyright notice are embedded in the font.
 
-Build the webfont and `data/small-seal-outlines.json.gz` with
+Build the webfont and the engine's Small Seal outlines with
 `uv run scripts/build_small_seal_font.py`. This uses the bundled SVG sources and the pinned
 crosswalk SVGs, checks their digests, converts cubic curves to quadratic curves with a 0.5-unit error bound,
 and writes deterministic font and outline files. Exact-description mappings in the
@@ -122,7 +122,7 @@ the positions proposed in OBAYASHI Muneaki, [L2/19-230R](https://www.unicode.org
 (2019-06-24). Unicode 18.0.0 leaves them unassigned; `fonts.css` gives the face the
 matching `unicode-range`.
 
-The drawings are CC BY-SA 4.0; the font and `data/new-korean-outlines.json.gz` keep that
+The drawings are CC BY-SA 4.0; the font and the engine's New Korean outlines keep that
 licence, and [LICENSE-IDSNewKorean.txt](LICENSE-IDSNewKorean.txt) records the attribution.
 The source SVGs, digests and letter names are in [`data/new-korean/`](../data/new-korean/).
 Rebuild the font and outlines with `uv run scripts/build_new_korean.py`.
@@ -137,7 +137,7 @@ The outlines are the glyphs of `Uni1B300Shuishu`, the font embedded in the code 
 ISO/IEC 10646 Amendment 2.2 charts (PDAM 2.2), read through the PDF's own ToUnicode map. The charts state no separate
 glyph licence and neither does the spreadsheet that names the characters; the position is in
 [LICENSE-IDSShuishu.txt](LICENSE-IDSShuishu.txt) and the [data notices](../data/README.md#shuishu).
-Rebuild the font and `data/shuishu-outlines.json.gz` with `uv run --python 3.12 scripts/build_shuishu.py`.
+Rebuild the font with `uv run --python 3.12 scripts/build_shuishu.py`; the outlines it writes belong to the engine's package.
 
 ## IDS Jurchen
 
@@ -149,7 +149,8 @@ The outlines are those of Alari Xuwasun Jurchen, public beta of 2026-10-12, by S
 Raxon7, under the SIL OFL 1.1 ([LICENSE-IDSJurchen.txt](LICENSE-IDSJurchen.txt)). This face reaches the
 variants through the selectors alone, leaves out the style sets, and is converted from cubic to
 quadratic outlines.
-Rebuild the font and `data/jurchen-outlines.json.gz` with `uv run --python 3.12 scripts/build_jurchen.py`.
+Rebuild the font and the engine's `data/sources/jurchen/outlines.json.gz` with
+`COMPOSER_REPO=<han-compose checkout> uv run --python 3.12 scripts/build_jurchen.py`.
 
 ## Unicode fallback glyphs
 
@@ -182,6 +183,6 @@ the Plangothic P1/P2 V2.9.5795 digests listed above, and uses the same subset/me
 procedure as the general parts font. `fonts.css` imports the generated
 `gongche.css`; the supplementary characters use the existing `IDS Parts` family.
 
-Matching composer outlines are included in `data/palette-outlines.json.gz`.
+Matching composer outlines ship in the engine's package, `data/sources/palette/outlines.json.gz`.
 BMP text uses the reader's CJK font, as in the rest of the panel. The outlined
 fallback for missing BMP components uses the pinned Noto Sans CJK font.

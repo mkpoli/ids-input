@@ -34,10 +34,12 @@ from fontTools.pens.perimeterPen import PerimeterPen
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.ttLib import TTFont
 
+from engine_data import WRITE_DATA
+
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / 'data/jurchen'
 FONT = ROOT / 'fonts/IDSJurchen.woff2'
-OUTLINES = ROOT / 'data/jurchen-outlines.json.gz'
+OUTLINES = WRITE_DATA / 'sources/jurchen/outlines.json.gz'
 INDEX = ROOT / 'data/jurchen.json.gz'
 LICENCE = ROOT / 'fonts/LICENSE-IDSJurchen.txt'
 

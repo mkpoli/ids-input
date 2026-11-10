@@ -381,7 +381,7 @@ export const SOURCES = [
     summaryKey: 'app.source.jurchenGlyphs',
     more: ['https://mp.weixin.qq.com/s/YaUP6bq4xt_18ywlRxCQpA'],
     note: 'Folder 女真文资料/女真文字体. Its article describes the face as a Fangsong restyling of the forms in the encoding proposal; it does not reproduce an inscription or manuscript.',
-    used: ['fonts/IDSJurchen.woff2', 'data/jurchen-outlines.json.gz'],
+    used: ['fonts/IDSJurchen.woff2', 'node_modules/@han-compose/composer/data/sources/jurchen/outlines.json.gz'],
   },
   {
     id: 'new-korean',
@@ -595,7 +595,7 @@ export const SOURCES = [
     licence: 'SIL OFL 1.1',
     date: '2.004',
     summaryKey: 'app.source.noto',
-    used: ['fonts/', 'src/composer/'],
+    used: ['fonts/', 'node_modules/@han-compose/composer/'],
   },
   {
     id: 'noto-serif-tangut',
@@ -619,7 +619,7 @@ export const SOURCES = [
     licence: 'SIL OFL 1.1',
     date: 'V2.9.5795',
     summaryKey: 'app.source.plangothic',
-    used: ['fonts/', 'src/composer/'],
+    used: ['fonts/', 'node_modules/@han-compose/composer/'],
   },
   {
     id: 'seal-font',
@@ -707,7 +707,7 @@ export const SOURCES = [
       ko: 'CJK 확장 J와 Noto 글꼴이 채우지 못한 글자의 대체 윤곽.',
       vi: 'Hình dự phòng cho CJK Extension J và các chỗ Noto chưa có.',
     },
-    used: ['data/unicode-outlines/'],
+    used: ['node_modules/@han-compose/composer/data/unicode/outlines/'],
   },
   {
     id: 'noto-emoji',
@@ -725,7 +725,7 @@ export const SOURCES = [
       ko: '대체 윤곽에 쓰는 단색 이모지 윤곽.',
       vi: 'Đường viền emoji đơn sắc cho các hình dự phòng.',
     },
-    used: ['data/unicode-outlines/'],
+    used: ['node_modules/@han-compose/composer/data/unicode/outlines/'],
   },
   {
     id: 'unifont',
@@ -744,7 +744,7 @@ export const SOURCES = [
       ko: '다른 글꼴에 없는 최근 가나, 키릴, 음성 기호, 표의 문자 기호의 픽셀 윤곽.',
       vi: 'Hình điểm ảnh cho kana, Kirin, ký hiệu ngữ âm và dấu biểu ý mà các phông khác thiếu.',
     },
-    used: ['data/unicode-outlines/'],
+    used: ['node_modules/@han-compose/composer/data/unicode/outlines/'],
   },
   {
     id: 'iosevka',
@@ -763,7 +763,7 @@ export const SOURCES = [
       ko: '대체 윤곽에 쓰는 라틴 수식 문자 48자.',
       vi: '48 chữ Latin biến thể cho các hình dự phòng.',
     },
-    used: ['data/unicode-outlines/'],
+    used: ['node_modules/@han-compose/composer/data/unicode/outlines/'],
   },
   {
     id: 'unihieroglyphica',
@@ -781,7 +781,7 @@ export const SOURCES = [
       ko: '이집트 상형문자 확장 A 3,995자.',
       vi: '3.995 hình chữ tượng hình Ai Cập mở rộng A.',
     },
-    used: ['data/unicode-outlines/'],
+    used: ['node_modules/@han-compose/composer/data/unicode/outlines/'],
   },
 
   // ------------------------------------------------------------------ code
@@ -795,8 +795,8 @@ export const SOURCES = [
     licence: 'MIT',
     date: 'composer bd0829b, export format 5',
     summaryKey: 'app.source.hanCompose',
-    note: 'The composer src/composer/ ports. Its export draws on Noto Sans CJK JP and Plangothic (SIL OFL 1.1), BabelStone IDS, hfhchan/ids (MIT) and KanjiVG (CC BY-SA 3.0), as its docs/licensing.md states.',
-    used: ['src/composer/'],
+    note: 'The composer package ports han-compose. Its export draws on Noto Sans CJK JP and Plangothic (SIL OFL 1.1), BabelStone IDS, hfhchan/ids (MIT) and KanjiVG (CC BY-SA 3.0), as its docs/licensing.md states.',
+    used: ['node_modules/@han-compose/composer/'],
   },
   {
     id: 'qrcode',

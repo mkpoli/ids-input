@@ -126,6 +126,7 @@
   "ids.preview.tooLargeNote": "Quá lớn để vẽ; các ô thể hiện bố cục.",
   "ids.problem.character": "Bắt đầu bằng một toán tử như ⿰ hoặc ⿱.",
   "ids.problem.component": "Không thể dùng ký tự này làm bộ phận.",
+  "ids.problem.draft": "Ô nhập chưa chứa chuỗi mô tả. Hãy hoàn tất hoặc xóa nó trước.",
   "ids.problem.drop": "{name} dùng ít bộ phận hơn. Hãy xóa các bộ phận thừa trước.",
   "ids.problem.empty": "Bộ phận {n} của {name} đang trống. Hãy điền vào hoặc nhập ？ nếu không có ký tự cho bộ phận đó.",
   "ids.problem.extra": "Số bộ phận vượt quá số mà các toán tử nhận.",

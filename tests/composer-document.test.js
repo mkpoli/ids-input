@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { applyGeometryEdits, fingerprintGeometry, fromSequence, renderLayers } from '../src/document/index.js'
-import { compose, composeDocumentSource, createSource, documentSource, sketch as composerSketch } from '../src/composer/index.js'
+import { compose, composeDocumentSource, createSource, documentSource, sketch as composerSketch } from '@han-compose/composer'
 import { files } from './fixtures/composer-export.js'
 
 const square = (x, width) => `M${x} 0L${x + width} 0L${x + width} 1000L${x} 1000Z`
@@ -102,7 +102,7 @@ describe('a composer-backed document source', () => {
   it('rejects path data the transform engine cannot read', () => {
     const made = sourceOf('木', [[0, 0, 1000, 1000]], [{ leaf: 0, d: 'M0 0H100' }])
     expect(made.complete).toBe(false)
-    expect(made.issues).toContain('part leaf 0 has path data the transform engine cannot read')
+    expect(made.issues).toContain('part leaf 0 has path data that is not a path')
   })
   it('reports a layout box with a number that is not finite', () => {
     const { complete, issues } = sourceOf('⿰木口', [[Number.NaN, 0, 500, 1000], [500, 0, 500, 1000]], [

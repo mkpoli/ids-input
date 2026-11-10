@@ -2,8 +2,8 @@ import { createHash } from 'node:crypto'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
 import { gunzipSync } from 'node:zlib'
-import { createSource } from '../../src/composer/loader.js'
-import { unicodeSource } from '../../src/composer/unicode.js'
+import { createSource } from '@han-compose/composer/loader'
+import { unicodeSource } from '@han-compose/composer/unicode'
 
 export function cachedAuditSource(base, cache, { maxDownloadBytes = 512 * 1024 * 1024, fetch: get = globalThis.fetch } = {}) {
   const root = base.endsWith('/') ? base : `${base}/`
@@ -42,7 +42,7 @@ export function cachedAuditSource(base, cache, { maxDownloadBytes = 512 * 1024 *
       const fallback = createSource(read, { concurrency: 4 })
       const source = unicodeSource({ fallback, load: async key => {
         if (!/^unicode\/[a-f0-9]+$/.test(key)) throw Error(`Unexpected Unicode shard: ${key}`)
-        const name = `data/unicode-outlines/${key.slice('unicode/'.length)}.json.gz`
+        const name = `node_modules/@han-compose/composer/data/unicode/outlines/${key.slice('unicode/'.length)}.json.gz`
         const bytes = await readFile(new URL(`../../${name}`, import.meta.url))
         hashes.set(name, digest(bytes))
         return JSON.parse(gunzipSync(bytes).toString())

@@ -66,7 +66,7 @@ describe('palette stroke metadata', () => {
     const outlines = JSON.parse(gunzipSync(readFileSync(new URL('../data/numbered-pua-outlines.json.gz', import.meta.url))))
     const glyphs = numbered.filter(part => part.glyph).map(part => part.glyph).sort()
     expect(Object.keys(outlines.records).sort()).toEqual(glyphs)
-    const fallbacks = new Set(JSON.parse(readFileSync(new URL('../data/palette-fallback-characters.json', import.meta.url))))
+    const fallbacks = new Set(JSON.parse(readFileSync(new URL('../node_modules/@han-compose/composer/data/palette/fallback-characters.json', import.meta.url))))
     expect(glyphs.every(glyph => fallbacks.has(glyph))).toBe(true)
   })
 

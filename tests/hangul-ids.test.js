@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { COMPAT_FINALS, COMPAT_INITIALS, COMPAT_MEDIALS, HANGUL_CONSONANTS, HANGUL_VOWELS, hangulIdsOf, hangulLetters, hangulOfIds, jamoKind } from '../src/core/hangul-ids.js'
+import { COMPAT_FINALS, COMPAT_INITIALS, COMPAT_MEDIALS, HANGUL_CONSONANTS, HANGUL_VOWELS, hangulIdsOf, hangulLetters, hangulOfIds, jamoKind } from '@han-compose/composer/hangul-ids'
 
 describe('Hangul letters as description sequences', () => {
   it('classifies every jamo as a consonant or a vowel', () => {

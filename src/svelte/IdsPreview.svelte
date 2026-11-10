@@ -10,9 +10,15 @@
   import { fade } from 'svelte/transition'
   import { EMPTY, leaves, samePath, write } from '../core/ids.js'
   import { EMOJI_CUT_MATRIX, FACE, STROKE, badge, emojiPlace, emojiTransform, placeholder, roughLayout, runPreview } from '../core/preview.js'
-  import { documentView } from '../composer/index.js'
+  import { documentView } from '@han-compose/composer/document-view'
   import { affineForChain, applyAffine, boxCorners, findLayer, invertAffine, layerAtPath, multiplyAffine, pathOfLayer, scopesMarkup } from '../document/index.js'
+  import { layerFrames, renderScopes } from '../document/index.js'
   import { translator } from './i18n.js'
+  /** @typedef {import('../document/frames.js').LayerFrame} LayerFrame */
+  /** @typedef {import('../document/model.js').Document} LocalDocument */
+  /** @typedef {import('@han-compose/composer/document-view').DocumentView} DocumentView */
+  /** The engine's view, with the frames and the scoped drawing this file's renderer makes.
+   *  @typedef {Omit<DocumentView, 'scopes' | 'frames'> & { scopes: import('../document/render.js').ScopeTree | null, frames: Map<string, LayerFrame> }} View */
 
   /**
    * @typedef {import('../adapter/types.js').IdsAdapter} IdsAdapter
@@ -89,7 +95,7 @@
   const view = $derived.by(() => {
     const drawn = shown?.drawn
     if (!localDoc || !drawn || !sketched || sketched.text !== sequence) return null
-    return documentView(localDoc, drawn, sketched.leaves)
+    return /** @type {View} */ (/** @type {unknown} */ (documentView(/** @type {LocalDocument} */ (localDoc), drawn, sketched.leaves, { renderer: { layerFrames, renderScopes } })))
   })
   const adjustNote = $derived(editable && step === 'composed' && shown?.drawn && !view?.complete ? t('ids.adjust.unavailable') : '')
   $effect(() => {
@@ -124,7 +130,7 @@
     if (!inverse) return CELL
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
     for (const part of view.partsByLeaf.get(leaf) ?? []) {
-      const box = part.box
+      const box = /** @type {import('../adapter/types.js').DrawingPart} */ (part).box
       if (!Array.isArray(box) || box.length < 4) continue
       const [x, y, width, height] = box
       if (![x, y, width, height].every(Number.isFinite) || width <= 0 || height <= 0) continue

@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
-import { componentDrawing, isComponentForm } from '../src/composer/component-forms.js'
-import { paletteSource } from '../src/composer/palette.js'
-import { compose, createSource } from '../src/composer/loader.js'
-import { Composer } from '../src/composer/compose.js'
+import { componentDrawing, isComponentForm } from '@han-compose/composer/component-forms'
+import { paletteSource } from '@han-compose/composer/palette'
+import { compose, createSource } from '@han-compose/composer/loader'
+import { Composer } from '@han-compose/composer/compose'
 import { files } from './fixtures/composer-export.js'
 
 const forms = JSON.parse(readFileSync(new URL('../data/numbered-forms.json', import.meta.url)))

@@ -88,14 +88,14 @@ for (const line of unzipEntry(archive, 'Unihan_IRGSources.txt').toString().split
 
 // The bundled fallback outlines, then the palette's own fallback outlines, cover characters the
 // export does not record; both are sources the composer draws from.
-const coverage = JSON.parse(readFileSync(new URL('../data/unicode-coverage.json', import.meta.url)))
+const coverage = JSON.parse(readFileSync(new URL('../node_modules/@han-compose/composer/data/unicode/coverage.json', import.meta.url)))
 for (const [first, last] of coverage) {
   for (let point = first; point <= last; point++) {
     const char = String.fromCodePoint(point)
     if (characterScript(char) === 'han') keys.add(char)
   }
 }
-const palette = JSON.parse(gunzipSync(readFileSync(new URL('../data/palette-outlines.json.gz', import.meta.url)))).records
+const palette = JSON.parse(gunzipSync(readFileSync(new URL('../node_modules/@han-compose/composer/data/sources/palette/outlines.json.gz', import.meta.url)))).records
 for (const char of Object.keys(palette)) {
   if ([...char].length === 1 && characterScript(char) === 'han') keys.add(char)
 }

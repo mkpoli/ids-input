@@ -8,26 +8,9 @@
 // that character. Any other chain describes a shape the composer cannot draw yet, and stays text.
 // Source: NightFurySL2001, （白式）IDS 延展语法导论, <https://nightfurySl2001.github.io/bai-ids/>,
 // §5.3, read 2026-10-28. Its examples: https://zi.tools/?secondary=ids.
-
-/**
- * The chains that name a character, each without `#(` and `)`. A chain's letters are its strokes:
- * H 横, S 竖, P 撇, N 捺, D 点, T 提, J, Z, Wg 弯钩, Qa–Qd 曲; `-` reverses a stroke, `b` breaks a
- * stroke, `x` crosses an earlier one, `w` rounds a joint, and a closing `z` joins the ends.
- * @type {Readonly<Record<string, string>>}
- */
-export const STROKE_CHAINS = {
-  // One stroke: the letters, the leftward Z and the four quarter curves Qa–Qd.
-  H: '一', S: '丨', P: '丿', N: '乀', D: '丶', T: '㇀', SZ: '㇘',
-  Qa: '◝', Qb: '◞', Qc: '◟', Qd: '◜',
-  // Compound strokes.
-  HNg: '⺄', Wg: '㇁', Ng: '㇂', SHw: '㇄', HSH: '㇅', HP: '㇇', HSHwg: '㇈', SHSg: '㇉',
-  HST: '㇊', HSHP: '㇋', HPWg: '㇌', HSHw: '㇍', HSHS: '㇎', HN: '乁', J: '㇝', Pg: '㇢',
-  HPHwg: '乙', SHwg: '乚', Hg: '乛', Sg: '亅', SH: '𠃊', PH: '𠃋', HSg: '𠃌', HS: '𠃍',
-  SHS: '𠃑', ST: '𠄌', HSHSg: '𠄎', '◟◜◝◞z': '〇',
-  // Characters the grammar draws with a chain.
-  '丿丿': '𠂆', '-一𠃊': '匚', '-𠃊㇈': '𠤬', '-𠃊㇎z': '𱍫', '𠃍-一㇉': '弓', '𠃍-一乚': '己',
-  '一-𠃍乚': '巳', '-丨𠃍-一z': '口', '-乀x1㇇': '又',
-}
+//
+// The chains themselves are the engine's: a description's chain and the field's are one notation.
+import { STROKE_CHAINS } from '@han-compose/composer/tree'
 
 /** The character a chain's contents name, or undefined where they name none. @param {string} text */
 export const strokeChainChar = text => STROKE_CHAINS[text]
