@@ -152,6 +152,8 @@
   "ids.hints.title": "{name}第{n}部分的常用部件",
   "ids.hints.count.one": "此位置有1个字使用",
   "ids.hints.count.other": "此位置有{count}个字使用",
+  "ids.hints.more": "再显示{count}个",
+  "ids.hints.less": "收起",
   "ids.inline.label": "编辑部件",
   "ids.slot": "所选部件",
   "ids.slotHint": "输入部件",

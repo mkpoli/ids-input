@@ -152,6 +152,8 @@
   "ids.hints.title": "Bộ phận thường gặp ở phần {n} ({name})",
   "ids.hints.count.one": "Có 1 chữ dùng bộ phận này ở vị trí này",
   "ids.hints.count.other": "Có {count} chữ dùng bộ phận này ở vị trí này",
+  "ids.hints.more": "Hiện thêm {count}",
+  "ids.hints.less": "Hiện ít hơn",
   "ids.inline.label": "Sửa bộ phận",
   "ids.slot": "Bộ phận đã chọn",
   "ids.slotHint": "Nhập bộ phận",

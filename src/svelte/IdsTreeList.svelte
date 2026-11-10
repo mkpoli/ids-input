@@ -304,6 +304,7 @@
   li.carried{outline:2px dashed var(--_accent);outline-offset:-2px}
   li.swap{border-color:var(--_accent);background:var(--_accent-light)}
   li.dragged{opacity:.45}
+  li:has(.inline-edit){position:relative;z-index:70}
   li:focus-visible{outline:2px solid var(--_focus);outline-offset:-2px}
   .toggle{display:grid;place-items:center;width:14px;flex:none;color:var(--_muted);font-size:11px}
   .part{display:grid;place-items:center;min-width:22px;font-family:var(--_font);font-size:20px;line-height:1.1}

@@ -13,9 +13,13 @@ import { isNode, partAt } from './ids.js'
 /** The most common components in each slot, by operator. @type {Map<string, { total: number, hints: Hint[] }[]>} */
 export const SLOT_HINTS = new Map(catalog.operators.map(({ op, slots }) => [op, /** @type {{ total: number, hints: Hint[] }[]} */ (slots)]))
 
+/** How many hints the panel shows before it offers the rest. */
+export const SLOT_HINT_DEFAULT = catalog.default
+
 /** How many hints each slot holds, and where the counts come from. */
 export const SLOT_HINT_METADATA = {
   top: catalog.top,
+  default: catalog.default,
   method: catalog.method,
   sources: catalog.sources,
   statistics: catalog.statistics,

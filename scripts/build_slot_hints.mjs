@@ -5,8 +5,10 @@ import { pathToFileURL } from 'node:url'
 import { isNode, parse, OPERATORS } from '../src/core/ids.js'
 import { readBundledSources } from './build_structure_templates.mjs'
 
-/** How many components a slot's hint panel offers. */
-export const TOP = 12
+/** How many components a slot's hint panel can offer. */
+export const TOP = 48
+/** How many of them a panel shows before its Show more button. */
+export const DEFAULT = 24
 
 /** Whether a character may stand as a hint: a single encoded component, not an operator, an empty
  * slot or an unnamed part. @param {import('../src/core/ids.js').Part} part */
@@ -85,6 +87,7 @@ export function buildSlotHints(table, sources, top = TOP) {
   return {
     version: 1,
     top,
+    default: Math.min(DEFAULT, top),
     method: 'A Han character counts once in an operator slot for each single-component character its supplied descriptions place there at any depth; alternative descriptions add no duplicate. Components are ranked by the number of distinct characters using them in that slot. Counts describe corpus decompositions, not language-use frequency.',
     sources,
     statistics: {
@@ -110,4 +113,5 @@ if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) 
   writeFileSync(target, JSON.stringify(catalog, null, 2) + '\n')
   console.log(formatSlotHints(catalog))
   console.log(`\n${catalog.statistics.slots} slots, ${catalog.statistics.hintEntries} hints, ${catalog.statistics.coveredCharacters}/${catalog.statistics.hanCharacters} Han characters`)
+  console.log(`The panel shows ${catalog.default} by default and ${catalog.top} on request.`)
 }

@@ -24,13 +24,38 @@ try {
     const panel = page.locator('.slot-hints')
     await panel.waitFor({ timeout: 5000 })
     assert.match(await groupTitle(panel), /part 2 of Left to right/, 'the panel names the slot')
-    const hints = await panel.locator('button').allInnerTexts()
-    assert.equal(hints.length, 12, 'the panel offers twelve components')
+    /** Frame the tree and the panel for a pull-request screenshot. @param {string} name */
+    const shot = async name => {
+      const dir = process.env.IDS_SLOT_HINT_SHOTS
+      if (!dir) return
+      const tree = await page.locator('.ids-tree').boundingBox()
+      const box = await panel.boundingBox()
+      if (!tree || !box) return
+      const margin = 40
+      const x = Math.max(0, Math.min(tree.x, box.x) - margin)
+      const y = Math.max(0, Math.min(tree.y, box.y) - margin)
+      const right = Math.min(1440, Math.max(tree.x + tree.width, box.x + box.width) + margin)
+      const bottom = Math.min(900, Math.max(tree.y + tree.height, box.y + box.height) + margin)
+      await page.mouse.move(8, 8)
+      await page.waitForTimeout(100)
+      await page.screenshot({ path: `${dir}/${name}-${scheme}.png`, clip: { x, y, width: right - x, height: bottom - y } })
+    }
+    const hints = await panel.locator('button.hint').allInnerTexts()
+    assert.equal(hints.length, 24, 'the panel offers twenty-four components by default')
+    await shot('after-default')
+    const beforeBox = await panel.boundingBox()
+    await panel.getByRole('button', { name: /Show 24 more/ }).click()
+    const expanded = await panel.locator('button.hint').allInnerTexts()
+    assert.equal(expanded.length, 48, 'Show more reveals the stored components')
+    const afterBox = await panel.boundingBox()
+    assert.ok(afterBox && afterBox.height > (beforeBox?.height ?? 0), 'the expanded panel grows')
+    await shot('after-expanded')
+    await panel.getByRole('button', { name: /Show fewer/ }).click()
+    assert.equal(await panel.locator('button.hint').count(), 24, 'Show fewer restores the default')
     assert.ok(hints.includes('刂') && hints.includes('頁') && hints.includes('鳥'), 'the right slot offers 刂, 頁 and 鳥')
     assert.match(await panel.locator('button').first().getAttribute('title') ?? '', /Used in this slot by [\d,]+ characters/, 'the count is in the tooltip')
     const box = await panel.boundingBox()
     assert.ok(box && box.x >= 0 && box.y >= 0 && box.x + box.width <= 1440 && box.y + box.height <= 900, 'the panel stays inside the window')
-    if (process.env.IDS_SLOT_HINT_SHOTS) await page.screenshot({ path: `${process.env.IDS_SLOT_HINT_SHOTS}/slot-hints-${scheme}.png` })
 
     await panel.getByRole('button', { name: /^刂 / }).click()
     await page.waitForTimeout(300)
@@ -73,5 +98,29 @@ try {
     assert.deepEqual(errors, [], 'no page errors')
     await page.close()
   }
+
+  const phone = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, colorScheme: 'light', isMobile: true, hasTouch: true })
+  try {
+    const errors = []
+    phone.on('pageerror', error => errors.push(error.message))
+    await phone.goto(process.env.IDS_URL ?? 'http://localhost:5186', { waitUntil: 'domcontentloaded' })
+    const field = phone.locator('.ids-field input')
+    await field.waitFor({ timeout: 30000 })
+    await field.fill('⿰木⬚')
+    await field.press('Tab')
+    await phone.getByRole('tab', { name: 'Compose', exact: true }).click()
+    await phone.locator('.ids-tree .ids-part.empty').first().dblclick()
+    const panel = phone.locator('.slot-hints')
+    await panel.waitFor({ timeout: 5000 })
+    assert.equal(await panel.locator('button.hint').count(), 24, 'the phone shows twenty-four hints')
+    await panel.getByRole('button', { name: /Show 24 more/ }).tap()
+    assert.equal(await panel.locator('button.hint').count(), 48, 'the phone can reveal the rest')
+    if (process.env.IDS_SLOT_HINT_SHOTS) { await phone.waitForTimeout(350); await phone.screenshot({ path: `${process.env.IDS_SLOT_HINT_SHOTS}/phone-expanded.png` }) }
+    const box = await panel.boundingBox()
+    assert.ok(box && box.x >= 0 && box.y >= 0 && box.x + box.width <= 390 && box.y + box.height <= 844, 'the tall panel stays inside the phone window')
+    await panel.getByRole('button', { name: /^刂 / }).tap()
+    assert.equal(await field.inputValue(), '⿰木刂', 'a phone tap puts the hint in the slot')
+    assert.deepEqual(errors, [], 'no page errors on the phone')
+  } finally { await phone.close() }
   console.log('slot hints: ok')
 } finally { await browser.close() }

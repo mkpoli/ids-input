@@ -4,14 +4,17 @@
   import { tick, untrack } from 'svelte'
   import { parse, place, samePath, write } from '../core/ids.js'
   import { unalias } from '../core/aliases.js'
-  import { hintsAt } from '../core/hints.js'
+  import { hintsAt, SLOT_HINT_DEFAULT } from '../core/hints.js'
   import { loadFallbackText } from './fallback-font.js'
   /** @type {{ editor: import('./editor.svelte.js').Editor, path: import('../core/ids.js').Path, owner: HTMLElement | null, variant?: 'label' | 'leaf', onclose: () => void, onreveal?: (path: import('../core/ids.js').Path) => void }} */
   let { editor, path, owner, variant = 'label', onclose, onreveal } = $props()
   const targetPath = untrack(() => path)
   const initialValue = untrack(() => editor.sequenceAt(targetPath))
   const hintSet = untrack(() => hintsAt(editor.tree, targetPath))
+  let expanded = $state(false)
   const hintTitle = $derived(hintSet ? editor.t('ids.hints.title', { n: hintSet.slot + 1, name: editor.name(hintSet.op) }) : '')
+  const visibleHints = $derived(hintSet ? (expanded ? hintSet.hints : hintSet.hints.slice(0, SLOT_HINT_DEFAULT)) : [])
+  const hiddenHints = $derived(hintSet ? Math.max(0, hintSet.hints.length - SLOT_HINT_DEFAULT) : 0)
   const revision = untrack(() => editor.revision)
   const uid = $props.id()
   const hintsId = `${uid}-hints`
@@ -25,21 +28,27 @@
   $effect(() => { if (editor.revision !== revision || !samePath(editor.chosen, targetPath)) { closing = true; onclose() } })
   // The panel is fixed where it fits beside the field: below it, or above it near the window's
   // bottom, and never past either side.
+  function placeHints() {
+    if (!input || !panel) return
+    const field = input.getBoundingClientRect()
+    const box = panel.getBoundingClientRect()
+    const margin = 8, gap = 6
+    const x = Math.max(margin, Math.min(field.left, innerWidth - margin - box.width))
+    const below = field.bottom + gap
+    const y = below + box.height <= innerHeight - margin ? below : Math.max(margin, field.top - gap - box.height)
+    position = { x, y }
+  }
   $effect(() => {
     if (!input || !panel) return
-    const place = () => {
-      const field = /** @type {HTMLElement} */ (input).getBoundingClientRect()
-      const box = /** @type {HTMLElement} */ (panel).getBoundingClientRect()
-      const margin = 8, gap = 6
-      const x = Math.max(margin, Math.min(field.left, innerWidth - margin - box.width))
-      const below = field.bottom + gap
-      const y = below + box.height <= innerHeight - margin ? below : Math.max(margin, field.top - gap - box.height)
-      position = { x, y }
-    }
-    place()
-    addEventListener('scroll', place, true)
-    addEventListener('resize', place)
-    return () => { removeEventListener('scroll', place, true); removeEventListener('resize', place) }
+    placeHints()
+    addEventListener('scroll', placeHints, true)
+    addEventListener('resize', placeHints)
+    return () => { removeEventListener('scroll', placeHints, true); removeEventListener('resize', placeHints) }
+  })
+  // Show more changes the panel's height, so place it again after the grid grows.
+  $effect(() => {
+    if (!expanded) return
+    tick().then(placeHints)
   })
   /** @param {boolean} [followSelection] @param {boolean} [refocus] */
   function close(followSelection = false, refocus = true) {
@@ -101,15 +110,20 @@
   {#if hintSet}
     <!-- svelte-ignore a11y_no_noninteractive_element_interactions -- the panel only keeps the field focused; its buttons are the controls -->
     <div class="slot-hints" class:placed={position !== null} role="group" id={hintsId} onkeydown={hintKey} aria-labelledby={`${hintsId}-title`}
-      style:left="{position?.x ?? 0}px" style:top="{position?.y ?? 0}px" style:--hint-cols={Math.min(6, hintSet.hints.length)}
-      bind:this={panel} onpointerdown={event => event.preventDefault()}>
+      style:left="{position?.x ?? 0}px" style:top="{position?.y ?? 0}px" style:--hint-cols={Math.min(6, visibleHints.length)}
+      bind:this={panel} onpointerdown={event => event.preventDefault()} onpointerenter={() => editor.hover(null)} onpointermove={event => event.stopPropagation()}>
       <p id={`${hintsId}-title`}>{hintTitle}</p>
       <div class="hints-grid">
-        {#each hintSet.hints as [part, count] (part)}
+        {#each visibleHints as [part, count] (part)}
           <button type="button" class="hint" title={`${part} · ${editor.t('ids.hints.count', { count })}`} aria-label={`${part} · ${editor.t('ids.hints.count', { count })}`}
             onclick={() => pick(part)}>{part}</button>
         {/each}
       </div>
+      {#if hiddenHints}
+        <button type="button" class="hints-more" aria-expanded={expanded} onclick={() => expanded = !expanded}>
+          {expanded ? editor.t('ids.hints.less') : editor.t('ids.hints.more', { count: hiddenHints })}
+        </button>
+      {/if}
     </div>
   {/if}
 </span>
@@ -129,4 +143,6 @@
     font:20px/1 var(--_font,var(--ids-font,"IDS Operators","IDS Numbered","IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Jurchen","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif))}
   .hint:hover,.hint:focus-visible{border-color:var(--ids-focus,light-dark(#2944c7,#8ea8ff));background:var(--ids-accent-light,light-dark(#e9edfd,#232c4c))}
   .hint:focus-visible{outline:2px solid var(--ids-focus,light-dark(#2944c7,#8ea8ff));outline-offset:0}
+  .hints-more{align-self:stretch;padding:4px 6px;border:1px solid var(--ids-line,light-dark(#e1e1e8,#2e2e36));border-radius:6px;background:var(--ids-surface-subtle,light-dark(#f6f6f9,#16161a));color:var(--ids-muted,light-dark(#686874,#9d9daa));font:11px system-ui,sans-serif;cursor:pointer}
+  .hints-more:hover,.hints-more:focus-visible{border-color:var(--ids-focus,light-dark(#2944c7,#8ea8ff));color:var(--ids-ink,light-dark(#1c1c22,#ececf2))}
 </style>
