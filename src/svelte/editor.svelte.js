@@ -300,6 +300,9 @@ export function createEditor(options) {
    * @param {Part} part @param {Path | null} [at] @param {string} [label] */
   function put(part, at, label) {
     if (at === undefined && caret !== null && !typed.problem) return insert(part, undefined, label)
+    // An implicit or root placement has no part to replace while the field holds text the tree
+    // cannot read: keep that text, as `take` and the operator path do.
+    if ((at === undefined || at === null || at.length === 0) && typed.problem && draft) { note = t('ids.problem.draft'); return false }
     at = at === undefined ? target() : at
     if (disabled()) return false
     if (!at) { note = t('ids.chooseFirst'); return false }
