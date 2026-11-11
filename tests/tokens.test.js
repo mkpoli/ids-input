@@ -22,6 +22,14 @@ test('tokens keep a conjoining Hangul run whole', () => {
   expect(spans.at(-1)).toMatchObject({ path: [1], start: 1 + cluster.length, end: text.length })
   expect(spans.map(token => token.text).join('')).toBe(text)
 })
+test('an operator short of operands has a zero-width token for each one', () => {
+  expect(tokens('⿳').map(token => [token.path, token.text, token.start, token.end])).toEqual([
+    [[], '⿳', 0, 1], [[0], '', 1, 1], [[1], '', 1, 1], [[2], '', 1, 1],
+  ])
+  expect(tokens('⿳木').map(token => [token.path, token.text, token.start, token.end])).toEqual([
+    [[], '⿳', 0, 2], [[0], '木', 1, 2], [[1], '', 2, 2], [[2], '', 2, 2],
+  ])
+})
 test('unfinished slots have zero width; invalid drafts are unmapped', () => {
   expect(tokens('⿰木').at(-1)).toMatchObject({ path: [1], start: 2, end: 2, text: '' })
   expect(tokens('⿰木木木')).toEqual([])
