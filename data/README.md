@@ -1198,6 +1198,29 @@ paths: kana strokes are curved, so a turn and a curve carry the same turning ang
 built on that angle labelled ア, コ and ヨ wrongly. A class column waits for a source that names
 stroke types.
 
+## `stroke-orders.json.gz`
+
+The stroke order of the Han parts of the palette, for finding a part by the strokes it is written
+with: 10,650 `keys` in palette order with one entry of `orders` each, the codes separated by a
+space, a letter a stroke (`letters`: h 横, s 豎, p 撇, n 點, z 折). 90 KB gzipped, read when a
+stroke key of the Components panel is first reached. Built by `scripts/build_stroke_orders.mjs`
+from `ids-parts.json`.
+
+- Licence: **LGPL-3.0**, as the `first` column of `ids-parts.json`; the source authors and the
+  licence texts are in `data/licences/`.
+- Source: Rime five-stroke dictionary, revision `1e8fff9b9494ddec23b0cbc526bcfd8171a6fd48`,
+  <https://github.com/rime/rime-stroke>, SHA-256
+  `b3e93dce89c185f45c3d6e189b86b3a8626913352cc85e1094c786579a665791`. Authors: 四季的風, 雪齋,
+  Kunki Chou and 宋天.
+- A character the dictionary writes more than one way keeps every code, in the dictionary's order
+  (小 `zpn spn`, 乃 `pz zp`); 4,701 parts have more than one. The codes follow Chinese stroke
+  order and can differ from Japanese order, and a code can count strokes differently from Unihan's
+  `kTotalStrokes`.
+- A part of one stroke takes the class `ids-parts.json` gives it, so a CJK stroke symbol and the
+  ideograph Unicode calls its equivalent read alike (㇕ and 𠃍 are `z`).
+- The compound parts, BabelStone's numbered components and the radical forms the dictionary does
+  not name have no entry and are not found by strokes.
+
 ## `han-parts.json.gz`
 
 Every Han-script character the composer can draw: 103,352 keys in code-point order, with the

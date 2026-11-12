@@ -95,3 +95,20 @@ export function loadStrokes() {
     .catch(error => { loading = null; throw error })
   return loading
 }
+
+/** @type {Promise<Map<string, string[]>> | null} */
+let orders = null
+
+/**
+ * The stroke order of each Han part of the palette, from `data/stroke-orders.json.gz`: every way
+ * Rime's five-stroke dictionary writes it, a letter a stroke (h 横, s 豎, p 撇, n 點, z 折).
+ * @returns {Promise<Map<string, string[]>>}
+ */
+export function loadStrokeOrders() {
+  orders ??= download(new URL('../../data/stroke-orders.json.gz', import.meta.url))
+    .then(response => response.ok ? response.arrayBuffer() : Promise.reject(new Error('Stroke orders')))
+    .then(unpack).then(JSON.parse).then((/** @type {{ keys: string[], orders: string[] }} */ data) =>
+      new Map(data.keys.map((key, index) => [key, data.orders[index].split(' ')])))
+    .catch(error => { orders = null; throw error })
+  return orders
+}
