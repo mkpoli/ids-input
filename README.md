@@ -174,7 +174,10 @@ A finger drags the same way on a touch screen, where the browser starts no drag 
 or a group by its operator button, and `Space` on another box places it; `Escape` lets it go, and in
 the indented Tree view the arrows move the focus between rows while a box is lifted. The context
 menu (right click, the Menu key or `Shift+F10`) splits or swaps with any operator, clears, removes a
-level or copies that part's sequence. "Take parts from" reads a character dropped on it.
+level or copies that part's sequence. A component the adapter's `variationSequences` lists has a
+button in its corner that opens its variation sequences, each drawn by the adapter's `icon`;
+choosing one writes its selector after the character (`editor.vary(sequence, path)`), and the
+context menu lists them too. "Take parts from" reads a character dropped on it.
 Double-clicking a part in either structure view edits it in place. While a single-part slot is
 edited, a panel lists the components that slot takes most often across BabelStone IDS and Yi Bai
 IDS, with the count in each button's tooltip; choosing one puts it in the slot, Tab reaches the
@@ -511,6 +514,7 @@ records live in [`src/document/store.js`](src/document/store.js); file bindings 
 interface IdsAdapter {
   structure(char, options?): Promise<{ text: string, regions?: string }[]>   // required
   variants?(part, options?): Promise<{ char: string, count?: number }[]>
+  variationSequences?(): Promise<Map<string, string[]>>   // 者 → [者 U+8005 U+E0101], the sequences the preview draws
   search?(query, options?): Promise<{ char: string, label?: string }[]>
   containing?(parts, options?): Promise<{ items: string[], more?: boolean }>
   parts?(options?): Promise<PalettePart[]>

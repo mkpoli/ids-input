@@ -166,6 +166,7 @@
   "ids.unwrap": "Bỏ cấp",
   "ids.unwrapHint": "Bỏ cấp này, giữ bộ phận đầu tiên không trống ở vị trí của nó",
   "ids.unwrapNode": "Bỏ {what}",
+  "ids.variants.label": "Chuỗi biến thể của {part}",
   "ids.view.label": "Hiển thị",
   "ids.view.shape": "Hình",
   "ids.view.tree": "Cây",
