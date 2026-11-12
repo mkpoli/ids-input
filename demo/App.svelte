@@ -559,8 +559,8 @@
   /** Start direct editing from a double-click on the drawing. @param {MouseEvent} event */
   function startAdjust(event) {
     if (adjusting || !canAdjust) return
-    // The toolbar and the caption have their own double-click uses: buttons and text selection.
-    if (event.target instanceof Element && event.target.closest('.adjust, .ids-preview-meta')) return
+    // Only the drawing box starts it; the toolbar and the caption keep their own double-click.
+    if (!(event.target instanceof Element) || !event.target.closest('.ids-preview-large')) return
     adjusting = true
   }
   // The address starts on the tab shown, as it does after every change.
