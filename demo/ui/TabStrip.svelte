@@ -347,22 +347,23 @@
     overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-x:contain}
   .tabs::-webkit-scrollbar{display:none}
   .tabs.dragging{user-select:none}
-  /* The tab's corner curves are drawn at the radius the tab top uses. */
-  .tab{--tab-curve:var(--ui-space-md);position:relative;isolation:isolate;flex:none;width:80px;height:40px;border:0;border-radius:var(--ui-radius-xl) var(--ui-radius-xl) 0 0;color:var(--ui-color-ink-muted)}
+  /* A tab is only as wide as its drawn glyph; the open one adds the room its close needs. */
+  .tab{--tab-curve:var(--ui-space-md);position:relative;isolation:isolate;flex:none;width:calc(var(--ui-control-h-sm) + 2 * var(--ui-space-xs));height:40px;border:0;border-radius:var(--ui-radius-xl) var(--ui-radius-xl) 0 0;color:var(--ui-color-ink-muted)}
   .tab.dragging{z-index:4;color:var(--ui-color-ink);filter:drop-shadow(0 5px 9px var(--ui-shadow-color-1))}
   .tab.dragging .tab-main{cursor:grabbing}
   .tab:not(.on):hover{background:var(--ui-color-surface-hover);color:var(--ui-color-ink)}
-  .tab.on{background:var(--ui-color-canvas);color:var(--ui-color-ink);box-shadow:inset 0 var(--ui-space-3xs) 0 var(--ui-color-accent)}
+  .tab.on{width:calc(var(--ui-control-h-sm) + 2 * var(--ui-space-xs) + var(--ui-target-min));background:var(--ui-color-canvas);color:var(--ui-color-ink);box-shadow:inset 0 var(--ui-space-3xs) 0 var(--ui-color-accent)}
+  /* The tab's corner curves are drawn at the radius the tab top uses. */
   .tab.on::before,.tab.on::after{content:"";position:absolute;bottom:0;width:var(--tab-curve);height:var(--tab-curve);pointer-events:none}
   .tab.on::before{left:calc(-1 * var(--tab-curve));background:radial-gradient(circle at 0 0,transparent var(--tab-curve),var(--ui-color-canvas) calc(var(--tab-curve) + .5px))}
   .tab.on::after{right:calc(-1 * var(--tab-curve));background:radial-gradient(circle at 100% 0,transparent var(--tab-curve),var(--ui-color-canvas) calc(var(--tab-curve) + .5px))}
-  .tab-main{display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:var(--ui-space-xs) var(--ui-space-4xl) var(--ui-space-xs) var(--ui-space-sm);border:0;border-radius:inherit;background:none;color:inherit;cursor:pointer}
-  .tab:not(.on) .tab-main{padding-inline:var(--ui-space-lg)}
+  .tab-main{display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:var(--ui-space-xs);border:0;border-radius:inherit;background:none;color:inherit;cursor:pointer}
+  .tab.on .tab-main{justify-content:flex-start;padding-inline:var(--ui-space-xs) var(--ui-space-3xl)}
   .tab-main:focus-visible{outline-offset:calc(-1 * var(--ui-ring-width) - 1px)}
   .tab-icon{position:relative;display:grid;place-items:center;flex:none;width:var(--ui-control-h-sm);height:var(--ui-control-h-sm)}
   .tab:not(.on) .tab-icon{opacity:.7}
   .tab-dot{position:absolute;top:0;right:calc(-1 * var(--ui-space-2xs));width:var(--ui-space-2xs);height:var(--ui-space-2xs);border-radius:var(--ui-radius-pill);background:var(--ui-color-accent)}
-  .tab-close{position:absolute;z-index:2;top:var(--ui-space-sm);right:var(--ui-space-sm);display:grid;place-items:center;width:var(--ui-target-min);height:var(--ui-target-min);padding:0;border:0;border-radius:var(--ui-radius-sm);
+  .tab-close{position:absolute;z-index:2;top:var(--ui-space-sm);right:var(--ui-space-3xs);display:grid;place-items:center;width:var(--ui-target-min);height:var(--ui-target-min);padding:0;border:0;border-radius:var(--ui-radius-sm);
     background:none;color:var(--ui-color-ink-muted);cursor:pointer;pointer-events:none;opacity:0;
     transition:opacity var(--ui-duration-fast),background-color var(--ui-duration-fast),color var(--ui-duration-fast)}
   .tab.on .tab-close,.tab-close:focus-visible{opacity:1;pointer-events:auto}
