@@ -175,6 +175,7 @@
   "parts.order.label": "筆順",
   "parts.order.backspace": "一画削除",
   "parts.order.clear": "クリア",
+  "parts.order.unavailable": "筆順を読み込めませんでした。",
   "parts.identity.ideograph": "漢字",
   "parts.identity.radical": "部首記号",
   "parts.identity.stroke": "筆画記号",

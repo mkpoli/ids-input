@@ -175,6 +175,7 @@
   "parts.order.label": "Thứ tự nét",
   "parts.order.backspace": "Xoá lùi",
   "parts.order.clear": "Xoá hết",
+  "parts.order.unavailable": "Không thể tải thứ tự nét.",
   "parts.identity.ideograph": "Chữ Hán",
   "parts.identity.radical": "Ký hiệu bộ thủ",
   "parts.identity.stroke": "Ký hiệu nét",

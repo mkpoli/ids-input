@@ -175,6 +175,7 @@
   "parts.order.label": "筆順",
   "parts.order.backspace": "退格",
   "parts.order.clear": "清除",
+  "parts.order.unavailable": "無法載入筆順。",
   "parts.identity.ideograph": "漢字",
   "parts.identity.radical": "部首符號",
   "parts.identity.stroke": "筆畫符號",

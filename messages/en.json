@@ -177,6 +177,7 @@
   "parts.order.label": "Stroke order",
   "parts.order.backspace": "Backspace",
   "parts.order.clear": "Clear",
+  "parts.order.unavailable": "Stroke orders could not be loaded.",
   "parts.identity.ideograph": "Ideograph",
   "parts.identity.radical": "Radical symbol",
   "parts.identity.stroke": "Stroke symbol",

@@ -369,10 +369,19 @@
   function readOrders() {
     if (orders) return
     ordersFailed = false
-    loadStrokeOrders().then(found => { orders = found }, () => { ordersFailed = true })
+    loadStrokeOrders().then(found => {
+      // Strokes typed before the orders arrived keep the start some part is written with.
+      let kept = typed
+      while (kept && !findByStrokes(strokeParts, found, kept).length) kept = kept.slice(0, -1)
+      typed = kept
+      orders = found
+    }, () => { ordersFailed = true })
   }
-  /** @param {string} letter */
-  function typeStroke(letter) { readOrders(); typed += letter }
+  /** A key no part goes on with stays focusable and does nothing. @param {string} letter */
+  function typeStroke(letter) {
+    readOrders()
+    if (!strokeNext || strokeNext.has(letter)) typed += letter
+  }
   const searching = $derived(tab === 'components' && !characters && typed !== '')
   // A filter narrows the parts the strokes are looked for in.
   const strokeParts = $derived.by(() => filtered ?? [...countedParts, ...strokeSymbols])
@@ -886,14 +895,14 @@
       {#each STROKE_KEYS as key (key.letter)}
         {@const label = t(`parts.first.${KEY_MESSAGE[key.letter]}`)}
         <button type="button" class="stroke-key" data-stroke={key.letter} title={label} aria-label={label}
-          disabled={disabled || Boolean(strokeNext && !strokeNext.has(key.letter))}
+          disabled={disabled} aria-disabled={Boolean(strokeNext && !strokeNext.has(key.letter)) || undefined}
           onpointerenter={readOrders} onfocus={readOrders} onclick={() => typeStroke(key.letter)}>{key.stroke}</button>
       {/each}
       <output class="stroke-typed" class:empty={!typed} aria-label={t('parts.order.label')} {@attach showEnd}>{typed ? [...typed].map(letter => STROKE_KEYS.find(key => key.letter === letter)?.stroke).join('') : t('parts.order.label')}</output>
       <button type="button" class="stroke-backspace" aria-label={t('parts.order.backspace')} title={t('parts.order.backspace')}
-        disabled={disabled || !typed} onclick={() => { typed = typed.slice(0, -1) }}>←</button>
+        disabled={disabled} aria-disabled={!typed || undefined} onclick={() => { typed = typed.slice(0, -1) }}>←</button>
       <button type="button" class="stroke-clear" aria-label={t('parts.order.clear')} title={t('parts.order.clear')}
-        disabled={disabled || !typed} onclick={() => { typed = '' }}>×</button>
+        disabled={disabled} aria-disabled={!typed || undefined} onclick={() => { typed = '' }}>×</button>
     </div>
   {/if}
   {#if tab === 'components'}
@@ -1039,7 +1048,7 @@
     {:else if filtered && !searching}
       {#if filtered.length}{@render typedGrid(filtered)}{:else}<p class="parts-note">{t('parts.none')}</p>{/if}
     {:else if tab === 'components'}
-      {#if searching && ordersFailed}<p class="parts-note" role="status">{t('parts.script.unavailable')} <button type="button" onclick={readOrders}>{t('parts.script.retry')}</button></p>
+      {#if searching && ordersFailed}<p class="parts-note" role="status">{t('parts.order.unavailable')} <button type="button" onclick={readOrders}>{t('parts.script.retry')}</button></p>
       {:else if searching && !orders}<p class="parts-note" role="status">{t('parts.loading')}</p>
       {:else if searching && !strokeHits.length}<p class="parts-note">{t('parts.none')}</p>{/if}
       {#if componentPages > 1}
@@ -1128,7 +1137,8 @@
   .stroke-keys{display:flex;align-items:stretch;gap:3px;min-width:0;height:34px;user-select:none}
   .stroke-key{flex:none;width:30px;padding:0;font-size:20px;line-height:1;border-color:transparent;background:var(--_surface-subtle);
     font-family:"IDS Strokes",var(--ids-font,var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif)}
-  .stroke-key:not(:disabled):hover{border-color:var(--_accent);background:var(--_accent-light)}
+  .stroke-keys button[aria-disabled="true"]{cursor:default;opacity:.55}
+  .stroke-key:not(:disabled,[aria-disabled="true"]):hover{border-color:var(--_accent);background:var(--_accent-light)}
   .stroke-typed{flex:1;min-width:0;display:block;padding:0 8px;border:1px solid var(--_line);border-radius:6px;overflow:hidden;white-space:nowrap;
     font:16px/32px "IDS Strokes",var(--ids-font,var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif);letter-spacing:1px}
   .stroke-typed.empty{font:12px/32px var(--ids-ui-font,system-ui,sans-serif);letter-spacing:0;color:var(--_muted)}

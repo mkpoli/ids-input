@@ -41,11 +41,15 @@ try {
   await press('zp')
   await parts.locator('.parts-panel .part[data-character="乃"]').waitFor()
 
-  // A sequence nothing is written with cannot be typed: its last key is off.
+  // A key no part goes on with is off, keeps the focus and types nothing: no part begins 點 豎 豎.
   await keys.locator('.stroke-clear').click()
-  await press('nnnn')
-  const off = await keys.locator('.stroke-key:disabled').count()
-  assert.ok(off > 0)
+  await press('ns')
+  const vertical = keys.locator('[data-stroke="s"]')
+  assert.equal(await vertical.getAttribute('aria-disabled'), 'true')
+  await vertical.focus()
+  await vertical.click({ force: true })
+  assert.equal(await keys.locator('.stroke-typed').innerText(), '㇔㇑')
+  assert.ok(await vertical.evaluate(node => node === document.activeElement))
 
   // The filter narrows the parts the strokes are looked for in.
   await keys.locator('.stroke-clear').click()
