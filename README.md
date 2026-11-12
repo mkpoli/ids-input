@@ -1345,12 +1345,13 @@ transforms, the active tab, the view, face, theme, language and panel widths) an
 document: the version and build commit (`__APP_VERSION__` and `__BUILD_COMMIT__`, the commit the CI
 built), the route without its query, the viewport, pixel ratio, user agent, loaded font families,
 the preview's step and label, and the last twenty console warnings, errors and failed requests
-collected by the ring `demo/main.js` installs before the app mounts. Anything naming the reporter's
-own machine — a local address, a `file:` URL, a `/@fs/` or home path, wherever it appears, including
-inside a logged line — is taken out before the report leaves, and the share link is rebuilt on the
-published site with only the parameters that open the sequence. The answer replaces the form with
-the issue it became; a report matching an open issue says so and links to it, and a refused or
-timed-out one keeps the text and offers another try.
+collected by the ring `demo/main.js` installs before the app mounts. A workspace too large for the
+intake loses its last tabs, then their documents; the JSON counts what was left out. Anything
+naming the reporter's own machine — a local address, a `file:` URL, a `/@fs/` or home path, wherever
+it appears, including inside a logged line — is taken out before the report leaves, and the share
+link is rebuilt on the published site with only the parameters that open the sequence. The answer
+replaces the form with the issue it became; a report matching an open issue says so and links to
+it, and a refused or timed-out one keeps the text and offers another try.
 
 ### Desktop app
 
