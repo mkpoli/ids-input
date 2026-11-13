@@ -88,10 +88,11 @@ Built by `bun scripts/build_custom_components.mjs` from the bundled BabelStone a
 zi.tools' `ids_lv1.txt` at the pinned revision. GPL-2.0-or-later, since CHISE's rows inform it.
 
 - `components`: one row per custom component — `text`, `kind`, `source`, BabelStone's
-  `description` and `fragment`, `uses` (characters described with it), `examples`, `subtraction`
+  `description` and `fragment`, `uses` (characters described with it), `examples`, `usedIn` (all
+  of those characters, as one string), `subtraction`
   (the component as a character less one part, `㇯凫几`), `draw` and `equivalents`.
 - `draw`: what a composer draws in the component's place — BabelStone's fragment, the private-use
-  glyph of BabelStone Han PUA, or the best equivalent made of characters only. 925 have one.
+  glyph of BabelStone Han PUA, or the best equivalent made of characters only. 972 have one.
 - `equivalents`: what the component is in another table, `{ in, text, count, characters, status,
   basis }`. `difference` rows are solved; `inverse` rows turn a solved row round.
   `verified` means two or more characters give the same spelling, `candidate` that none does;
@@ -116,7 +117,7 @@ it belongs to is a relation between identifiers and never changes one.
 The ledger is append-only. A form keeps the number its first name was given. Two numbers found to
 be one form keep the lower, and the other is retired with `merged into`; a form split in two keeps
 its number on the side with its first name; a number whose first name is gone is `withdrawn`. A
-retired number is not given out again. 1,991 forms: 1,541 with a source's name, 450 without.
+retired number is not given out again. 2,054 forms: 1,588 with a source's name, 466 without.
 
 Every row is derived. No source states these equalities, and each row names the characters behind it.
 
@@ -149,4 +150,4 @@ stands twice in the larger one, or that the result would still name, gives no ro
 - The first description of a character stands for it, whatever source it is for; a regional
   difference between two tables shows up as a `candidate` that no second character confirms.
 - A description with ⿾, ⿿ or ㇯ is one opaque part.
-- 3 of 121 numbered components, 639 of 1,387 entities and 57 of 117 chains have no equivalent yet.
+- 3 of 121 numbered components, 638 of 1,387 entities and 58 of 164 chains have no equivalent yet.

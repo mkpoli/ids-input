@@ -13,9 +13,9 @@ from the starter catalogue in `demo/lib/examples.js`, its source records and
 ## `custom-components.json.gz`
 
 The components no code point names in BabelStone IDS (`{53}`), CHISE IDS (`&CDP-8BD0;`) and
-zi.tools (`#(-𠃌㇉)`): 1,625 of them, what each is in the other tables' notation where the tables'
-descriptions of shared characters settle it (926, 371 confirmed by two or more characters), and
-9,196 descriptions of characters that follow. Fields, method and limits:
+zi.tools (`#(-𠃌㇉)`): 1,672 of them, what each is in the other tables' notation where the tables'
+descriptions of shared characters settle it (973, 373 confirmed by two or more characters), and
+9,259 descriptions of characters that follow. Fields, method and limits:
 [custom IDS notation](../docs/custom-components.md). Every row is derived by this project; no
 source states it. Rebuild with `bun scripts/build_custom_components.mjs`.
 
