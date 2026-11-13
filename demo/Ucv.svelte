@@ -28,7 +28,7 @@
   let query = $state(entryOf())
 </script>
 
-<svelte:window onhashchange={() => { query = entryOf() }} />
+<svelte:window onhashchange={() => { const entry = entryOf(); if (entry) query = entry }} />
 <svelte:head>
   <title>{t('ucv.title')} — {t('app.title')}</title>
 </svelte:head>

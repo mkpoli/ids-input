@@ -192,6 +192,10 @@ to an editable IDS (`⿰木火`). The lookup opens as few components as possible
 shallowest occurrence; where several are equally shallow, the last is used. If the target cannot be found in the available descriptions, the entered text
 remains in the field. Resolution is bounded to eight opened components and 128 candidate trees.
 
+`IdsVariations` (`t`, bindable `query`, and `href(text)` or `ontake(text)`) lists the IRG's unifiable
+and non-unifiable component variations from `data/ucv.json`, each form drawn from
+`data/ucv-forms.json.gz`; the workshop shows it as its `/ucv` page.
+
 `IdsParts` (`adapter`, `onpick(part)`) and `IdsFrom` (`adapter`, `ontake(text)`, bindable `text`)
 also work without an editor. A pick that returns `false` was not placed, so the Hangul compose
 keyboard keeps its letters. `IdsSketch` (`adapter`, `onpick(part)`, `onclose()`) is the Find tab's
