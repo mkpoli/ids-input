@@ -13,9 +13,9 @@ from the starter catalogue in `demo/lib/examples.js`, its source records and
 ## `custom-components.json.gz`
 
 The components no code point names in BabelStone IDS (`{53}`), CHISE IDS (`&CDP-8BD0;`) and
-zi.tools (`#(-𠃌㇉)`): 1,625 of them, what each is in the other tables' notation where the tables'
-descriptions of shared characters settle it (926, 371 confirmed by two or more characters), and
-9,196 descriptions of characters that follow. Fields, method and limits:
+zi.tools (`#(-𠃌㇉)`): 1,672 of them, what each is in the other tables' notation where the tables'
+descriptions of shared characters settle it (973, 373 confirmed by two or more characters), and
+9,259 descriptions of characters that follow. Fields, method and limits:
 [custom IDS notation](../docs/custom-components.md). Every row is derived by this project; no
 source states it. Rebuild with `bun scripts/build_custom_components.mjs`.
 
@@ -1272,6 +1272,13 @@ from `ids-parts.json`.
   ideograph Unicode calls its equivalent read alike (㇕ and 𠃍 are `z`).
 - The compound parts, BabelStone's numbered components and the radical forms the dictionary does
   not name have no entry and are not found by strokes.
+
+## `open-strokes/`
+
+The open stroke-order release served at <https://ids.mkpo.li/open-data#strokes>: Taiwan's standard order
+from CNS 全字庫, Rime's five-stroke dictionary, and orders induced by equivalence or from
+BabelStone IDS for characters a source lacks. Its own `README.md` gives the fields, rules, licences
+and how often the rules agree with the sources. Built by `scripts/build_open_strokes.mjs`.
 
 ## `han-parts.json.gz`
 

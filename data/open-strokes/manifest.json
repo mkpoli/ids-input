@@ -1,0 +1,440 @@
+{
+  "format": "ids-input/open-strokes",
+  "version": 1,
+  "strokes": {
+    "横": {
+      "cns11643": "1",
+      "rime-stroke": "h"
+    },
+    "豎": {
+      "cns11643": "2",
+      "rime-stroke": "s"
+    },
+    "撇": {
+      "cns11643": "3",
+      "rime-stroke": "p"
+    },
+    "點": {
+      "cns11643": "4",
+      "rime-stroke": "n"
+    },
+    "折": {
+      "cns11643": "5",
+      "rime-stroke": "z"
+    }
+  },
+  "sources": [
+    {
+      "key": "cns11643",
+      "name": "CNS11643 中文標準交換碼全字庫, CNS_strokes_sequence.txt",
+      "authors": "數位發展部",
+      "url": "https://www.cns11643.gov.tw/",
+      "files": [
+        {
+          "url": "https://www.cns11643.gov.tw/opendata/Properties.zip",
+          "sha256": "3d56ef14cc8099893245dac58fe4718d2fa64812b9159352a98a4588ad3efa5c"
+        },
+        {
+          "url": "https://www.cns11643.gov.tw/opendata/MapingTables.zip",
+          "sha256": "4502fcf7b433d679dee51127298929543ec7f4aa99be93cd219df1552bc3d2bf"
+        }
+      ],
+      "licence": {
+        "name": "政府資料開放授權條款-第1版 (Open Government Data License, version 1.0)",
+        "url": "https://data.gov.tw/license"
+      },
+      "attribution": "數位發展部，CNS11643中文標準交換碼全字庫網站，https://www.cns11643.gov.tw。"
+    },
+    {
+      "key": "rime-stroke",
+      "name": "Rime five-stroke dictionary (stroke.dict.yaml)",
+      "authors": "四季的風, 雪齋, Kunki Chou, 宋天",
+      "url": "https://github.com/rime/rime-stroke",
+      "revision": "1e8fff9b9494ddec23b0cbc526bcfd8171a6fd48",
+      "sha256": "b3e93dce89c185f45c3d6e189b86b3a8626913352cc85e1094c786579a665791",
+      "licence": {
+        "spdx": "LGPL-3.0-only",
+        "url": "https://www.gnu.org/licenses/lgpl-3.0.html",
+        "texts": [
+          "LICENSE-rime-stroke-LGPL-3.0.txt",
+          "LICENSE-GPL-3.0.txt",
+          "AUTHORS-rime-stroke.txt"
+        ]
+      },
+      "changes": "Reduced to the Han characters with a complete five-class code, one row per character, in code point order."
+    },
+    {
+      "key": "babelstone-ids",
+      "name": "BabelStone IDS (IDS.TXT), the descriptions induced rows are written from",
+      "authors": "Andrew West (魏安)",
+      "url": "https://www.babelstone.co.uk/CJK/IDS.TXT",
+      "version": "BabelStone IDS, https://www.babelstone.co.uk/CJK/IDS.TXT, Andrew West (魏安); File Date 2025-06-27, sha256:cc2a0a97e6a51ed6ebe59870ef2af66e83f3c3c27387d79b4441bb2d791d78b1",
+      "licence": {
+        "name": "Public domain"
+      }
+    }
+  ],
+  "agreement": {
+    "shared": 76278,
+    "sameOrder": 75579,
+    "blocks": [
+      {
+        "block": "URO and earlier",
+        "shared": 27498,
+        "sameOrder": 27479
+      },
+      {
+        "block": "Extension B",
+        "shared": 42704,
+        "sameOrder": 42663
+      },
+      {
+        "block": "Extension C",
+        "shared": 4101,
+        "sameOrder": 4099
+      },
+      {
+        "block": "Extension D",
+        "shared": 195,
+        "sameOrder": 184
+      },
+      {
+        "block": "Extension E",
+        "shared": 1263,
+        "sameOrder": 654
+      },
+      {
+        "block": "Extension F and later",
+        "shared": 517,
+        "sameOrder": 500
+      }
+    ],
+    "inducedAgainstRime": {
+      "rows": 19315,
+      "agree": 9560
+    }
+  },
+  "induction": {
+    "operators": [
+      "⿰",
+      "⿱",
+      "⿲",
+      "⿳",
+      "⿴",
+      "⿵",
+      "⿶",
+      "⿷",
+      "⿸",
+      "⿺"
+    ],
+    "ways": 8,
+    "validation": [
+      {
+        "source": "cns11643",
+        "operators": [
+          {
+            "operator": "⿰",
+            "described": 48669,
+            "written": 46401,
+            "agree": 42326,
+            "induced": true
+          },
+          {
+            "operator": "⿱",
+            "described": 16600,
+            "written": 15544,
+            "agree": 13325,
+            "induced": true
+          },
+          {
+            "operator": "⿺",
+            "described": 2765,
+            "written": 2689,
+            "agree": 2317,
+            "induced": true
+          },
+          {
+            "operator": "⿸",
+            "described": 2436,
+            "written": 2336,
+            "agree": 2154,
+            "induced": true
+          },
+          {
+            "operator": "⿳",
+            "described": 1270,
+            "written": 956,
+            "agree": 729,
+            "induced": true
+          },
+          {
+            "operator": "⿵",
+            "described": 736,
+            "written": 694,
+            "agree": 612,
+            "induced": true
+          },
+          {
+            "operator": "⿲",
+            "described": 504,
+            "written": 452,
+            "agree": 387,
+            "induced": true
+          },
+          {
+            "operator": "⿹",
+            "described": 318,
+            "written": 206,
+            "agree": 80,
+            "induced": false
+          },
+          {
+            "operator": "⿻",
+            "described": 265,
+            "written": 210,
+            "agree": 113,
+            "induced": false
+          },
+          {
+            "operator": "⿴",
+            "described": 254,
+            "written": 248,
+            "agree": 220,
+            "induced": true
+          },
+          {
+            "operator": "⿷",
+            "described": 143,
+            "written": 137,
+            "agree": 109,
+            "induced": true
+          },
+          {
+            "operator": "⿶",
+            "described": 47,
+            "written": 45,
+            "agree": 37,
+            "induced": true
+          },
+          {
+            "operator": "⿽",
+            "described": 15,
+            "written": 10,
+            "agree": 2,
+            "induced": false
+          },
+          {
+            "operator": "㇯",
+            "described": 5,
+            "written": 4,
+            "agree": 0,
+            "induced": false
+          },
+          {
+            "operator": "⿾",
+            "described": 3,
+            "written": 3,
+            "agree": 1,
+            "induced": false
+          },
+          {
+            "operator": "⿿",
+            "described": 3,
+            "written": 3,
+            "agree": 1,
+            "induced": false
+          },
+          {
+            "operator": "⿼",
+            "described": 2,
+            "written": 2,
+            "agree": 1,
+            "induced": false
+          }
+        ]
+      },
+      {
+        "source": "rime-stroke",
+        "operators": [
+          {
+            "operator": "⿰",
+            "described": 62767,
+            "written": 62553,
+            "agree": 61424,
+            "induced": true
+          },
+          {
+            "operator": "⿱",
+            "described": 21407,
+            "written": 21235,
+            "agree": 20118,
+            "induced": true
+          },
+          {
+            "operator": "⿺",
+            "described": 3537,
+            "written": 3517,
+            "agree": 3410,
+            "induced": true
+          },
+          {
+            "operator": "⿸",
+            "described": 2981,
+            "written": 2967,
+            "agree": 2910,
+            "induced": true
+          },
+          {
+            "operator": "⿳",
+            "described": 1644,
+            "written": 1598,
+            "agree": 1418,
+            "induced": true
+          },
+          {
+            "operator": "⿵",
+            "described": 938,
+            "written": 933,
+            "agree": 886,
+            "induced": true
+          },
+          {
+            "operator": "⿲",
+            "described": 687,
+            "written": 674,
+            "agree": 652,
+            "induced": true
+          },
+          {
+            "operator": "⿹",
+            "described": 425,
+            "written": 409,
+            "agree": 241,
+            "induced": false
+          },
+          {
+            "operator": "⿻",
+            "described": 343,
+            "written": 310,
+            "agree": 184,
+            "induced": false
+          },
+          {
+            "operator": "⿴",
+            "described": 318,
+            "written": 317,
+            "agree": 298,
+            "induced": true
+          },
+          {
+            "operator": "⿷",
+            "described": 188,
+            "written": 185,
+            "agree": 156,
+            "induced": true
+          },
+          {
+            "operator": "⿶",
+            "described": 53,
+            "written": 53,
+            "agree": 49,
+            "induced": true
+          },
+          {
+            "operator": "⿽",
+            "described": 15,
+            "written": 13,
+            "agree": 2,
+            "induced": false
+          },
+          {
+            "operator": "㇯",
+            "described": 9,
+            "written": 6,
+            "agree": 0,
+            "induced": false
+          },
+          {
+            "operator": "⿾",
+            "described": 4,
+            "written": 4,
+            "agree": 2,
+            "induced": false
+          },
+          {
+            "operator": "⿼",
+            "described": 3,
+            "written": 3,
+            "agree": 2,
+            "induced": false
+          },
+          {
+            "operator": "⿿",
+            "described": 3,
+            "written": 3,
+            "agree": 2,
+            "induced": false
+          }
+        ]
+      }
+    ]
+  },
+  "coverage": [
+    {
+      "source": "cns11643",
+      "recorded": 76282,
+      "equivalent": 719,
+      "ids": 19315,
+      "none": 7036
+    },
+    {
+      "source": "rime-stroke",
+      "recorded": 102582,
+      "equivalent": 681,
+      "ids": 0,
+      "none": 89
+    }
+  ],
+  "files": [
+    {
+      "name": "cns11643.tsv.gz",
+      "rows": 76282,
+      "columns": [
+        "char",
+        "codepoint",
+        "orders",
+        "cns"
+      ],
+      "bytes": 913393
+    },
+    {
+      "name": "rime-stroke.tsv.gz",
+      "rows": 102582,
+      "columns": [
+        "char",
+        "codepoint",
+        "orders"
+      ],
+      "bytes": 1165017
+    },
+    {
+      "name": "induced.tsv.gz",
+      "rows": 20715,
+      "columns": [
+        "char",
+        "codepoint",
+        "orders",
+        "basis",
+        "from",
+        "source"
+      ],
+      "bytes": 316757
+    }
+  ],
+  "texts": [
+    "README.md",
+    "LICENSE-rime-stroke-LGPL-3.0.txt",
+    "LICENSE-GPL-3.0.txt",
+    "AUTHORS-rime-stroke.txt"
+  ]
+}

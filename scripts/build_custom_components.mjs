@@ -191,7 +191,7 @@ const components = [...used].map(([text, entry]) => {
   return {
     text, kind, source: SOURCE_OF[kind],
     ...(note ? { description: note.description, ...(note.fragment ? { fragment: note.fragment } : {}) } : {}),
-    uses: chars.length, examples: chars.slice(0, 8),
+    uses: chars.length, examples: chars.slice(0, 8), usedIn: chars.join(''),
     ...(subtraction ? { subtraction } : {}),
     equivalents: equivalents.get(text) ?? [],
   }
