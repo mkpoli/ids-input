@@ -189,6 +189,13 @@
   }
 </script>
 
+{#snippet mark(/** @type {string} */ status, /** @type {boolean} */ worded)}
+  <span class="status" data-status={status} title={worded ? undefined : t(`appendix.status.${status}`)}>
+    {#if status === 'confirmed'}<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8" /></svg>{:else if status === 'candidate' && !worded}<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.2" /></svg>{/if}
+    {#if worded}{t(`appendix.status.${status}`)}{:else}<span class="ui-visually-hidden">{t(`appendix.status.${status}`)}</span>{/if}
+  </span>
+{/snippet}
+
 <div class="page">
   <header class="bar">
     <SiteSelect title={t('app.title')} label={t('app.sitesLabel')} more={t('app.sitesMore')} {locale} href={`./?lang=${locale}`} />
@@ -292,7 +299,7 @@
                 </td>
                 <td class="id">
                   <a href={`?q=${row.id}`} onclick={event => { event.preventDefault(); show(row.id) }}>{row.id}</a>
-                  <span class="status" data-status={row.status}>{t(`appendix.status.${row.status}`)}</span>
+                  {@render mark(row.status, true)}
                 </td>
                 <td>
                   <ul class="names">
@@ -310,7 +317,7 @@
                       <li>
                         <span class="tag" data-source={item.in}>{t(`appendix.source.${item.in}`)}</span>
                         <span class="name" lang="ja">{item.text}</span>
-                        <span class="status" data-status={item.status}>{t(`appendix.status.${item.status}`)}</span>
+                        {@render mark(item.status, false)}
                         {#if item.count}<span class="by" lang="ja">{item.count} · {item.characters.join('')}</span>{/if}
                         {#if item.id && item.id !== row.id}<a class="link" href={`?q=${item.id}`} onclick={event => { event.preventDefault(); show(/** @type {string} */ (item.id)) }}>{item.id}</a>{/if}
                       </li>
@@ -332,7 +339,7 @@
                   <td colspan="6">
                     <ul class="derived">
                       {#each row.derived as one (one.char + one.in + one.text)}
-                        <li><span class="char" lang="ja">{one.char}</span><span class="tag" data-source={one.in}>{t(`appendix.source.${one.in}`)}</span><span class="name" lang="ja">{one.text}</span><span class="status" data-status={one.status === 'verified' ? 'confirmed' : 'candidate'}>{t(`appendix.status.${one.status === 'verified' ? 'confirmed' : 'candidate'}`)}</span><span class="by" lang="ja">{one.of}</span></li>
+                        <li><span class="char" lang="ja">{one.char}</span><span class="tag" data-source={one.in}>{t(`appendix.source.${one.in}`)}</span><span class="name" lang="ja">{one.text}</span>{@render mark(one.status === 'verified' ? 'confirmed' : 'candidate', false)}<span class="by" lang="ja">{one.of}</span></li>
                       {/each}
                     </ul>
                   </td>
@@ -425,14 +432,16 @@
   .id{white-space:nowrap}
   .id a,.link,a.name{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--ids-accent);text-decoration:none}
   .id a:hover,.link:hover,a.name:hover{text-decoration:underline}
-  .id .status{display:block;margin-top:4px}
+  .id .status{display:flex;margin-top:4px}
   .names,.equals,.derived{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
   .names li,.equals li,.derived li{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
   .tag{flex:none;padding:0 5px;border:1px solid var(--ids-line);border-radius:4px;font-size:10px;line-height:1.6;color:var(--ids-muted);white-space:nowrap}
   .tag[data-source="babelstone"]{color:light-dark(#8a4b00,#e0a458);border-color:currentColor}
   .tag[data-source="chise"]{color:light-dark(#1f5fa8,#7fb2ee);border-color:currentColor}
   .tag[data-source="zi-tools"]{color:light-dark(#1d7044,#6fcf97);border-color:currentColor}
-  .status{font-size:10px;color:var(--ids-muted);white-space:nowrap}
+  .status{display:inline-flex;align-items:center;gap:3px;font-size:10px;color:var(--ids-muted);white-space:nowrap}
+  .status svg{width:13px;height:13px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .status[data-status="candidate"] svg{stroke-width:1.4;stroke-dasharray:2 2}
   .status[data-status="confirmed"],.status[data-status="verified"]{color:light-dark(#1d7044,#6fcf97)}
   .status[data-status="none"]{opacity:.7}
   .by{font-family:var(--ids-font),var(--ids-glyph-fallback);font-size:11px;color:var(--ids-muted);overflow-wrap:anywhere}
