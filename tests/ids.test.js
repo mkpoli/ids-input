@@ -195,6 +195,12 @@ describe('the editor verbs', () => {
     expect(swapOp(tree('⿲亻木口'), [], '⿰')).toEqual({ problem: 'drop' })
     expect(swapOp(t, [1], '⿾')).toEqual({ problem: 'drop' })
   })
+  it('drop parts on request, keeping the filled ones first', () => {
+    expect(write(swapOp(tree('⿲亻木口'), [], '⿰', { drop: true }).tree)).toBe('⿰亻木')
+    expect(write(swapOp(tree('⿲亻⬚口'), [], '⿰', { drop: true }).tree)).toBe('⿰亻口')
+    expect(write(swapOp(t, [1], '⿾', { drop: true }).tree)).toBe('⿰亻⿾七')
+    expect(write(applyOperator(tree('⿲亻木口'), [], '⿰', { drop: true }).tree)).toBe('⿰亻木')
+  })
   it('remove one level, keeping the first part that is filled', () => {
     expect(write(unwrap(t, [1]))).toBe('⿰亻七')
     expect(write(unwrap(tree('⿰⬚木'), []))).toBe('木')
