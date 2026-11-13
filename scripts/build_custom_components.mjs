@@ -179,21 +179,23 @@ const components = [...used].map(([text, entry]) => {
   const kind = /** @type {'numbered'} */ (customKind(text))
   const chars = [...entry.chars]
   const note = numbered.get(text)
-  // The same component as what is left of a character it stands in beside one other part.
-  let subtraction = null
-  for (const char of chars) {
-    const tree = tables[SOURCE_OF[kind]].get(char)?.find(tree => isNode(tree) && tree.parts.length === 2 && tree.parts.includes(text))
-    if (!isNode(tree)) continue
-    const other = tree.parts.find(part => part !== text)
-    if (typeof other !== 'string' || isCustom(other)) continue
-    subtraction = `㇯${char}${other}`
-    break
+  // The same component as what is left of a character once its other parts are taken out: {51} is
+  // 馬 without 灬, ㇯馬灬. Up to two parts are taken, each a character that stands once.
+  /** @type {string[]} */
+  const subtractions = []
+  for (const char of chars) for (const tree of tables[SOURCE_OF[kind]].get(char) ?? []) {
+    if (!isNode(tree) || atoms(tree).filter(atom => atom === text).length !== 1) continue
+    const others = besides(tree, text)
+    if (!others.length || others.length > 2) continue
+    if (!others.every(other => typeof other === 'string' && !isCustom(other) && [...other].length === 1 && atoms(tree).filter(atom => atom === other).length === 1)) continue
+    const written = others.reduce((/** @type {string} */ whole, other) => `㇯${whole}${other}`, char)
+    if (!subtractions.includes(written)) subtractions.push(written)
   }
   return {
     text, kind, source: SOURCE_OF[kind],
     ...(note ? { description: note.description, ...(note.fragment ? { fragment: note.fragment } : {}) } : {}),
     uses: chars.length, examples: chars.slice(0, 8), usedIn: chars.join(''),
-    ...(subtraction ? { subtraction } : {}),
+    ...(subtractions.length ? { subtractions } : {}),
     equivalents: equivalents.get(text) ?? [],
   }
 }).sort((a, b) => SOURCES.indexOf(a.source) - SOURCES.indexOf(b.source) || b.uses - a.uses || (a.text < b.text ? -1 : 1))
@@ -320,6 +322,15 @@ for (const row of components) {
     for (const other of item.arrangements ?? []) { const own = idOf(other.text); if (own) other.id = own }
   }
 }
+// A subtraction two forms both claim (a character one table writes two ways) names neither.
+/** @type {Map<string, Set<string>>} */
+const claimed = new Map()
+for (const row of components) for (const written of /** @type {{ subtractions?: string[] }} */ (row).subtractions ?? []) claimed.set(written, (claimed.get(written) ?? new Set()).add(/** @type {string} */ (idOf(row.text))))
+for (const row of /** @type {{ subtractions?: string[] }[]} */ (components)) {
+  if (!row.subtractions) continue
+  row.subtractions = row.subtractions.filter(written => claimed.get(written)?.size === 1)
+  if (!row.subtractions.length) delete row.subtractions
+}
 const formRows = forms.map(form => ({ id: /** @type {string} */ (idOf(form.first)), char: formChar(/** @type {string} */ (idOf(form.first))), names: form.aliases }))
   .sort((a, b) => formNumber(a.id) - formNumber(b.id))
 const retiredRows = ledger.rows.filter(row => row.note.startsWith('merged into') || row.note === 'withdrawn').map(row => ({ id: row.id, note: row.note }))
@@ -441,13 +452,14 @@ const flat = tableRows(/** @type {any} */ (document)).map(row => {
   return {
     id: row.id, entity: `&${row.id};`, char: `U+${(0xf0000 + row.number).toString(16).toUpperCase()}`,
     babelstone: named('babelstone'), chise: named('chise'), zi_tools: named('zi-tools'), expression: named('unnamed'),
+    subtractions: row.subtractions.join(' '),
     description: row.names.map(name => name.description ?? '').filter(Boolean).join('; '),
     status: row.status, uses: row.uses, used_in: row.usedIn,
     equivalents: row.equivalents.map(item => ({ in: item.in, text: item.text, status: item.status, count: item.count, ...(item.id ? { id: item.id } : {}) })),
     of: row.of,
   }
 })
-const COLUMNS = /** @type {const} */ (['id', 'entity', 'char', 'babelstone', 'chise', 'zi_tools', 'expression', 'description', 'status', 'uses', 'used_in', 'equivalents', 'of'])
+const COLUMNS = /** @type {const} */ (['id', 'entity', 'char', 'babelstone', 'chise', 'zi_tools', 'expression', 'subtractions', 'description', 'status', 'uses', 'used_in', 'equivalents', 'of'])
 /** @param {typeof flat[number]} row @returns {string[]} */
 const cells = row => COLUMNS.map(column => column === 'equivalents' ? row.equivalents.map(item => `${item.in}:${item.text}:${item.status}:${item.count}`).join(' | ')
   : column === 'of' ? row.of.map(other => `${other.relation}:${other.id}`).join(' | ') : String(row[column]))
