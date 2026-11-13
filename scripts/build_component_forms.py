@@ -111,6 +111,38 @@ def compress_chang(outlines, style):
     return [[ops, [ymap(v) if i % 2 else v for i,v in enumerate(points)]] for ops,points in outlines]
 
 
+
+ROOF_CUT = 535         # 王's top bar in Sans: the roof lives above it
+APEX_CUT = 690         # the apex of 𠆢 sits above this: cutting it opens the roof into 八
+
+def move_recording(recordings, fn):
+    """The same contours with every point passed through fn."""
+    return [[(op, tuple(fn(*point) for point in args)) for op, args in recording]
+            for recording in recordings]
+
+def huang_eight(cs):
+    """黄's 八: the two wide, short strokes the character ends in."""
+    return [contour for contour in cs('\u9ec4')
+            if max(p[1] for _, args in contour for p in args) < 120
+            and max(p[0] for _, args in contour for p in args)
+            - min(p[0] for _, args in contour for p in args) > 250]
+
+def jin_with_ba(cs, style='sans'):
+    """金 with its 𠆢 opened into 八.
+
+    金's roof is two strokes that meet at the apex and come down on 王's top bar. Removing
+    the apex leaves those strokes standing as 八, which is how this character shares 黄's
+    last two strokes: the legs keep the weight and the angles 金 draws them with.
+    """
+    shape = pathops.Path()
+    for contour in cs('金'): replayRecording(contour, shape.getPen())
+    apex = pathops.Path()
+    apex.moveTo(385, APEX_CUT); apex.lineTo(615, APEX_CUT)
+    apex.lineTo(615, 1000); apex.lineTo(385, 1000); apex.close()
+    pen = RecordingPen()
+    pathops.op(shape, apex, pathops.PathOp.DIFFERENCE).draw(pen)
+    return [group([pen.value])]
+
 def huang_body(cs):
     """黄 without its last two strokes, which 金's top stands in for.
 
@@ -118,14 +150,8 @@ def huang_body(cs):
     sharing a stroke, so the example names the body and this form keeps it where 黄
     draws it, rather than letting the composer lay 龷 and 由 out afresh.
     """
-    body = []
-    for contour in cs('黄'):
-        ys = [p[1] for _, values in contour for p in values if p is not None]
-        xs = [p[0] for _, values in contour for p in values if p is not None]
-        if min(ys) > 330 and max(ys) < 460 and max(xs) - min(xs) > 180:
-            continue                      # the 八: two wide, short strokes along the bottom
-        body.append(contour)
-    return body
+    eight = huang_eight(cs)
+    return [contour for contour in cs('黄') if contour not in eight]
 
 def wan_shan(cs, style):
     if style in ('kaisho', 'fangsong'):
@@ -432,6 +458,7 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     forms['⿳艹田⿵冂山'] = wan_shan(cs, style)
     forms['⿱田⿵冂山'] = globals()['WAN_WITHOUT_CAO']
     forms['⿱龷由'] = [group(huang_body(cs))]
+    forms['⿱⿰丿㇏⿻王丷'] = jin_with_ba(cs, style)
     # The top of the KRM vulgar 處 (K07097330): ⺊'s dot as a bar, the stem centred on the cover
     # and joined to it. One component, reused as the top of ⿳⺊冖人 and its relatives.
     forms['⿱⺊冖'] = seal_dot_top(cs, style)

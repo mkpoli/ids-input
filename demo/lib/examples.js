@@ -309,7 +309,7 @@ export const EXAMPLE_GROUPS = [
     // In 黄金萬兩 the sharing runs the other way as well: 金's top stands where 黄's last two
     // strokes would, and 金's bottom stands where 萬's 艹 would, so neither is drawn twice.
     { sequence: '⿳五⿲矢口隹龰', refs: [46], char: '', editorial: true },
-    { sequence: '⿱⿱龷由⿱金⿱田⿵冂山', refs: [46,51], char: '', editorial: true },
+    { sequence: '⿱⿱龷由⿱⿱⿰丿㇏⿻王丷⿱田⿵冂山', refs: [46,51], char: '', editorial: true },
     { sequence: '⿳士⿲女口意祥', refs: [50], char: '', editorial: true },
     { sequence: '⿱艹⿰马尼', refs: [43], char: '' },
     { sequence: '⿰⿳⿰SIR木阝', refs: [43], char: '' },

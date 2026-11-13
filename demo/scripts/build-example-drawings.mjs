@@ -42,7 +42,7 @@ await source.ready()
 // 黃金萬兩 sets 黃 above 金, and 黃 ends in two dots that sit in the gap between them.
 // The print the example follows joins the two: 金's roof takes the dots' place. Drop the
 // dots from 黃's own outline and let the roof meet the body it belongs to.
-const JOINED_DOTS = '⿱⿱龷由⿱金⿱田⿵冂山'
+const JOINED_DOTS = '⿱⿱龷由⿱⿱⿰丿㇏⿻王丷⿱田⿵冂山'
 
 // The stored drawings run y down, and a viewer that flips y shows them upside down.
 function inkBox(d) {
@@ -72,7 +72,7 @@ function place(body, jin, band) {
 
 function joinHuangToJin(drawn) {
   const body = drawn?.parts?.find(p => String(p.origin).startsWith('Noto Sans CJK: ⿱龷由'))
-  const jin = drawn?.parts?.find(p => String(p.origin).startsWith('host 鑫'))
+  const jin = drawn?.parts?.find(p => String(p.origin).startsWith('host 鑫') || String(p.origin).startsWith('Noto Sans CJK: ⿱⿰丿㇏⿻王丷'))
   if (!body || !jin) return drawn
   const fit = (part, left, right, top, bottom) => {
     const box = inkBox(part.d)
@@ -109,7 +109,7 @@ function transformPath(d, map) {
 }
 
 function fitWanToStack(drawn) {
-  const jin = drawn?.parts?.find(p => String(p.origin).startsWith('host 鑫'))
+  const jin = drawn?.parts?.find(p => String(p.origin).startsWith('host 鑫') || String(p.origin).startsWith('Noto Sans CJK: ⿱⿰丿㇏⿻王丷'))
   const wans = (drawn?.parts ?? []).filter(p => String(p.origin).startsWith('Noto Sans CJK: ⿱田⿵冂山'))
   if (!jin || wans.length === 0) return drawn
   const boxes = wans.map(p => inkBox(p.d))
@@ -146,10 +146,7 @@ for (const example of EXAMPLES) {
     if (hasSmallSeal(example.sequence)) selected = smallSealSource({load: async () => JSON.parse(gunzipSync(readFileSync(new URL('../../node_modules/@han-compose/composer/data/sources/small-seal/outlines.json.gz', import.meta.url)))), fallback: selected})
     if (hasShuishu(example.sequence)) selected = shuishuSource({ load: loadShuishu, fallback: selected })
     if (hasJurchen(example.sequence)) selected = jurchenSource({ load: loadJurchen, fallback: selected })
-    // A draft form names the character it stood for, not the one its parts spell out: the examples of
-    // the sign and the 二简字 group are drawn from the description, so the thumbnail matches the editor.
-    const drafted = (DRAFTED.get(example.sequence) ?? null) !== null
-    const drawn = await compose(selected, drafted ? example.sequence : example.char || example.sequence)
+    const drawn = await compose(selected, example.char || example.sequence)
     if (example.sequence === JOINED_DOTS) { joinHuangToJin(drawn); fitWanToStack(drawn) }
     drawings[example.sequence] = { char: example.char, drawn }
     console.log(`drew ${example.char || example.sequence}`)
