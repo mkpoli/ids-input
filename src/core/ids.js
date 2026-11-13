@@ -220,17 +220,22 @@ export function modifierLength(text, at) {
  * @returns {{ tree: Part, problem?: undefined } | { problem: Problem, tree?: undefined }}
  */
 export function parse(text, { open = false } = {}) {
-  const read = readTree(text, open, true)
-  // Braces, & and # are graphic characters too: where a text does not read with a custom
-  // component, its characters are read one by one (⿳{1} as {, 1 and }).
-  if (!read.problem || !/[{&#]/.test(text ?? '')) return read
-  const literal = readTree(text, open, false)
-  return literal.problem ? read : literal
+  return readTree(text, open, !readsLiterally(text))
 }
 
-/** Whether `text` reads only with its braces, & or # as components of their own.
- * @param {string | null | undefined} text */
-export const readsLiterally = text => /[{&#]/.test(text ?? '') && [false, true].some(open => Boolean(readTree(text, open, true).problem) && !readTree(text, open, false).problem)
+/**
+ * Whether `text` reads with its braces, & or # as components of their own. Braces, & and # are
+ * graphic characters too: a text that is no whole description with a custom component, and is one
+ * with its characters read one by one, reads that way (⿳{1} as {, 1 and }), as a draft too. A draft
+ * that is whole neither way takes whichever reading has no problem, custom components first.
+ * @param {string | null | undefined} text
+ */
+export function readsLiterally(text) {
+  if (!/[{&#]/.test(text ?? '')) return false
+  if (!readTree(text, false, true).problem) return false
+  if (!readTree(text, false, false).problem) return true
+  return Boolean(readTree(text, true, true).problem) && !readTree(text, true, false).problem
+}
 
 /**
  * @param {string | null | undefined} text @param {boolean} open @param {boolean} customs
