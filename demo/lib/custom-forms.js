@@ -1,7 +1,7 @@
 // @ts-check
 // The appendix's table: one row per form no code point names, gathered from
 // `data/custom-components.json.gz`, and the test a query puts to a row.
-import { isCustom } from '../../src/core/index.js'
+import { customKind, customLength, isCustom } from '../../src/core/index.js'
 
 /**
  * @typedef {'babelstone' | 'chise' | 'zi-tools'} Notation
@@ -121,4 +121,34 @@ export function matches(row, terms, source, status) {
   if (status !== 'any' && row.status !== status) return false
   if (source === 'yours' ? !row.yours.length : source !== 'all' && !row.names.some(name => name.source === source)) return false
   return terms.every(term => row.hay.includes(term))
+}
+
+/** The notation a custom component is written in, as the table names its sources. */
+const NOTATION = /** @type {const} */ ({ numbered: 'babelstone', entity: 'chise', chain: 'zi-tools' })
+
+/**
+ * A description as the runs the table writes: text as it is, and each custom component on its
+ * own with its notation and, where `idOf` knows it, the form it is.
+ * @param {string} text @param {(name: string) => string | undefined} idOf
+ * @returns {{ text: string, source?: Notation | 'form', id?: string }[]}
+ */
+export function segments(text, idOf) {
+  /** @type {{ text: string, source?: Notation | 'form', id?: string }[]} */
+  const out = []
+  for (let at = 0; at < text.length;) {
+    const length = customLength(text, at)
+    if (!length) {
+      const char = String.fromCodePoint(/** @type {number} */ (text.codePointAt(at)))
+      const last = out[out.length - 1]
+      if (last && !last.source) last.text += char; else out.push({ text: char })
+      at += char.length
+      continue
+    }
+    const token = text.slice(at, at + length), kind = /** @type {'numbered'} */ (customKind(token))
+    const own = /^&X-\d+;$/.test(token)
+    const id = own ? token.slice(1, -1) : idOf(token)
+    out.push({ text: token, source: own ? 'form' : NOTATION[kind], ...(id ? { id } : {}) })
+    at += length
+  }
+  return out
 }
