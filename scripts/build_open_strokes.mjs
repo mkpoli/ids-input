@@ -1,9 +1,10 @@
-// Build `data/open-strokes/`: the stroke order of Han characters by writing style, each row from a
-// named source or induced from one and marked so.
+// Build `data/open-strokes/`: the stroke order of Han characters, each row from a named source or
+// induced from one and marked so.
 //
-//   rime-stroke.tsv.gz  mainland order, as Rime's five-stroke dictionary records it (LGPL-3.0)
-//   cns11643.tsv.gz     Taiwan order, as CNS 全字庫 records it (Open Government Data License 1.0)
-//   induced.tsv.gz      characters a style's source lacks, written from a character the source has:
+//   cns11643.tsv.gz     Taiwan's standard order, as CNS 全字庫 records it (Open Government Data License 1.0)
+//   rime-stroke.tsv.gz  Rime's five-stroke dictionary: the CNS table with the orders its authors
+//                       added, through Extension J (LGPL-3.0)
+//   induced.tsv.gz      characters a source lacks, written from a character the source has:
 //                       the unified ideograph a compatibility form or radical is equivalent to, or
 //                       the components of its ideographic description sequence
 //
@@ -17,7 +18,7 @@
 // records the SHA-256 of the copies read.
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { copyFileSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { gunzipSync, gzipSync } from 'node:zlib'
@@ -58,7 +59,8 @@ if (rimeFile.sha256 !== RIME.sha256) throw Error(`Unexpected rime-stroke: ${RIME
 const rime = new Map()
 for (const line of rimeFile.bytes.toString().split('\n')) {
   const [char, code] = line.split('\t')
-  if (!char || !code || [...char].length !== 1 || !/^[hspnz]+$/.test(code)) continue
+  // The dictionary also lists Tangut and the CJK strokes; the release holds Han characters.
+  if (!char || !code || [...char].length !== 1 || !/^[hspnz]+$/.test(code) || characterScript(char) !== 'han') continue
   const known = rime.get(char)
   if (!known) rime.set(char, [code])
   else if (!known.includes(code)) known.push(code)
@@ -111,7 +113,7 @@ for (const line of idsText.split('\n')) {
   if (!sequences || [...char].length !== 1) continue
   ids.set(char, sequences.split(' ').map(text => {
     const found = /^(.*?)(?:\(([A-Z]+)\))?$/.exec(text)
-    return { seq: (found?.[1] ?? text).replace(/^〾/, ''), regions: found?.[2] ?? '' }
+    return { seq: found?.[1] ?? text, regions: found?.[2] ?? '' }
   }))
 }
 /** @typedef {{ leaf: string } | { op: string, parts: Tree[] }} Tree */
@@ -122,7 +124,8 @@ function parse(sequence) {
   /** @returns {Tree} */
   const node = () => {
     const char = chars[at++]
-    if (char === undefined || char === '{' || char === '？') throw Error('unreadable')
+    // 〾 marks a description as a variation of the form, not the form itself: nothing is induced from it.
+    if (char === undefined || char === '{' || char === '？' || char === '〾') throw Error('unreadable')
     if (!ARITY[char]) return { leaf: char }
     return { op: char, parts: Array.from({ length: ARITY[char] }, node) }
   }
@@ -157,13 +160,17 @@ function ordersOf(tree, table, through) {
 /** The description a style reads a character by: the one its region gives, else the first. @param {string} char @param {string} region */
 const described = (char, region) => { const list = ids.get(char); return list ? (list.find(entry => entry.regions.includes(region)) ?? list[0]).seq : null }
 
-const STYLES = [
-  { style: 'mainland', source: 'rime-stroke', table: rime, region: 'G' },
-  { style: 'taiwan', source: 'cns11643', table: cns, region: 'T' },
+// Both tables follow Taiwan's standard forms, so a character is read by its T-source description.
+const SOURCES = [
+  { source: 'cns11643', table: cns, region: 'T' },
+  { source: 'rime-stroke', table: rime, region: 'T' },
 ]
+const LETTER = { h: '1', s: '2', p: '3', n: '4', z: '5' }
+/** A Rime code in the digits CNS writes, for comparing the two. @param {string} code */
+const digits = code => [...code].map(letter => LETTER[letter]).join('')
 // How often the rules write a recorded character the way its source does, by the description's
 // outer operator.
-const validation = STYLES.map(({ style, source, table, region }) => {
+const validation = SOURCES.map(({ source, table, region }) => {
   /** @type {Map<string, { described: number, written: number, agree: number }>} */
   const byOperator = new Map()
   for (const [char, recorded] of table) {
@@ -176,7 +183,7 @@ const validation = STYLES.map(({ style, source, table, region }) => {
     tally.written++
     if (written.some(order => recorded.includes(order))) tally.agree++
   }
-  return { style, source, operators: [...byOperator].sort((a, b) => b[1].described - a[1].described).map(([operator, tally]) => ({ operator, ...tally, induced: RELIABLE.includes(operator) })) }
+  return { source, operators: [...byOperator].sort((a, b) => b[1].described - a[1].described).map(([operator, tally]) => ({ operator, ...tally, induced: RELIABLE.includes(operator) })) }
 })
 
 const repertoire = JSON.parse(gunzipSync(readFileSync(new URL('../data/han-parts.json.gz', import.meta.url)))).keys
@@ -185,23 +192,36 @@ const candidates = [...new Set([...repertoire, ...ids.keys()])].filter(char => c
 const through = new Set(RELIABLE)
 /** @type {string[][]} */
 const induced = []
-const left = STYLES.map(({ style, source, table, region }) => {
+const left = SOURCES.map(({ source, table, region }) => {
   let equivalent = 0, fromIds = 0, none = 0
   for (const char of candidates) {
     if (table.has(char)) continue
     // A compatibility ideograph or a Kangxi radical is the unified ideograph it normalizes to.
     const unified = char.normalize('NFKC')
     if (unified !== char && [...unified].length === 1 && table.has(unified)) {
-      induced.push([char, point(char), style, table.get(unified).join(' '), 'equivalent', unified, source])
+      induced.push([char, point(char), table.get(unified).join(' '), 'equivalent', unified, source])
       equivalent++
       continue
     }
     const sequence = described(char, region), tree = sequence ? parse(sequence) : null
     const written = tree && !('leaf' in tree) ? ordersOf(tree, table, through) : null
-    if (written) { induced.push([char, point(char), style, written.slice(0, WAYS).join(' '), 'ids', sequence, source]); fromIds++ } else none++
+    if (written) { induced.push([char, point(char), written.slice(0, WAYS).join(' '), 'ids', sequence, source]); fromIds++ } else none++
   }
-  return { style, source, recorded: table.size, equivalent, ids: fromIds, none }
+  return { source, recorded: table.size, equivalent, ids: fromIds, none }
 })
+// The two sources on the characters both record, and the orders induced from CNS against what Rime
+// records for the same characters: rows neither the rules nor the CNS table had seen.
+const shared = [...cns.keys()].filter(char => rime.has(char))
+const same = char => rime.get(char).some(code => cns.get(char).includes(digits(code)))
+const BLOCKS = [['URO and earlier', 0x9fff], ['Extension B', 0x2a6df], ['Extension C', 0x2b73f], ['Extension D', 0x2b81f], ['Extension E', 0x2ceaf], ['Extension F and later', 0x10ffff]]
+const blockOf = char => BLOCKS.find(([, last]) => char.codePointAt(0) <= last)[0]
+const agreement = {
+  shared: shared.length,
+  sameOrder: shared.filter(same).length,
+  blocks: BLOCKS.map(([block]) => { const chars = shared.filter(char => blockOf(char) === block); return { block, shared: chars.length, sameOrder: chars.filter(same).length } }),
+}
+const heldOut = induced.filter(row => row[5] === 'cns11643' && row[3] === 'ids' && rime.has(row[0]))
+const heldOutAgree = heldOut.filter(row => rime.get(row[0]).some(code => row[2].split(' ').includes(digits(code)))).length
 
 // --- The files -----------------------------------------------------------------------------------
 
@@ -213,27 +233,31 @@ function write(name, columns, rows) {
   return { name, rows: rows.length, columns, bytes: statSync(new URL(name, OUT)).size }
 }
 const files = [
-  write('rime-stroke.tsv.gz', ['char', 'codepoint', 'orders'],
-    [...rime.keys()].sort(byCodePoint).map(char => [char, point(char), rime.get(char).join(' ')])),
   write('cns11643.tsv.gz', ['char', 'codepoint', 'orders', 'cns'],
     [...cns.keys()].sort(byCodePoint).map(char => [char, point(char), cns.get(char).join(' '), cnsCodes.get(char).join(' ')])),
-  write('induced.tsv.gz', ['char', 'codepoint', 'style', 'orders', 'basis', 'from', 'source'], induced),
+  write('rime-stroke.tsv.gz', ['char', 'codepoint', 'orders'],
+    [...rime.keys()].sort(byCodePoint).map(char => [char, point(char), rime.get(char).join(' ')])),
+  write('induced.tsv.gz', ['char', 'codepoint', 'orders', 'basis', 'from', 'source'], induced),
 ]
+// The LGPL asks that its text, and the GPL's it builds on, travel with the data.
+const LICENCES = { 'rime-stroke-LGPL-3.0.txt': 'LICENSE-rime-stroke-LGPL-3.0.txt', 'GPL-3.0.txt': 'LICENSE-GPL-3.0.txt', 'rime-stroke-AUTHORS.txt': 'AUTHORS-rime-stroke.txt' }
+for (const [from, to] of Object.entries(LICENCES)) copyFileSync(new URL(`../data/licences/${from}`, import.meta.url), new URL(to, OUT))
 const manifest = {
   format: 'ids-input/open-strokes',
   version: 1,
-  strokes: { 横: { 'rime-stroke': 'h', cns11643: '1' }, 豎: { 'rime-stroke': 's', cns11643: '2' }, 撇: { 'rime-stroke': 'p', cns11643: '3' }, 點: { 'rime-stroke': 'n', cns11643: '4' }, 折: { 'rime-stroke': 'z', cns11643: '5' } },
+  strokes: { 横: { cns11643: '1', 'rime-stroke': 'h' }, 豎: { cns11643: '2', 'rime-stroke': 's' }, 撇: { cns11643: '3', 'rime-stroke': 'p' }, 點: { cns11643: '4', 'rime-stroke': 'n' }, 折: { cns11643: '5', 'rime-stroke': 'z' } },
   sources: [
     {
-      key: 'rime-stroke', style: 'mainland', name: 'Rime five-stroke dictionary (stroke.dict.yaml)',
-      authors: '四季的風, 雪齋, Kunki Chou, 宋天', url: 'https://github.com/rime/rime-stroke', revision: RIME.revision, sha256: RIME.sha256,
-      licence: { spdx: 'LGPL-3.0-only', url: 'https://www.gnu.org/licenses/lgpl-3.0.html' },
-    },
-    {
-      key: 'cns11643', style: 'taiwan', name: 'CNS11643 中文標準交換碼全字庫, CNS_strokes_sequence.txt',
+      key: 'cns11643', name: 'CNS11643 中文標準交換碼全字庫, CNS_strokes_sequence.txt',
       authors: '數位發展部', url: 'https://www.cns11643.gov.tw/', files: [{ url: CNS.properties, sha256: properties.sha256 }, { url: CNS.mapping, sha256: mapping.sha256 }],
       licence: { name: '政府資料開放授權條款-第1版 (Open Government Data License, version 1.0)', url: 'https://data.gov.tw/license' },
       attribution: '數位發展部，CNS11643中文標準交換碼全字庫網站，https://www.cns11643.gov.tw。',
+    },
+    {
+      key: 'rime-stroke', name: 'Rime five-stroke dictionary (stroke.dict.yaml)',
+      authors: '四季的風, 雪齋, Kunki Chou, 宋天', url: 'https://github.com/rime/rime-stroke', revision: RIME.revision, sha256: RIME.sha256,
+      licence: { spdx: 'LGPL-3.0-only', url: 'https://www.gnu.org/licenses/lgpl-3.0.html', texts: Object.values(LICENCES) },
+      changes: 'Reduced to the Han characters with a complete five-class code, one row per character, in code point order.',
     },
     {
       key: 'babelstone-ids', name: 'BabelStone IDS (IDS.TXT), the descriptions induced rows are written from',
@@ -241,13 +265,140 @@ const manifest = {
       licence: { name: 'Public domain' },
     },
   ],
+  agreement: { ...agreement, inducedAgainstRime: { rows: heldOut.length, agree: heldOutAgree } },
   induction: { operators: RELIABLE, ways: WAYS, validation },
   coverage: left,
   files,
+  texts: ['README.md', ...Object.values(LICENCES)],
 }
+const n = value => value.toLocaleString('en')
+const file = name => files.find(entry => entry.name === name)
+const cover = key => left.find(row => row.source === key)
+const scores = key => ['| Operator | Described | Written | Agree | | Induced |', '| --- | ---: | ---: | ---: | ---: | --- |',
+  ...validation.find(row => row.source === key).operators.map(row => `| ${row.operator} | ${n(row.described)} | ${n(row.written)} | ${n(row.agree)} | ${row.written ? (100 * row.agree / row.written).toFixed(1) + '%' : ''} | ${row.induced ? 'yes' : 'no'} |`)].join('\n')
+const kept = validation.find(row => row.source === 'cns11643').operators.filter(row => row.induced)
+const keptRate = (100 * kept.reduce((sum, row) => sum + row.agree, 0) / kept.reduce((sum, row) => sum + row.written, 0)).toFixed(1)
+writeFileSync(new URL('README.md', OUT), `# Open stroke orders
+
+The stroke order of Han characters, from two sources, with orders induced for the characters a
+source lacks. Every row names where it comes from; an induced row is never mixed into a source's
+file.
+
+The format is \`ids-input/open-strokes\`, version 1.
+
+## Files
+
+| File | Rows | |
+| --- | ---: | --- |
+| \`cns11643.tsv.gz\` | ${n(file('cns11643.tsv.gz').rows)} | Taiwan's standard order, from CNS 全字庫: \`char\`, \`codepoint\`, \`orders\`, \`cns\` (the CNS plane-codes mapped to the character). Open Government Data License 1.0. |
+| \`rime-stroke.tsv.gz\` | ${n(file('rime-stroke.tsv.gz').rows)} | Rime's five-stroke dictionary: \`char\`, \`codepoint\`, \`orders\`. LGPL-3.0. |
+| \`induced.tsv.gz\` | ${n(file('induced.tsv.gz').rows)} | Induced orders: \`char\`, \`codepoint\`, \`orders\`, \`basis\`, \`from\`, \`source\`. Each row keeps the terms of its \`source\`. |
+| \`manifest.json\` | | Sources with checksums, licences, coverage and the tables below. |
+| \`LICENSE-rime-stroke-LGPL-3.0.txt\`, \`LICENSE-GPL-3.0.txt\`, \`AUTHORS-rime-stroke.txt\` | | The terms and authors of the Rime dictionary. |
+
+The data files are gzipped UTF-8 TSV with a header row. \`orders\` holds one code per way of writing
+the character, separated by a space, in the source's order.
+
+## Strokes
+
+A code is one symbol per stroke in writing order, in the five classes. Each file keeps its source's
+symbols.
+
+| Class | \`cns11643\` | \`rime-stroke\` |
+| --- | --- | --- |
+| 横 horizontal | \`1\` | \`h\` |
+| 豎 vertical | \`2\` | \`s\` |
+| 撇 left-falling | \`3\` | \`p\` |
+| 點 dot | \`4\` | \`n\` |
+| 折 turning | \`5\` | \`z\` |
+
+Neither source gives stroke paths, and neither gives mainland, Japanese or Korean standard order.
+
+## The two sources are not two styles
+
+The Rime dictionary states that its main table comes from CNS 全字庫 and that its data beyond
+Extension D was added by its authors. The files bear that out: of the ${n(agreement.shared)} characters both
+record, ${n(agreement.sameOrder)} have an order in common, and the agreement drops where the CNS-derived part ends.
+
+| Block | In both | Same order |
+| --- | ---: | ---: |
+${agreement.blocks.map(row => `| ${row.block} | ${n(row.shared)} | ${n(row.sameOrder)} |`).join('\n')}
+
+Through Extension D the Rime file is CNS order with added alternatives. In Extension E about half
+of the shared characters differ (the 馬 component begins \`hs\` in Rime's rows there and \`21\` in
+CNS), so Rime's own additions do not all follow CNS order. This project has not identified the
+convention they follow.
+
+## Induced rows
+
+\`basis\` says how the order was written.
+
+- \`equivalent\`: the character is a compatibility ideograph or a radical form, and \`from\` is the
+  unified ideograph it normalizes to (NFKC). The row repeats that character's recorded orders.
+  ${n(cover('cns11643').equivalent)} rows from \`cns11643\`, ${n(cover('rime-stroke').equivalent)} from \`rime-stroke\`.
+- \`ids\`: \`from\` is the character's description in BabelStone IDS (the sequence its T source gives,
+  else the first), and the order joins the recorded orders of its components.
+  ${n(cover('cns11643').ids)} rows from \`cns11643\`, ${n(cover('rime-stroke').ids)} from \`rime-stroke\`. Up to ${WAYS} ways are kept.
+
+The components are joined in the order the description names them, except:
+
+- ⿺ with 辶 or 廴 as the enclosure, and ⿶: what is held is written first.
+- ⿴: the enclosure without its last stroke, then what it holds, then that stroke.
+- ⿷: the enclosure's first stroke, then what it holds, then the rest.
+
+An order is induced only through ${RELIABLE.join(' ')}, at every level of the description, and only
+when every component has a recorded order in the same source. A description BabelStone marks 〾 is
+not used. Nothing is induced from another induced row.
+
+### How often the rules agree with a source
+
+Each recorded character with a description was written by the same rules from the same source and
+compared with its recorded orders. "Written" counts the characters whose components all have orders;
+"Agree" those where one written order is a recorded one. Rows are the description's outer operator.
+
+\`cns11643\`:
+
+${scores('cns11643')}
+
+\`rime-stroke\`:
+
+${scores('rime-stroke')}
+
+An induced row is a prediction, not a record. Over the operators induced through, the rules agree
+with CNS on ${keptRate}% of the characters CNS records. The rows induced from CNS cannot be checked against the
+Rime file: Rime records ${n(heldOut.length)} of those characters and ${n(heldOutAgree)} agree, since Rime's
+additions do not all follow CNS order.
+
+## Coverage
+
+| Source | Recorded | By equivalence | From IDS | Without an order |
+| --- | ---: | ---: | ---: | ---: |
+${left.map(row => `| \`${row.source}\` | ${n(row.recorded)} | ${n(row.equivalent)} | ${n(row.ids)} | ${n(row.none)} |`).join('\n')}
+
+"Without an order" counts the Han characters the workshop's composer draws or BabelStone IDS
+describes that end with no row from that source.
+
+## Sources and terms
+
+- CNS11643 中文標準交換碼全字庫, \`CNS_strokes_sequence.txt\` in \`Properties.zip\` and the Unicode
+  tables in \`MapingTables.zip\`, <https://www.cns11643.gov.tw/>. 政府資料開放授權條款-第1版 (Open
+  Government Data License, version 1.0), <https://data.gov.tw/license>. Attribution:
+  數位發展部，CNS11643中文標準交換碼全字庫網站，https://www.cns11643.gov.tw。 The archives carry no
+  version; \`manifest.json\` records the SHA-256 of the copies read. Private Use code points are left out.
+- Rime five-stroke dictionary, \`stroke.dict.yaml\`, revision
+  \`${RIME.revision}\`, <https://github.com/rime/rime-stroke>. Authors: 四季的風, 雪齋,
+  Kunki Chou and 宋天; the table credits CNS11643, 北大中文論壇 and 宋天's extension data.
+  LGPL-3.0; the licence texts are beside this file. \`rime-stroke.tsv.gz\` is a modified form of the
+  dictionary: reduced to the Han characters with a complete five-class code, one row per
+  character, in code point order.
+- BabelStone IDS, \`IDS.TXT\`, Andrew West (魏安), <https://www.babelstone.co.uk/CJK/IDS.TXT>, public
+  domain: the descriptions induced rows are written from.
+
+## Rebuild
+
+\`bun scripts/build_open_strokes.mjs\` fetches the sources and writes the files, this one included.
+`)
 writeFileSync(new URL('manifest.json', OUT), JSON.stringify(manifest, null, 2) + '\n')
-for (const row of left) console.log(`${row.style}: ${row.recorded} recorded, ${row.equivalent} by equivalence, ${row.ids} from descriptions, ${row.none} without an order`)
-for (const { style, operators } of validation) {
-  const kept = operators.filter(row => row.induced), written = kept.reduce((sum, row) => sum + row.written, 0), agree = kept.reduce((sum, row) => sum + row.agree, 0)
-  console.log(`${style}: the induced operators agree on ${agree} of ${written} recorded characters (${(100 * agree / written).toFixed(1)}%)`)
-}
+for (const row of left) console.log(`${row.source}: ${row.recorded} recorded, ${row.equivalent} by equivalence, ${row.ids} from descriptions, ${row.none} without an order`)
+console.log(`same order in both sources: ${agreement.sameOrder} of ${agreement.shared}`)
+console.log(`induced from CNS, against Rime: ${heldOutAgree} of ${heldOut.length} (${(100 * heldOutAgree / heldOut.length).toFixed(1)}%)`)

@@ -17,7 +17,7 @@
 
   /** @param {number} bytes */
   const size = bytes => bytes < 1024 ? `${bytes} B` : `${Math.round(bytes / 1024)} KB`
-  const mainland = strokes.coverage.find(row => row.style === 'mainland'), taiwan = strokes.coverage.find(row => row.style === 'taiwan')
+  const rime = strokes.coverage.find(row => row.source === 'rime-stroke'), cns = strokes.coverage.find(row => row.source === 'cns11643')
 </script>
 
 <svelte:head>
@@ -98,16 +98,16 @@
       <a href="https://ids.mkpo.li/open-data">https://ids.mkpo.li/open-data</a></p>
 
     <h2 id="strokes">Stroke orders</h2>
-    <p class="lead">The stroke order of Han characters in mainland and Taiwan writing, each row from
-      a named source or induced from one and marked so.</p>
+    <p class="lead">The stroke order of Han characters from CNS 全字庫 and Rime's five-stroke
+      dictionary, with orders induced for the characters CNS lacks and marked so.</p>
     <ul class="stats">
-      <li><b>{mainland?.recorded.toLocaleString('en')}</b><span>mainland, recorded</span></li>
-      <li><b>{taiwan?.recorded.toLocaleString('en')}</b><span>Taiwan, recorded</span></li>
-      <li><b>{taiwan?.ids.toLocaleString('en')}</b><span>Taiwan, induced from IDS</span></li>
-      <li><b>{((mainland?.equivalent ?? 0) + (taiwan?.equivalent ?? 0)).toLocaleString('en')}</b><span>by equivalence</span></li>
+      <li><b>{cns?.recorded.toLocaleString('en')}</b><span>CNS, recorded</span></li>
+      <li><b>{rime?.recorded.toLocaleString('en')}</b><span>Rime, recorded</span></li>
+      <li><b>{cns?.ids.toLocaleString('en')}</b><span>induced from IDS</span></li>
+      <li><b>{((rime?.equivalent ?? 0) + (cns?.equivalent ?? 0)).toLocaleString('en')}</b><span>by equivalence</span></li>
     </ul>
     <ul class="files stroke-files">
-      {#each [...strokes.files, { name: 'manifest.json', bytes: 0 }, { name: 'README.md', bytes: 0 }] as file (file.name)}
+      {#each [...strokes.files, { name: 'manifest.json', bytes: 0 }, ...strokes.texts.map(name => ({ name, bytes: 0 }))] as file (file.name)}
         <li>
           <a href={`/data/open-strokes/${file.name}`}>{file.name}</a>
           {#if file.bytes}<span class="meta">{size(file.bytes)}</span>{/if}
@@ -125,7 +125,6 @@
 
 <style>
   .page{display:flex;flex-direction:column;min-height:100dvh}
-  .stroke-files{margin-top:12px}
   .bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px max(18px,env(safe-area-inset-right)) 10px max(18px,env(safe-area-inset-left));
     border-bottom:1px solid var(--ui-color-border);background:color-mix(in srgb,var(--ui-color-canvas) 88%,transparent);backdrop-filter:blur(10px);position:sticky;top:0;z-index:10}
   .slash{color:var(--ui-color-border-strong)}
@@ -173,4 +172,5 @@
     .stats{grid-template-columns:1fr 1fr}
     .stats b{font-size:22px}
   }
+  .files.stroke-files{margin-top:12px}
 </style>

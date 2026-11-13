@@ -13,15 +13,18 @@
 - [equivalences.tsv](https://ids.mkpo.li/data/open-data/equivalences.tsv): the same table as a TSV.
 - [README.md](https://ids.mkpo.li/data/open-data/README.md): the release notes, fields and sources.
 
+The release is CC0 1.0; source-derived material keeps the terms its records name.
+
 ## Open stroke orders
 
+Each file keeps its source's terms; this release is not CC0.
+
 - [manifest.json](https://ids.mkpo.li/data/open-strokes/manifest.json): the files, sources, licences, coverage and how often induction agrees with the sources.
-- [rime-stroke.tsv.gz](https://ids.mkpo.li/data/open-strokes/rime-stroke.tsv.gz): mainland stroke order, from Rime's five-stroke dictionary (LGPL-3.0).
-- [cns11643.tsv.gz](https://ids.mkpo.li/data/open-strokes/cns11643.tsv.gz): Taiwan stroke order, from CNS 全字庫 (Open Government Data License 1.0).
+- [cns11643.tsv.gz](https://ids.mkpo.li/data/open-strokes/cns11643.tsv.gz): Taiwan's standard stroke order, from CNS 全字庫 (Open Government Data License 1.0).
+- [rime-stroke.tsv.gz](https://ids.mkpo.li/data/open-strokes/rime-stroke.tsv.gz): Rime's five-stroke dictionary, CNS order through Extension D and its authors' data beyond (LGPL-3.0).
 - [induced.tsv.gz](https://ids.mkpo.li/data/open-strokes/induced.tsv.gz): orders written from an equivalent character or from IDS components, for characters a source lacks.
 - [README.md](https://ids.mkpo.li/data/open-strokes/README.md): fields, rules and limits.
 
-The release is CC0 1.0; source-derived material keeps the terms its records name.
 Use these files instead of scraping the workshop pages.
 
 ## Pages

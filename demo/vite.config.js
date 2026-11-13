@@ -100,7 +100,7 @@ function ortAssets() {
 // data/open-data/, and serves them at /data/open-data/: the page links to stable paths, and the
 // build puts the same directory beside the app.
 const OPEN_DATA = fileURLToPath(new URL('../data/open-data/', import.meta.url))
-const OPEN_DATA_TYPES = { '.json': 'application/json; charset=utf-8', '.tsv': 'text/tab-separated-values; charset=utf-8', '.md': 'text/markdown; charset=utf-8', '.gz': 'application/gzip' }
+const OPEN_DATA_TYPES = { '.json': 'application/json; charset=utf-8', '.tsv': 'text/tab-separated-values; charset=utf-8', '.md': 'text/markdown; charset=utf-8', '.gz': 'application/gzip', '.txt': 'text/plain; charset=utf-8' }
 // The stroke-order release sits beside it under data/open-strokes/, served at /data/open-strokes/.
 const OPEN_STROKES = fileURLToPath(new URL('../data/open-strokes/', import.meta.url))
 
@@ -133,7 +133,8 @@ function openData() {
       }
       const strokes = join(import.meta.dirname, '..', 'dist', 'data', 'open-strokes')
       mkdirSync(strokes, { recursive: true })
-      for (const name of readdirSync(OPEN_STROKES)) copyFileSync(join(OPEN_STROKES, name), join(strokes, name))
+      const listed = JSON.parse(readFileSync(join(OPEN_STROKES, 'manifest.json'), 'utf8'))
+      for (const name of ['manifest.json', ...listed.texts, ...listed.files.map(file => file.name)]) copyFileSync(join(OPEN_STROKES, name), join(strokes, name))
     },
   }
 }

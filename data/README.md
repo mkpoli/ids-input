@@ -1240,8 +1240,8 @@ from `ids-parts.json`.
 
 ## `open-strokes/`
 
-The open stroke-order release served at <https://ids.mkpo.li/open-data#strokes>: mainland order from
-Rime's five-stroke dictionary, Taiwan order from CNS 全字庫, and orders induced by equivalence or from
+The open stroke-order release served at <https://ids.mkpo.li/open-data#strokes>: Taiwan's standard order
+from CNS 全字庫, Rime's five-stroke dictionary, and orders induced by equivalence or from
 BabelStone IDS for characters a source lacks. Its own `README.md` gives the fields, rules, licences
 and how often the rules agree with the sources. Built by `scripts/build_open_strokes.mjs`.
 
