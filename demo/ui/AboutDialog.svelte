@@ -81,7 +81,7 @@
 <Dialog bind:open title={t('app.about.title')} closeLabel={t('app.close')} wide>
   <div class="about">
     <p class="lead">{t('app.about.lead')}</p>
-    <p class="links"><a href="https://github.com/mkpoli/ids-input" target="_blank" rel="noreferrer">ids-input</a> · <a href="https://github.com/mkpoli/han-compose" target="_blank" rel="noreferrer">han-compose</a> · <a href="https://mkpo.li" rel="me">mkpoli</a> · <a href="./compare.html">{t('app.compare')}</a> · <a href="./engines.html">{t('app.engines')}</a> · <a href="./component-atlas.html">{t('app.atlas')}</a> · <a href={`./unencoded.html?lang=${locale}#equivalents`}>{t('appendix.equivalents')}</a></p>
+    <p class="links"><a href="https://github.com/mkpoli/ids-input" target="_blank" rel="noreferrer">ids-input</a> · <a href="https://github.com/mkpoli/han-compose" target="_blank" rel="noreferrer">han-compose</a> · <a href="https://mkpo.li" rel="me">mkpoli</a> · <a href="./compare.html">{t('app.compare')}</a> · <a href="./engines.html">{t('app.engines')}</a> · <a href="./component-atlas.html">{t('app.atlas')}</a> · <a href={`./normalization.html?lang=${locale}`}>{t('normalization.title')}</a></p>
     <h3>{t('app.about.licenses')}</h3>
     <p><a href="https://github.com/mkpoli/ids-input/blob/main/LICENSE" rel="license">{t('app.about.codeLicense')}</a></p>
     <p>{t('app.about.dataLicense')} <a href="https://github.com/mkpoli/ids-input/blob/main/data/README.md">{t('app.about.sources')}</a></p>
