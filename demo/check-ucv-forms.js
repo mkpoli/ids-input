@@ -19,6 +19,11 @@ try {
     await page.goto(`${url}/?lang=en&ids=${encodeURIComponent('⿰氵壬')}`, { waitUntil: 'networkidle' })
     assert.deepEqual(await page.locator('.ids-pick-tabs [role="tab"]').allInnerTexts(), ['Parts', 'Templates', 'Take parts from', 'Find'])
 
+    // A component whose entries hold no form that can be written gets no row.
+    await Promise.all([page.waitForResponse(response => response.url().includes('ucv.json')), page.locator('.ids-tree .ids-part').nth(0).click()])
+    await page.waitForTimeout(500)
+    assert.equal(await page.locator('.ids-swaps .ids-unified').count(), 0, '氵 has only an undrawn, unwritten form')
+
     // A chosen component with unifiable forms lists them beside its other alternatives.
     await page.locator('.ids-tree .ids-part').nth(1).click()
     const row = page.locator('.ids-swaps .ids-unified[data-ucv="1"]')

@@ -7,7 +7,7 @@
   // the next slot to fill shows beneath; the alternatives float over the page, so choosing a part does
   // not move what is around it.
   import { untrack } from 'svelte'
-  import { isNode, write } from '../core/ids.js'
+  import { isNode, variantOf, write } from '../core/ids.js'
   import { recursiveAlternatives } from '../core/recursive-alternatives.js'
   import { shortcut } from './shortcut.js'
   import { watchFallback } from './fallback-font.js'
@@ -15,8 +15,8 @@
 
   /** @typedef {{ text: string, tree: import('../core/ids.js').Part, operation: 'expand' | 'merge' | 'both' }} Option */
 
-  /** @type {{ editor: import('./editor.svelte.js').Editor, keyHints?: boolean, slot?: HTMLInputElement | null, status?: boolean, variationsHref?: ((entry: string) => string) | null }} */
-  let { editor, keyHints = true, slot = $bindable(null), status = true, variationsHref = null } = $props()
+  /** @type {{ editor: import('./editor.svelte.js').Editor, keyHints?: boolean, slot?: HTMLInputElement | null, status?: boolean, variations?: boolean, variationsHref?: ((entry: string) => string) | null }} */
+  let { editor, keyHints = true, slot = $bindable(null), status = true, variations = false, variationsHref = null } = $props()
   const t = $derived(editor.t)
   const uid = $props.id()
   const picked = $derived(editor.picked)
@@ -40,18 +40,22 @@
     for (const option of additional) out[option.operation].push(option)
     return out
   })
-  // The other forms of the chosen component's UCV entries: the list is read once a component is
-  // chosen, the drawings once an entry has forms to show.
+  // With `variations`, the other forms of the chosen component's UCV entries, for each entry that
+  // has one to put in its place: a character or a description. The list is read once a component is
+  // chosen, the drawings once an entry is shown; a form with no text shows only as its drawing.
   let ucv = $state.raw(/** @type {import('../core/ucv.js').UcvIndex | null} */ (null))
   let ucvOutlines = $state.raw(/** @type {Record<string, string> | null} */ (null))
-  $effect(() => { if (part && !ucv) loadUcvIndex().then(index => { ucv = index }, () => {}) })
-  const unified = $derived.by(() => {
+  $effect(() => { if (variations && part && !ucv) loadUcvIndex().then(index => { ucv = index }, () => {}) })
+  const offered = $derived.by(() => {
     if (!ucv || !part) return []
-    return ucv.formsOf(part).filter(entry => entry.kind === 'unifiable')
-      .map(entry => ({ id: entry.id, forms: entry.forms.filter(form => form.text !== part) }))
-      .filter(entry => entry.forms.length)
+    // A variant identifier after the component names one of its forms; the entries are the component's.
+    const base = variantOf(part).base
+    return ucv.formsOf(base).filter(entry => entry.kind === 'unifiable')
+      .map(entry => ({ id: entry.id, forms: entry.forms.filter(form => form.text !== base) }))
+      .filter(entry => entry.forms.some(form => form.text))
   })
-  $effect(() => { if (unified.length && !ucvOutlines) loadUcvOutlines().then(outlines => { ucvOutlines = outlines }, () => {}) })
+  $effect(() => { if (offered.length && !ucvOutlines) loadUcvOutlines().then(outlines => { ucvOutlines = outlines }, () => {}) })
+  const unified = $derived(offered.map(entry => ({ id: entry.id, forms: entry.forms.filter(form => form.text || ucvOutlines?.[form.glyph]) })))
   const replaceable = $derived((Boolean(part) && (editor.swaps.length > 0 || editor.splits.length > 0 || unified.length > 0)) || merges.length > 0 || additional.length > 0 || truncated || failed)
   const label = $derived(t('ids.swaps.label', { part: part || written }))
 
@@ -380,7 +384,8 @@
   .ids-unified{align-items:center}
   .ids-unified-entry{flex:none;font-size:11px;line-height:1;padding:3px 6px;border:1px solid var(--_line);border-radius:5px;color:var(--_muted);white-space:nowrap;text-decoration:none;font-variant-numeric:tabular-nums}
   a.ids-unified-entry:hover{border-color:var(--_accent);color:var(--_accent)}
-  .ids-unified-form{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:40px;height:36px;padding:3px}
+  .ids-unified-form{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:40px;height:36px}
+  span.ids-unified-form{padding:3px}
   span.ids-unified-form{border:1px dashed var(--_line);border-radius:8px}
   .ids-unified-form svg{width:28px;height:28px;fill:currentColor}
   .ids-swap{min-width:40px;padding:2px 8px;font-size:22px;line-height:1.25;font-family:var(--_font)}
