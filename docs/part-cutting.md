@@ -25,7 +25,10 @@ operator:
 
 A candidate is scored by fingerprint: the group's ink as coverage over a 16×16 grid of its
 own box, compared with the element drawn alone. Scaling to the box lets a squashed 山 read
-as 山.
+as 山. Row candidates are then kept on their side of the glyph's middle line: a left
+group that would take ink more than 2.5% of the width past the middle is not ranked at
+all, unless no other grouping is left, so a piece of the right column never reads as
+part of the left operand.
 
 ## Rows
 

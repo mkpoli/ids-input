@@ -19,6 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
+      - uses: ./.github/actions/composer
       - run: bun install --frozen-lockfile
       # The two secrets a maintainer has to add once: CLOUDFLARE_API_TOKEN to deploy, and a
       # fine-grained GITHUB_TOKEN for the Worker to file with. Both are needed before anything is

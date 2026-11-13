@@ -85,8 +85,7 @@ not stop GitHub notifying the account a symptom happens to name.
 
 An issue body may hold 65536 characters, which a 200 KB document would overrun on its own, so each
 part the reporter controls is cut to a share of that budget: 20000 characters of the document, 8000
-of console output, 500 per table cell. A cut part says it was cut, and the uploaded `documentFile`
-still carries the whole thing.
+of console output, 500 per table cell. A cut part says it was cut.
 
 Images and the uploaded document go to the orphan branch `bug-attachments` under
 `reports/<yyyy>/<mm>/<uuid>.<ext>`, through the Git Data API, and the body points at
@@ -113,7 +112,8 @@ the site itself. The Worker waits on the queue `ids-reports-answers` for the `re
 the run sends back.
 
 GitHub takes a payload under 64 KB, so a report whose fields come to more than 30 KB is answered
-`413` and never dispatched.
+`413` and never dispatched. The dialog fits the workspace and the context to that budget before it
+sends, so its reports do not meet this answer.
 
 | What | Where |
 | --- | --- |

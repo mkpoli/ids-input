@@ -1,5 +1,6 @@
 <script>
-  // The logo as a select: the input sites of this family, then the wider gallery. The current
+  // The logo as a select: the input sites of this family and the glyph reader served beside this
+  // site at /ocr/, then the wider gallery. The current
   // site's row leads where the logo always led. Arrow keys, Home and End move, Escape closes and
   // returns the focus; the menu's keys stay in it so the page's shortcuts do not act behind it.
   import Icon from './Icon.svelte'
@@ -12,6 +13,7 @@
     { id: 'jurchen', name: 'Jurchen Input', href: 'https://jurchen.mkpo.li/', logo: '/brand/jurchen-input.svg' },
     { id: 'han', name: 'Han Input', href: 'https://han.mkpo.li/', logo: '/brand/han-input.svg' },
     { id: 'ids', name: 'IDS Workshop', href: '', logo: '/brand/ids-workshop.svg' },
+    { id: 'han2ids', name: 'han2ids', href: '/ocr/', logo: '/brand/han2ids.svg' },
   ]
   const GALLERY = ['ja', 'zh-Hans', 'zh-Hant', 'ko']
   const gallery = $derived(`https://moji.mkpo.li/${GALLERY.includes(locale) ? `${locale}/` : ''}`)

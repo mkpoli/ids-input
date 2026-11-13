@@ -1,0 +1,456 @@
+{
+ "sources": [
+  {
+   "id": "bai-ids",
+   "title": "（白式）IDS 延展语法导论, §5.3",
+   "author": "NightFurySL2001, with Yi Bai, 1-PT-AxH-RV-0 and Losketch",
+   "url": "https://nightfurysl2001.github.io/bai-ids/",
+   "edition": "2026-09-30, commit 062ce3dfc80ef69984463b10f4cd7d9075ed4f54",
+   "licence": "MIT"
+  },
+  {
+   "id": "midzchi",
+   "title": "IDS（漢字構成記述文字列）ガイド",
+   "author": "黒丿乀 (@midzchi_)",
+   "url": "https://note.com/midzchi_/n/n21737ee18736",
+   "date": "2025-09-30",
+   "note": "The stroke table is an image; its 36 stroke rows are assigned to U+31C0..U+31E3 in block order and its last two rows (HN, HNg) to 乁 and ⺄ as the grammar names them. The author writes of the table 「絶対に間違いがあります」. Rows marked なし give no chain; the letters in brackets after them are kept as `suggested`."
+  }
+ ],
+ "strokes": [
+  {
+   "stroke": "一",
+   "chain": "H",
+   "sources": [
+    "bai-ids"
+   ]
+  },
+  {
+   "stroke": "丨",
+   "chain": "S",
+   "sources": [
+    "bai-ids"
+   ]
+  },
+  {
+   "stroke": "丿",
+   "chain": "P",
+   "sources": [
+    "bai-ids"
+   ]
+  },
+  {
+   "stroke": "乀",
+   "chain": "N",
+   "sources": [
+    "bai-ids"
+   ]
+  },
+  {
+   "stroke": "丶",
+   "chain": "D",
+   "sources": [
+    "bai-ids"
+   ]
+  },
+  {
+   "stroke": "㇀",
+   "chain": "T",
+   "sources": [
+    "bai-ids",
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇝",
+   "chain": "J",
+   "sources": [
+    "bai-ids",
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇘",
+   "chain": "SZ",
+   "sources": [
+    "bai-ids",
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇁",
+   "chain": "Wg",
+   "sources": [
+    "bai-ids",
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "◝",
+   "chain": "Qa",
+   "sources": [
+    "bai-ids"
+   ]
+  },
+  {
+   "stroke": "◞",
+   "chain": "Qb",
+   "sources": [
+    "bai-ids"
+   ]
+  },
+  {
+   "stroke": "◟",
+   "chain": "Qc",
+   "sources": [
+    "bai-ids"
+   ]
+  },
+  {
+   "stroke": "◜",
+   "chain": "Qd",
+   "sources": [
+    "bai-ids"
+   ]
+  },
+  {
+   "stroke": "⺄",
+   "chain": "HNg",
+   "sources": [
+    "bai-ids",
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇂",
+   "chain": "Ng",
+   "sources": [
+    "bai-ids",
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇄",
+   "chain": "SHw",
+   "sources": [
+    "bai-ids",
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇅",
+   "chain": "HSH",
+   "sources": [
+    "bai-ids",
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇇",
+   "chain": "HP",
+   "sources": [
+    "bai-ids",
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇈",
+   "chain": "HSHwg",
+   "sources": [
+    "bai-ids",
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇉",
+   "chain": "SHSg",
+   "sources": [
+    "bai-ids",
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇊",
+   "chain": "HST",
+   "sources": [
+    "bai-ids",
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇋",
+   "chain": "HSHP",
+   "sources": [
+    "bai-ids",
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇌",
+   "chain": "HPWg",
+   "sources": [
+    "bai-ids",
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇍",
+   "chain": "HSHw",
+   "sources": [
+    "bai-ids",
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇎",
+   "chain": "HSHS",
+   "sources": [
+    "bai-ids",
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "乁",
+   "chain": "HN",
+   "sources": [
+    "bai-ids",
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇢",
+   "chain": "Pg",
+   "sources": [
+    "bai-ids",
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "乙",
+   "chain": "HPHwg",
+   "sources": [
+    "bai-ids"
+   ]
+  },
+  {
+   "stroke": "乚",
+   "chain": "SHwg",
+   "sources": [
+    "bai-ids"
+   ]
+  },
+  {
+   "stroke": "乛",
+   "chain": "Hg",
+   "sources": [
+    "bai-ids"
+   ]
+  },
+  {
+   "stroke": "亅",
+   "chain": "Sg",
+   "sources": [
+    "bai-ids"
+   ]
+  },
+  {
+   "stroke": "𠃊",
+   "chain": "SH",
+   "sources": [
+    "bai-ids"
+   ]
+  },
+  {
+   "stroke": "𠃋",
+   "chain": "PH",
+   "sources": [
+    "bai-ids"
+   ]
+  },
+  {
+   "stroke": "𠃌",
+   "chain": "HSg",
+   "sources": [
+    "bai-ids"
+   ]
+  },
+  {
+   "stroke": "𠃍",
+   "chain": "HS",
+   "sources": [
+    "bai-ids"
+   ]
+  },
+  {
+   "stroke": "𠃑",
+   "chain": "SHS",
+   "sources": [
+    "bai-ids"
+   ]
+  },
+  {
+   "stroke": "𠄌",
+   "chain": "ST",
+   "sources": [
+    "bai-ids"
+   ]
+  },
+  {
+   "stroke": "𠄎",
+   "chain": "HSHSg",
+   "sources": [
+    "bai-ids"
+   ]
+  },
+  {
+   "stroke": "〇",
+   "chain": "◟◜◝◞z",
+   "sources": [
+    "bai-ids"
+   ]
+  },
+  {
+   "stroke": "㇃",
+   "chain": null,
+   "suggested": "BNg, Nbg",
+   "sources": [
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇆",
+   "chain": "HSg",
+   "sources": [
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇏",
+   "chain": null,
+   "suggested": "N",
+   "sources": [
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇐",
+   "chain": "H",
+   "sources": [
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇑",
+   "chain": "S",
+   "sources": [
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇒",
+   "chain": "P",
+   "sources": [
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇓",
+   "chain": null,
+   "suggested": "SP, Ps",
+   "sources": [
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇔",
+   "chain": "D",
+   "sources": [
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇕",
+   "chain": "HS",
+   "sources": [
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇖",
+   "chain": "Hg",
+   "sources": [
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇗",
+   "chain": "SH",
+   "sources": [
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇙",
+   "chain": "ST",
+   "sources": [
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇚",
+   "chain": "Sg",
+   "sources": [
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇛",
+   "chain": "PD",
+   "sources": [
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇜",
+   "chain": "PH",
+   "sources": [
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇞",
+   "chain": "SHS, SHP",
+   "sources": [
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇟",
+   "chain": "SHwg",
+   "sources": [
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇠",
+   "chain": "HPHwg",
+   "sources": [
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇡",
+   "chain": "HSHSg",
+   "sources": [
+    "midzchi"
+   ]
+  },
+  {
+   "stroke": "㇣",
+   "chain": "QcQdQaQbz",
+   "sources": [
+    "midzchi"
+   ]
+  }
+ ]
+}

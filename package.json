@@ -78,6 +78,8 @@
     "coverage": "bun scripts/audit_render_coverage.mjs cache/coverage-sans docs/coverage/sans.json sans && bun scripts/audit_render_coverage.mjs cache/coverage-serif docs/coverage/serif.json serif && bun scripts/audit_render_coverage.mjs cache/coverage-fangsong docs/coverage/fangsong.json fangsong && bun scripts/audit_render_coverage.mjs cache/coverage-klee docs/coverage/klee.json klee",
     "dev": "vite demo",
     "build:subtrees": "node scripts/build_subtree_parts.mjs",
+    "build:slot-hints": "bun scripts/build_slot_hints.mjs",
+    "build:custom-components": "bun scripts/build_custom_components.mjs",
     "build:demo": "vite build demo",
     "dev:desktop-page": "VITE_DESKTOP=1 vite demo",
     "build:desktop-page": "VITE_DESKTOP=1 vite build demo",

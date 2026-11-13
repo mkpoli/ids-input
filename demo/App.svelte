@@ -13,6 +13,7 @@
   import { APPROXIMATE, composableDescription } from '@han-compose/composer/compose'
   import { hasTangut } from '@han-compose/composer/tangut'
   import { composerPreview as composerAt } from '@han-compose/composer'
+  import { variationSequences } from '@han-compose/composer/variants'
   import engineOutlines from 'ids-engine-outlines'
   import { EMPTY_MARKS, OPERATORS, characterStrokes, componentQuery, isJurchen, isShuishu, parse, substituteSequences, unalias } from '../src/core/index.js'
   import { loadStrokeRecords } from '../src/svelte/strokes.js'
@@ -37,6 +38,7 @@
   import folds from '../data/component-name-folds.tsv?url'
   import characterInfo from '../data/character-info.json.gz?url'
   import chains from '../data/zi-tools-chains.tsv.gz?url'
+  import custom from '../data/custom-components.json.gz?url'
   import characters from '../data/character-vocabulary.tsv.gz?url'
   import { LOCALES, appMessages } from './lib/locales.js'
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
@@ -46,7 +48,7 @@
   import { COMPOSER_BASE, COMPOSER_BASES, readFrom } from './lib/composer.js'
   import { DESKTOP, SITE } from './lib/desktop.js'
   import { addressDocument, documentFrom, linkTo, sameShare, sequenceFrom, transformed } from './lib/share.js'
-  import { canonical, makeTab, readActiveTab, readTabs, tabName, writeTabs } from './lib/tabs.js'
+  import { makeTab, readActiveTab, readTabs, sameSequence, tabName, writeTabs } from './lib/tabs.js'
   import { readRecent, remember } from './lib/recent.js'
   import { openTabSession, syncTabSession } from './lib/document-state.js'
   import { applyTheme, storedTheme } from './lib/theme.js'
@@ -132,7 +134,7 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const sealAdapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, jurchen: jurchenData, ids, layers, zitools, chise: corpus, project: projectIds, overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains })
+  const sealAdapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, jurchen: jurchenData, ids, layers, zitools, chise: corpus, project: projectIds, overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains, custom })
 
   const operatorSet = new Set(OPERATORS.map(([op]) => op))
   const babel = { ...sealAdapter, recognizeDrawing, parts: async () => {
@@ -377,7 +379,15 @@
   }
   const componentStyle = $derived(face === 'serif' ? 'serif' : face === 'fangsong' ? 'fangsong' : face === 'klee' ? 'kaisho' : 'sans')
   const icons = $derived(iconsAt(base, componentStyle))
-  const adapter = $derived({ ...babel, preview: previewFor(base, separate, componentStyle), icon: icons, fontStyle: componentStyle })
+  // One function for each export, so a tree asks again only when the face changes.
+  /** @type {Map<string, () => Promise<Map<string, string[]>>>} */
+  const sequenceLists = new Map()
+  /** @param {string} at */
+  const sequencesAt = at => {
+    if (!sequenceLists.has(at)) sequenceLists.set(at, () => variationSequences(readFrom(at)))
+    return /** @type {() => Promise<Map<string, string[]>>} */ (sequenceLists.get(at))
+  }
+  const adapter = $derived({ ...babel, preview: previewFor(base, separate, componentStyle), icon: icons, fontStyle: componentStyle, variationSequences: sequencesAt(base) })
   const wanted = String(params.get('lang') ?? load('locale', null) ?? navigator.language ?? '')
   // A browser asking for Traditional Chinese names its region or script, never the catalogue's code.
   const traditional = /^zh-(?:Hant|TW|HK|MO)\b/i
@@ -504,14 +514,14 @@
   // The tabs of the workspace: one description each, the open ones and the active one kept for the
   // next visit. A tab's tree and history wait in `states` while another tab is shown.
   const stored = readTabs(), linkedDocument = documentFrom(location)
-  const linked = linkedDocument ? canonical(toSequence(linkedDocument.root)) : canonical(sequenceFrom(location))
+  const linked = linkedDocument ? toSequence(linkedDocument.root) : sequenceFrom(location)
   // Bring the old single-document autosave into the first tab on upgrade.
   if (!stored.length) {
     const previous = load('current', '')
     if (typeof previous === 'string' && previous) stored.push(makeTab(previous))
   }
   const keptTab = stored.find(tab => tab.id === readActiveTab())
-  const linkedTab = linked ? stored.find(tab => tab.sequence === linked
+  const linkedTab = linked ? stored.find(tab => sameSequence(tab.sequence, linked)
     && (!linkedDocument || sameShare(tab.document?.document, linkedDocument))) : undefined
   // A link opens its tab, or a tab of its own when none has it; of two tabs holding the same text,
   // the one kept active stays.
@@ -642,6 +652,7 @@
   /** @param {string} ch */
   const cp = ch => `U+${/** @type {number} */ (ch.codePointAt(0)).toString(16).toUpperCase().padStart(4, '0')}`
   const points = $derived([...editor.whole].map(ch => ({ ch, cp: cp(ch) })))
+  const ziToolsHref = $derived(editor.whole ? `https://zi.tools/zi/?secondary=ids&seq=${encodeURIComponent(editor.whole)}` : '')
   /** @param {string} text */
   async function copy(text) {
     try { await navigator.clipboard.writeText(text); note(t('app.copied', { text })); return true } catch { note(t('app.copyFailed')); return false }
@@ -851,8 +862,8 @@
   }
   /** A sequence opened in the active tab when it is empty, in the tab already showing it, else in a new tab. @param {string} sequence */
   function openSequence(sequence) {
-    const text = canonical(sequence)
-    const open = tabs.find(tab => tab.sequence === text)
+    const text = sequence
+    const open = tabs.find(tab => sameSequence(tab.sequence, text))
     if (open) {
       if (!EMPTY_MARKS.includes(text)) recents = remember(text, open.document)
       activate(open.id)
@@ -864,7 +875,7 @@
       toast = null
       editor.reset(text)
       adjusting = false
-      if (editor.draft === editor.whole) tab.saved = tab.sequence
+      if (!editor.problem) tab.saved = tab.sequence
       if (!EMPTY_MARKS.includes(text)) recents = remember(text)
       store()
       return
@@ -875,7 +886,7 @@
   function openRecent(record) {
     // A recent document opens its own tab; a tab with another document for the same sequence is
     // not the one this entry stands for.
-    const open = tabs.find(tab => tab.sequence === record.sequence
+    const open = tabs.find(tab => sameSequence(tab.sequence, record.sequence)
       && (!record.document || sameShare(tab.document?.document, record.document.document)))
     if (open) {
       recents = remember(record.sequence, open.document)
@@ -1183,7 +1194,7 @@
       lang,
       drawing: prepared.get(example.sequence),
       hint: [groupKey === 'erjian' && example.char ? `${example.sequence}　${point}${replaces ? `　${replaces}` : ''}` : replaces ? `${example.sequence}　${replaces}　${t('app.examples.none')}` : example.abbreviates ? `${example.abbreviates}　${example.sequence}　${t('app.examples.abbreviation')}` : example.char ? `${example.char}${example.sequence === example.char ? '' : `　${example.sequence}`}　${point}` : `${example.sequence}　${t('app.examples.none')}`, citation].filter(Boolean).join('　'),
-      run: () => addTab(canonical(example.sequence)),
+      run: () => addTab(example.sequence),
     }
   }
   const exampleItems = $derived(EXAMPLE_GROUPS.flatMap(group => [
@@ -1389,7 +1400,12 @@
           <div class="label-row">
             <h2 class="label">{t('ids.label')}</h2>
             {#if points.length}
-              <button type="button" class="points-btn" aria-haspopup="dialog" title={t('app.codePoints', { count: points.length })} onclick={() => pointsOpen = true}>{t('app.codePoints', { count: points.length })}</button>
+              <div class="label-actions">
+                <button type="button" class="points-btn" aria-haspopup="dialog" title={t('app.codePoints', { count: points.length })} onclick={() => pointsOpen = true}>{t('app.codePoints', { count: points.length })}</button>
+                {#if ziToolsHref}
+                  <a class="points-link" href={ziToolsHref} target="_blank" rel="noopener noreferrer" aria-label={t('info.site.zitools')} title={t('info.site.zitools')}><Icon name="link" size={15} /></a>
+                {/if}
+              </div>
             {/if}
           </div>
           <div class="seq-line">
@@ -1426,7 +1442,7 @@
               <div class="tree-list" role="tabpanel" id="tree-panel" aria-labelledby="tree-tab"><IdsTreeList {editor} /></div>
             {/key}
           {/if}
-          <div class="block tools-row"><IdsPartTools {editor} {keyHints} bind:slot status={false} /></div>
+          <div class="block tools-row"><IdsPartTools {editor} {keyHints} bind:slot status={false} variations variationsHref={entry => `./ucv.html?lang=${locale}#ucv-${entry}`} /></div>
         </section>
         <div class="split" role="separator" aria-orientation="horizontal" aria-label={t('app.panels.resize')} title={`${t('app.panels.resize')} (${Math.round(split)}%)`}
           aria-valuemin="35" aria-valuemax="78" aria-valuenow={Math.round(split)} tabindex="0"
@@ -1439,6 +1455,9 @@
             <button type="button" aria-pressed={searchMode === 'current'} onclick={() => searchMode = 'current'}>{t('ids.search.title')}</button>
             <button type="button" aria-pressed={searchMode === 'component'} onclick={() => searchMode = 'component'}>{t('app.componentLookup.title')}</button>
             <button type="button" aria-pressed={searchMode === 'structure'} onclick={() => searchMode = 'structure'}>{t('ids.structural.title')}</button>
+            {#if ziToolsHref}
+              <a class="search-site" href={ziToolsHref} target="_blank" rel="noopener noreferrer">{t('info.site.zitools')}<span class="out" aria-hidden="true">↗</span></a>
+            {/if}
           </div>
           {#if searchMode === 'component'}
             <ComponentLookup {adapter} {messages} {locale} {t} onopen={hit => openSequence(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
@@ -1601,7 +1620,11 @@
 <style>
   .confirm-text{margin:0 0 var(--ui-space-xl);font-size:var(--ui-text-md);line-height:var(--ui-leading-normal)}
   .confirm-actions{display:flex;justify-content:flex-end;gap:var(--ui-space-sm)}
-  .search-modes{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+  .search-modes{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-bottom:8px}
+  .search-site{margin-inline-start:auto;padding:2px 0;color:var(--ui-color-ink-muted);font-size:11px;text-decoration:underline;text-decoration-color:color-mix(in srgb,currentColor 55%,transparent);text-underline-offset:2px;white-space:nowrap}
+  .search-site:hover{color:var(--ui-color-accent);text-decoration-color:currentColor}
+  .search-site:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:2px;border-radius:2px}
+  .search-site .out{margin-inline-start:3px}
   .similar{margin-top:12px;padding-top:8px;border-top:1px solid var(--ui-color-border)}
   .search-modes button{font:inherit;font-size:12px;padding:5px 9px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-sm);background:transparent;color:inherit;cursor:pointer}
   .search-modes button[aria-pressed=true]{background:var(--ui-color-surface-sunken);font-weight:600}
@@ -1672,6 +1695,10 @@
   .label{margin:0;font-size:11px;font-weight:600;letter-spacing:.03em;color:var(--ui-color-ink-muted)}
   .label-glyph{font-family:var(--ids-font)}
   .label-row{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:24px}
+  .label-actions{display:flex;align-items:center;gap:4px}
+  .points-link{display:grid;place-items:center;width:24px;height:24px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface);color:var(--ui-color-ink-muted)}
+  .points-link:hover{color:var(--ui-color-ink);border-color:var(--ui-color-border-strong)}
+  .points-link:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}
   .seq-line{position:relative}
   .seq-line :global(.ids-field){width:100%}
   .seq-line :global(.ids-field input){padding-right:44px}

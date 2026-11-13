@@ -1,5 +1,5 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync } from 'node:fs'
-import { join } from 'node:path'
+import { extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
@@ -100,7 +100,9 @@ function ortAssets() {
 // data/open-data/, and serves them at /data/open-data/: the page links to stable paths, and the
 // build puts the same directory beside the app.
 const OPEN_DATA = fileURLToPath(new URL('../data/open-data/', import.meta.url))
-const OPEN_DATA_TYPES = { '.json': 'application/json; charset=utf-8', '.tsv': 'text/tab-separated-values; charset=utf-8', '.md': 'text/markdown; charset=utf-8' }
+const OPEN_DATA_TYPES = { '.json': 'application/json; charset=utf-8', '.tsv': 'text/tab-separated-values; charset=utf-8', '.md': 'text/markdown; charset=utf-8', '.gz': 'application/gzip', '.txt': 'text/plain; charset=utf-8' }
+// The stroke-order release sits beside it under data/open-strokes/, served at /data/open-strokes/.
+const OPEN_STROKES = fileURLToPath(new URL('../data/open-strokes/', import.meta.url))
 
 function openData() {
   return {
@@ -114,6 +116,14 @@ function openData() {
         response.setHeader('Content-Type', OPEN_DATA_TYPES[extname(file)] ?? 'application/octet-stream')
         response.end(readFileSync(file))
       })
+      server.middlewares.use('/data/open-strokes', (request, response, next) => {
+        let name
+        try { name = decodeURIComponent((request.url ?? '').split('?')[0].replace(/^\//, '')) } catch { return next() }
+        const file = join(OPEN_STROKES, name)
+        if (!name || name.startsWith('.') || name.includes('/') || !existsSync(file) || !statSync(file).isFile()) return next()
+        response.setHeader('Content-Type', OPEN_DATA_TYPES[extname(file)] ?? 'application/octet-stream')
+        response.end(readFileSync(file))
+      })
     },
     writeBundle() {
       const out = join(import.meta.dirname, '..', 'dist', 'data', 'open-data')
@@ -121,6 +131,10 @@ function openData() {
       for (const name of ['descriptions.json', 'descriptions.tsv', 'components.tsv', 'manifest.json', 'README.md']) {
         if (existsSync(join(OPEN_DATA, name))) copyFileSync(join(OPEN_DATA, name), join(out, name))
       }
+      const strokes = join(import.meta.dirname, '..', 'dist', 'data', 'open-strokes')
+      mkdirSync(strokes, { recursive: true })
+      const listed = JSON.parse(readFileSync(join(OPEN_STROKES, 'manifest.json'), 'utf8'))
+      for (const name of ['manifest.json', ...listed.texts, ...listed.files.map(file => file.name)]) copyFileSync(join(OPEN_STROKES, name), join(strokes, name))
     },
   }
 }
@@ -145,7 +159,7 @@ export default defineConfig({
     // A fallback shard is fetched when a character needs it; inlined, the small ones would ride in
     // the first scripts as base64, which hardly compresses.
     assetsInlineLimit: file => file.endsWith('.woff2') ? false : undefined,
-    rollupOptions: { input: { index: `${import.meta.dirname}/index.html`, compare: `${import.meta.dirname}/compare.html`, engines: `${import.meta.dirname}/engines.html`, sources: `${import.meta.dirname}/sources.html`, embed: `${import.meta.dirname}/embed.html`, design: `${import.meta.dirname}/design.html`, 'open-data': `${import.meta.dirname}/open-data.html`, unencoded: `${import.meta.dirname}/unencoded.html` } } },
+    rollupOptions: { input: { index: `${import.meta.dirname}/index.html`, compare: `${import.meta.dirname}/compare.html`, engines: `${import.meta.dirname}/engines.html`, sources: `${import.meta.dirname}/sources.html`, embed: `${import.meta.dirname}/embed.html`, design: `${import.meta.dirname}/design.html`, 'open-data': `${import.meta.dirname}/open-data.html`, unencoded: `${import.meta.dirname}/unencoded.html`, ucv: `${import.meta.dirname}/ucv.html` } } },
   // The drawing engine's files, outside this checkout's root: a dependency that is a directory is
   // read where it stands, and its Worker is a `file:` module the page asks for by that path.
   server: { fs: { strict: false, allow: ['..', join(import.meta.dirname, '..', 'node_modules', '@han-compose', 'composer')] } },
