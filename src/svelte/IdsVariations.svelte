@@ -9,12 +9,14 @@
   let { t, query = $bindable(''), disabled = false, ontake = null, href = null } = $props()
   const PAGE = 24
 
-  /** @type {{ status: 'loading' | 'ready' | 'failed', index: import('../core/ucv.js').UcvIndex | null, outlines: Record<string, string> }} */
-  let list = $state.raw({ status: 'loading', index: null, outlines: {} })
+  // The entries make the list; the drawings fill in when they arrive, and a form that is text shows
+  // as text without them.
+  /** @type {{ status: 'loading' | 'ready' | 'failed', index: import('../core/ucv.js').UcvIndex | null }} */
+  let list = $state.raw({ status: 'loading', index: null })
+  let outlines = $state.raw(/** @type {Record<string, string>} */ ({}))
   $effect(() => {
-    Promise.all([loadUcvIndex(), loadUcvOutlines()]).then(
-      ([index, outlines]) => { list = { status: 'ready', index, outlines } },
-      () => { list = { status: 'failed', index: null, outlines: {} } })
+    loadUcvIndex().then(index => { list = { status: 'ready', index } }, () => { list = { status: 'failed', index: null } })
+    loadUcvOutlines().then(loaded => { outlines = loaded }, () => {})
   })
 
   let kind = $state(/** @type {import('../core/ucv.js').UcvEntry['kind'] | null} */ (null))
@@ -76,7 +78,7 @@
           </div>
           <div class="ids-ucv-forms">
             {#each entry.forms as form, slot (slot)}
-              {@const outline = list.outlines[form.glyph]}
+              {@const outline = outlines[form.glyph]}
               {@const label = form.text ? `${form.text} ${code(form.text)}` : t('ids.ucv.form', { name: form.glyph })}
               {#if form.text && href}
                 <a class="ids-ucv-form" data-form={form.glyph} href={href(form.text)} title={label} aria-label={label}>
