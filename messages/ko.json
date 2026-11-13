@@ -405,7 +405,6 @@
   "info.script.jurchen": "여진 문자",
   "info.script.kana": "가나",
   "parts.equivalents": "CHISE: {names}",
-  "ids.pick.variations": "UCV",
   "ids.ucv.search": "글자 또는 항목 번호",
   "ids.ucv.all": "전체",
   "ids.ucv.level": "레벨 {level}",
@@ -418,5 +417,6 @@
   "ids.ucv.loading": "목록을 불러오는 중…",
   "ids.ucv.failed": "목록을 불러오지 못했습니다.",
   "ids.ucv.kind": "목록",
-  "ids.ucv.form": "자형 {name}"
+  "ids.ucv.form": "자형 {name}",
+  "ids.alternatives.unifiable": "통합 가능 자형"
 }

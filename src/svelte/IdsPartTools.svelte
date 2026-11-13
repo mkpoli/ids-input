@@ -2,7 +2,8 @@
   // The chosen part of `editor`: a field to type it (Enter puts what it holds and moves on to the next
   // empty slot), buttons to clear it or take its level away, and the alternatives in its place: the
   // components that can stand for it, the descriptions it splits into, the characters it merges to,
-  // and the recursive combinations of splitting and merging, each under its own heading. A problem or
+  // the recursive combinations of splitting and merging, and the forms the IRG unifies with it (its
+  // UCV entries), each under its own heading. A problem or
   // the next slot to fill shows beneath; the alternatives float over the page, so choosing a part does
   // not move what is around it.
   import { untrack } from 'svelte'
@@ -10,11 +11,12 @@
   import { recursiveAlternatives } from '../core/recursive-alternatives.js'
   import { shortcut } from './shortcut.js'
   import { watchFallback } from './fallback-font.js'
+  import { loadUcvIndex, loadUcvOutlines } from './ucv.js'
 
   /** @typedef {{ text: string, tree: import('../core/ids.js').Part, operation: 'expand' | 'merge' | 'both' }} Option */
 
-  /** @type {{ editor: import('./editor.svelte.js').Editor, keyHints?: boolean, slot?: HTMLInputElement | null, status?: boolean }} */
-  let { editor, keyHints = true, slot = $bindable(null), status = true } = $props()
+  /** @type {{ editor: import('./editor.svelte.js').Editor, keyHints?: boolean, slot?: HTMLInputElement | null, status?: boolean, variationsHref?: ((entry: string) => string) | null }} */
+  let { editor, keyHints = true, slot = $bindable(null), status = true, variationsHref = null } = $props()
   const t = $derived(editor.t)
   const uid = $props.id()
   const picked = $derived(editor.picked)
@@ -38,7 +40,19 @@
     for (const option of additional) out[option.operation].push(option)
     return out
   })
-  const replaceable = $derived((Boolean(part) && (editor.swaps.length > 0 || editor.splits.length > 0)) || merges.length > 0 || additional.length > 0 || truncated || failed)
+  // The other forms of the chosen component's UCV entries: the list is read once a component is
+  // chosen, the drawings once an entry has forms to show.
+  let ucv = $state.raw(/** @type {import('../core/ucv.js').UcvIndex | null} */ (null))
+  let ucvOutlines = $state.raw(/** @type {Record<string, string> | null} */ (null))
+  $effect(() => { if (part && !ucv) loadUcvIndex().then(index => { ucv = index }, () => {}) })
+  const unified = $derived.by(() => {
+    if (!ucv || !part) return []
+    return ucv.formsOf(part).filter(entry => entry.kind === 'unifiable')
+      .map(entry => ({ id: entry.id, forms: entry.forms.filter(form => form.text !== part) }))
+      .filter(entry => entry.forms.length)
+  })
+  $effect(() => { if (unified.length && !ucvOutlines) loadUcvOutlines().then(outlines => { ucvOutlines = outlines }, () => {}) })
+  const replaceable = $derived((Boolean(part) && (editor.swaps.length > 0 || editor.splits.length > 0 || unified.length > 0)) || merges.length > 0 || additional.length > 0 || truncated || failed)
   const label = $derived(t('ids.swaps.label', { part: part || written }))
 
   $effect(() => {
@@ -253,6 +267,30 @@
             </div>
           </div>
         {/if}
+        {#if unified.length}
+          <div class="ids-option-group" role="group" aria-labelledby={`${uid}-unified`}>
+            <span class="ids-option-label" id={`${uid}-unified`}>{t('ids.alternatives.unifiable')}</span>
+            {#each unified as entry (entry.id)}
+              <div class="ids-option-items ids-unified" data-ucv={entry.id}>
+                {#if variationsHref}<a class="ids-unified-entry" href={variationsHref(entry.id)} target="_blank" rel="noreferrer">UCV {entry.id}</a>
+                {:else}<span class="ids-unified-entry">UCV {entry.id}</span>{/if}
+                {#each entry.forms as form, place (place)}
+                  {@const outline = ucvOutlines?.[form.glyph]}
+                  {#if form.text}
+                    <button type="button" class="ids-swap ids-unified-form" data-form={form.glyph} disabled={editor.disabled} title={`${part} → ${form.text}`} aria-label={`${part} → ${form.text}`}
+                      draggable="true" ondragstart={event => event.dataTransfer?.setData('text/plain', /** @type {string} */ (form.text))} onclick={() => editor.take(/** @type {string} */ (form.text))}>
+                      {#if outline}<svg viewBox="0 0 200 200" aria-hidden="true"><path d={outline} /></svg>{:else}{form.text}{/if}
+                    </button>
+                  {:else if outline}
+                    <span class="ids-unified-form" data-form={form.glyph} role="img" title={t('ids.ucv.form', { name: form.glyph })} aria-label={t('ids.ucv.form', { name: form.glyph })}>
+                      <svg viewBox="0 0 200 200" aria-hidden="true"><path d={outline} /></svg>
+                    </span>
+                  {/if}
+                {/each}
+              </div>
+            {/each}
+          </div>
+        {/if}
         {#if merges.length || extra.merge.length}
           <div class="ids-option-group" role="group" aria-labelledby={`${uid}-merge`}>
             <span class="ids-option-label" id={`${uid}-merge`}>{t('ids.alternatives.merge')}</span>
@@ -339,6 +377,12 @@
   .ids-option-group{display:flex;flex-direction:column;gap:4px;min-width:0}
   .ids-option-label{font-size:11px;font-weight:500;letter-spacing:.02em;color:var(--_muted)}
   .ids-option-items{display:flex;flex-wrap:wrap;gap:6px}
+  .ids-unified{align-items:center}
+  .ids-unified-entry{flex:none;font-size:11px;line-height:1;padding:3px 6px;border:1px solid var(--_line);border-radius:5px;color:var(--_muted);white-space:nowrap;text-decoration:none;font-variant-numeric:tabular-nums}
+  a.ids-unified-entry:hover{border-color:var(--_accent);color:var(--_accent)}
+  .ids-unified-form{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:40px;height:36px;padding:3px}
+  span.ids-unified-form{border:1px dashed var(--_line);border-radius:8px}
+  .ids-unified-form svg{width:28px;height:28px;fill:currentColor}
   .ids-swap{min-width:40px;padding:2px 8px;font-size:22px;line-height:1.25;font-family:var(--_font)}
   .ids-split{max-width:100%;overflow-wrap:anywhere;text-align:left;font-size:16px;color:var(--_muted)}
   .ids-merge{font-weight:500}

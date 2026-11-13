@@ -405,7 +405,6 @@
   "info.script.jurchen": "女真文字",
   "info.script.kana": "仮名",
   "parts.equivalents": "CHISE：{names}",
-  "ids.pick.variations": "UCV",
   "ids.ucv.search": "文字または項目番号",
   "ids.ucv.all": "すべて",
   "ids.ucv.level": "レベル{level}",
@@ -418,5 +417,6 @@
   "ids.ucv.loading": "一覧を読み込み中…",
   "ids.ucv.failed": "一覧を読み込めませんでした。",
   "ids.ucv.kind": "一覧",
-  "ids.ucv.form": "字形{name}"
+  "ids.ucv.form": "字形{name}",
+  "ids.alternatives.unifiable": "統合可能な字形"
 }

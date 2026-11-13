@@ -1,34 +1,24 @@
 <script>
   // The IRG's unifiable (UCV) and non-unifiable (NUCV) component variations as a list: each entry's
   // forms drawn from the source's glyphs, the criterion it cites and its example characters. Typing
-  // a character or an entry number narrows it; with nothing typed it follows the part chosen in the
-  // editor. A form or an example that is text goes in the editor's chosen slot when clicked.
-  import { isNode } from '../core/ids.js'
-  import { loadUcv } from './ucv.js'
+  // a character or an entry number narrows it. A form or an example that is text is a link where
+  // `href` names one for it, or a button that hands it to `ontake`.
+  import { loadUcvIndex, loadUcvOutlines } from './ucv.js'
 
-  /** @type {{ editor: import('./editor.svelte.js').Editor }} */
-  let { editor } = $props()
-  const t = $derived(editor.t)
+  /** @type {{ t: (key: string, values?: Record<string, string | number>) => string, query?: string, disabled?: boolean, ontake?: ((text: string) => void) | null, href?: ((text: string) => string) | null }} */
+  let { t, query = $bindable(''), disabled = false, ontake = null, href = null } = $props()
   const PAGE = 24
 
   /** @type {{ status: 'loading' | 'ready' | 'failed', index: import('../core/ucv.js').UcvIndex | null, outlines: Record<string, string> }} */
   let list = $state.raw({ status: 'loading', index: null, outlines: {} })
   $effect(() => {
-    loadUcv().then(
-      loaded => { list = { status: 'ready', index: loaded.index, outlines: loaded.outlines } },
+    Promise.all([loadUcvIndex(), loadUcvOutlines()]).then(
+      ([index, outlines]) => { list = { status: 'ready', index, outlines } },
       () => { list = { status: 'failed', index: null, outlines: {} } })
   })
 
-  let query = $state('')
   let kind = $state(/** @type {import('../core/ucv.js').UcvEntry['kind'] | null} */ (null))
-  // The part chosen in the editor, when it is a component rather than a structure.
-  const chosen = $derived.by(() => {
-    const picked = editor.picked
-    return typeof picked === 'string' && picked && !isNode(picked) ? picked : ''
-  })
-  // The chosen part narrows the list only where it has entries; otherwise the whole list stays.
-  const followed = $derived(!query.trim() && chosen && list.index?.find(chosen, { kind }).length ? chosen : '')
-  const asked = $derived(query.trim() || followed)
+  const asked = $derived(query.trim())
   const found = $derived(list.index ? list.index.find(asked, { kind }) : [])
   // Entries are drawn a page at a time; the end of the page coming into view draws the next, and a
   // new question starts again from the first page.
@@ -61,8 +51,8 @@
 
 <div class="ids-ucv">
   <div class="ids-ucv-row">
-    <input type="search" bind:value={query} disabled={editor.disabled} lang="ja" spellcheck="false" autocomplete="off"
-      aria-label={t('ids.ucv.search')} placeholder={followed || t('ids.ucv.search')} />
+    <input type="search" bind:value={query} {disabled} lang="ja" spellcheck="false" autocomplete="off"
+      aria-label={t('ids.ucv.search')} placeholder={t('ids.ucv.search')} />
     <div class="ids-ucv-kinds" role="group" aria-label={t('ids.ucv.kind')}>
       {#each KINDS as [value, label] (label)}
         <button type="button" class:active={kind === value} aria-pressed={kind === value} onclick={() => kind = value}>{label ?? t('ids.ucv.all')}</button>
@@ -75,7 +65,7 @@
   {:else}
     <ol class="ids-ucv-list">
       {#each shown as entry (entry.id)}
-        <li class="ids-ucv-entry" data-entry={entry.id}>
+        <li class="ids-ucv-entry" id={`ucv-${entry.id}`} data-entry={entry.id}>
           <div class="ids-ucv-head">
             <span class="ids-ucv-id">{entry.id}</span>
             {#if entry.kind === 'not-unifiable'}<span class="ids-ucv-badge strong">NUCV</span>{/if}
@@ -88,15 +78,18 @@
             {#each entry.forms as form, slot (slot)}
               {@const outline = list.outlines[form.glyph]}
               {@const label = form.text ? `${form.text} ${code(form.text)}` : t('ids.ucv.form', { name: form.glyph })}
-              {#if form.text}
-                <button type="button" class="ids-ucv-form" class:current={form.text === chosen} data-form={form.glyph} disabled={editor.disabled} title={label} aria-label={label}
-                  draggable="true" ondragstart={event => event.dataTransfer?.setData('text/plain', /** @type {string} */ (form.text))}
-                  onclick={() => editor.take(/** @type {string} */ (form.text))}>
+              {#if form.text && href}
+                <a class="ids-ucv-form" data-form={form.glyph} href={href(form.text)} title={label} aria-label={label}>
+                  {#if outline}<svg viewBox="0 0 200 200" aria-hidden="true"><path d={outline} /></svg>{:else}<span lang="ja">{form.text}</span>{/if}
+                </a>
+              {:else if form.text && ontake}
+                <button type="button" class="ids-ucv-form" data-form={form.glyph} {disabled} title={label} aria-label={label}
+                  onclick={() => ontake(/** @type {string} */ (form.text))}>
                   {#if outline}<svg viewBox="0 0 200 200" aria-hidden="true"><path d={outline} /></svg>{:else}<span lang="ja">{form.text}</span>{/if}
                 </button>
               {:else}
                 <span class="ids-ucv-form" data-form={form.glyph} role="img" title={label} aria-label={label}>
-                  {#if outline}<svg viewBox="0 0 200 200" aria-hidden="true"><path d={outline} /></svg>{:else}<span class="ids-ucv-name">{form.glyph}</span>{/if}
+                  {#if outline}<svg viewBox="0 0 200 200" aria-hidden="true"><path d={outline} /></svg>{:else if form.text}<span lang="ja">{form.text}</span>{:else}<span class="ids-ucv-name">{form.glyph}</span>{/if}
                 </span>
               {/if}
             {/each}
@@ -108,9 +101,9 @@
                 {#each row.groups as group, at (at)}
                   <span class="ids-ucv-group">
                     {#each group as char, place (place)}
-                      <button type="button" class="ids-ucv-char" data-character={char} disabled={editor.disabled} lang="ja" title={`${char} ${code(char)}`}
-                        draggable="true" ondragstart={event => event.dataTransfer?.setData('text/plain', char)}
-                        onclick={() => editor.take(char)}>{char}</button>
+                      {#if href}<a class="ids-ucv-char" data-character={char} href={href(char)} lang="ja" title={`${char} ${code(char)}`}>{char}</a>
+                      {:else if ontake}<button type="button" class="ids-ucv-char" data-character={char} {disabled} lang="ja" title={`${char} ${code(char)}`} onclick={() => ontake(char)}>{char}</button>
+                      {:else}<span class="ids-ucv-char" data-character={char} lang="ja" title={`${char} ${code(char)}`}>{char}</span>{/if}
                     {/each}
                   </span>
                 {/each}
@@ -127,7 +120,19 @@
 </div>
 
 <style>
-  .ids-ucv{display:flex;flex-direction:column;gap:6px;min-width:0}
+  .ids-ucv{
+    --_ink:var(--ids-ink,light-dark(#1c1c22,#ececf2));--_muted:var(--ids-muted,light-dark(#686874,#9d9daa));
+    --_line:var(--ids-line,light-dark(#e1e1e8,#2e2e36));--_line-strong:var(--ids-line-strong,light-dark(#c2c2cc,#4a4a55));
+    --_control-border:var(--ids-control-border,light-dark(#8a8a96,#6f6f7e));
+    --_surface:var(--ids-surface,light-dark(#fff,#1b1b20));--_surface-subtle:var(--ids-surface-subtle,light-dark(#f6f6f9,#16161a));
+    --_accent:var(--ids-accent,light-dark(#2944c7,#8ea8ff));--_accent-light:var(--ids-accent-light,light-dark(#e9edfd,#232c4c));
+    --_focus:var(--ids-focus,light-dark(#2944c7,#8ea8ff));--_fault:var(--ids-fault,light-dark(#b42318,#ff8a80));
+    --_font:var(--ids-font,"IDS Numbered","IDS Strokes","IDS Parts","IDS Operators","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif);
+    display:flex;flex-direction:column;gap:6px;min-width:0;color:var(--_ink)}
+  :where(.ids-ucv) :is(button,input){font:inherit;color:inherit;border:1px solid var(--_line);border-radius:8px;background:var(--_surface)}
+  :where(.ids-ucv) input{border-color:var(--_control-border)}
+  :where(.ids-ucv) button{cursor:pointer}
+  :where(.ids-ucv) :is(button,input,a):focus-visible{outline:2px solid var(--_focus);outline-offset:1px}
   .ids-ucv-row{display:flex;gap:6px;align-items:stretch}
   .ids-ucv-row input{flex:1;min-width:0;font-size:14px;padding:7px 10px}
   .ids-ucv-kinds{display:flex;flex:none;padding:2px;gap:2px;border:1px solid var(--_line);border-radius:8px;background:var(--_surface-subtle)}
@@ -136,15 +141,15 @@
   .ids-ucv-note{margin:0;font-size:11px;color:var(--_muted)}
   .ids-ucv-note.fault{color:var(--_fault)}
   .ids-ucv-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
-  .ids-ucv-entry{display:flex;flex-direction:column;gap:5px;padding:8px 10px;border:1px solid var(--_line);border-radius:10px;background:var(--_surface)}
+  .ids-ucv-entry{scroll-margin-top:12px;display:flex;flex-direction:column;gap:5px;padding:8px 10px;border:1px solid var(--_line);border-radius:10px;background:var(--_surface)}
   .ids-ucv-head{display:flex;flex-wrap:wrap;align-items:center;gap:5px}
   .ids-ucv-id{font-weight:650;font-size:14px;font-variant-numeric:tabular-nums;margin-right:2px}
   .ids-ucv-badge{font-size:11px;line-height:1;padding:3px 6px;border:1px solid var(--_line-strong);border-radius:5px;color:var(--_muted);white-space:nowrap}
   .ids-ucv-badge.strong{border-color:var(--_accent);color:var(--_accent)}
   .ids-ucv-forms{display:flex;flex-wrap:wrap;gap:4px}
   .ids-ucv-form{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:46px;height:46px;padding:3px;border:1px solid transparent;border-radius:8px;background:var(--_surface-subtle);font-family:var(--_font);font-size:26px;color:var(--_ink)}
-  button.ids-ucv-form:not(:disabled):hover{border-color:var(--_accent)}
-  .ids-ucv-form.current{border-color:var(--_accent);background:var(--_accent-light)}
+  :is(button,a).ids-ucv-form:not(:disabled):hover{border-color:var(--_accent)}
+  a.ids-ucv-form{text-decoration:none}
   span.ids-ucv-form{background:transparent;border-color:var(--_line)}
   .ids-ucv-form svg{width:100%;height:100%;fill:currentColor}
   .ids-ucv-name{font-size:9px;font-family:ui-monospace,monospace;overflow-wrap:anywhere;line-height:1.1;color:var(--_muted)}
@@ -152,8 +157,8 @@
   .ids-ucv-label{font-size:11px;color:var(--_muted)}
   .ids-ucv-groups{display:flex;flex-wrap:wrap;gap:2px 8px;min-width:0}
   .ids-ucv-group{display:inline-flex;flex-wrap:wrap;min-width:0}
-  .ids-ucv-char{border:0;background:transparent;padding:0 1px;font-family:var(--_font);font-size:20px;line-height:1.25;border-radius:4px}
-  .ids-ucv-char:not(:disabled):hover{background:var(--_accent-light);color:var(--_accent)}
+  .ids-ucv-char{border:0;background:transparent;padding:0 1px;font-family:var(--_font);font-size:20px;line-height:1.25;border-radius:4px;color:inherit;text-decoration:none}
+  :is(button,a).ids-ucv-char:not(:disabled):hover{background:var(--_accent-light);color:var(--_accent)}
   .ids-ucv-more{color:var(--_muted)}
   .ids-ucv-sentinel{height:1px}
 </style>

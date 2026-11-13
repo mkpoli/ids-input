@@ -10,7 +10,7 @@ import { EXAMPLES } from '../demo/lib/examples.js'
 import { pathOf } from '../worker/page.js'
 
 const ORIGIN = 'https://ids.mkpo.li'
-const PAGES = ['/', '/compare', '/engines', '/sources', '/open-data', '/unencoded']
+const PAGES = ['/', '/compare', '/engines', '/sources', '/open-data', '/unencoded', '/ucv']
 
 /** @param {string} path */
 const url = path => `<url>\n    <loc>${ORIGIN}${path}</loc>\n  </url>`

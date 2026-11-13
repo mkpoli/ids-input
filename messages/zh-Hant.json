@@ -405,7 +405,6 @@
   "info.script.jurchen": "女真文字",
   "info.script.kana": "假名",
   "parts.equivalents": "CHISE：{names}",
-  "ids.pick.variations": "UCV",
   "ids.ucv.search": "字元或條目編號",
   "ids.ucv.all": "全部",
   "ids.ucv.level": "級別 {level}",
@@ -418,5 +417,6 @@
   "ids.ucv.loading": "正在載入清單…",
   "ids.ucv.failed": "無法載入清單。",
   "ids.ucv.kind": "清單",
-  "ids.ucv.form": "字形 {name}"
+  "ids.ucv.form": "字形 {name}",
+  "ids.alternatives.unifiable": "可認同字形"
 }

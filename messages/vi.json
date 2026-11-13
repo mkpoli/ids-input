@@ -405,7 +405,6 @@
   "info.script.jurchen": "Chữ Nữ Chân",
   "info.script.kana": "Kana",
   "parts.equivalents": "CHISE: {names}",
-  "ids.pick.variations": "UCV",
   "ids.ucv.search": "Chữ hoặc số mục",
   "ids.ucv.all": "Tất cả",
   "ids.ucv.level": "Mức {level}",
@@ -418,5 +417,6 @@
   "ids.ucv.loading": "Đang tải danh sách…",
   "ids.ucv.failed": "Không tải được danh sách.",
   "ids.ucv.kind": "Danh sách",
-  "ids.ucv.form": "Dạng {name}"
+  "ids.ucv.form": "Dạng {name}",
+  "ids.alternatives.unifiable": "Dạng hợp nhất được"
 }

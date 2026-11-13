@@ -1417,7 +1417,7 @@
           {:else if editor.pending}<p class="status" role="status">{wholeComponentLookup ? t('ids.search.emptyHint') : editor.pending}</p>{/if}
         </div>
         <div class="block"><IdsOperators {editor} {keyHints} /></div>
-        <div class="block grow"><IdsPicker {editor} pickers={['parts', 'templates', 'from', 'find', 'variations']} bind:fromText={fromText_} title={false} {equivalents} /></div>
+        <div class="block grow"><IdsPicker {editor} pickers={['parts', 'templates', 'from', 'find']} bind:fromText={fromText_} title={false} {equivalents} /></div>
       </section>
 
       <div class="column-gap input-gap">
@@ -1442,7 +1442,7 @@
               <div class="tree-list" role="tabpanel" id="tree-panel" aria-labelledby="tree-tab"><IdsTreeList {editor} /></div>
             {/key}
           {/if}
-          <div class="block tools-row"><IdsPartTools {editor} {keyHints} bind:slot status={false} /></div>
+          <div class="block tools-row"><IdsPartTools {editor} {keyHints} bind:slot status={false} variationsHref={entry => `./ucv.html?lang=${locale}#ucv-${entry}`} /></div>
         </section>
         <div class="split" role="separator" aria-orientation="horizontal" aria-label={t('app.panels.resize')} title={`${t('app.panels.resize')} (${Math.round(split)}%)`}
           aria-valuemin="35" aria-valuemax="78" aria-valuenow={Math.round(split)} tabindex="0"

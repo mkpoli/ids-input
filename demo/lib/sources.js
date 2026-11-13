@@ -77,7 +77,7 @@ export const FEATURES = /** @type {const} */ ([
 
 /** What each source is used in. Kept beside the entries so a new source has to say. */
 const USED_IN = /** @type {Record<string, string[]>} */ ({
-  'iwds-ucv': ['palette'],
+  'iwds-ucv': ['decompose'],
   babelstone: ['decompose', 'palette', 'search', 'composer', 'info', 'examples'],
   'babelstone-tangut': ['decompose', 'palette', 'composer', 'examples'],
   'yi-bai': ['decompose', 'search'],

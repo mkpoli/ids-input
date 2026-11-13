@@ -436,5 +436,7 @@
   "appendix.prev": "上一页",
   "appendix.next": "下一页",
   "appendix.one": "一侧",
-  "appendix.mine": "我的对应"
+  "appendix.mine": "我的对应",
+  "ucv.title": "部件认同规则（UCV）",
+  "ucv.source": "来源"
 }
