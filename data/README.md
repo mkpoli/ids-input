@@ -1238,6 +1238,13 @@ from `ids-parts.json`.
 - The compound parts, BabelStone's numbered components and the radical forms the dictionary does
   not name have no entry and are not found by strokes.
 
+## `open-strokes/`
+
+The open stroke-order release served at <https://ids.mkpo.li/open-data#strokes>: Taiwan's standard order
+from CNS 全字庫, Rime's five-stroke dictionary, and orders induced by equivalence or from
+BabelStone IDS for characters a source lacks. Its own `README.md` gives the fields, rules, licences
+and how often the rules agree with the sources. Built by `scripts/build_open_strokes.mjs`.
+
 ## `han-parts.json.gz`
 
 Every Han-script character the composer can draw: 103,352 keys in code-point order, with the
