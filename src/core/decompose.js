@@ -1,7 +1,7 @@
 // @ts-check
 // Decomposition: the characters or the description typed into "Take parts from", each character's
 // descriptions as an adapter gives them, and the way the tree of them is stepped through by keys.
-import { arity, isComponent, isDescription, isSequence, isShuishu, leaves, modifierAt, parse, takesModifier } from './ids.js'
+import { arity, customAt, customOrFirst, readsLiterally, isComponent, isDescription, isSequence, isShuishu, leaves, modifierAt, parse, takesModifier } from './ids.js'
 import { emojiPrefix } from '@han-compose/composer/emoji'
 
 import { unicodeProperty } from './unicode.js'
@@ -32,7 +32,7 @@ const SELECTOR = /^[︀-️\u{E0100}-\u{E01EF}]$/u
 export function tokens(text) {
   // A complete description can use braces and digits as literal graphic operands.
   // Otherwise retain BabelStone's unresolved {n} notation as one token.
-  if (isSequence(text) && !parse(text, { open: true }).problem) return descriptionTokens(text ?? '')
+  if (isSequence(text) && !parse(text, { open: true }).problem) return descriptionTokens(text ?? '', !readsLiterally(text))
   const written = text ?? ''
   const complete = isDescription(text)
   /** @type {string[]} */
@@ -67,7 +67,7 @@ export function tokens(text) {
 
 /** A description's tokens in reading order, each operator's zi.tools modifier left out.
  * @param {string} text @returns {string[]} */
-function descriptionTokens(text) {
+function descriptionTokens(text, customs = true) {
   const chars = [...text]
   /** @type {string[]} */
   const out = []
@@ -87,6 +87,8 @@ function descriptionTokens(text) {
         return
       }
     }
+    const custom = customs ? customAt(chars, at - 1) : null
+    if (custom) { at = custom.end; out.push(custom.text); return }
     const n = arity(char)
     if (!n) {
       out.push(SELECTOR.test(chars[at]) ? char + chars[at++] : char)
@@ -104,8 +106,8 @@ function descriptionTokens(text) {
 /** The number of an unencoded component `{n}`, or null for any other token. @param {string | null | undefined} token */
 export const unencoded = token => /^\{(\d+)\}$/.exec(token ?? '')?.[1] ?? null
 
-/** The character a part is looked up by: its variation selector dropped. @param {string | null | undefined} part */
-export const lookupChar = part => [...(part ?? '')][0] ?? ''
+/** The character a part is looked up by: its variation selector dropped, a custom component whole. @param {string | null | undefined} part */
+export const lookupChar = part => customOrFirst(part)
 
 /** Whether a part can be looked up: one encoded component, not ？. @param {unknown} part @returns {part is string} */
 export const decomposable = part => typeof part === 'string' && unencoded(part) === null && isComponent(lookupChar(part)) && lookupChar(part) !== '？'

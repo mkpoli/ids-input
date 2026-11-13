@@ -239,11 +239,11 @@ describe('component lookup expressions', () => {
     expect(alias.search('㇯？イ').hits.map(hit => hit.char)).toContain('イ')
   })
 
-  it('opens a readable description or the component when the source contains placeholders', () => {
+  it('opens a description of characters before one naming an unencoded component', () => {
     const index = createSearch(new Map([['體', ['⿰骨豊']], ['骨', ['⿳{108}冖⺝', '⿱冖月']], ['豊', ['⿱{123}豆']]]))
     const hits = index.search('㇯體？').hits
     expect(hits.find(hit => hit.char === '骨').sequence).toBe('⿱冖月')
-    expect(hits.find(hit => hit.char === '豊').sequence).toBe('豊')
+    expect(hits.find(hit => hit.char === '豊').sequence).toBe('⿱{123}豆')
   })
 
   it('treats an empty slot as the same wildcard for both lookup directions', () => {

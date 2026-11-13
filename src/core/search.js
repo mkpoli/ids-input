@@ -14,7 +14,7 @@
 // the match lies, how many components had to be opened to reach it, and how much else the character
 // holds, and among equals the common ideographs first. Each hit carries the description it matched in, opened where the match needed it, and the
 // spans of it the terms matched, for highlighting.
-import { EMPTY_MARKS, UNKNOWN, arity, entryDescription, isComponent, isDescription, isNode, isSequence, leaves, nextEmpty, parse, partAt, replaceAt, splitDescription, write } from './ids.js'
+import { EMPTY_MARKS, UNKNOWN, arity, entryDescription, isComponent, isDescription, isEncodedDescription, isNode, isSequence, leaves, nextEmpty, parse, partAt, replaceAt, splitDescription, write } from './ids.js'
 
 import { unalias } from './aliases.js'
 import { lookupChar, tokens, unencoded } from './decompose.js'
@@ -765,7 +765,8 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
     const sorted = [...depths].sort((a, b) => a[1] - b[1] || tier(a[0]) - tier(b[0])
       || /** @type {number} */ (a[0].codePointAt(0)) - /** @type {number} */ (b[0].codePointAt(0)))
     const hits = sorted.slice(0, limit).map(([part, depth]) => {
-      const description = (table.get(lookupChar(part)) ?? []).find(isDescription)
+      const described = table.get(lookupChar(part)) ?? []
+      const description = described.find(isEncodedDescription) ?? described.find(isDescription)
       return { char: part, sequence: description ?? part, spans: [], score: depth }
     })
     return { hits, total: sorted.length }

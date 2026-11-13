@@ -383,11 +383,16 @@ carries no variant data. A modifier after an operator (`⿻[1:]丨日`, `⿴[1]�
 stays with that operator and is written back with it: overlays, the enclosures and subtraction take
 one, other operators keep a bracket as a component, and its matrix or index narrows where a part
 sits or which occurrence an operator acts on. The layout draws the description as it does without
-one, so previewing such a description is approximate. Stroke chains (`#(H)`) are not read yet.
+one, so previewing such a description is approximate.
 
 A zi.tools stroke chain that names a stroke or a character reads as that character: `#(H)` is 一,
-`#(Wg)` is ㇁, and `#(-丨𠃍-一z)` is 口. Chains that name no character the published grammar lists
-stay in the text, to be read as their parts or rejected as usual.
+`#(Wg)` is ㇁, and `#(-丨𠃍-一z)` is 口.
+
+A component no code point names is one part, in its source's spelling: BabelStone's numbered
+component `{53}`, a CHISE entity `&CDP-8BD0;`, and any other zi.tools stroke chain `#(-𠃌㇉)`.
+`customKind(part)` answers `'numbered'`, `'entity'`, `'chain'` or null, `customsOf(tree)` lists the
+ones a tree names, and `isEncodedDescription(text)` tells a description of characters only. Where a
+text reads only with `{`, `&` or `#` as characters of their own (`⿳{1}`), it reads that way.
 
 A zi.tools description that carries a stroke chain this package cannot draw resolves to the
 character the published table gives it: pasting `⿱丿⿹#(-𠃌㇉)一` gives 乌. The host supplies that

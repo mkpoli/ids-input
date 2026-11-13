@@ -4,13 +4,16 @@ import { unicodeProperty } from './unicode.js'
 import { emojiPrefix } from '@han-compose/composer/emoji'
 import { isMark, marksOf, normalizeMarks, toneMarksAt, withMarks, withoutMarks } from './marks.js'
 import { strokeChain } from './strokes.js'
+import { customAt, isCustom } from './custom.js'
+export * from './custom.js'
 export { UNICODE_VERSION } from './unicode.js'
 export * from './marks.js'
 // Ideographic description sequences: reading, writing and editing them as trees.
 //
 // Each operator takes its own number of descriptions. A component is a graphic Unicode code
 // point, a private-use character, one of the bundled allocations below, or a run of conjoining
-// Hangul jamo that forms one syllable, with an optional variation selector. ？ names an unknown
+// Hangul jamo that forms one syllable, with an optional variation selector, or a component no code
+// point names in its source's spelling (`custom.js`: {53}, &CDP-8BD0;, #(-𠃌㇉)). ？ names an unknown
 // part. Operators, draft slots and invisible characters cannot be components. A run of loose marks
 // (`marks.js`) after the whole description annotates it: ⿰亻木ˊ, ⿰ㄅㄚˇ, ⿰氵青゛.
 
@@ -116,7 +119,7 @@ export const arity = char => (char === undefined ? 0 : ARITY.get(char) ?? 0)
  * character. @type {RegExp} */
 const SEPARATOR = /^\{(?:\?[0-9]?)?([^}]+)\}/u
 /** A zi.tools entry's glyph-variant definition, (.,T) or (d), after its description. @type {RegExp} */
-const DEFINITION = /\([0-9A-Za-z.,]+\)$/u
+const DEFINITION = /(?<!#)\([0-9A-Za-z.,]+\)$/u
 /** Whether `note` names variants, as a glyph-variant definition does: letters, digits, dots, commas.
  * @param {string} note */
 const isVariantList = note => /^[0-9A-Za-z.,]*$/u.test(note)
@@ -217,6 +220,28 @@ export function modifierLength(text, at) {
  * @returns {{ tree: Part, problem?: undefined } | { problem: Problem, tree?: undefined }}
  */
 export function parse(text, { open = false } = {}) {
+  return readTree(text, open, !readsLiterally(text))
+}
+
+/**
+ * Whether `text` reads with its braces, & or # as components of their own. Braces, & and # are
+ * graphic characters too: a text that is no whole description with a custom component, and is one
+ * with its characters read one by one, reads that way (⿳{1} as {, 1 and }), as a draft too. A draft
+ * that is whole neither way takes whichever reading has no problem, custom components first.
+ * @param {string | null | undefined} text
+ */
+export function readsLiterally(text) {
+  if (!/[{&#]/.test(text ?? '')) return false
+  if (!readTree(text, false, true).problem) return false
+  if (!readTree(text, false, false).problem) return true
+  return Boolean(readTree(text, true, true).problem) && !readTree(text, true, false).problem
+}
+
+/**
+ * @param {string | null | undefined} text @param {boolean} open @param {boolean} customs
+ * @returns {{ tree: Part, problem?: undefined } | { problem: Problem, tree?: undefined }}
+ */
+function readTree(text, open, customs) {
   const body = entryDescription(text)
   const chars = [...body]
   if (open && !chars.length) return { tree: null }
@@ -241,6 +266,9 @@ export function parse(text, { open = false } = {}) {
           return (isSelector(chars[at]) ? chain.char + chars[at++] : chain.char) + tones()
         }
       }
+      // A component no code point names is one part, written as its source writes it.
+      const custom = emoji || !customs ? null : customAt(chars, at - 1)
+      if (custom) { at = custom.end; return custom.text }
       const n = arity(char)
       if (!n) {
         if (open && EMPTY_MARKS.includes(char)) return null
@@ -291,11 +319,19 @@ export const problemOf = text => parse(text).problem ?? null
  * @returns {number}
  */
 export function descriptionEnd(chars, at = 0) {
+  const end = endOf(chars, at, true)
+  return end < 0 ? endOf(chars, at, false) : end
+}
+
+/** @param {string[]} chars @param {number} at @param {boolean} customs @returns {number} */
+function endOf(chars, at, customs) {
   const char = chars[at]
   if (char === undefined) return -1
   const chain = strokeChain(chars, at)
   // A stroke chain stands for the character it names, and takes a variation selector like one.
   if (chain) return toneMarksAt(chars, isSelector(chars[chain.end]) ? chain.end + 1 : chain.end)
+  const custom = customs ? customAt(chars, at) : null
+  if (custom) return custom.end
   const n = arity(char)
   if (!n) {
     if (!isComponent(char)) return -1
@@ -308,7 +344,7 @@ export function descriptionEnd(chars, at = 0) {
   let end = at + 1
   const note = takesModifier(char) ? modifierAt(chars, end) : ''
   if (note) end += [...note].length + 2
-  for (let k = 0; k < n && end >= 0; k++) end = descriptionEnd(chars, end)
+  for (let k = 0; k < n && end >= 0; k++) end = endOf(chars, end, customs)
   return end
 }
 
@@ -367,6 +403,14 @@ export function leaves(tree, path = []) {
 export function paths(tree, path = []) {
   return [path, ...(isNode(tree) ? tree.parts.flatMap((part, i) => paths(part, [...path, i])) : [])]
 }
+
+/** The custom components a tree names ({53}, &CDP-8BD0;, #(-𠃌㇉)), in reading order.
+ * @param {Part} tree @returns {string[]} */
+export const customsOf = tree => leaves(tree).flatMap(leaf => leaf.char !== null && isCustom(leaf.char) ? [leaf.char] : [])
+
+/** Whether `text` is a description every component of which is a character.
+ * @param {string | null | undefined} text */
+export const isEncodedDescription = text => { const read = parse(text); return !read.problem && !customsOf(read.tree).length }
 
 /** Whether two paths name the same part. @param {Path | null | undefined} a @param {Path | null | undefined} b */
 export const samePath = (a, b) => Boolean(a && b) && a?.length === b?.length && (a ?? []).every((x, i) => x === b?.[i])
