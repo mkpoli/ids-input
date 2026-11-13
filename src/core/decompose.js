@@ -1,7 +1,7 @@
 // @ts-check
 // Decomposition: the characters or the description typed into "Take parts from", each character's
 // descriptions as an adapter gives them, and the way the tree of them is stepped through by keys.
-import { arity, customAt, readsLiterally, isComponent, isDescription, isSequence, isShuishu, leaves, modifierAt, parse, takesModifier } from './ids.js'
+import { arity, customAt, isNode, readingOf, isComponent, isDescription, isSequence, isShuishu, leaves, modifierAt, parse, takesModifier } from './ids.js'
 import { emojiPrefix } from '@han-compose/composer/emoji'
 
 import { unicodeProperty } from './unicode.js'
@@ -32,7 +32,13 @@ const SELECTOR = /^[︀-️\u{E0100}-\u{E01EF}]$/u
 export function tokens(text) {
   // A complete description can use braces and digits as literal graphic operands.
   // Otherwise retain BabelStone's unresolved {n} notation as one token.
-  if (isSequence(text) && !parse(text, { open: true }).problem) return descriptionTokens(text ?? '', !readsLiterally(text))
+  const draft = isSequence(text) ? parse(text, { open: true }) : null
+  if (draft && !draft.problem) {
+    const reading = readingOf(text)
+    // A variant identifier stays on its component, so the tokens are the tree's own.
+    if (reading === 'variant') return treeTokens(draft.tree)
+    return descriptionTokens(text ?? '', reading !== 'literal')
+  }
   const written = text ?? ''
   const complete = isDescription(text)
   /** @type {string[]} */
@@ -64,6 +70,10 @@ export function tokens(text) {
   }
   return merged
 }
+
+/** A tree's operators and components in reading order, a slot still to fill left out.
+ * @param {import('./ids.js').Part} tree @returns {string[]} */
+const treeTokens = tree => tree === null ? [] : isNode(tree) ? [tree.op, ...tree.parts.flatMap(treeTokens)] : [tree]
 
 /** A description's tokens in reading order, each operator's zi.tools modifier left out.
  * @param {string} text @returns {string[]} */

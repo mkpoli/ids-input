@@ -394,6 +394,14 @@ component `{53}`, a CHISE entity `&CDP-8BD0;`, and any other zi.tools stroke cha
 ones a tree names, and `isEncodedDescription(text)` tells a description of characters only. Where a
 text reads only with `{`, `&` or `#` as characters of their own (`⿳{1}`), it reads that way.
 
+Notes that are no part of a description are read around it. A zi.tools variant identifier stays on
+the component it follows (`⿰令dhs刂` has the parts `令dhs` and 刂) where the description reads no
+other way; `variantOf(part)` separates the two, `variantIdentifier(id)` says whether it names a
+source, a form of an IRG UCV entry (`q008a2`: form 2 of #8a) or a stroke style, and
+`withoutVariants(tree)` drops them, as the preview does before it draws. A BabelStone entry
+`^⿰氵骨$(GHTJKPV)` reads as its description, like a zi.tools entry; `entryNotes(text)` answers the
+separator, variants, sources and virtual forms either kind carries.
+
 A zi.tools description that carries a stroke chain this package cannot draw resolves to the
 character the published table gives it: pasting `⿱丿⿹#(-𠃌㇉)一` gives 乌. The host supplies that
 table as `chains` (the workshop's `data/zi-tools-chains.tsv.gz`); without it the text stays.
