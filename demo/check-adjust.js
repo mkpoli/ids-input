@@ -5,15 +5,17 @@ import { mkdirSync, readFileSync } from 'node:fs'
 /**
  * The chosen part as the canvas shows it, read from its selection box: the turn of its top edge in
  * degrees, the cosine between its top and left edges (0 for a box that is turned and not sheared),
- * and its width relative to `width`.
+ * its width relative to `width`, and its centre.
  * @param {import('playwright-core').Page} page @param {number} [width]
  */
 async function chained(page, width) {
   const quad = await page.locator('.ids-preview-large .select-box').getAttribute('points')
-  const [p0, p1, , p3] = (quad ?? '').trim().split(' ').reduce((pairs, value, index, all) => index % 2 ? pairs : [...pairs, [Number(value), Number(all[index + 1])]], /** @type {number[][]} */ ([]))
+  const corners = (quad ?? '').trim().split(' ').reduce((pairs, value, index, all) => index % 2 ? pairs : [...pairs, [Number(value), Number(all[index + 1])]], /** @type {number[][]} */ ([]))
+  const [p0, p1, , p3] = corners
+  const centre = [0, 1].map(axis => corners.reduce((sum, point) => sum + point[axis], 0) / corners.length)
   const top = [p1[0] - p0[0], p1[1] - p0[1]], left = [p3[0] - p0[0], p3[1] - p0[1]]
   const size = Math.hypot(...top)
-  return { size, scale: width ? size / width : 1, degrees: Math.atan2(top[1], top[0]) * 180 / Math.PI, shear: (top[0] * left[0] + top[1] * left[1]) / (size * Math.hypot(...left)) }
+  return { size, scale: width ? size / width : 1, degrees: Math.atan2(top[1], top[0]) * 180 / Math.PI, shear: (top[0] * left[0] + top[1] * left[1]) / (size * Math.hypot(...left)), centre }
 }
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH })
 try {
@@ -113,7 +115,7 @@ try {
     assert.equal(cleared, undefined, 'zero clears the layer transform')
     await page.keyboard.press('0')
     await page.waitForTimeout(300)
-    const { size: width } = await chained(page)
+    const { size: width, centre } = await chained(page)
     await page.keyboard.press('=')
     await page.waitForTimeout(300)
     const grown = await chained(page, width)
@@ -124,11 +126,15 @@ try {
     assert.ok(Math.abs((await chained(page, width)).scale - 1 / 1.05) < 1e-3, '- scales the part down by the same step')
     await page.keyboard.press('0')
     await page.keyboard.press(']')
-    await page.keyboard.press('Shift+]')
+    // Shift with the bracket key, as a keyboard reports it: } rather than ].
+    await page.keyboard.down('Shift')
+    await page.keyboard.press('}')
+    await page.keyboard.up('Shift')
     await page.waitForTimeout(300)
     const turned = await chained(page, width)
     assert.ok(Math.abs(turned.degrees - 20) < 0.05, `] turns 5°, Shift+] 15° more (got ${turned.degrees}°)`)
     assert.ok(Math.abs(turned.shear) < 1e-3 && Math.abs(turned.scale - 1) < 1e-3, `a key turn keeps the part's shape (shear ${turned.shear})`)
+    assert.ok(Math.hypot(turned.centre[0] - centre[0], turned.centre[1] - centre[1]) < 0.5, 'a key turn pivots on the part\'s centre')
     await page.keyboard.press('[')
     await page.waitForTimeout(300)
     assert.ok(Math.abs((await chained(page)).degrees - 15) < 0.05, '[ turns back 5°')
