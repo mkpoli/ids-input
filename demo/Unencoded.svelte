@@ -11,6 +11,10 @@
   import { load, save } from './lib/storage.js'
   import { importPairs, parsePair, parseSide } from './lib/equivalences.js'
   import dataUrl from '../data/custom-components.json.gz?url'
+  import outlinesUrl from '../data/custom-outlines.json.gz?url'
+  import { componentDrawing } from '@han-compose/composer/component-forms'
+  import { SvelteSet } from 'svelte/reactivity'
+  import { chainPath } from '../src/core/chain-shape.js'
   import engineOutlines from 'ids-engine-outlines'
   import { composerPreview } from '@han-compose/composer'
   import IdsPartIcon from '../src/svelte/IdsPartIcon.svelte'
@@ -38,17 +42,23 @@
   /** @type {import('../src/core/custom-components.js').CustomComponentsData | null} */
   let doc = $state.raw(null)
   let failed = $state(false)
-  onMount(async () => {
-    try {
-      const response = await fetch(dataUrl)
-      if (!response.ok) throw new Error(String(response.status))
-      // The published file is gzipped; the dev server may hand it over already decoded.
-      const bytes = new Uint8Array(await response.arrayBuffer())
-      const text = bytes[0] === 0x1f && bytes[1] === 0x8b
-        ? await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).text()
-        : new TextDecoder().decode(bytes)
-      doc = JSON.parse(text)
-    } catch { failed = true }
+  /** GlyphWiki's glyph for a CHISE entity: the entity's GlyphWiki name, and each name's outline.
+   * @type {{ names: Record<string, string>, outlines: Record<string, string> } | null} */
+  let outlines = $state.raw(null)
+  /** A gzipped JSON file; the dev server may hand it over already decoded. @param {string} url */
+  async function read(url) {
+    const response = await fetch(url)
+    if (!response.ok) throw new Error(String(response.status))
+    const bytes = new Uint8Array(await response.arrayBuffer())
+    const text = bytes[0] === 0x1f && bytes[1] === 0x8b
+      ? await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).text()
+      : new TextDecoder().decode(bytes)
+    return JSON.parse(text)
+  }
+  onMount(() => {
+    read(dataUrl).then(read => { doc = read }, () => { failed = true })
+    // The table reads without the outlines; a form then shows what the composer draws, or nothing.
+    read(outlinesUrl).then(read => { outlines = read }, () => {})
   })
   const custom = $derived(doc ? createCustomComponents(doc) : null)
 
@@ -98,15 +108,41 @@
 
   // The drawings: the composer is asked for what draws a form, as the workshop's palette does.
   // The composer's drawer ends a drawing when another is asked for, so the rows ask one at a time.
-  const icon = createIconDrawings(composerPreview({ base: readFrom(COMPOSER_BASE), fontStyle: 'sans', loaders: engineOutlines }))
+  const queued = createIconDrawings(composerPreview({ base: readFrom(COMPOSER_BASE), fontStyle: 'sans', loaders: engineOutlines }))
+  /** What the composer could not draw, so the row shows the next thing it has. */
+  const undrawn = new SvelteSet()
+  /** @param {string} sequence */
+  const icon = async sequence => {
+    const drawn = await queued(sequence)
+    if (!drawn) undrawn.add(sequence)
+    return drawn
+  }
   const adapter = $derived(/** @type {import('../src/adapter/types.js').IdsAdapter} */ (/** @type {unknown} */ ({
     icon, fontStyle: 'sans',
     drawable: async (/** @type {string} */ text) => custom?.drawableLeaves(text) ?? { text, leaves: [] },
   })))
-  /** Whether everything a form is written with draws. @param {Row} row */
-  const draws = row => {
-    const read = custom ? parse(custom.drawable(row.shown), { open: true }) : null
-    return Boolean(read && !read.problem && read.tree !== null && !customsOf(read.tree).length)
+  /**
+   * What stands for a form in the table, the first that there is: this project's cut of a numbered
+   * component, GlyphWiki's glyph of a CHISE entity, a chain's own line, what the composer draws of
+   * its equivalent, or nothing.
+   * @param {Row} row
+   * @returns {{ kind: 'composed', sequence: string } | { kind: 'outline', d: string, from: string } | { kind: 'chain', d: string } | null}
+   */
+  function glyphOf(row) {
+    const cut = row.names.find(name => name.source === 'babelstone' && componentDrawing(name.text, 'sans'))
+    if (cut) return { kind: 'composed', sequence: cut.text }
+    for (const name of row.names) {
+      const from = outlines?.names[name.text], d = from === undefined ? undefined : outlines?.outlines[from]
+      if (from !== undefined && d) return { kind: 'outline', d, from }
+    }
+    // A chain is shown as its own line: it is there at once, and says what the chain writes.
+    for (const name of row.names) {
+      const d = name.source === 'zi-tools' ? chainPath(name.text) : null
+      if (d) return { kind: 'chain', d }
+    }
+    const text = custom ? custom.drawable(row.shown) : row.shown
+    const read = parse(text, { open: true })
+    return !read.problem && read.tree !== null && !customsOf(read.tree).length && !undrawn.has(text) ? { kind: 'composed', sequence: row.shown } : null
   }
   /** @param {string} cid */
   const shortName = cid => cid.replace(/^(?:chise|bsp|ucs):/, '')
@@ -150,6 +186,13 @@
     } catch { formError = t('appendix.importFailed') }
   }
 </script>
+
+{#snippet mark(/** @type {string} */ status, /** @type {boolean} */ worded)}
+  <span class="status" data-status={status} title={worded ? undefined : t(`appendix.status.${status}`)}>
+    {#if status === 'confirmed'}<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8" /></svg>{:else if status === 'candidate' && !worded}<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.2" /></svg>{/if}
+    {#if worded}{t(`appendix.status.${status}`)}{:else}<span class="ui-visually-hidden">{t(`appendix.status.${status}`)}</span>{/if}
+  </span>
+{/snippet}
 
 <div class="page">
   <header class="bar">
@@ -219,13 +262,17 @@
           </thead>
           <tbody>
             {#each visible as row (row.id)}
+              {@const glyph = glyphOf(row)}
               <tr id={row.id} class:yours={row.yours.length > 0}>
                 <td class="glyph">
-                  {#if draws(row)}<span class="drawn"><IdsPartIcon sequence={row.shown} {adapter} /></span>{:else}<span class="dash">—</span>{/if}
+                  {#if glyph?.kind === 'composed'}<span class="drawn"><IdsPartIcon sequence={glyph.sequence} {adapter} /></span>
+                  {:else if glyph?.kind === 'outline'}<svg class="drawn" viewBox="0 0 200 200" role="img" aria-label={glyph.from}><title>GlyphWiki · {glyph.from}</title><path d={glyph.d} fill="currentColor" /></svg>
+                  {:else if glyph?.kind === 'chain'}<svg class="drawn" viewBox="0 0 1000 1000" aria-hidden="true"><path d={glyph.d} fill="none" stroke="currentColor" stroke-width="64" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                  {:else}<span class="dash">—</span>{/if}
                 </td>
                 <td class="id">
                   <a href={`?q=${row.id}`} onclick={event => { event.preventDefault(); show(row.id) }}>{row.id}</a>
-                  <span class="status" data-status={row.status}>{t(`appendix.status.${row.status}`)}</span>
+                  {@render mark(row.status, true)}
                 </td>
                 <td>
                   <ul class="names">
@@ -243,7 +290,7 @@
                       <li>
                         <span class="tag" data-source={item.in}>{t(`appendix.source.${item.in}`)}</span>
                         <span class="name" lang="ja">{item.text}</span>
-                        <span class="status" data-status={item.status}>{t(`appendix.status.${item.status}`)}</span>
+                        {@render mark(item.status, false)}
                         {#if item.count}<span class="by" lang="ja">{item.count} · {item.characters.join('')}</span>{/if}
                         {#if item.id && item.id !== row.id}<a class="link" href={`?q=${item.id}`} onclick={event => { event.preventDefault(); show(/** @type {string} */ (item.id)) }}>{item.id}</a>{/if}
                       </li>
@@ -265,7 +312,7 @@
                   <td colspan="6">
                     <ul class="derived">
                       {#each row.derived as one (one.char + one.in + one.text)}
-                        <li><span class="char" lang="ja">{one.char}</span><span class="tag" data-source={one.in}>{t(`appendix.source.${one.in}`)}</span><span class="name" lang="ja">{one.text}</span><span class="status" data-status={one.status === 'verified' ? 'confirmed' : 'candidate'}>{t(`appendix.status.${one.status === 'verified' ? 'confirmed' : 'candidate'}`)}</span><span class="by" lang="ja">{one.of}</span></li>
+                        <li><span class="char" lang="ja">{one.char}</span><span class="tag" data-source={one.in}>{t(`appendix.source.${one.in}`)}</span><span class="name" lang="ja">{one.text}</span>{@render mark(one.status === 'verified' ? 'confirmed' : 'candidate', false)}<span class="by" lang="ja">{one.of}</span></li>
                       {/each}
                     </ul>
                   </td>
@@ -343,18 +390,21 @@
   tr.yours{background:color-mix(in srgb,var(--ids-accent-light) 45%,transparent)}
   .glyph{color:var(--ids-ink)}
   .drawn{display:block;font-size:34px;line-height:1}
+  svg.drawn{width:34px;height:34px}
   .dash{color:var(--ids-muted)}
   .id{white-space:nowrap}
   .id a,.link,a.name{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--ids-accent);text-decoration:none}
   .id a:hover,.link:hover,a.name:hover{text-decoration:underline}
-  .id .status{display:block;margin-top:4px}
+  .id .status{display:flex;margin-top:4px}
   .names,.equals,.derived{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
   .names li,.equals li,.derived li{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
   .tag{flex:none;padding:0 5px;border:1px solid var(--ids-line);border-radius:4px;font-size:10px;line-height:1.6;color:var(--ids-muted);white-space:nowrap}
   .tag[data-source="babelstone"]{color:light-dark(#8a4b00,#e0a458);border-color:currentColor}
   .tag[data-source="chise"]{color:light-dark(#1f5fa8,#7fb2ee);border-color:currentColor}
   .tag[data-source="zi-tools"]{color:light-dark(#1d7044,#6fcf97);border-color:currentColor}
-  .status{font-size:10px;color:var(--ids-muted);white-space:nowrap}
+  .status{display:inline-flex;align-items:center;gap:3px;font-size:10px;color:var(--ids-muted);white-space:nowrap}
+  .status svg{width:13px;height:13px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .status[data-status="candidate"] svg{stroke-width:1.4;stroke-dasharray:2 2}
   .status[data-status="confirmed"],.status[data-status="verified"]{color:light-dark(#1d7044,#6fcf97)}
   .status[data-status="none"]{opacity:.7}
   .by{font-family:var(--ids-font),var(--ids-glyph-fallback);font-size:11px;color:var(--ids-muted);overflow-wrap:anywhere}
