@@ -118,6 +118,10 @@ describe('what draws a custom component', () => {
     expect(custom.drawable('⿻[1:]丨{22}')).toBe('⿻[1:]丨⿺㇉一')
     for (const row of doc.components) if (row.draw) expect(customsOf(parse(row.draw, { open: true }).tree)).toEqual([])
     expect(doc.counts.drawable).toBe(doc.components.filter(row => row.draw).length)
+    // Two components that are each the other less a part do not draw as one another.
+    for (const row of doc.components) if (row.draw) expect([...row.draw].length).toBeLessThanOrEqual(64)
+    expect(custom.get('#(-㇇𠃊)').draw.startsWith('㇯')).toBe(true)
+    expect(custom.get('&CDP-87FE;').draw.includes('㇯')).toBe(false)
   })
 
   it('reaches a preview through the adapter', async () => {

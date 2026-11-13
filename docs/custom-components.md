@@ -77,8 +77,9 @@ on its node, and leaves out an entry's separator and variant identifiers. Inline
 identifiers, BabelStone's `^ $` and source tags are not read.
 
 `babelStoneAdapter({ custom })` takes the data file below and answers `drawable(text)`: the
-description with each custom component written as its `draw`. The preview and the part icons ask
-the composer for that text, and the shape view shows a custom part as its drawing over its name.
+description with each custom component written as its `draw`, and which component each part of
+that text draws. The preview and the part icons ask the composer for that text and number the
+answer's parts by the description's own components, and the shape view shows a custom part as its drawing over its name.
 
 ## `data/custom-components.json.gz`
 
@@ -89,7 +90,7 @@ zi.tools' `ids_lv1.txt` at the pinned revision. GPL-2.0-or-later, since CHISE's 
   `description` and `fragment`, `uses` (characters described with it), `examples`, `subtraction`
   (the component as a character less one part, `㇯凫几`), `draw` and `equivalents`.
 - `draw`: what a composer draws in the component's place — BabelStone's fragment, the private-use
-  glyph of BabelStone Han PUA, or the first equivalent made of characters only. 929 have one.
+  glyph of BabelStone Han PUA, or the best equivalent made of characters only. 925 have one.
 - `equivalents`: what the component is in another table, `{ in, text, count, characters, status,
   basis }`. `difference` rows are solved; `inverse` rows turn a solved row round.
   `verified` means two or more characters give the same spelling, `candidate` that none does;

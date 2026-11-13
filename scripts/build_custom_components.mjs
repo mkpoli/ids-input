@@ -194,42 +194,52 @@ const components = [...used].map(([text, entry]) => {
 const palette = JSON.parse(await readFile(data('ids-parts.json'), 'utf8'))
 const glyphAt = palette.columns.indexOf('glyph')
 const glyphs = new Map(palette.parts.filter(row => row[glyphAt]).map(row => [row[0], row[glyphAt]]))
-/** @type {Map<string, string>} */
+/** @type {Map<string, string | null>} */
 const draws = new Map()
-/** @param {string} text @returns {string | null} `text` with its custom components drawn, or null. */
-const drawnText = text => {
-  const tree = plainTree(text)
-  if (tree === null) return null
-  let whole = true
-  /** @param {import('../src/core/ids.js').Part} part @returns {import('../src/core/ids.js').Part} */
-  const swap = part => {
-    if (isNode(part)) return { op: part.op, parts: part.parts.map(swap) }
-    if (part === null || !isCustom(part)) return part
-    const draw = draws.get(part)
-    if (draw === undefined) { whole = false; return part }
-    return plainTree(draw)
-  }
-  const out = write(swap(tree))
-  return whole && [...out].length <= 64 ? out : null
-}
+const rowOf = new Map(components.map(row => [row.text, row]))
 /** @param {typeof components[number]} row What may draw a component, the best first. */
 const candidatesOf = row => [
   ...(row.fragment ? [row.fragment] : []), ...(glyphs.has(row.text) ? [glyphs.get(row.text)] : []),
   ...[...row.equivalents].sort((a, b) => Number(a.basis === 'inverse') - Number(b.basis === 'inverse')
     || Number(b.status === 'verified') - Number(a.status === 'verified') || b.count - a.count).map(item => item.text),
 ]
-// A candidate may itself name a component drawn later, so the choice is repeated until every
-// component has its best candidate that draws, not the first that happened to draw.
-for (let round = 0, changed = true; changed && round < 8; round++) {
-  changed = false
-  for (const row of components) {
-    const draw = candidatesOf(row).map(drawnText).find(text => text !== null)
-    if (draw == null || draws.get(row.text) === draw) continue
-    draws.set(row.text, draw)
-    changed = true
+/**
+ * What draws one component: its best candidate every custom component of which draws in turn. Two
+ * components may each be the other less a part, so a candidate that leads back to a component
+ * still being worked out is passed over.
+ * @param {string} text @param {Set<string>} open @returns {string | null}
+ */
+function drawOf(text, open) {
+  if (draws.has(text)) return draws.get(text) ?? null
+  const row = rowOf.get(text)
+  if (!row || open.has(text)) return null
+  const inside = new Set(open).add(text)
+  let found = null
+  for (const candidate of candidatesOf(row)) {
+    const tree = plainTree(candidate)
+    if (tree === null) continue
+    let whole = true
+    /** @param {import('../src/core/ids.js').Part} part @returns {import('../src/core/ids.js').Part} */
+    const swap = part => {
+      if (isNode(part)) return { op: part.op, parts: part.parts.map(swap) }
+      if (part === null || !isCustom(part)) return part
+      const draw = drawOf(part, inside)
+      if (draw === null) { whole = false; return part }
+      return plainTree(draw)
+    }
+    const out = write(swap(tree))
+    if (whole && [...out].length <= 64) { found = out; break }
   }
+  // An answer reached while another component was open may have passed a candidate over for that
+  // reason alone, so only an answer worked out from the top is kept.
+  if (!open.size || found !== null) draws.set(text, found)
+  return found
 }
-for (const row of components) if (draws.has(row.text)) Object.assign(row, { draw: draws.get(row.text) })
+for (const row of components) {
+  const draw = drawOf(row.text, new Set())
+  if (draw !== null) Object.assign(row, { draw })
+}
+const drawable = components.filter(row => 'draw' in row).length
 
 // Characters: a description that names a custom component, said in another table's notation.
 /** @type {{ char: string, text: string, in: string, from: string, basis: 'substitution' | 'subtraction', of: string, status: string }[]} */
@@ -314,7 +324,7 @@ const document = {
     bySource: Object.fromEntries(SOURCES.map(source => [source, components.filter(row => row.source === source).length])),
     withEquivalent: components.filter(row => row.equivalents.length).length,
     verified: components.filter(row => row.equivalents.some(item => item.status === 'verified')).length,
-    drawable: draws.size,
+    drawable,
     characters: characters.length,
   },
   strokeLetters: strokeLetters.strokes,
