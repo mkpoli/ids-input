@@ -417,5 +417,6 @@
   "ids.ucv.loading": "一覧を読み込み中…",
   "ids.ucv.failed": "一覧を読み込めませんでした。",
   "ids.ucv.kind": "一覧",
-  "ids.ucv.form": "字形{name}"
+  "ids.ucv.form": "字形{name}",
+  "ids.alternatives.unifiable": "統合可能な字形"
 }

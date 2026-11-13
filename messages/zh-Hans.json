@@ -417,5 +417,6 @@
   "ids.ucv.loading": "正在加载列表…",
   "ids.ucv.failed": "无法加载列表。",
   "ids.ucv.kind": "列表",
-  "ids.ucv.form": "字形 {name}"
+  "ids.ucv.form": "字形 {name}",
+  "ids.alternatives.unifiable": "可认同字形"
 }

@@ -417,5 +417,6 @@
   "ids.ucv.loading": "Đang tải danh sách…",
   "ids.ucv.failed": "Không tải được danh sách.",
   "ids.ucv.kind": "Danh sách",
-  "ids.ucv.form": "Dạng {name}"
+  "ids.ucv.form": "Dạng {name}",
+  "ids.alternatives.unifiable": "Dạng hợp nhất được"
 }

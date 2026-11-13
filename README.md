@@ -196,6 +196,10 @@ remains in the field. Resolution is bounded to eight opened components and 128 c
 and non-unifiable component variations from `data/ucv.json`, each form drawn from
 `data/ucv-forms.json.gz`; the workshop shows it as its `/ucv` page.
 
+With `variations`, `IdsPartTools` also offers the forms the IRG unifies with the chosen component
+(its UCV entries, read from `data/ucv.json` when a component is first chosen); `variationsHref(entry)`
+gives each entry number a link.
+
 `IdsParts` (`adapter`, `onpick(part)`) and `IdsFrom` (`adapter`, `ontake(text)`, bindable `text`)
 also work without an editor. A pick that returns `false` was not placed, so the Hangul compose
 keyboard keeps its letters. `IdsSketch` (`adapter`, `onpick(part)`, `onclose()`) is the Find tab's

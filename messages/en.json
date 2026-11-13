@@ -421,5 +421,6 @@
   "ids.ucv.loading": "Loading the list…",
   "ids.ucv.failed": "The list could not be loaded.",
   "ids.ucv.kind": "List",
-  "ids.ucv.form": "Form {name}"
+  "ids.ucv.form": "Form {name}",
+  "ids.alternatives.unifiable": "Unifiable forms"
 }
