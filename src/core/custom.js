@@ -62,5 +62,9 @@ export function customKind(component) {
   return found && found.end === chars.length ? found.kind : null
 }
 
+/** The text a component is looked up by: a custom component whole, a character without what
+ * follows it. @param {string | null | undefined} component @returns {string} */
+export const customOrFirst = component => customKind(component) !== null ? /** @type {string} */ (component) : [...(component ?? '')][0] ?? ''
+
 /** Whether a component is a custom one. @param {string | null | undefined} component */
 export const isCustom = component => customKind(component) !== null

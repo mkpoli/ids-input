@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { lookupChar } from '../src/core/decompose.js'
 import { customKind, customsOf, EMPTY, LONGEST, OPERATORS, OPERATOR_GROUPS, applyOperator, arity, clear, descriptionEnd, entryBody, entryDescription, isComponent, isDescription, isLetter, isSequence, leaves, nextEmpty,
   parse, partAt, paths, place, problemOf, replaceAt, samePath, swapOp, unwrap, wrap, write, writeDraft } from '../src/core/index.js'
 
@@ -312,6 +313,11 @@ describe('components no code point names', () => {
   it('leaves unfinished or malformed ones to the ordinary reading', () => {
     expect(parse('⿰{木').tree).toEqual({ op: '⿰', parts: ['{', '木'] })
     expect(parse('⿰{5木').problem).toBe('extra')
+    // A draft reads as the whole description does.
+    for (const text of ['⿲{1}', '⿳{1}', '⿰⿰{1}']) expect(parse(text, { open: true }).tree).toEqual(parse(text).tree)
+    expect(parse('⿰{5}', { open: true }).tree).toEqual({ op: '⿰', parts: ['{5}', null] })
+    expect(lookupChar('&CDP-8BD0;')).toBe('&CDP-8BD0;')
+    expect(lookupChar('木\u{E0100}')).toBe('木')
     expect(parse('⿰木#(HSN)').tree).toEqual({ op: '⿰', parts: ['木', '#(HSN)'] })
     expect(parse('⿲{木}').tree).toEqual({ op: '⿲', parts: ['{', '木', '}'] })
     expect(descriptionEnd([...'⿰{5}木と'])).toBe(5)
