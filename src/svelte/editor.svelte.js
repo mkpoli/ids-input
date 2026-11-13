@@ -302,7 +302,7 @@ export function createEditor(options) {
     const done = applyOperator(tree, at, op, { drop: replace })
     if (done.problem) { note = t(`ids.problem.${done.problem}`, { name: name(op) }); return }
     const label = at === null && tree !== null ? t('ids.do.wrap', { op }) : isNode(before) ? t('ids.do.swap', { from: before.op, op }) : t('ids.do.split', { part: text(before) || '⬚', op })
-    const dropped = isNode(before) && before.parts.slice(arity(op)).some(part => part !== null)
+    const dropped = replace && isNode(before) && before.parts.filter(part => part !== null).length > arity(op)
     if (apply(done.tree, done.chosen, label, { destructive: dropped }) && replace) lone = true
   }
   /** `part` in the chosen slot (or the first empty one), or at `at`; false when it could not go there.
