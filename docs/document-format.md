@@ -53,6 +53,20 @@ identity layout and carries an authored transform independently of an IDS
 operator. Groups can be nested and remain in the document even when their
 transforms are identity. Their IDs can be selected and named in a layer view.
 
+A component may carry a `fill`, its own paint in the output. Omitting it inherits the drawing's
+ink, so the default output keeps one text colour. A solid fill holds a hex colour with an optional
+alpha channel:
+
+```json
+{ "id": "l3", "kind": "component", "char": "木", "fill": { "type": "solid", "colour": "#b42318cc" } }
+```
+
+A fill is post-processing: it belongs to the document and its drawing, not to the IDS projection.
+`toSequence` ignores it, and a pasted sequence carries none. Only a component can hold one; an
+operator, group or slot has no ink of its own. The renderer paints a filled component in that colour
+over the drawing's ink, and an alpha channel blends with what lies under it. The workshop lists the
+components of the output and offers their fills below the drawing.
+
 Every kind can have `transform`, an ordered array of operations; omission or
 `[]` means identity. The tree is authoritative. For core parsing, searching,
 sharing plain IDS or looking up a decomposition, project it to IDS and use the
@@ -67,7 +81,7 @@ IDs, content, transforms, render binding and geometry edits together.
 
 | operation | identity and transform rule |
 | --- | --- |
-| Replace a selected layer | Keep its ID, name, extensions and transform. Replace its content; descendants removed by the replacement leave the tree. |
+| Replace a selected layer | Keep its ID, name, extensions and transform, and its fill while it stays a component. Replace its content; descendants removed by the replacement leave the tree. |
 | Decompose a component | Keep its ID and transform; change its kind to `operator`. Give its new children fresh IDs and identity transforms. |
 | Fill or clear a slot | Keep the selected ID and transform; change its kind/content. Clearing a subtree removes its descendants. |
 | Wrap a layer in an operator | Create a new operator ID with identity transform. Move the existing layer, with its ID and transform, into the first operand. Create fresh slots for the other operands. |
@@ -150,7 +164,8 @@ The normalized layer frame and placement/edit order above are this format's rule
 ## Compositing scope
 
 Each component produces a filled region: union its ink pieces and subtract the
-union of its cut pieces, using each piece's fill rule. These cut roles apply only
+union of its cut pieces, using each piece's fill rule. A component with a `fill` paints that region
+in the fill's colour and alpha instead of the document ink. These cut roles apply only
 to that component. Geometry edits modify its pieces before this operation.
 
 Each operator combines the already-transformed, placed results of its children

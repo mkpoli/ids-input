@@ -10,6 +10,7 @@ import {
   changeOperator, decompose, deleteLayer, replaceNode, replaceWithSequence, unwrapNode, wrapNode,
 } from './edits.js'
 import { syncDocument } from './project.js'
+import { validateFill } from './fill.js'
 
 /** @typedef {import('./model.js').Document} Document */
 /** @typedef {import('./model.js').Node} Node */
@@ -52,6 +53,7 @@ import { syncDocument } from './project.js'
  * @property {(edit: import('./model.js').GeometryEdit, options?: { coalesce?: string, replace?: string[] }) => string} setGeometryEdit
  * @property {(id: string | string[], options?: { coalesce?: string }) => string} clearGeometryEdit
  * @property {(chain: Chain, id?: string, options?: { coalesce?: string }) => string} setTransform
+ * @property {(fill: import('./fill.js').Fill | null, id?: string, options?: { coalesce?: string }) => string} setFill
  * @property {(title: string) => void} setTitle
  * @property {(id?: string) => string} clearTransform
  * @property {(listener: (session: DocumentSession) => void) => () => void} listen
@@ -85,7 +87,7 @@ export function createDocumentSession(initial = emptyDocument(), { reserved = []
   const name = id => {
     const node = findLayer(document.root, id)?.node
     const fallback = node?.name ?? (node?.kind === 'component' ? node.char : node?.kind === 'operator' ? node.op : node?.kind === 'slot' ? '⬚' : id)
-    return { replace: `Replace ${fallback}`, decompose: `Decompose ${fallback}`, wrap: `Wrap ${fallback}`, unwrap: `Unwrap ${fallback}`, operator: `Change ${fallback}`, delete: `Delete ${fallback}`, transform: `Transform ${fallback}`, clear: `Clear ${fallback}` }
+    return { replace: `Replace ${fallback}`, decompose: `Decompose ${fallback}`, wrap: `Wrap ${fallback}`, unwrap: `Unwrap ${fallback}`, operator: `Change ${fallback}`, delete: `Delete ${fallback}`, transform: `Transform ${fallback}`, fill: `Fill ${fallback}`, clearFill: `Clear fill ${fallback}`, clear: `Clear ${fallback}` }
   }
 
   /** @param {unknown} error */
@@ -284,6 +286,24 @@ export function createDocumentSession(initial = emptyDocument(), { reserved = []
       if (chain.length) found.node.transform = /** @type {Chain} */ (structuredClone(chain))
       else delete found.node.transform
       commit(next, at, action(name(at).transform), coalesce)
+      return at
+    },
+    /** @param {import('./fill.js').Fill | null} fill @param {string} [id] @param {{ coalesce?: string }} [options] */
+    setFill(fill, id, { coalesce } = {}) {
+      const at = requireId(id ?? null)
+      if (fill !== null) {
+        /** @type {Issue[]} */
+        const issues = []
+        validateFill(fill, '/fill', issues)
+        if (issues.length) throw new DocumentError(issues)
+      }
+      const next = /** @type {Document} */ (structuredClone(document))
+      const found = findLayer(next.root, at)
+      if (!found) throw new DocumentError([{ path: '', message: `no layer ${at}` }])
+      if (found.node.kind !== 'component') throw new DocumentError([{ path: '', message: 'only a component carries a fill' }])
+      if (fill === null) delete found.node.fill
+      else found.node.fill = /** @type {import('./fill.js').Fill} */ (structuredClone(fill))
+      commit(next, at, action(fill === null ? name(at).clearFill : name(at).fill), coalesce)
       return at
     },
     /** @param {string} title */
