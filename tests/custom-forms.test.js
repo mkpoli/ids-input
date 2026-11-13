@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
-import { formRows, matches, querySummary, sideText } from '../demo/lib/custom-forms.js'
+import { formRows, matches, querySummary, segments, sideText } from '../demo/lib/custom-forms.js'
 
 const doc = JSON.parse(gunzipSync(readFileSync(new URL('../data/custom-components.json.gz', import.meta.url))).toString('utf8'))
 const rows = formRows(doc)
@@ -73,5 +73,16 @@ describe('the appendix table of forms', () => {
     // Two pairs to one other side are one line, and a name matches in any case.
     const twice = formRows(doc, [{ a: 'bsp:53', b: 'ucs:9E1F', note: 'one' }, { a: 'chise:cdp-8964', b: 'ucs:9E1F', note: 'two' }])
     expect(twice.find(row => row.id === outside.id).yours).toEqual([{ other: '鸟', note: 'one · two' }])
+  })
+})
+
+describe('a description with its custom parts set apart', () => {
+  const idOf = name => ({ '{53}': 'X-00053', '#(-𠃌㇉)': 'X-01465' })[name]
+  it('names each custom part\'s notation and form, and leaves the rest as text', () => {
+    expect(segments('⿹㇯{53}丶一', idOf)).toEqual([{ text: '⿹㇯' }, { text: '{53}', source: 'babelstone', id: 'X-00053' }, { text: '丶一' }])
+    expect(segments('⿱丿⿴#(-𠃌㇉)丶', idOf)).toEqual([{ text: '⿱丿⿴' }, { text: '#(-𠃌㇉)', source: 'zi-tools', id: 'X-01465' }, { text: '丶' }])
+    expect(segments('&CDP-8964;', idOf)).toEqual([{ text: '&CDP-8964;', source: 'chise' }])
+    expect(segments('⿰木&X-00053;', idOf)).toEqual([{ text: '⿰木' }, { text: '&X-00053;', source: 'form', id: 'X-00053' }])
+    expect(segments('⿰木木', idOf)).toEqual([{ text: '⿰木木' }])
   })
 })

@@ -22,7 +22,7 @@
   import { createCustomComponents, customsOf, parse } from '../src/core/index.js'
   import { COMPOSER_BASE, readFrom } from './lib/composer.js'
   import { createIconDrawings } from './lib/icons.js'
-  import { formRows, matches, querySummary } from './lib/custom-forms.js'
+  import { formRows, matches, querySummary, segments } from './lib/custom-forms.js'
 
   const params = new URLSearchParams(location.search)
   const wanted = String(params.get('lang') ?? load('locale', null) ?? navigator.language ?? '')
@@ -189,6 +189,10 @@
   }
 </script>
 
+{#snippet written(/** @type {string} */ text, /** @type {string | undefined} */ own)}
+  <span class="name" lang="ja">{#each segments(text, name => custom?.form(name)?.id) as run, at (at)}{#if !run.source}{run.text}{:else if run.id && run.id !== own}<a class="part" data-source={run.source} href={`?q=${run.id}`} title={run.id} onclick={event => { event.preventDefault(); show(/** @type {string} */ (run.id)) }}>{run.text}</a>{:else}<span class="part" data-source={run.source}>{run.text}</span>{/if}{/each}</span>
+{/snippet}
+
 {#snippet mark(/** @type {string} */ status, /** @type {boolean} */ worded)}
   <span class="status" data-status={status} title={worded ? undefined : t(`appendix.status.${status}`)}>
     {#if status === 'confirmed'}<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8" /></svg>{:else if status === 'candidate' && !worded}<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.2" /></svg>{/if}
@@ -304,7 +308,7 @@
                 <td>
                   <ul class="names">
                     {#each row.names as name (name.text)}
-                      <li><span class="tag" data-source={name.source}>{t(`appendix.source.${name.source}`)}</span><span class="name" lang="ja">{name.text}</span>{#if name.description}<span class="desc" lang="ja">{name.description}</span>{/if}</li>
+                      <li><span class="tag" data-source={name.source}>{t(`appendix.source.${name.source}`)}</span>{@render written(name.text, row.id)}{#if name.description}<span class="desc" lang="ja">{name.description}</span>{/if}</li>
                     {/each}
                     {#each row.of as other (other.id + other.relation)}
                       <li><span class="tag">{t(`appendix.relation.${other.relation}`)}</span><a class="name" href={`?q=${other.id}`} onclick={event => { event.preventDefault(); show(other.id) }}>{other.id}</a></li>
@@ -316,7 +320,7 @@
                     {#each row.equivalents as item (item.in + item.text)}
                       <li>
                         <span class="tag" data-source={item.in}>{t(`appendix.source.${item.in}`)}</span>
-                        <span class="name" lang="ja">{item.text}</span>
+                        {@render written(item.text, row.id)}
                         {@render mark(item.status, false)}
                         {#if item.count}<span class="by" lang="ja">{item.count} · {item.characters.join('')}</span>{/if}
                         {#if item.id && item.id !== row.id}<a class="link" href={`?q=${item.id}`} onclick={event => { event.preventDefault(); show(/** @type {string} */ (item.id)) }}>{item.id}</a>{/if}
@@ -339,7 +343,7 @@
                   <td colspan="6">
                     <ul class="derived">
                       {#each row.derived as one (one.char + one.in + one.text)}
-                        <li><span class="char" lang="ja">{one.char}</span><span class="tag" data-source={one.in}>{t(`appendix.source.${one.in}`)}</span><span class="name" lang="ja">{one.text}</span>{@render mark(one.status === 'verified' ? 'confirmed' : 'candidate', false)}<span class="by" lang="ja">{one.of}</span></li>
+                        <li><span class="char" lang="ja">{one.char}</span><span class="tag" data-source={one.in}>{t(`appendix.source.${one.in}`)}</span>{@render written(one.text, row.id)}{@render mark(one.status === 'verified' ? 'confirmed' : 'candidate', false)}<span class="by" lang="ja">{@render written(one.of, row.id)}</span></li>
                       {/each}
                     </ul>
                   </td>
@@ -436,9 +440,16 @@
   .names,.equals,.derived{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
   .names li,.equals li,.derived li{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
   .tag{flex:none;padding:0 5px;border:1px solid var(--ids-line);border-radius:4px;font-size:10px;line-height:1.6;color:var(--ids-muted);white-space:nowrap}
-  .tag[data-source="babelstone"]{color:light-dark(#8a4b00,#e0a458);border-color:currentColor}
-  .tag[data-source="chise"]{color:light-dark(#1f5fa8,#7fb2ee);border-color:currentColor}
-  .tag[data-source="zi-tools"]{color:light-dark(#1d7044,#6fcf97);border-color:currentColor}
+  .tag[data-source="babelstone"],.part[data-source="babelstone"]{color:light-dark(#8a4b00,#e0a458)}
+  .tag[data-source="babelstone"]{border-color:currentColor}
+  .tag[data-source="chise"],.part[data-source="chise"]{color:light-dark(#1f5fa8,#7fb2ee)}
+  .tag[data-source="chise"]{border-color:currentColor}
+  .tag[data-source="zi-tools"],.part[data-source="zi-tools"]{color:light-dark(#1d7044,#6fcf97)}
+  .tag[data-source="zi-tools"]{border-color:currentColor}
+  .part[data-source="form"]{color:var(--ids-accent)}
+  a.part{text-decoration:underline dotted;text-underline-offset:4px}
+  a.part:hover{text-decoration-style:solid}
+  .by .name{font-size:inherit}
   .status{display:inline-flex;align-items:center;gap:3px;font-size:10px;color:var(--ids-muted);white-space:nowrap}
   .status svg{width:13px;height:13px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
   .status[data-status="candidate"] svg{stroke-width:1.4;stroke-dasharray:2 2}
