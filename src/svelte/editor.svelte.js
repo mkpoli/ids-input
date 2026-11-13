@@ -12,7 +12,7 @@
 import { insertAt } from './insertion.js'
 import { tokens, rangeToken } from './tokens.js'
 import { tick } from 'svelte'
-import { applyOperator, clear, entryBody, unfinishedCustom, isDescription, isMarks, isNode, nextEmpty, normalizeMarks, parse, partAt, paths, place as placed, reorderSiblings,
+import { applyOperator, arity, clear, entryBody, unfinishedCustom, isDescription, isMarks, isNode, nextEmpty, normalizeMarks, parse, partAt, paths, place as placed, reorderSiblings,
   replaceAt, samePath, sameTree, swapParts, unwrap, withMarks, write, writeDraft } from '../core/ids.js'
 import { namingOperator, unalias } from '../core/aliases.js'
 import { commandFor } from '../core/keys.js'
@@ -60,6 +60,8 @@ export function createEditor(options) {
   let revision = $state(0)
   let hovered = $state.raw(/** @type {Path | null} */ (null))
   let chosen = $state.raw(/** @type {Path | null} */ (null))
+  /** The field's selection is the chosen node's operator alone, which an operator button replaces. */
+  let lone = false
   let draft = $state(''), piece = $state(''), note = $state('')
   /** The last change, for a host to answer (an undo toast after one that throws something away). */
   let change = $state.raw(/** @type {Change | null} */ (null))
@@ -184,7 +186,7 @@ export function createEditor(options) {
     invalidateResolution()
     history.clear(); caret = null; hovered = null; note = ''; change = null; typing = false; run = false
     const read = parse(start, { open: true })
-    tree = read.tree ?? null; chosen = null; piece = ''
+    tree = read.tree ?? null; chosen = null; lone = false; piece = ''
     // The text stays as given, so the slots a reader wrote stay written; a pasted ＋ for an empty
     // slot is written back as ⬚.
     draft = start.replaceAll('＋', '⬚')
@@ -195,7 +197,7 @@ export function createEditor(options) {
     invalidateResolution()
     caret = null
     hovered = null
-    tree = next; chosen = select; selectionVersion++; note = ''
+    tree = next; chosen = select; lone = false; selectionVersion++; note = ''
     // An empty tree is an empty field, not an empty slot (⬚); a slot is written inside a node.
     // A draft the tree cannot read yet (it is not a description) is put back as it was typed.
     if (!typing) draft = written ?? (next === null ? '' : writeDraft(next))
@@ -252,7 +254,7 @@ export function createEditor(options) {
     caret = null
     hovered = null
     history.restore(state.history)
-    tree = state.tree ?? null; chosen = state.chosen ?? null; draft = state.draft; piece = state.piece
+    tree = state.tree ?? null; chosen = state.chosen ?? null; lone = false; draft = state.draft; piece = state.piece
     note = ''; typing = false; run = false; change = null
     const part = chosen ? partAt(tree, chosen) : undefined
     if (typeof part === 'string') lookup.read(lookupChar(part))
@@ -280,7 +282,8 @@ export function createEditor(options) {
   /** An operator on the chosen part, or around the whole tree when nothing is chosen. A draft the
    * tree cannot read yet holds the parts themselves, so the operator goes in front of them (口匕 with
    * ⿰ becomes ⿰口匕), in place of the empty slots the stale tree would have shown. Refuses when the
-   * parts do not fill the operator, and leaves the draft as typed.
+   * parts do not fill the operator, and leaves the draft as typed. With an operator alone selected in
+   * the field, it replaces that operator even where parts have to go, and stays selected.
    * @param {string} op @param {Path | null} [at] */
   function operator(op, at) {
     if (at === undefined && caret !== null && !typed.problem) { insert(null, op); return }
@@ -293,12 +296,14 @@ export function createEditor(options) {
       if (applied) caret = op.length
       return
     }
+    const replace = at === undefined && lone
     at = at === undefined ? tree === null ? [] : chosen : at
     const before = at ? partAt(tree, at) : tree
-    const done = applyOperator(tree, at, op)
+    const done = applyOperator(tree, at, op, { drop: replace })
     if (done.problem) { note = t(`ids.problem.${done.problem}`, { name: name(op) }); return }
     const label = at === null && tree !== null ? t('ids.do.wrap', { op }) : isNode(before) ? t('ids.do.swap', { from: before.op, op }) : t('ids.do.split', { part: text(before) || '⬚', op })
-    apply(done.tree, done.chosen, label)
+    const dropped = replace && isNode(before) && before.parts.filter(part => part !== null).length > arity(op)
+    if (apply(done.tree, done.chosen, label, { destructive: dropped }) && replace) lone = true
   }
   /** `part` in the chosen slot (or the first empty one), or at `at`; false when it could not go there.
    * @param {Part} part @param {Path | null} [at] @param {string} [label] */
@@ -410,6 +415,7 @@ export function createEditor(options) {
     caret = null
     selectionVersion++
     chosen = path && toggle && samePath(chosen, path) ? null : path
+    lone = false
     note = ''
     const part = chosen ? partAt(tree, chosen) : undefined
     piece = text(part)
@@ -522,12 +528,18 @@ export function createEditor(options) {
     isHovered(path) { return hovered !== null && hovered.every((n, i) => path[i] === n) },
     get revision() { return revision },
     get selectionVersion() { return selectionVersion },
-    get selectionRange() { return caret !== null ? { start: caret, end: caret } : chosen === null ? null : tokens(draft).find(token => samePath(token.path, chosen)) ?? null },
+    get selectionRange() {
+      if (caret !== null) return { start: caret, end: caret }
+      const token = chosen === null ? undefined : tokens(draft).find(token => samePath(token.path, chosen))
+      return !token ? null : lone ? { start: token.start, end: token.tokenEnd } : token
+    },
     /** @param {number} start @param {number} end */
     selectText(start, end) {
       caret = start === end ? start : null
       const token = rangeToken(tokens(draft), start, end)
       chosen = token?.path ?? null
+      const node = chosen ? partAt(tree, chosen) : undefined
+      lone = isNode(node) && token?.start === start && (end === token.tokenEnd || end === start + node.op.length)
       piece = text(chosen ? partAt(tree, chosen) : undefined)
       if (typeof picked === 'string') lookup.read(lookupChar(picked))
       else readDescribed(chosen)

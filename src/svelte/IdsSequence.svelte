@@ -125,10 +125,12 @@
   function select() {
     if (!composing && field && document.activeElement === field) editor.selectText(field.selectionStart ?? 0, field.selectionEnd ?? 0)
   }
-  // Expand a partial token or crossing range before the browser replaces it.
+  // Expand a partial token, a crossing range or an operator alone to its whole part before the
+  // browser replaces it.
   function expandSelection() {
     if (field) editor.selectText(field.selectionStart ?? 0, field.selectionEnd ?? 0)
-    const range = editor.selectionRange
+    const chosen = editor.chosen
+    const range = chosen && spans.find(token => token.path.length === chosen.length && token.path.every((n, i) => n === chosen[i]))
     if (field && field.selectionStart !== field.selectionEnd && range) field.setSelectionRange(range.start, range.end)
   }
   /** @param {string} text */

@@ -619,17 +619,22 @@ export function unwrap(tree, path) {
 /**
  * `tree` with the node at `path` under the operator `op` instead, its parts kept in order. Answers
  * `{ tree }`, or `{ problem: 'drop' }` when `op` takes fewer parts and one it would drop is filled.
- * Parts it takes beyond the old ones are empty slots (⿰亻木 as ⿲ is ⿲亻木⬚).
+ * With `drop`, the filled parts move to the front and the ones past `op`'s count are dropped
+ * (⿲亻⬚木 as ⿰ is ⿰亻木, ⿲亻木口 as ⿰ is ⿰亻木). Parts it takes beyond the old ones are empty
+ * slots (⿰亻木 as ⿲ is ⿲亻木⬚).
  * @param {Part} tree
  * @param {Path} path
  * @param {string} op
+ * @param {{ drop?: boolean }} [how]
  * @returns {{ tree: Part, problem?: undefined } | { problem: 'drop', tree?: undefined }}
  */
-export function swapOp(tree, path, op) {
+export function swapOp(tree, path, op, { drop = false } = {}) {
   const node = partAt(tree, path), n = arity(op)
   if (!isNode(node) || !n) return { tree }
-  if (node.parts.slice(n).some(part => part !== null)) return { problem: 'drop' }
-  const parts = Array.from({ length: n }, (_, i) => node.parts[i] ?? null)
+  const surplus = node.parts.slice(n).some(part => part !== null)
+  if (surplus && !drop) return { problem: 'drop' }
+  const kept = surplus ? node.parts.filter(part => part !== null) : node.parts
+  const parts = Array.from({ length: n }, (_, i) => kept[i] ?? null)
   return { tree: normalizeMarks(replaceAt(tree, path, { op, parts, ...(node.marks ? { marks: node.marks } : {}) })) }
 }
 
@@ -637,13 +642,14 @@ export function swapOp(tree, path, op) {
  * Where an operator goes in a draft, and what the tree becomes. On a node it swaps the operator; on
  * a slot or a component it splits it, the old part first. With no target, an enclosing operator puts
  * the whole tree inside an empty frame; other operators put it first. Answers the new tree and the
- * part to choose next, or `{ problem: 'drop' }`.
+ * part to choose next, or `{ problem: 'drop' }`; `drop` lets a swap drop parts, as `swapOp` does.
  * @param {Part} tree
  * @param {Path | null} at
  * @param {string} op
+ * @param {{ drop?: boolean }} [how]
  * @returns {{ tree: Part, chosen: Path, problem?: undefined } | { problem: 'drop', tree?: undefined, chosen?: undefined }}
  */
-export function applyOperator(tree, at, op) {
+export function applyOperator(tree, at, op, how) {
   if (!at) {
     // Loose marks annotate the description; a new operator around it takes them with the whole.
     const marks = marksOf(tree), base = withoutMarks(tree)
@@ -652,7 +658,7 @@ export function applyOperator(tree, at, op) {
   }
   const part = partAt(tree, at)
   if (isNode(part)) {
-    const swapped = swapOp(tree, at, op)
+    const swapped = swapOp(tree, at, op, how)
     return swapped.problem ? swapped : { tree: swapped.tree, chosen: at }
   }
   // The old part stays first; the slot to fill next is the new one beside it, or the operator's only
