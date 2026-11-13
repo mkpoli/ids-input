@@ -19,7 +19,13 @@ try {
     page.on('pageerror', error => errors.push(error.message))
     const field = page.locator('.ids-field input')
     const drawing = () => page.locator('#output-panel .ids-preview svg path').first().getAttribute('d')
-    const shot = async name => { if (shots) await page.screenshot({ path: join(shots, `${name}-${scheme}.png`) }) }
+    // The preview cross-fades each new drawing in; a picture is taken once one layer is left and nothing is animating.
+    const settled = () => page.waitForFunction(() => {
+      const layers = [...document.querySelectorAll('#output-panel .ids-preview-large .layer')]
+      return document.querySelector('#output-panel .ids-preview')?.getAttribute('data-label') !== 'loading'
+        && layers.length === 1 && !layers[0].getAnimations().length
+    })
+    const shot = async name => { if (shots) { await settled(); await page.screenshot({ path: join(shots, `${name}-${scheme}.png`) }) } }
     await page.goto(`${url}/?ids=${encodeURIComponent('⿰氵者')}${composer}`, { waitUntil: 'domcontentloaded' })
     await field.waitFor()
     const toggle = page.locator('.ids-tree .ids-forms-toggle')
@@ -44,7 +50,6 @@ try {
     await page.waitForFunction(before => { const d = document.querySelector('#output-panel .ids-preview svg path')?.getAttribute('d'); return d && d !== before }, plain)
     assert.equal(await page.locator('.ids-menu').count(), 0, 'choosing closes the list')
     assert.ok(await page.locator('.ids-tree .ids-part.chosen .ids-form svg').count(), 'the tree shows the chosen glyph')
-    await page.waitForTimeout(400)
     await shot('variants-after')
 
     // The keyboard: the button opens the list on the form in use, the arrows move, Enter chooses.
