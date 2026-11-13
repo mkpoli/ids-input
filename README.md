@@ -1335,7 +1335,8 @@ a link keeps the token. Tabs use
 chooses the face for Han text and Sans/Serif bundled component forms, and shows the description
 being built in each face. Other composed outlines use the configured export’s font. Settings,
 the recent sequences, the theme and font choice stay in `localStorage`; the keys use the
-`ids-input:` prefix.
+`ids-input:` prefix. The report form’s contact address is kept there too, so the next report has
+it filled in already; a report sent with the field empty clears it.
 
 ### Share cards
 
