@@ -1,6 +1,6 @@
 // Run against a local devrun server with IDS_URL. Checks the per-part fill in the output: a component
 // without one follows the ink, a chosen one keeps its alpha in the preview, the document and the
-// exported SVG, and Use text colour takes it back.
+// exported SVG, a hex typed without alpha keeps it, and Use text colour takes it back.
 import { chromium } from 'playwright-core'
 import { strict as assert } from 'node:assert'
 import { mkdirSync, readFileSync } from 'node:fs'
@@ -34,6 +34,14 @@ try {
     assert.ok(fills.includes('#b42318'), 'the preview paints the filled component')
     assert.ok(await page.locator('.ids-preview svg g[opacity="0.502"]').count() >= 1, 'the fill is composited at half opacity')
     assert.ok(fills.includes('currentColor'), 'the other component keeps the ink')
+    await dialog.getByLabel('Hex colour').fill('#112233')
+    await dialog.getByLabel('Hex colour').press('Enter')
+    await page.waitForTimeout(150)
+    assert.equal(await dialog.getByLabel('Alpha (%)', { exact: true }).inputValue(), '50', 'a hex without alpha keeps the opacity')
+    assert.deepEqual(await section.locator('.value').allTextContents(), ['#11223380', 'Text colour'], 'the retyped hex keeps its alpha')
+    await dialog.getByLabel('Hex colour').fill('#B42318')
+    await dialog.getByLabel('Hex colour').press('Enter')
+    await page.waitForTimeout(150)
 
     if (process.env.IDS_FILL_SHOTS) {
       mkdirSync(process.env.IDS_FILL_SHOTS, { recursive: true })
