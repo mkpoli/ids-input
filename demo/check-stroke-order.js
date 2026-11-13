@@ -63,5 +63,17 @@ try {
   await parts.locator('.parts-counts button').first().click()
   assert.equal(await keys.locator('.stroke-typed').innerText(), 'Stroke order')
   assert.equal(await parts.locator('.parts-counts button[aria-pressed="true"]').count(), 1)
+
+  // Strokes pressed before the palette has arrived are kept: the palette is held back a moment.
+  const early = await browser.newPage({ viewport: { width: 1440, height: 900 } })
+  let held = 0
+  await early.route(/ids-parts/, async route => { held++; await new Promise(done => setTimeout(done, 2500)); await route.continue() })
+  await early.goto(`${process.env.IDS_URL ?? 'http://localhost:5173'}/?lang=en`, { waitUntil: 'domcontentloaded' })
+  const earlyKeys = early.locator('.ids-parts').first().locator('.stroke-keys')
+  await earlyKeys.waitFor()
+  for (const letter of 'zhh') await earlyKeys.locator(`[data-stroke="${letter}"]`).click()
+  await early.locator('.ids-parts').first().locator('.parts-panel .part[data-character="彐"]').waitFor()
+  assert.equal(await earlyKeys.locator('.stroke-typed').innerText(), '㇕㇐㇐')
+  assert.ok(held > 0, 'the palette request was held back')
   console.log('PASS the stroke keys find a part by its stroke order')
 } finally { await browser.close() }

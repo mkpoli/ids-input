@@ -13,7 +13,7 @@
   // characters finds those parts or matching compound IDS, a number the parts of that many strokes.
   // The stroke keys of Components find a part by the strokes it begins with, in writing order.
   // Picking a part calls `onpick(part)`.
-  import { onMount } from 'svelte'
+  import { onMount, untrack } from 'svelte'
   import { watchFallback } from './fallback-font.js'
   import { GONGCHE_PARTS, gongcheGroups } from '../core/gongche.js'
   import { HANGUL_FINALS, HANGUL_INITIALS, HANGUL_MEDIALS, HANGUL_TONE_MARKS, composeHangul, composeJamo, findSyllablesByRomanization, romanizeHangul, toConjoiningJamo } from '@han-compose/composer/hangul'
@@ -369,14 +369,21 @@
   function readOrders() {
     if (orders) return
     ordersFailed = false
-    loadStrokeOrders().then(found => {
-      // Strokes typed before the orders arrived keep the start some part is written with.
+    loadStrokeOrders().then(found => { orders = found }, () => { ordersFailed = true })
+  }
+  // Strokes typed before the palette and the orders arrived keep the start some part is written
+  // with, checked once when both are there.
+  let settled = false
+  $effect(() => {
+    const found = orders
+    if (settled || !found || !parts) return
+    settled = true
+    untrack(() => {
       let kept = typed
       while (kept && !findByStrokes(strokeParts, found, kept).length) kept = kept.slice(0, -1)
       typed = kept
-      orders = found
-    }, () => { ordersFailed = true })
-  }
+    })
+  })
   /** A key no part goes on with stays focusable and does nothing. @param {string} letter */
   function typeStroke(letter) {
     readOrders()
@@ -386,7 +393,8 @@
   // A filter narrows the parts the strokes are looked for in.
   const strokeParts = $derived.by(() => filtered ?? [...countedParts, ...strokeSymbols])
   const strokeHits = $derived(searching && orders ? findByStrokes(strokeParts, orders, typed) : [])
-  const strokeNext = $derived(orders && tab === 'components' && !characters ? nextStrokes(strokeParts, orders, typed) : null)
+  // Until the palette and the orders are both read, every key types.
+  const strokeNext = $derived(orders && parts && tab === 'components' && !characters ? nextStrokes(strokeParts, orders, typed) : null)
   /** Keep the last strokes typed in view. @param {HTMLElement} node */
   const showEnd = node => { $effect(() => { node.scrollLeft = typed ? node.scrollWidth : 0 }) }
   const componentList = $derived.by(() => {
