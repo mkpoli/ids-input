@@ -227,7 +227,8 @@
   /** @param {KeyboardEvent} event */
   function adjustKey(event) {
     if (!editable || !session || !chosenLayer || !frame?.supported) return
-    const key = event.key
+    // The bracket keys by position: with Shift held they report { and } on most layouts.
+    const key = event.code === 'BracketLeft' ? '[' : event.code === 'BracketRight' ? ']' : event.key
     if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', '+', '=', '-', '[', ']', '0'].includes(key)) return
     event.preventDefault()
     event.stopPropagation()
