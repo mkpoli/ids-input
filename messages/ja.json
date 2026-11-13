@@ -404,5 +404,19 @@
   "info.firstStrokeShort": "最初の画",
   "info.script.jurchen": "女真文字",
   "info.script.kana": "仮名",
-  "parts.equivalents": "CHISE：{names}"
+  "parts.equivalents": "CHISE：{names}",
+  "ids.ucv.search": "文字または項目番号",
+  "ids.ucv.all": "すべて",
+  "ids.ucv.level": "レベル{level}",
+  "ids.ucv.unified": "統合",
+  "ids.ucv.compatibility": "互換",
+  "ids.ucv.disunified": "分離",
+  "ids.ucv.separated": "原規格分離",
+  "ids.ucv.single": "単独字形",
+  "ids.ucv.none": "該当する項目はありません。",
+  "ids.ucv.loading": "一覧を読み込み中…",
+  "ids.ucv.failed": "一覧を読み込めませんでした。",
+  "ids.ucv.kind": "一覧",
+  "ids.ucv.form": "字形{name}",
+  "ids.alternatives.unifiable": "統合可能な字形"
 }

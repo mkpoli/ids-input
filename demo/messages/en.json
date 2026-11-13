@@ -444,5 +444,7 @@
   "appendix.sort.uses": "By uses",
   "appendix.count.one": "{count} form",
   "appendix.count.other": "{count} forms",
-  "appendix.relation.confirmed": "Confirmed for"
+  "appendix.relation.confirmed": "Confirmed for",
+  "ucv.title": "Component variations (UCV)",
+  "ucv.source": "Source"
 }

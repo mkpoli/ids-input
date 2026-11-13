@@ -441,5 +441,7 @@
   "appendix.sort.id": "ID순",
   "appendix.sort.uses": "사용 횟수순",
   "appendix.count.other": "자형 {count}개",
-  "appendix.relation.confirmed": "확인된 원형"
+  "appendix.relation.confirmed": "확인된 원형",
+  "ucv.title": "부품 통합 기준(UCV)",
+  "ucv.source": "출처"
 }

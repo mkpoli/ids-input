@@ -441,5 +441,7 @@
   "appendix.sort.id": "ID順",
   "appendix.sort.uses": "使用数順",
   "appendix.count.other": "{count}個の字形",
-  "appendix.relation.confirmed": "確認の元"
+  "appendix.relation.confirmed": "確認の元",
+  "ucv.title": "部品の統合規準（UCV）",
+  "ucv.source": "出典"
 }

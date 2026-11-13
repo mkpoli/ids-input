@@ -165,6 +165,7 @@
           {#each LOCALES as [code, name] (code)}<option value={code}>{name}</option>{/each}
         </select>
       </label>
+      <a class="back" href={`./ucv.html?lang=${locale}`}>UCV</a>
       <ThemeSwitch {theme} label={t('app.prefs.theme')} labels={{ system: t('app.theme.system'), light: t('app.theme.light'), dark: t('app.theme.dark') }} onchange={setTheme} />
       <a class="back" href={`./?lang=${locale}`}>{t('sources.back')}</a>
     </div>

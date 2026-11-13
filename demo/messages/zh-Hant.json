@@ -441,5 +441,7 @@
   "appendix.sort.id": "按 ID",
   "appendix.sort.uses": "按使用數",
   "appendix.count.other": "{count}個字形",
-  "appendix.relation.confirmed": "確認來源"
+  "appendix.relation.confirmed": "確認來源",
+  "ucv.title": "部件認同規則（UCV）",
+  "ucv.source": "來源"
 }

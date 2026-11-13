@@ -441,5 +441,7 @@
   "appendix.sort.id": "Theo ID",
   "appendix.sort.uses": "Theo số lần dùng",
   "appendix.count.other": "{count} dạng",
-  "appendix.relation.confirmed": "Đã xác nhận cho"
+  "appendix.relation.confirmed": "Đã xác nhận cho",
+  "ucv.title": "Biến thể bộ phận (UCV)",
+  "ucv.source": "Nguồn"
 }
