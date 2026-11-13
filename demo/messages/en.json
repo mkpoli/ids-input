@@ -478,5 +478,15 @@
   "appendix.notation.chise": "A glyph of the CHISE character ontology, by its name there. The prefix names the set it comes from.",
   "appendix.notation.zi-tools": "Strokes in writing order, each starting where the last ended. A minus writes a stroke backwards and a final z closes the line.",
   "appendix.notation.form": "This table’s own number for one form, whatever the sources call it. It reads as a part in any description.",
-  "appendix.download": "Download"
+  "appendix.download": "Download",
+  "library.title": "Component library",
+  "library.open": "Open in the workshop",
+  "library.copy": "Copy",
+  "library.copied": "Copied",
+  "library.descriptions": "Descriptions",
+  "library.unencoded": "Unencoded form",
+  "library.empty": "Choose a part",
+  "library.code": "Code point",
+  "library.strokes": "Strokes",
+  "library.uses": "Uses"
 }

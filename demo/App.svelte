@@ -9,7 +9,6 @@
   import { onMount, tick, untrack } from 'svelte'
   import { watchFallback } from '../src/svelte/fallback-font.js'
   import { IdsCharacterInfo, IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, OperatorIcon, createEditor, shortcut, translator } from '../src/svelte/index.js'
-  import { smallSealAdapter } from '../src/adapter/index.js'
   import { APPROXIMATE, composableDescription } from '@han-compose/composer/compose'
   import { hasTangut } from '@han-compose/composer/tangut'
   import { composerPreview as composerAt } from '@han-compose/composer'
@@ -19,27 +18,8 @@
   import { loadStrokeRecords } from '../src/svelte/strokes.js'
   import { createDocumentSession, layerAtPath, sessionRecord, toSequence } from '../src/document/index.js'
   import { documentFile, readDocumentFile } from './lib/documents.js'
-  import ids from '../data/babelstone-ids.tsv.gz?url'
   import equivalencesUrl from '../data/ids-equivalences.json?url'
-  import layers from '../data/tangut-layers.json.gz?url'
-  import zitools from '../data/yi-bai-ids.tsv.gz?url'
-  import corpus from '../data/ids-corpus.json.gz?url'
-  import projectIds from '../data/ids-project.tsv.gz?url'
-  import overwriteIds from '../data/ids-overwrites.tsv?url'
-  import components from '../data/ids-components.tsv?url'
-  import sealData from '../data/small-seal.json.gz?url'
-  import shuishuData from '../data/shuishu.json.gz?url'
-  import jurchenData from '../data/jurchen.json.gz?url'
-  import sealExtraParts from '../data/seal-extra-parts.json'
-  import parts from '../data/ids-parts.json?url'
-  import sketches from '../data/sketch-parts.json.gz?url'
-  import forms from '../data/component-forms.tsv?url'
-  import names from '../data/component-names.tsv?url'
-  import folds from '../data/component-name-folds.tsv?url'
-  import characterInfo from '../data/character-info.json.gz?url'
-  import chains from '../data/zi-tools-chains.tsv.gz?url'
-  import custom from '../data/custom-components.json.gz?url'
-  import characters from '../data/character-vocabulary.tsv.gz?url'
+  import { dataAdapter } from './lib/workshop-adapter.js'
   import { LOCALES, appMessages } from './lib/locales.js'
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
   import { createIconDrawings } from './lib/icons.js'
@@ -135,14 +115,7 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const sealAdapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, jurchen: jurchenData, ids, layers, zitools, chise: corpus, project: projectIds, overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains, custom })
-
-  const operatorSet = new Set(OPERATORS.map(([op]) => op))
-  const babel = { ...sealAdapter, recognizeDrawing, parts: async () => {
-    const curated = await sealAdapter.parts()
-    const seen = new Set(curated.map(part => part.part))
-    return [...curated, ...sealExtraParts.filter(part => !seen.has(part)).map(part => ({ part, kind: /** @type {const} */ ('seal'), sealGroup: /** @type {const} */ ('other') }))]
-  } }
+  const babel = { ...dataAdapter, recognizeDrawing }
   // Direct layer editing belongs to the active document tab.
   let adjusting = $state(false)
   let titleOpen = $state(false)

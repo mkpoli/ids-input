@@ -74,6 +74,7 @@
   // The workshop's other pages, each named by its own title.
   const pages = $derived([
     { path: 'sources.html', label: t('sources.title') },
+    { path: 'components.html', label: t('library.title') },
     { path: 'unencoded.html', label: t('appendix.title') },
     { path: 'component-atlas.html', label: t('app.atlas') },
     { path: 'ucv.html', label: t('ucv.title') },

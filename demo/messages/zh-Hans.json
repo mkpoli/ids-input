@@ -475,5 +475,15 @@
   "appendix.notation.chise": "CHISE字符本体里的一个字形，用它在那里的名称表示。前缀是所出的字符集。",
   "appendix.notation.zi-tools": "按笔顺排列的笔画，每一笔从上一笔的终点起笔。减号表示倒着写，末尾的z表示首尾相接。",
   "appendix.notation.form": "不管各来源怎么称呼，本表给一个字形的编号。在任何描述序列里都可以当部件读。",
-  "appendix.download": "下载"
+  "appendix.download": "下载",
+  "library.title": "部件库",
+  "library.open": "在工坊中打开",
+  "library.copy": "复制",
+  "library.copied": "已复制",
+  "library.descriptions": "描述序列",
+  "library.unencoded": "未编码字形",
+  "library.empty": "请选择部件",
+  "library.code": "码位",
+  "library.strokes": "笔画",
+  "library.uses": "使用数"
 }

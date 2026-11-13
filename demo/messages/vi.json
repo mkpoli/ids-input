@@ -475,5 +475,15 @@
   "appendix.notation.chise": "Một glyph trong bản thể luận ký tự CHISE, gọi theo tên ở đó. Tiền tố cho biết bộ ký tự nguồn.",
   "appendix.notation.zi-tools": "Các nét theo thứ tự viết, nét sau bắt đầu ở chỗ nét trước kết thúc. Dấu trừ là nét viết ngược, chữ z cuối là nét khép kín.",
   "appendix.notation.form": "Số riêng của bảng này cho một dạng, dù nguồn gọi nó là gì. Nó đọc được như một bộ phận trong mọi mô tả.",
-  "appendix.download": "Tải xuống"
+  "appendix.download": "Tải xuống",
+  "library.title": "Thư viện bộ phận",
+  "library.open": "Mở trong xưởng",
+  "library.copy": "Sao chép",
+  "library.copied": "Đã sao chép",
+  "library.descriptions": "Mô tả",
+  "library.unencoded": "Dạng chưa mã hóa",
+  "library.empty": "Chọn một bộ phận",
+  "library.code": "Điểm mã",
+  "library.strokes": "Số nét",
+  "library.uses": "Số lần dùng"
 }
