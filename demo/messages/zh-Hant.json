@@ -485,5 +485,8 @@
   "library.empty": "請選擇部件",
   "library.code": "碼位",
   "library.strokes": "筆畫",
-  "library.uses": "使用數"
+  "library.uses": "使用數",
+  "history.title": "記法沿革",
+  "history.earliest": "所見最早記錄",
+  "history.undated": "年代不詳"
 }
