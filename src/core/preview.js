@@ -113,6 +113,44 @@ export function runPreview(text, { preview, drawing, signal }, update) {
   })
 }
 
+/**
+ * `ask` asked for what draws a description: `drawable` writes each component no code point names as
+ * a character or a description first, and the answer's parts and sketch are numbered by the
+ * components of the description asked for, so a part chosen in the tree is the part drawn. Without
+ * either, `ask` as it is.
+ * @template {((text: string, options?: any) => Promise<any>) | undefined} T
+ * @param {T} ask @param {((text: string, options?: any) => Promise<{ text: string, leaves: number[] }>) | undefined} drawable @returns {T}
+ */
+export function askDrawable(ask, drawable) {
+  if (!ask || !drawable) return ask
+  const wrapped = async (text, options) => {
+    const swap = /[{&#]/.test(text) ? await drawable(text, { signal: options?.signal }).catch(() => null) : null
+    if (!swap || swap.text === text) return ask(text, options)
+    const place = index => swap.leaves[index] ?? index
+    const onSketch = options?.onSketch && (sketch => options.onSketch(ownSketch(sketch, place)))
+    const drawn = await ask(swap.text, { ...options, onSketch })
+    if (!drawn) return drawn
+    /** @param {{ leaf?: number }} item */
+    const own = item => item.leaf === undefined ? item : { ...item, leaf: place(item.leaf) }
+    return { ...drawn, ...(drawn.parts ? { parts: drawn.parts.map(own) } : {}), ...(drawn.emoji ? { emoji: drawn.emoji.map(own) } : {}) }
+  }
+  if (ask.warm) wrapped.warm = ask.warm
+  return wrapped
+}
+
+/** A sketch's leaves gathered by the component each draws: one leaf per place, its box around all
+ * of them. @param {{ index: number, box: number[], empty: boolean }[]} sketch @param {(index: number) => number} place */
+function ownSketch(sketch, place) {
+  const out = new Map()
+  for (const leaf of sketch) {
+    const index = place(leaf.index), [x, y, w, h] = leaf.box, seen = out.get(index)
+    if (!seen) { out.set(index, { ...leaf, index, box: [x, y, w, h] }); continue }
+    const x0 = Math.min(seen.box[0], x), y0 = Math.min(seen.box[1], y)
+    seen.box = [x0, y0, Math.max(seen.box[0] + seen.box[2], x + w) - x0, Math.max(seen.box[1] + seen.box[3], y + h) - y0]
+  }
+  return [...out.values()].sort((a, b) => a.index - b.index)
+}
+
 /** Path data with nothing but its commands and numbers, its line breaks and tabs kept as separators. */
 const pathData = d => String(d ?? '').replace(/[\t\n\r]/g, ' ').replace(/[^MLHVCSQTAZmlhvcsqtaz0-9.,eE+\- ]/g, '')
 /** A transform list with nothing but SVG transform functions: its letters, numbers, spaces, commas and brackets. */

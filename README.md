@@ -394,6 +394,10 @@ component `{53}`, a CHISE entity `&CDP-8BD0;`, and any other zi.tools stroke cha
 ones a tree names, and `isEncodedDescription(text)` tells a description of characters only. Where a
 text reads only with `{`, `&` or `#` as characters of their own (`⿳{1}`), it reads that way.
 
+`data/custom-components.json.gz` says what each of them is in the other tables' notation and what
+draws it; pass it as `custom` to `babelStoneAdapter` and the preview draws `⿹{53}一` as 鸟. See
+[custom IDS notation](docs/custom-components.md).
+
 Notes that are no part of a description are read around it. A zi.tools variant identifier stays on
 the component it follows (`⿰令dhs刂` has the parts `令dhs` and 刂) where the description reads no
 other way; `variantOf(part)` separates the two, `variantIdentifier(id)` says whether it names a
