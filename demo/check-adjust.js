@@ -2,6 +2,19 @@
 import { chromium } from 'playwright-core'
 import { strict as assert } from 'node:assert'
 import { mkdirSync, readFileSync } from 'node:fs'
+/**
+ * The chosen part as the canvas shows it, read from its selection box: the turn of its top edge in
+ * degrees, the cosine between its top and left edges (0 for a box that is turned and not sheared),
+ * and its width relative to `width`.
+ * @param {import('playwright-core').Page} page @param {number} [width]
+ */
+async function chained(page, width) {
+  const quad = await page.locator('.ids-preview-large .select-box').getAttribute('points')
+  const [p0, p1, , p3] = (quad ?? '').trim().split(' ').reduce((pairs, value, index, all) => index % 2 ? pairs : [...pairs, [Number(value), Number(all[index + 1])]], /** @type {number[][]} */ ([]))
+  const top = [p1[0] - p0[0], p1[1] - p0[1]], left = [p3[0] - p0[0], p3[1] - p0[1]]
+  const size = Math.hypot(...top)
+  return { size, scale: width ? size / width : 1, degrees: Math.atan2(top[1], top[0]) * 180 / Math.PI, shear: (top[0] * left[0] + top[1] * left[1]) / (size * Math.hypot(...left)) }
+}
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH })
 try {
   for (const scheme of ['light', 'dark']) {
@@ -98,8 +111,50 @@ try {
     await page.waitForTimeout(300)
     const cleared = await page.evaluate(() => JSON.parse(localStorage.getItem('ids-input:tabs') ?? '[]')[0]?.document?.document?.root?.children?.[0]?.transform)
     assert.equal(cleared, undefined, 'zero clears the layer transform')
-    await page.keyboard.press('ArrowRight')
+    await page.keyboard.press('0')
     await page.waitForTimeout(300)
+    const { size: width } = await chained(page)
+    await page.keyboard.press('=')
+    await page.waitForTimeout(300)
+    const grown = await chained(page, width)
+    assert.ok(Math.abs(grown.scale - 1.05) < 1e-3 && Math.abs(grown.degrees) < 0.05, '= scales the part up by 5%, without turning it')
+    await page.keyboard.press('-')
+    await page.keyboard.press('-')
+    await page.waitForTimeout(300)
+    assert.ok(Math.abs((await chained(page, width)).scale - 1 / 1.05) < 1e-3, '- scales the part down by the same step')
+    await page.keyboard.press('0')
+    await page.keyboard.press(']')
+    await page.keyboard.press('Shift+]')
+    await page.waitForTimeout(300)
+    const turned = await chained(page, width)
+    assert.ok(Math.abs(turned.degrees - 20) < 0.05, `] turns 5°, Shift+] 15° more (got ${turned.degrees}°)`)
+    assert.ok(Math.abs(turned.shear) < 1e-3 && Math.abs(turned.scale - 1) < 1e-3, `a key turn keeps the part's shape (shear ${turned.shear})`)
+    await page.keyboard.press('[')
+    await page.waitForTimeout(300)
+    assert.ok(Math.abs((await chained(page)).degrees - 15) < 0.05, '[ turns back 5°')
+    await page.keyboard.press('0')
+    await page.waitForTimeout(300)
+    // The rotate handle, dragged a quarter turn round the layer with Shift, lands on a 15° step.
+    const knob = await page.locator('.ids-preview .handle.rotate .handle-hit').boundingBox()
+    assert.ok(knob, 'the chosen layer shows its rotate handle')
+    const pivot = { x: surface.x + surface.width * 0.25, y: surface.y + surface.height * 0.5 }
+    const from = { x: knob.x + knob.width / 2, y: knob.y + knob.height / 2 }
+    const radius = Math.hypot(from.x - pivot.x, from.y - pivot.y)
+    const start = Math.atan2(from.y - pivot.y, from.x - pivot.x)
+    await page.keyboard.down('Shift')
+    await page.mouse.move(from.x, from.y)
+    await page.mouse.down()
+    for (let step = 1; step <= 8; step++) {
+      const angle = start + step * (Math.PI / 2 + 0.12) / 8
+      await page.mouse.move(pivot.x + radius * Math.cos(angle), pivot.y + radius * Math.sin(angle))
+    }
+    await page.mouse.up()
+    await page.keyboard.up('Shift')
+    await page.waitForTimeout(300)
+    const snapped = await chained(page)
+    assert.ok(Math.abs(snapped.degrees) > 30, 'dragging the rotate handle turns the part')
+    assert.ok(Math.abs(snapped.degrees / 15 - Math.round(snapped.degrees / 15)) < 0.01, `Shift snaps the turn to 15° (got ${snapped.degrees}°)`)
+    assert.ok(Math.abs(snapped.shear) < 1e-3, 'the handle turn keeps the part\'s shape')
     assert.deepEqual(errors, [])
     console.log(`PASS ${scheme}: main preview drag, scoped export and reset`)
     await page.close()
