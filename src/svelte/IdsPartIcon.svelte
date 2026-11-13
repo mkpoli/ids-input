@@ -2,7 +2,7 @@
   // Draw compound palette entries only when their cells enter the scroll area.
   import { componentDrawing } from '@han-compose/composer/component-forms'
   import { parse } from '../core/ids.js'
-  import { roughLayout, runPreview } from '../core/preview.js'
+  import { askDrawable, roughLayout, runPreview } from '../core/preview.js'
 
   /** @type {{ sequence: string, adapter: import('../adapter/types.js').IdsAdapter }} */
   let { sequence, adapter } = $props()
@@ -30,7 +30,7 @@
     url = null
     if (!visible || localDrawing) return
     const controller = new AbortController()
-    runPreview(text, { preview: icon, drawing, signal: controller.signal }, patch => {
+    runPreview(text, { preview: askDrawable(icon, adapter.drawable), drawing, signal: controller.signal }, patch => {
       if (patch.url) url = patch.url
       if (patch.drawn) drawn = /** @type {import('../adapter/types.js').Drawing} */ (patch.drawn)
     })

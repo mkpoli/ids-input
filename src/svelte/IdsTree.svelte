@@ -12,7 +12,8 @@
   // dropped beside a sibling moves there or on any other part switches places with it; the context
   // menu (right click, the Menu key or Shift+F10) splits or swaps with any operator, clears, removes a
   // level or copies that part's sequence. An empty slot shows as ⬚.
-  import { OPERATOR_GROUPS, isNode, partAt, samePath, write } from '../core/ids.js'
+  import { OPERATOR_GROUPS, isCustom, isNode, partAt, samePath, write } from '../core/ids.js'
+  import IdsPartIcon from './IdsPartIcon.svelte'
   import OperatorIcon from './OperatorIcon.svelte'
   import { shortcut } from './shortcut.js'
   import { nodeLayout, treeSizes } from './tree-layout.js'
@@ -284,7 +285,7 @@
       data-path={key(path)} data-hover-path={key(path)} disabled={editor.disabled} title={`${part === null ? label : t('ids.choose', { part })}${path.length ? ` · ${t('ids.dragSibling')}` : ''}`}
       aria-label={parent ? t('ids.part', { part: label, n: parent.n, name: editor.name(parent.op) }) : label}
       onclick={() => editor.choose(path)} oncontextmenu={event => contextmenu(event, path)} onkeydown={event => partKey(event, path)}
-      ondragover={event => dragover(event, path)} ondragleave={() => { overPath = null; overSwap = false }} ondrop={event => drop(event, path)}>{part ?? '⬚'}</button>
+      ondragover={event => dragover(event, path)} ondragleave={() => { overPath = null; overSwap = false }} ondrop={event => drop(event, path)}>{#if part !== null && isCustom(part)}<span class="ids-custom"><IdsPartIcon sequence={part} adapter={editor.adapter} /><span class="ids-custom-name">{part}</span></span>{:else}{part ?? '⬚'}{/if}</button>
     {/if}
   {/if}
 {/snippet}
@@ -415,6 +416,8 @@
   [data-op="⿹"] > .ids-parts > [data-index="0"] > .ids-part{place-items:start end}
   [data-op="⿺"] > .ids-parts > [data-index="0"] > .ids-part{place-items:end start}
   [data-op="⿽"] > .ids-parts > [data-index="0"] > .ids-part{place-items:end end}
+  .ids-custom{display:grid;justify-items:center;gap:1px;max-width:100%;line-height:1}
+  .ids-custom-name{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:500 10px/1.2 var(--ids-ui-font,system-ui,sans-serif);color:var(--_muted)}
   .ids-part{display:grid;place-items:center;width:100%;height:100%;min-width:0;min-height:0;box-sizing:border-box;padding:min(2px,2cqh) min(4px,2cqw);font-size:min(var(--ids-part-size,32px),max(0px,calc(66cqh - 3px)),max(0px,calc(66cqw - 3px)));line-height:1.4;overflow:hidden;
     font-family:var(--_font);color:var(--_ink);background:var(--_surface);border:min(1px,1cqw,1cqh) solid var(--_line);border-radius:min(8px,8cqw,8cqh)}
   .ids-part:not(:disabled):hover{border-color:var(--_line-strong)}
