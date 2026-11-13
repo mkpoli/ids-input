@@ -12,6 +12,10 @@
   import { importPairs, parsePair, parseSide } from './lib/equivalences.js'
   import { equivalences } from '../src/core/index.js'
   import dataUrl from '../data/custom-components.json.gz?url'
+  import outlinesUrl from '../data/custom-outlines.json.gz?url'
+  import { componentDrawing } from '@han-compose/composer/component-forms'
+  import { SvelteSet } from 'svelte/reactivity'
+  import { chainPath } from '../src/core/chain-shape.js'
   import engineOutlines from 'ids-engine-outlines'
   import { composerPreview } from '@han-compose/composer'
   import IdsPartIcon from '../src/svelte/IdsPartIcon.svelte'
@@ -40,17 +44,23 @@
   /** @type {import('../src/core/custom-components.js').CustomComponentsData | null} */
   let doc = $state.raw(null)
   let failed = $state(false)
-  onMount(async () => {
-    try {
-      const response = await fetch(dataUrl)
-      if (!response.ok) throw new Error(String(response.status))
-      // The published file is gzipped; the dev server may hand it over already decoded.
-      const bytes = new Uint8Array(await response.arrayBuffer())
-      const text = bytes[0] === 0x1f && bytes[1] === 0x8b
-        ? await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).text()
-        : new TextDecoder().decode(bytes)
-      doc = JSON.parse(text)
-    } catch { failed = true }
+  /** GlyphWiki's glyph for a CHISE entity: the entity's GlyphWiki name, and each name's outline.
+   * @type {{ names: Record<string, string>, outlines: Record<string, string> } | null} */
+  let outlines = $state.raw(null)
+  /** A gzipped JSON file; the dev server may hand it over already decoded. @param {string} url */
+  async function read(url) {
+    const response = await fetch(url)
+    if (!response.ok) throw new Error(String(response.status))
+    const bytes = new Uint8Array(await response.arrayBuffer())
+    const text = bytes[0] === 0x1f && bytes[1] === 0x8b
+      ? await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).text()
+      : new TextDecoder().decode(bytes)
+    return JSON.parse(text)
+  }
+  onMount(() => {
+    read(dataUrl).then(read => { doc = read }, () => { failed = true })
+    // The table reads without the outlines; a form then shows what the composer draws, or nothing.
+    read(outlinesUrl).then(read => { outlines = read }, () => {})
   })
   const custom = $derived(doc ? createCustomComponents(doc) : null)
 
@@ -100,15 +110,41 @@
 
   // The drawings: the composer is asked for what draws a form, as the workshop's palette does.
   // The composer's drawer ends a drawing when another is asked for, so the rows ask one at a time.
-  const icon = createIconDrawings(composerPreview({ base: readFrom(COMPOSER_BASE), fontStyle: 'sans', loaders: engineOutlines }))
+  const queued = createIconDrawings(composerPreview({ base: readFrom(COMPOSER_BASE), fontStyle: 'sans', loaders: engineOutlines }))
+  /** What the composer could not draw, so the row shows the next thing it has. */
+  const undrawn = new SvelteSet()
+  /** @param {string} sequence */
+  const icon = async sequence => {
+    const drawn = await queued(sequence)
+    if (!drawn) undrawn.add(sequence)
+    return drawn
+  }
   const adapter = $derived(/** @type {import('../src/adapter/types.js').IdsAdapter} */ (/** @type {unknown} */ ({
     icon, fontStyle: 'sans',
     drawable: async (/** @type {string} */ text) => custom?.drawableLeaves(text) ?? { text, leaves: [] },
   })))
-  /** Whether everything a form is written with draws. @param {Row} row */
-  const draws = row => {
-    const read = custom ? parse(custom.drawable(row.shown), { open: true }) : null
-    return Boolean(read && !read.problem && read.tree !== null && !customsOf(read.tree).length)
+  /**
+   * What stands for a form in the table, the first that there is: this project's cut of a numbered
+   * component, GlyphWiki's glyph of a CHISE entity, a chain's own line, what the composer draws of
+   * its equivalent, or nothing.
+   * @param {Row} row
+   * @returns {{ kind: 'composed', sequence: string } | { kind: 'outline', d: string, from: string } | { kind: 'chain', d: string } | null}
+   */
+  function glyphOf(row) {
+    const cut = row.names.find(name => name.source === 'babelstone' && componentDrawing(name.text, 'sans'))
+    if (cut) return { kind: 'composed', sequence: cut.text }
+    for (const name of row.names) {
+      const from = outlines?.names[name.text], d = from === undefined ? undefined : outlines?.outlines[from]
+      if (from !== undefined && d) return { kind: 'outline', d, from }
+    }
+    // A chain is shown as its own line: it is there at once, and says what the chain writes.
+    for (const name of row.names) {
+      const d = name.source === 'zi-tools' ? chainPath(name.text) : null
+      if (d) return { kind: 'chain', d }
+    }
+    const text = custom ? custom.drawable(row.shown) : row.shown
+    const read = parse(text, { open: true })
+    return !read.problem && read.tree !== null && !customsOf(read.tree).length && !undrawn.has(text) ? { kind: 'composed', sequence: row.shown } : null
   }
   /** @param {string} cid */
   const shortName = cid => cid.replace(/^(?:chise|bsp|ucs):/, '')
@@ -246,9 +282,13 @@
           </thead>
           <tbody>
             {#each visible as row (row.id)}
+              {@const glyph = glyphOf(row)}
               <tr id={row.id} class:yours={row.yours.length > 0}>
                 <td class="glyph">
-                  {#if draws(row)}<span class="drawn"><IdsPartIcon sequence={row.shown} {adapter} /></span>{:else}<span class="dash">—</span>{/if}
+                  {#if glyph?.kind === 'composed'}<span class="drawn"><IdsPartIcon sequence={glyph.sequence} {adapter} /></span>
+                  {:else if glyph?.kind === 'outline'}<svg class="drawn" viewBox="0 0 200 200" role="img" aria-label={glyph.from}><title>GlyphWiki · {glyph.from}</title><path d={glyph.d} fill="currentColor" /></svg>
+                  {:else if glyph?.kind === 'chain'}<svg class="drawn" viewBox="0 0 1000 1000" aria-hidden="true"><path d={glyph.d} fill="none" stroke="currentColor" stroke-width="64" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                  {:else}<span class="dash">—</span>{/if}
                 </td>
                 <td class="id">
                   <a href={`?q=${row.id}`} onclick={event => { event.preventDefault(); show(row.id) }}>{row.id}</a>
@@ -380,6 +420,7 @@
   tr.yours{background:color-mix(in srgb,var(--ids-accent-light) 45%,transparent)}
   .glyph{color:var(--ids-ink)}
   .drawn{display:block;font-size:34px;line-height:1}
+  svg.drawn{width:34px;height:34px}
   .dash{color:var(--ids-muted)}
   .id{white-space:nowrap}
   .id a,.link,a.name{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--ids-accent);text-decoration:none}
