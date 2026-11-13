@@ -114,7 +114,7 @@ components, which this project has not verified.
 | Style | Recorded | By equivalence | From IDS | Without an order |
 | --- | ---: | ---: | ---: | ---: |
 | Mainland | 110,125 | 681 | 0 | 89 |
-| Taiwan | 76,282 | 719 | 19,329 | 13,167 |
+| Taiwan | 76,282 | 719 | 19,329 | 7,022 |
 
 "Without an order" counts the Han characters the workshop's composer draws or BabelStone IDS
 describes that end with no row in that style.

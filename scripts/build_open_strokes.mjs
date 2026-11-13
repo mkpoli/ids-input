@@ -180,7 +180,8 @@ const validation = STYLES.map(({ style, source, table, region }) => {
 })
 
 const repertoire = JSON.parse(gunzipSync(readFileSync(new URL('../data/han-parts.json.gz', import.meta.url)))).keys
-const candidates = [...new Set([...repertoire, ...ids.keys()])].sort(byCodePoint)
+// BabelStone IDS also describes Tangut; only Han characters are counted and induced.
+const candidates = [...new Set([...repertoire, ...ids.keys()])].filter(char => characterScript(char) === 'han').sort(byCodePoint)
 const through = new Set(RELIABLE)
 /** @type {string[][]} */
 const induced = []
