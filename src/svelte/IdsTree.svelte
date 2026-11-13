@@ -450,7 +450,7 @@
   .ids-op :global(svg *){vector-effect:none}
   .ids-parts{flex:1;display:flex;gap:6em;min-width:0;min-height:0}
   .ids-cell{position:relative;flex:1;display:grid;min-width:0;min-height:0;container-type:size}
-  .ids-cell:has(:global(.inline-edit)){position:relative;z-index:2}
+  .ids-cell:has(:global(.inline-edit)){position:relative;z-index:70}
   .row > .ids-parts{flex-direction:row}
   .column > .ids-parts,.stack > .ids-parts{flex-direction:column}
   /* An enclosure: the first part fills the box, its glyph on the closed side, and the second sits

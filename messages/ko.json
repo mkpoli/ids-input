@@ -152,6 +152,8 @@
   "ids.hints.title": "{name} {n}번째 자리의 흔한 구성 요소",
   "ids.hints.count.one": "이 자리에서는 이 부품을 쓰는 글자가 1개 있습니다",
   "ids.hints.count.other": "이 자리에서는 이 부품을 쓰는 글자가 {count}개 있습니다",
+  "ids.hints.more": "{count}개 더 보기",
+  "ids.hints.less": "접기",
   "ids.inline.label": "구성 요소 편집",
   "ids.slot": "고른 구성 요소",
   "ids.slotHint": "구성 요소 입력",

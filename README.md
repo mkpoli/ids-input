@@ -181,8 +181,10 @@ context menu lists them too. "Take parts from" reads a character dropped on it.
 Double-clicking a part in either structure view edits it in place. While a single-part slot is
 edited, a panel lists the components that slot takes most often across BabelStone IDS and Yi Bai
 IDS, with the count in each button's tooltip; choosing one puts it in the slot, Tab reaches the
-buttons and Escape closes the editor. `bun run build:slot-hints` writes `src/core/slot-hints.json`
-through `scripts/build_slot_hints.mjs`, counting each Han character once per operator slot and
+buttons and Escape closes the editor. The panel shows up to 24, and **Show more** reveals the rest, up to 48
+stored for that slot. `bun run build:slot-hints` writes `src/core/slot-hints.json` through
+`scripts/build_slot_hints.mjs` and the [ranked appendix](docs/slot-hints.md) through
+`scripts/build_slot_hints_appendix.mjs`, counting each Han character once per operator slot and
 component at any depth of all its descriptions; these are dictionary coverage counts, not usage
 frequencies.
 
@@ -239,7 +241,7 @@ control are in [design/README.md](design/README.md).
 ### Core
 
 ```js
-import { parse, write, writeDraft, applyOperator, unwrap, unalias, commandFor, createHistory, enclosedRepeatSequence, hintsAt, pyramidOnBase, pyramidRows, pyramidSequence, repeatSequence, slotHints } from 'ids-input'
+import { parse, write, writeDraft, applyOperator, unwrap, unalias, commandFor, createHistory, enclosedRepeatSequence, hintsAt, pyramidOnBase, pyramidRows, pyramidSequence, repeatSequence, SLOT_HINT_DEFAULT, slotHints } from 'ids-input'
 
 parse('⿰亻⿱七木').tree        // { op: '⿰', parts: ['亻', { op: '⿱', parts: ['七', '木'] }] }
 parse('⿰亻').problem           // 'missing'
@@ -261,6 +263,7 @@ enclosedRepeatSequence('囗', '口')  // '⿴囗⿱⿰口口⿰口口'
 repeatSequence('屮', [3, 3], { bottom: '刀' })  // '⿱⿲屮屮屮⿲刀刀刀'
 slotHints('⿱', 1).slice(0, 2)  // [['心', 971], ['土', 653]], the common bottom parts
 hintsAt(parse('⿰木⬚', { open: true }).tree, [1])?.op  // '⿰'
+SLOT_HINT_DEFAULT             // 24, what the panel shows before Show more
 ```
 
 A component is a graphic Unicode code point (letter, mark, number, punctuation or symbol) or a
