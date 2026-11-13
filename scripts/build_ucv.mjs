@@ -29,7 +29,7 @@ const unescape = text => text.replace(/&(#x[0-9a-f]+|#\d+|\w+);/gi, (whole, name
   name[0] === '#' ? String.fromCodePoint(name[1] === 'x' ? parseInt(name.slice(2), 16) : Number(name.slice(1)))
     : ENTITIES[/** @type {keyof typeof ENTITIES} */ (name)] ?? whole)
 /** @param {string} tag @returns {Record<string, string>} */
-const attributes = tag => Object.fromEntries([...tag.matchAll(/([\w-]+)="([^"]*)"/g)].map(match => [match[1], unescape(match[2])]))
+const attributes = tag => Object.fromEntries([...tag.matchAll(/([\w-]+)=(?:"([^"]*)"|'([^']*)')/g)].map(match => [match[1], unescape(match[2] ?? match[3])]))
 
 // The chart an example is shown from when it is not the current one.
 const CHARTS = { '*': 'ucs2003', $: 'ucs2014', '#': 'supercjk' }
@@ -131,7 +131,12 @@ for (const match of xml.matchAll(/<(group|subgroup)\s([^>]*)>|<\/(group|subgroup
       compatibility: list(one('compatibles'))?.map(char => [char.normalize('NFC'), char]),
       disunified: groupsOf(one('disunified')),
       sourceSeparations: groupsOf(one('SourceCodeSeparation')),
-      single: [...match[5].matchAll(/<single\s([^>]*)>([\s\S]*?)<\/single>/g)].map(single => ({ ...attributes(single[1]), examples: list(unescape(single[2])) ?? [] })),
+      single: [...match[5].matchAll(/<single\s([^>]*)>([\s\S]*?)<\/single>/g)].map(single => {
+        // The source ends some lists with a count in words (`About 10`, `More than 300`) in place of the characters.
+        const body = unescape(single[2]).trim(), words = /\(?[A-Za-z][A-Za-z0-9 ]*\)?/
+        const count = body.match(words)?.[0].replace(/[()]/g, '').trim()
+        return { ...attributes(single[1]), examples: list(body.replace(words, '')) ?? [], count }
+      }),
       references: one('references'),
       note: one('note'),
       review: fields.ReviewSystem,
