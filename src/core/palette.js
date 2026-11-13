@@ -1,14 +1,14 @@
 // @ts-check
 import { isSequence } from './ids.js'
-/** Keep variant families adjacent, anchored at their first existing position.
+/** Keep each group of variant forms and look-alikes adjacent, anchored at its first existing position.
  * The caller supplies one visible group, so stroke counts and filters remain exact.
  * @param {import('../adapter/types.js').PalettePart[]} parts
  */
-export function adjacentVariants(parts) {
+export function adjacentGroups(parts) {
   /** @type {Map<string, import('../adapter/types.js').PalettePart[]>} */
   const families = new Map()
   for (const part of parts) {
-    const key = part.variantGroup ?? part.part
+    const key = part.group ?? part.part
     const family = families.get(key)
     if (family) family.push(part)
     else families.set(key, [part])

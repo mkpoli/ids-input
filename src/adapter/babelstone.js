@@ -111,19 +111,25 @@ export function parseLayers(text) {
 }
 
 /**
- * The palette file's rows as objects.
- * @param {{ columns: string[], parts: unknown[][], subtrees?: { encoded?: Record<string, string>, sourceAliases?: Record<string, string[]> } }} document
+ * The palette file's rows as objects. A part in one of the file's look-alike groups takes the
+ * group's first member as its `group`.
+ * @param {{ columns: string[], parts: unknown[][], lookalikes?: string[], subtrees?: { encoded?: Record<string, string>, sourceAliases?: Record<string, string[]> } }} document
  * @returns {PalettePart[]}
  */
-export const paletteRows = ({ columns, parts, subtrees }) => parts.map(row => {
-  const part = /** @type {PalettePart} */ (Object.fromEntries(columns.map((name, i) => [name, row[i]])))
-  const aliases = [...new Set([
-    ...Object.entries(subtrees?.encoded ?? {}).filter(([, encoded]) => encoded === part.part).map(([ids]) => ids),
-    ...(subtrees?.sourceAliases?.[part.part] ?? []),
-  ])]
-  if (aliases.length) part.aliases = aliases
-  return part
-})
+export const paletteRows = ({ columns, parts, lookalikes = [], subtrees }) => {
+  const lookalike = new Map(lookalikes.flatMap(members => [...members].map(member => [member, [...members][0]])))
+  return parts.map(row => {
+    const part = /** @type {PalettePart} */ (Object.fromEntries(columns.map((name, i) => [name, row[i]])))
+    const group = lookalike.get(part.part)
+    if (group) part.group = group
+    const aliases = [...new Set([
+      ...Object.entries(subtrees?.encoded ?? {}).filter(([, encoded]) => encoded === part.part).map(([ids]) => ids),
+      ...(subtrees?.sourceAliases?.[part.part] ?? []),
+    ])]
+    if (aliases.length) part.aliases = aliases
+    return part
+  })
+}
 
 /**
  * A response's text, gunzipped when it is a gzip file served as it is (as GitHub Pages serves a
@@ -526,12 +532,24 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
     const rows = doc || shuiDoc || jurDoc ? [...new Map([...base, ...(doc?.parts ?? []), ...(shuiDoc?.parts ?? []), ...(jurDoc?.parts ?? [])].map(p => [p.part, p])).values()] : base
     // Keep reviewed contextual search substitutions out of palette families.
     const safe = text.split('\n').filter(line => !line.split('\t').slice(0, 2).some(char => PALETTE_SEPARATE.has(char))).join('\n')
-    const variants = readForms(safe)
-    for (const root of variants.values()) variants.set(root, root)
+    // Variant forms and look-alikes join one group.
+    const groups = readForms(safe)
+    for (const root of groups.values()) groups.set(root, root)
+    /** @param {string} char @returns {string} */
+    const find = char => { let root = char; while (groups.has(root) && groups.get(root) !== root) root = /** @type {string} */ (groups.get(root)); return root }
+    const grouped = (/** @type {PalettePart} */ part) => (part.kind === 'c' || part.kind === 'd') && !isSequence(part.part) && !PALETTE_SEPARATE.has(part.part)
+    for (const part of rows) {
+      if (!part.group || !grouped(part) || PALETTE_SEPARATE.has(part.group)) continue
+      const a = find(part.group), b = find(part.part)
+      groups.set(a, a)
+      if (a !== b) groups.set(b, a)
+    }
+    const sizes = new Map()
+    for (const part of rows) if (grouped(part) && groups.has(part.part)) sizes.set(find(part.part), (sizes.get(find(part.part)) ?? 0) + 1)
     return rows.map(part => {
-      if (part.kind !== 'c' && part.kind !== 'd' || isSequence(part.part) || PALETTE_SEPARATE.has(part.part)) return part
-      const variantGroup = variants.get(part.part)
-      return variantGroup ? { ...part, variantGroup } : part
+      if (grouped(part) && groups.has(part.part) && sizes.get(find(part.part)) > 1) return { ...part, group: find(part.part) }
+      const { group, ...rest } = part
+      return group ? rest : part
     })
   })
     .catch(error => { palette = null; throw error })

@@ -20,7 +20,7 @@
   import { hangulIdsOf } from '@han-compose/composer/hangul-ids'
   import { shuishuLabel } from '../adapter/shuishu-data.js'
   import { jurchenLabel, jurchenMatches } from '../adapter/jurchen-data.js'
-  import { adjacentVariants, matchScriptParts } from '../core/palette.js'
+  import { adjacentGroups, matchScriptParts } from '../core/palette.js'
   import { adjacentStrokeForms, componentIdentity, isStroke } from '../core/component-identity.js'
   import { characterScript, groupPaletteParts, isOtherScript } from '../core/scripts.js'
   import { UNICODE_COVERAGE as coverage } from '@han-compose/composer'
@@ -350,7 +350,7 @@
   const strokeSymbols = $derived((parts ?? []).filter(part => isStroke(part.part)))
   /** BabelStone's numbered components are references, not common characters. @param {PalettePart} part */
   const numbered = part => /^\{\d+\}$/.test(part.part)
-  const commonParts = $derived(adjacentVariants(countedParts.filter(part =>
+  const commonParts = $derived(adjacentGroups(countedParts.filter(part =>
     !numbered(part) && (part.uses == null ? part.kind === 'c' : part.uses >= COMMON_USE))))
   // The stroke counts the counted parts hold, in order, null (not recorded) last. Counts from
   // HAN_TAIL up share one chip, as the character list does.
@@ -430,7 +430,7 @@
   const chosen = $derived(count === 'strokes' ? (strokeSymbols.length ? count : undefined) : count === undefined || counts.includes(count) ? count : undefined)
   /** @param {PalettePart[]} list */
   const grouped = list => [...CLASSES, null]
-    .map(cls => ({ cls, parts: adjacentStrokeForms(adjacentVariants(list.filter(part => (part.first ?? null) === cls))) }))
+    .map(cls => ({ cls, parts: adjacentStrokeForms(adjacentGroups(list.filter(part => (part.first ?? null) === cls))) }))
     .filter(group => group.parts.length)
 
   // The full outline index is loaded only when the Tangut tab is opened.
@@ -523,13 +523,13 @@
     if (tab === 'jurchen') return jurchenMatches(jurParts, query)
     if (/^\d+$/.test(query)) {
       const stroked = parts.filter(part => part.strokes === Number(query))
-      if (stroked.length) return adjacentVariants(stroked)
+      if (stroked.length) return adjacentGroups(stroked)
       return parts.filter(part => /^\{\d+\}$/.test(part.part) && part.part.slice(1, -1) === query)
     }
     // A numbered reference is its own query, not the digits inside it.
     if (/^\{\d+\}$/.test(query)) return parts.filter(part => part.part === query || part.aliases?.some(alias => alias.includes(query)))
     const chars = new Set(query)
-    return adjacentVariants(parts.filter(part => part.part === query || !isSequence(query) && chars.has(part.part) || isSequence(part.part) && part.part.includes(query) || part.fragment?.includes(query) || part.glyph === query || query.length >= 3 && part.description?.includes(query) || part.aliases?.some(alias => alias.includes(query))))
+    return adjacentGroups(parts.filter(part => part.part === query || !isSequence(query) && chars.has(part.part) || isSequence(part.part) && part.part.includes(query) || part.fragment?.includes(query) || part.glyph === query || query.length >= 3 && part.description?.includes(query) || part.aliases?.some(alias => alias.includes(query))))
   })
 
   /** @type {{ cls: string | null | undefined, parts: PalettePart[] }[]} */
