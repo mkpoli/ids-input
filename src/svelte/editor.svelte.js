@@ -18,6 +18,7 @@ import { namingOperator, unalias } from '../core/aliases.js'
 import { commandFor } from '../core/keys.js'
 import { createHistory } from '../core/history.js'
 import { lookupChar } from '../core/decompose.js'
+import { variationBase, withVariation } from '../core/variation.js'
 import { replacementQuery, resolveReplacement } from '../core/replacement.js'
 import { replacementExpression, replacementInput, resolveReplacementExpression, unaliasReplacementInput } from '../core/replacement-expression.js'
 import { createLookup } from './lookup.svelte.js'
@@ -330,6 +331,22 @@ export function createEditor(options) {
     return apply(replaceAt(tree, path, char), path, t('ids.do.merge', { part: write(part), char }), { destructive: true })
   }
   /**
+   * Write the component at `at` (the chosen one by default) as `sequence`: its character, or one
+   * of its variation sequences. Its marks stay, and it stays chosen. False where that part is not a
+   * component of that character.
+   * @param {string} sequence @param {Path | null} [at]
+   */
+  function vary(sequence, at) {
+    if (disabled()) return false
+    const path = at === undefined ? chosen : at
+    if (!path) return false
+    const part = partAt(tree, path)
+    if (typeof part !== 'string' || variationBase(part) === null || variationBase(part) !== variationBase(sequence)) return false
+    const next = withVariation(part, sequence)
+    if (next === part) return false
+    return apply(replaceAt(tree, path, next), path, t('ids.do.replace', { from: text(part), part: text(next) }))
+  }
+  /**
    * A part or a node as written (a palette part, a part taken from a tree, a sequence), put in place.
    * With `loose`, a run of marks annotates the whole description instead of filling a slot. False
    * when the part could not be put anywhere, so a picker can keep what the reader was holding.
@@ -545,7 +562,7 @@ export function createEditor(options) {
     get locale() { return options().locale ?? 'en' },
     get t() { return t },
     lookup, name, text, pathKey,
-    reset, operator, put, merge, take, reorder, swap, empty, remove, open, choose, edit, settle, enter, undo, redo, keydown, focusChosen, snapshot, restore,
+    reset, operator, put, merge, vary, take, reorder, swap, empty, remove, open, choose, edit, settle, enter, undo, redo, keydown, focusChosen, snapshot, restore,
     resolveChain,
     resolveInput, cancelResolution,
     /** Jump `n` steps back (negative) or forward through the history. @param {number} n */

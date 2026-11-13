@@ -10,6 +10,23 @@ README with the fields and the source list; CC0 1.0. Built by `bun scripts/build
 from the starter catalogue in `demo/lib/examples.js`, its source records and
 `data/ids-components.tsv`.
 
+## `custom-components.json.gz`
+
+The components no code point names in BabelStone IDS (`{53}`), CHISE IDS (`&CDP-8BD0;`) and
+zi.tools (`#(-𠃌㇉)`): 1,625 of them, what each is in the other tables' notation where the tables'
+descriptions of shared characters settle it (926, 371 confirmed by two or more characters), and
+9,196 descriptions of characters that follow. Fields, method and limits:
+[custom IDS notation](../docs/custom-components.md). Every row is derived by this project; no
+source states it. Rebuild with `bun scripts/build_custom_components.mjs`.
+
+`custom-ids.tsv` is the ledger of form identifiers the file carries (`X-00053`, written `&X-00053;`
+in a description): identifier, a name the form is known by, the date, and `first`, `merged into …`
+or `withdrawn`. It is append-only and the build reads it before it writes it, so a number once
+given stays.
+
+Licence: GPL-2.0-or-later, as CHISE IDS, whose rows inform it; BabelStone IDS is public domain and
+Yi Bai's table MIT.
+
 ## `yi-bai-ids.tsv.gz`
 
 Standard IDS descriptions from Yi Bai's level-1 IDS dataset at commit
@@ -1232,6 +1249,29 @@ The table holds counts alone. KanjiVG records no five-stroke class, and one cann
 paths: kana strokes are curved, so a turn and a curve carry the same turning angle, and a classifier
 built on that angle labelled ア, コ and ヨ wrongly. A class column waits for a source that names
 stroke types.
+
+## `stroke-orders.json.gz`
+
+The stroke order of the Han parts of the palette, for finding a part by the strokes it is written
+with: 10,650 `keys` in palette order with one entry of `orders` each, the codes separated by a
+space, a letter a stroke (`letters`: h 横, s 豎, p 撇, n 點, z 折). 90 KB gzipped, read when a
+stroke key of the Components panel is first reached. Built by `scripts/build_stroke_orders.mjs`
+from `ids-parts.json`.
+
+- Licence: **LGPL-3.0**, as the `first` column of `ids-parts.json`; the source authors and the
+  licence texts are in `data/licences/`.
+- Source: Rime five-stroke dictionary, revision `1e8fff9b9494ddec23b0cbc526bcfd8171a6fd48`,
+  <https://github.com/rime/rime-stroke>, SHA-256
+  `b3e93dce89c185f45c3d6e189b86b3a8626913352cc85e1094c786579a665791`. Authors: 四季的風, 雪齋,
+  Kunki Chou and 宋天.
+- A character the dictionary writes more than one way keeps every code, in the dictionary's order
+  (小 `zpn spn`, 乃 `pz zp`); 4,701 parts have more than one. The codes follow Chinese stroke
+  order and can differ from Japanese order, and a code can count strokes differently from Unihan's
+  `kTotalStrokes`.
+- A part of one stroke takes the class `ids-parts.json` gives it, so a CJK stroke symbol and the
+  ideograph Unicode calls its equivalent read alike (㇕ and 𠃍 are `z`).
+- The compound parts, BabelStone's numbered components and the radical forms the dictionary does
+  not name have no entry and are not found by strokes.
 
 ## `han-parts.json.gz`
 

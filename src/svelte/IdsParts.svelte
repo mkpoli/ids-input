@@ -11,6 +11,7 @@
   // Hangul letters, Gongche the gongche notation, Recent the parts picked here before (kept in this
   // browser under `recentKey`, none when it is null), and Other scripts the rest. A filter of
   // characters finds those parts or matching compound IDS, a number the parts of that many strokes.
+  // The stroke keys of Components find a part by the strokes it begins with, in writing order.
   // Picking a part calls `onpick(part)`.
   import { onMount } from 'svelte'
   import { watchFallback } from './fallback-font.js'
@@ -28,6 +29,8 @@
   import IdsPartIcon from './IdsPartIcon.svelte'
   import { isNewKorean, isSequence } from '../core/ids.js'
   import { translator } from './i18n.js'
+  import { STROKE_KEYS, findByStrokes, nextStrokes } from '../core/stroke-order.js'
+  import { loadStrokeOrders } from './strokes.js'
   import { download } from '@han-compose/composer/retry'
 
   /**
@@ -45,6 +48,8 @@
   /** @type {('横' | '豎' | '撇' | '點' | '折')[]} */
   const CLASSES = ['横', '豎', '撇', '點', '折']
   const CLASS_KEY = { 横: 'h', 豎: 's', 撇: 'p', 點: 'd', 折: 'z' }
+  /** The message each stroke key reads; the dictionary writes 點 as n. */
+  const KEY_MESSAGE = /** @type {Record<string, string>} */ ({ h: 'h', s: 's', p: 'p', n: 'd', z: 'z' })
   /** @type {('components' | 'gongche' | 'tangut' | 'jurchen' | 'seal' | 'shuishu' | 'bopomofo' | 'marks' | 'alphabet' | 'hangul' | 'recent' | 'other')[]} */
   const TABS = ['components', 'gongche', 'tangut', 'jurchen', 'seal', 'shuishu', 'bopomofo', 'marks', 'alphabet', 'hangul', 'recent', 'other']
 
@@ -354,11 +359,44 @@
   // The Components views page like the character list: frequent parts, stroke symbols or one count, in
   // first-stroke order, 120 at a time.
   let componentPage = $state(0)
-  $effect(() => { void tab; void count; void partTail; void characters; void filter; componentPage = 0 })
+  $effect(() => { void tab; void count; void partTail; void characters; void filter; void typed; componentPage = 0 })
+  // The strokes typed on the stroke keys, a letter each, and every part's stroke order, read when a
+  // key is first reached.
+  let typed = $state('')
+  /** @type {Map<string, string[]> | null} */
+  let orders = $state.raw(null)
+  let ordersFailed = $state(false)
+  function readOrders() {
+    if (orders) return
+    ordersFailed = false
+    loadStrokeOrders().then(found => {
+      // Strokes typed before the orders arrived keep the start some part is written with.
+      let kept = typed
+      while (kept && !findByStrokes(strokeParts, found, kept).length) kept = kept.slice(0, -1)
+      typed = kept
+      orders = found
+    }, () => { ordersFailed = true })
+  }
+  /** A key no part goes on with stays focusable and does nothing. @param {string} letter */
+  function typeStroke(letter) {
+    readOrders()
+    if (!strokeNext || strokeNext.has(letter)) typed += letter
+  }
+  const searching = $derived(tab === 'components' && !characters && typed !== '')
+  // A filter narrows the parts the strokes are looked for in.
+  const strokeParts = $derived.by(() => filtered ?? [...countedParts, ...strokeSymbols])
+  const strokeHits = $derived(searching && orders ? findByStrokes(strokeParts, orders, typed) : [])
+  const strokeNext = $derived(orders && tab === 'components' && !characters ? nextStrokes(strokeParts, orders, typed) : null)
+  /** Keep the last strokes typed in view. @param {HTMLElement} node */
+  const showEnd = node => { $effect(() => { node.scrollLeft = typed ? node.scrollWidth : 0 }) }
   const componentList = $derived.by(() => {
-    /** @type {{ part: PalettePart, cls: string | null | undefined }[]} */
+    /** @type {{ part: PalettePart, cls: string | number | null | undefined }[]} */
     const list = []
     if (tab !== 'components' || characters) return list
+    if (searching) {
+      for (const hit of strokeHits) list.push({ part: hit.part, cls: hit.strokes })
+      return list
+    }
     if (chosen === undefined && !partTail) {
       for (const part of commonParts) list.push({ part, cls: undefined })
       return list
@@ -370,7 +408,7 @@
   })
   const componentPages = $derived(Math.max(1, Math.ceil(componentList.length / PAGE_SIZE)))
   const componentShown = $derived.by(() => {
-    /** @type {{ cls: string | null | undefined, parts: PalettePart[] }[]} */
+    /** @type {{ cls: string | number | null | undefined, parts: PalettePart[] }[]} */
     const groups = []
     for (const entry of componentList.slice(componentPage * PAGE_SIZE, (componentPage + 1) * PAGE_SIZE)) {
       const last = groups.at(-1)
@@ -658,8 +696,8 @@
   }
   // In the stroke-symbol view, ㇣ falls outside the five first-stroke classes. The components written
   // as a description have no first stroke recorded; their groups are stroke counts.
-  /** @param {string | null | undefined} cls */
-  const heading = cls => cls ? t(`parts.first.${CLASS_KEY[/** @type {keyof typeof CLASS_KEY} */ (cls)]}`)
+  /** @param {string | number | null | undefined} cls A first-stroke class, or the stroke count a stroke search groups by. */
+  const heading = cls => typeof cls === 'number' ? t('parts.strokeCount', { count: cls }) : cls ? t(`parts.first.${CLASS_KEY[/** @type {keyof typeof CLASS_KEY} */ (cls)]}`)
     : !partTail && chosen === 'strokes' ? t('parts.first.rest') : t('parts.first.unknown')
 </script>
 
@@ -852,13 +890,28 @@
       </div>
     {/if}
   {/if}
+  {#if tab === 'components' && !characters}
+    <div class="stroke-keys" role="group" aria-label={t('parts.order.label')}>
+      {#each STROKE_KEYS as key (key.letter)}
+        {@const label = t(`parts.first.${KEY_MESSAGE[key.letter]}`)}
+        <button type="button" class="stroke-key" data-stroke={key.letter} title={label} aria-label={label}
+          disabled={disabled} aria-disabled={Boolean(strokeNext && !strokeNext.has(key.letter)) || undefined}
+          onpointerenter={readOrders} onfocus={readOrders} onclick={() => typeStroke(key.letter)}>{key.stroke}</button>
+      {/each}
+      <output class="stroke-typed" class:empty={!typed} aria-label={t('parts.order.label')} {@attach showEnd}>{typed ? [...typed].map(letter => STROKE_KEYS.find(key => key.letter === letter)?.stroke).join('') : t('parts.order.label')}</output>
+      <button type="button" class="stroke-backspace" aria-label={t('parts.order.backspace')} title={t('parts.order.backspace')}
+        disabled={disabled} aria-disabled={!typed || undefined} onclick={() => { typed = typed.slice(0, -1) }}>←</button>
+      <button type="button" class="stroke-clear" aria-label={t('parts.order.clear')} title={t('parts.order.clear')}
+        disabled={disabled} aria-disabled={!typed || undefined} onclick={() => { typed = '' }}>×</button>
+    </div>
+  {/if}
   {#if tab === 'components'}
     <div class="parts-counts" role="group" aria-label={t('parts.groups')}>
-      <button type="button" class:active={!characters && !partTail && chosen === undefined} aria-pressed={!characters && !partTail && chosen === undefined}
-        onclick={() => { count = undefined; partTail = false; characters = false }}>{t('parts.tab.common')}</button>
+      <button type="button" class:active={!searching && !characters && !partTail && chosen === undefined} aria-pressed={!searching && !characters && !partTail && chosen === undefined}
+        onclick={() => { count = undefined; partTail = false; characters = false ; typed = '' }}>{t('parts.tab.common')}</button>
       {#if strokeSymbols.length}
-        <button type="button" class="stroke-symbols" title={t('parts.strokeSymbols')} class:active={!characters && !partTail && chosen === 'strokes'} aria-pressed={!characters && !partTail && chosen === 'strokes'}
-          onclick={() => { count = 'strokes'; partTail = false; characters = false }}>{t('parts.strokes')}</button>
+        <button type="button" class="stroke-symbols" title={t('parts.strokeSymbols')} class:active={!searching && !characters && !partTail && chosen === 'strokes'} aria-pressed={!searching && !characters && !partTail && chosen === 'strokes'}
+          onclick={() => { count = 'strokes'; partTail = false; characters = false ; typed = '' }}>{t('parts.strokes')}</button>
       {/if}
       {#if characters}
         {#each hanChips as value (value)}
@@ -880,23 +933,23 @@
       {:else}
         {#each partChips as value (value)}
           {@const label = t('parts.strokeCount', { count: value })}
-          <button type="button" class:active={!partTail && value === chosen} aria-pressed={!partTail && value === chosen}
+          <button type="button" class:active={!searching && !partTail && value === chosen} aria-pressed={!searching && !partTail && value === chosen}
             title={label} aria-label={label}
-            onclick={() => { count = value; partTail = false }}>{t('parts.strokeChip', { count: value })}</button>
+            onclick={() => { count = value; partTail = false ; typed = '' }}>{t('parts.strokeChip', { count: value })}</button>
         {/each}
         {#if partTailCount}
-          <button type="button" class:active={partTail} aria-pressed={partTail}
+          <button type="button" class:active={!searching && partTail} aria-pressed={!searching && partTail}
             title={t('parts.characters.fromStrokes', { count: HAN_TAIL })} aria-label={t('parts.characters.fromStrokes', { count: HAN_TAIL })}
-            onclick={() => { partTail = true; count = undefined }}>{HAN_TAIL}+</button>
+            onclick={() => { partTail = true; count = undefined ; typed = '' }}>{HAN_TAIL}+</button>
         {/if}
         {#if partUnknown}
-          <button type="button" class:active={!partTail && chosen === null} aria-pressed={!partTail && chosen === null}
+          <button type="button" class:active={!searching && !partTail && chosen === null} aria-pressed={!searching && !partTail && chosen === null}
             title={t('parts.unknownStrokes')} aria-label={t('parts.unknownStrokes')}
-            onclick={() => { count = null; partTail = false }}>?</button>
+            onclick={() => { count = null; partTail = false ; typed = '' }}>?</button>
         {/if}
       {/if}
       <button type="button" class:active={characters} aria-pressed={characters}
-        onclick={() => { characters = true; hanCount = undefined }}>{t('parts.characters.label')}</button>
+        onclick={() => { characters = true; hanCount = undefined ; typed = '' }}>{t('parts.characters.label')}</button>
     </div>
   {/if}
   <div class="parts-panel" role="tabpanel" id={`${uid}-panel`} aria-labelledby={`${uid}-tab-${tab}`}>
@@ -992,9 +1045,12 @@
         {/if}
         {@render grid(hanShown)}
       {:else if hanKeys}<p class="parts-note">{t('parts.none')}</p>{/if}
-    {:else if filtered}
+    {:else if filtered && !searching}
       {#if filtered.length}{@render typedGrid(filtered)}{:else}<p class="parts-note">{t('parts.none')}</p>{/if}
     {:else if tab === 'components'}
+      {#if searching && ordersFailed}<p class="parts-note" role="status">{t('parts.order.unavailable')} <button type="button" onclick={readOrders}>{t('parts.script.retry')}</button></p>
+      {:else if searching && !orders}<p class="parts-note" role="status">{t('parts.loading')}</p>
+      {:else if searching && !strokeHits.length}<p class="parts-note">{t('parts.none')}</p>{/if}
       {#if componentPages > 1}
         <div class="script-pages" role="group" aria-label={t('parts.script.pages')}>
           <button type="button" disabled={componentPage === 0} onclick={() => componentPage--}>{t('parts.script.previous')}</button>
@@ -1078,6 +1134,15 @@
     border-color:transparent;background:var(--_surface-subtle);font-family:"IDS Numbered","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Jurchen","IDS Strokes",var(--ids-font,var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif)}
   .jamo-key:not(:disabled):hover{border-color:var(--_accent);background:var(--_accent-light)}
   .compose-live{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;margin:0}
+  .stroke-keys{display:flex;align-items:stretch;gap:3px;min-width:0;height:34px;user-select:none}
+  .stroke-key{flex:none;width:30px;padding:0;font-size:20px;line-height:1;border-color:transparent;background:var(--_surface-subtle);
+    font-family:"IDS Strokes",var(--ids-font,var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif)}
+  .stroke-keys button[aria-disabled="true"]{cursor:default;opacity:.55}
+  .stroke-key:not(:disabled,[aria-disabled="true"]):hover{border-color:var(--_accent);background:var(--_accent-light)}
+  .stroke-typed{flex:1;min-width:0;display:block;padding:0 8px;border:1px solid var(--_line);border-radius:6px;overflow:hidden;white-space:nowrap;
+    font:16px/32px "IDS Strokes",var(--ids-font,var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif);letter-spacing:1px}
+  .stroke-typed.empty{font:12px/32px var(--ids-ui-font,system-ui,sans-serif);letter-spacing:0;color:var(--_muted)}
+  .stroke-backspace,.stroke-clear{flex:none;width:30px;padding:0;font-size:16px;line-height:1;color:var(--_muted)}
   .parts-counts{display:flex;flex-wrap:wrap;gap:4px;user-select:none}
   .parts-counts button{min-width:30px;padding:4px 7px;white-space:nowrap;font-variant-numeric:tabular-nums}
   /* Two rows of the 51, so the characters stay in view; the rest scroll. */
