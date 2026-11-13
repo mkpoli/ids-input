@@ -75,8 +75,8 @@ Two more branches use the unread rows without reading them:
 
 On 2026-11-14 at revision `2597437b928e8d530b7ae09cf53fe5ec7868569c`, with custom components and variant
 identifiers read: all
-117,051 sequences of `ids_lv1.txt` read, and 166,921 of the 166,923 in `ids_lv0.txt`, which writes a
-variant identifier after every component (12,902 before). One of the two left writes a modifier
+117,051 sequences of `ids_lv1.txt` read, and 166,922 of the 166,923 in `ids_lv0.txt`, which writes a
+variant identifier after every component (12,902 before). The one left writes a modifier
 after ⿱ (`⿰氵.⿱[:-1]一.冉K`), which the grammar gives to ⿻ only. A chain no character names is a
 component of its own, drawn through `data/custom-components.json.gz` where that has an equivalent.
 

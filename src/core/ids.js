@@ -252,14 +252,15 @@ export function modifierLength(text, at) {
  */
 export function parse(text, { open = false } = {}) {
   const read = readTree(text, open, 'custom')
-  if (!read.problem) return read
-  for (const mode of readings(text)) {
-    const other = readTree(text, open, mode)
-    if (!other.problem) return other
-  }
-  return read
+  if (!readings(text).length) return read
+  // The custom reading stands where it gives a whole description; a draft follows the reading the
+  // whole text takes, so ⿲{1} is {, 1 and } while typed as well.
+  if (!read.problem && (!open || !readTree(text, false, 'custom').problem)) return read
+  const mode = readingOf(text)
+  if (mode === 'custom') return read
+  const other = readTree(text, open, mode)
+  return other.problem ? read : other
 }
-
 /**
  * How a text is read. `custom`: a component no code point names is one part. `literal`: braces, &
  * and # are graphic characters of their own (⿳{1} as {, 1 and }). `variant`: letters, digits and
@@ -273,12 +274,14 @@ const readings = text => [.../** @type {Reading[]} */ (/[{&#]/.test(text ?? '') 
   // Only a description takes the variant reading: 木A alone is two components, not 木 in form A.
   .../** @type {Reading[]} */ (VARIANT_AFTER.test(text ?? '') && isSequence(text) ? ['variant'] : [])]
 
-/** The reading `text` takes, as a draft or whole: the first that has no problem, `custom` if none.
- * @param {string | null | undefined} text @returns {Reading} */
+/**
+ * The reading `text` takes: the first that gives a whole description, else the first that gives a
+ * draft, else `custom`. A draft so reads as the whole text does.
+ * @param {string | null | undefined} text @returns {Reading}
+ */
 export function readingOf(text) {
-  for (const open of [false, true]) for (const mode of /** @type {Reading[]} */ (['custom', ...readings(text)])) {
-    if (!readTree(text, open, mode).problem) return mode
-  }
+  const modes = /** @type {Reading[]} */ (['custom', ...readings(text)])
+  for (const open of [false, true]) for (const mode of modes) if (!readTree(text, open, mode).problem) return mode
   return 'custom'
 }
 
