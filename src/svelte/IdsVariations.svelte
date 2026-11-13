@@ -48,7 +48,7 @@
     { key: 'compatibility', groups: entry.compatibility ?? [] },
     { key: 'disunified', groups: entry.disunified ?? [] },
     { key: 'separated', groups: entry.sourceSeparations ?? [] },
-    { key: 'single', groups: (entry.single ?? []).filter(single => single.char).map(single => [/** @type {string} */ (single.char)]) },
+    { key: 'single', groups: (entry.single ?? []).map(single => [...single.char ? [single.char] : [], ...single.examples]).filter(group => group.length) },
   ]).filter(row => row.groups.length)
   /** @param {string} char */
   const code = char => [...char].map(point => `U+${/** @type {number} */ (point.codePointAt(0)).toString(16).toUpperCase().padStart(4, '0')}`).join(' ')
@@ -81,7 +81,7 @@
             {#if entry.annexS}<span class="ids-ucv-badge">Annex {entry.annexS}</span>{/if}
           </div>
           <div class="ids-ucv-forms">
-            {#each entry.forms as form (form.glyph)}
+            {#each entry.forms as form, slot (slot)}
               {@const outline = list.outlines[form.glyph]}
               {@const label = form.text ? `${form.text} ${code(form.text)}` : t('ids.ucv.form', { name: form.glyph })}
               {#if form.text}

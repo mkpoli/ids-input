@@ -22,6 +22,11 @@ try {
   assert.deepEqual(await entry.locator('.ids-ucv-char').evaluateAll(nodes => nodes.map(node => node.getAttribute('data-character'))),
     ['爂', '爨', '釁', '爨', '\u{2F920}', '𦦝', '𦦧', '𦦞', '𦦡'])
 
+  // An entry the source gives the same glyph twice still draws every form.
+  await search.fill('213a')
+  await panel.locator('.ids-ucv-entry[data-entry="213a"]').waitFor()
+  assert.equal(await panel.locator('.ids-ucv-entry[data-entry="213a"] .ids-ucv-form').count(), 13)
+
   // A character finds the entries it is a form of first.
   await search.fill('壬')
   await panel.locator('.ids-ucv-entry[data-entry="1"]').waitFor()

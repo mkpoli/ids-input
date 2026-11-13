@@ -26,10 +26,10 @@
  * @property {string[][]} [compatibility] Pairs of a unified ideograph and its compatibility ideograph.
  * @property {string[][]} [disunified] Groups of characters coded apart.
  * @property {string[][]} [sourceSeparations] Groups kept apart by the source separation rule.
- * @property {{ char?: string, glyph?: string, text: string }[]} [single]
+ * @property {{ char?: string, glyph?: string, examples: string[] }[]} [single] A character that keeps one form, and the characters it appears in.
  * @property {string} [note]
  * @property {string} [references]
- * @property {string} [review]
+ * @property {string[]} [review]
  * @property {Record<string, string>} [charts]
  */
 
@@ -59,7 +59,10 @@ export function entryCharacters(entry) {
   for (const group of [...entry.compatibility ?? [], ...entry.disunified ?? [], ...entry.sourceSeparations ?? []]) {
     for (const char of group) examples.add(char)
   }
-  for (const single of entry.single ?? []) if (single.char) examples.add(single.char)
+  for (const single of entry.single ?? []) {
+    if (single.char) examples.add(single.char)
+    for (const char of single.examples) examples.add(char)
+  }
   return { forms, examples }
 }
 
