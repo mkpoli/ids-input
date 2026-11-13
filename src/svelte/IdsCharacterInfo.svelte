@@ -1,14 +1,19 @@
 <script>
   import { tick } from 'svelte'
   import { characterScript } from '../adapter/character-info.js'
+  import { componentDrawing } from '@han-compose/composer/component-forms'
   import { isJurchen } from '../core/ids.js'
+  import { isCustom } from '../core/custom.js'
+  import { chainPath } from '../core/chain-shape.js'
+  import IdsPartIcon from './IdsPartIcon.svelte'
   import { componentIdentity } from '../core/component-identity.js'
   import { strokeClassName, translator } from './i18n.js'
   import { loadJurchenStrokes, loadKanaStrokes, loadStrokeRecords, loadTangutStrokes } from './strokes.js'
   import { watchFallback } from './fallback-font.js'
 
-  /** @type {{ root: HTMLElement | null, adapter: import('../adapter/types.js').IdsAdapter, messages?: Record<string, string>, locale?: string, disabled?: boolean, onpick?: (part: string, path?: number[]) => void }} */
-  let { root, adapter, messages, locale = 'en', disabled = false, onpick } = $props()
+  /** `customHref` answers where a custom component's form is listed, by its identifier (X-00053).
+   * @type {{ root: HTMLElement | null, adapter: import('../adapter/types.js').IdsAdapter, messages?: Record<string, string>, locale?: string, disabled?: boolean, onpick?: (part: string, path?: number[]) => void, customHref?: (id: string) => string }} */
+  let { root, adapter, messages, locale = 'en', disabled = false, onpick, customHref } = $props()
   const t = $derived(translator(messages, locale))
   /** A reading system's name for the card's locale; the CJK names are the ones readers know it by.
    *  @param {import('../adapter/character-info.js').InfoReading} reading */
@@ -37,8 +42,25 @@
   const kinds = /** @type {const} */ (['han', 'tangut', 'seal', 'modern', 'usage'])
   /** @param {string} value */
   const codePoint = value => `U+${value.codePointAt(0)?.toString(16).toUpperCase().padStart(4, '0')}`
-  const code = $derived(char ? codePoint(char) : '')
-  const identity = $derived(componentIdentity(char))
+  // A component no code point names ({53}, &CDP-8964;, #(-𠃌㇉)) has its own card: its shape, and
+  // the other ways the same form is written.
+  const customChar = $derived(isCustom(char))
+  /** @type {import('../adapter/types.js').CustomPartInfo | null} */ let custom = $state.raw(null)
+  /** How many subtractions the card lists; the table has the rest. */
+  const SUBTRACTIONS = 4
+  /** What stands for the form, the first there is: this project's cut of one of its names, the
+   *  host's outline, a chain's own line, else what the composer draws. */
+  const shape = $derived.by(() => {
+    if (!customChar) return null
+    const written = [char, ...(custom?.names ?? []).map(name => name.text)]
+    const cut = written.find(name => componentDrawing(name, adapter.fontStyle))
+    if (cut) return { kind: /** @type {const} */ ('drawn'), sequence: cut }
+    if (custom?.outline) return { kind: /** @type {const} */ ('outline'), d: custom.outline.d, title: `${custom.outline.source} · ${custom.outline.from}` }
+    for (const name of written) { const d = chainPath(name); if (d) return { kind: /** @type {const} */ ('chain'), d } }
+    return { kind: /** @type {const} */ ('drawn'), sequence: char }
+  })
+  const code = $derived(!char ? '' : customChar ? char : codePoint(char))
+  const identity = $derived(customChar ? null : componentIdentity(char))
   /** @type {number | null} */ let uses = $state(null)
   // The stroke count and first stroke the card adds to the code point; the table loads on first use.
   let strokeRecords = $state.raw(/** @type {Map<string, import('./strokes.js').StrokeRecord> | null} */ (null))
@@ -103,7 +125,7 @@
     for (const entry of list) if (shared.get(entry.site) > 1 && entry.what) entry.site = `${entry.site} · ${entry.what}`
     // The sites that hold the character in their own records, after the records the card read.
     // zi.tools and CHISE list every script the card shows; 字海 and 漢典 cover Han characters.
-    if (char) {
+    if (char && !customChar) {
       list.push({ key: 'zitools', site: t('info.site.zitools'), what: 'zi.tools', url: `https://zi.tools/zi/${encodeURIComponent(char)}` })
       if (/^\p{Unified_Ideograph}$/u.test(char)) {
         const point = (char.codePointAt(0) ?? 0).toString(16).toUpperCase().padStart(5, '0')
@@ -129,7 +151,7 @@
       else anchor.removeAttribute('aria-details')
     }
     anchor = null; savedTitle = null; savedDetails = null; pinned = false
-    open = false; char = ''; info = null; status = 'idle'
+    open = false; char = ''; info = null; custom = null; status = 'idle'
     panel?.hidePopover()
   }
   // The band between the anchor and the card: crossing the gap goes through neighbouring tiles,
@@ -258,7 +280,7 @@
     if (dragging) return
     // A mark records strokes but no script and no Unicode identity (々, 〡), and the panel is the
     // only place its strokes are laid out; it opens for the stroke record too.
-    if (!componentIdentity(value) && !(adapter.characterInfo && characterScript(value)) && !strokeRecords?.has(value) && !(isJurchen(value) && jurchenStrokes?.has(value))) { leave(); return }
+    if (!(adapter.customPart && isCustom(value)) && !componentIdentity(value) && !(adapter.characterInfo && characterScript(value)) && !strokeRecords?.has(value) && !(isJurchen(value) && jurchenStrokes?.has(value))) { leave(); return }
     keep()
     if (anchor === element && char === value && (open || showTimer !== undefined)) return
     close(); anchor = element; char = value
@@ -274,10 +296,13 @@
       anchor.setAttribute('aria-details', uid)
       await tick(); panel?.showPopover(); position()
       try {
-        const found = await adapter.characterInfo?.(value, { signal: controller.signal })
+        const named = isCustom(value)
+        const found = named ? await adapter.customPart?.(value, { signal: controller.signal }) : await adapter.characterInfo?.(value, { signal: controller.signal })
         if (id !== generation) return
         if (!anchor?.isConnected || anchor.dataset.character !== value) { close(); return }
-        info = found ?? null; status = 'ready'
+        if (named) custom = /** @type {import('../adapter/types.js').CustomPartInfo | null} */ (found ?? null)
+        else info = /** @type {import('../adapter/character-info.js').CharacterInfo | null} */ (found ?? null)
+        status = 'ready'
       } catch { if (id === generation) status = 'failed' }
       await tick(); if (id === generation) position()
     }, delay)
@@ -484,9 +509,19 @@
   style:left={`${x}px`} style:top={`${y}px`} onpointerenter={keep} onpointerleave={leave} onfocusin={keep} onfocusout={cardFocusOut}>
   {#if open}
     <header>
-      <span class="glyph" lang={info?.script === 'tangut' || info?.script === 'component' ? 'txg' : 'zh'}>{char}</span>
+      {#if shape}
+        <span class="glyph custom-glyph">
+          {#if shape.kind === 'outline'}<svg viewBox="0 0 200 200" role="img" aria-label={shape.title}><title>{shape.title}</title><path d={shape.d} fill="currentColor" /></svg>
+          {:else if shape.kind === 'chain'}<svg viewBox="0 0 1000 1000" aria-hidden="true"><path d={shape.d} fill="none" stroke="currentColor" stroke-width="64" stroke-linecap="round" stroke-linejoin="round" /></svg>
+          {:else}{#key shape.sequence}<IdsPartIcon sequence={shape.sequence} {adapter} />{/key}{/if}
+        </span>
+      {:else}
+        <span class="glyph" lang={info?.script === 'tangut' || info?.script === 'component' ? 'txg' : 'zh'}>{char}</span>
+      {/if}
       <div>
-        {#if identity || info?.script || characterScript(char)}
+        {#if customChar}
+          <span class="script">{t('info.custom.kind')}</span>
+        {:else if identity || info?.script || characterScript(char)}
           <span class="script">{identity ? t(`parts.identity.${identity.type}`) : t(`info.script.${info?.script ?? characterScript(char)}`)}</span>
         {/if}
         <div class="code"><code>{code}</code><button class="copy" type="button" title={t('info.copy', { char })} aria-label={t('info.copy', { char })} onclick={copy}><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d={copied ? 'm5 12 5 5 9-10' : 'M9 9h11v11H9zM5 15H4V4h11v1'} /></svg></button><span class="copy-note" class:failed={copyFailed} role="status">{copied ? t('info.copied') : copyFailed ? t('info.copyFailed') : ''}</span></div>
@@ -523,7 +558,33 @@
         </section>
       {/if}
     {/if}
-    {#if status === 'loading'}<p class="muted" role="status">{t('info.loading')}</p>
+    {#if customChar}
+      {#if status === 'failed'}<p class="muted" role="status">{t('info.failed')}</p>
+      {:else if custom}
+        {@const subtractions = custom.subtractions.slice(0, SUBTRACTIONS)}
+        {#if custom.description}<p class="custom-note" lang="en">{custom.description}</p>{/if}
+        {#if custom.names.length || subtractions.length}
+          <section>
+            <p class="label">{t('info.custom.names')}</p>
+            <div class="spellings">
+              {#each custom.names as name (name.text)}
+                <button type="button" class="relation spelling" disabled={disabled || !onpick} aria-label={t('info.insert', { part: name.text })} onclick={() => pick(name.text)}>
+                  <span class="spelled" lang="ja">{name.text}</span>{#if name.source}<span class="label">{t(`info.custom.source.${name.source}`)}</span>{/if}
+                </button>
+              {/each}
+              {#each subtractions as written (written)}
+                <button type="button" class="relation spelling" disabled={disabled || !onpick} aria-label={t('info.insert', { part: written })} onclick={() => pick(written)}>
+                  <span class="spelled" lang="ja">{written}</span>
+                </button>
+              {/each}
+            </div>
+          </section>
+        {/if}
+        {#if custom.id}
+          <p class="sources">{#if customHref}<a href={customHref(custom.id)}>{custom.id}</a>{:else}<code>{custom.id}</code>{/if}</p>
+        {/if}
+      {/if}
+    {:else if status === 'loading'}<p class="muted" role="status">{t('info.loading')}</p>
     {:else if status === 'failed'}<p class="muted" role="status">{t('info.failed')}</p>
     {:else if info}
       {@const hasMeaning = info.glosses.length > 0 || Boolean(info.meanings?.ja?.length) || Boolean(info.meanings?.zh?.length)}
@@ -574,4 +635,8 @@
   .sources a:hover{color:var(--ids-accent,light-dark(#2944c7,#8ea8ff));text-decoration-color:currentColor}
   .sources a:focus-visible{outline:2px solid var(--ids-focus,light-dark(#2944c7,#8ea8ff));outline-offset:2px;border-radius:2px}
   .sep{color:var(--ids-line,#d6d6de)}
+  .custom-glyph{flex:none;display:grid;place-items:center;width:64px;height:64px;font-size:64px;line-height:1}.custom-glyph>svg{display:block;width:100%;height:100%}
+  .custom-note{font-size:12px;color:var(--info-muted)}
+  .spellings{display:flex;flex-direction:column;gap:4px}.spelling{display:flex;align-items:baseline;justify-content:space-between;gap:12px;width:100%;text-align:start}
+  .spelled{min-width:0;overflow-wrap:anywhere;font:15px/1.4 var(--info-font)}.spelling .label{flex:none;margin:0}
 </style>

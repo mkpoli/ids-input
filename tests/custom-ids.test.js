@@ -126,3 +126,23 @@ describe('a form written as a character less its other parts', () => {
     expect(custom.drawable('㇯軍車')).toBe('㇯軍車')
   })
 })
+
+describe('a component with the other ways its form is written', () => {
+  const doc = JSON.parse(gunzipSync(readFileSync(new URL('../data/custom-components.json.gz', import.meta.url))).toString('utf8'))
+  const custom = createCustomComponents(doc)
+
+  it('names the form in each table, with its expression and subtractions', () => {
+    const part = custom.describe('{53}')
+    expect(part.id).toBe('X-00053')
+    expect(part.description).toBe('outside of 鸟岛 (F2E7)')
+    expect(part.names).toEqual([{ text: '&CDP-8964;', source: 'chise' }, { text: '⿱丿⿴#(-𠃌㇉)丶', source: null }])
+    expect(part.subtractions).toContain('㇯鸟一')
+    expect([...part.subtractions[0]].length).toBeLessThanOrEqual([...part.subtractions.at(-1)].length)
+  })
+  it('answers the same form from any of its names', () => {
+    expect(custom.describe('&CDP-8964;').names.map(name => name.text)).toContain('{53}')
+    expect(custom.describe('&X-00053;').names.map(name => name.text)).toEqual(['{53}', '&CDP-8964;', '⿱丿⿴#(-𠃌㇉)丶'])
+    expect(custom.describe('&CDP-8964;').description).toBe('outside of 鸟岛 (F2E7)')
+    expect(custom.describe('{9999}')).toBeUndefined()
+  })
+})

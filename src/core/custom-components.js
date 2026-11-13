@@ -10,6 +10,9 @@ import { customsOf, isNode, leaves, parse, write } from './ids.js'
  *   uses: number, examples: string[], subtractions?: string[], draw?: string, id?: string, char?: string, equivalents: CustomEquivalent[] }} CustomComponent
  * @typedef {{ id: string, char: string, names: string[] }} CustomForm One form under its identifier, with every name and confirmed expression it has.
  * @typedef {{ format: string, version: number, components: CustomComponent[], forms?: CustomForm[] }} CustomComponentsData
+ * @typedef {{ text: string, id?: string, description?: string, names: { text: string, source: string | null }[], subtractions: string[] }} CustomPart
+ *   One component with the other ways its form is written: each table's name for it (`source`), the
+ *   expressions two or more characters confirm (no `source`), and the subtractions that name it.
  */
 
 /**
@@ -83,7 +86,30 @@ export function createCustomComponents(data) {
     const tree = swap(read.tree)
     return { text: write(tree), leaves: from }
   }
+  /** @type {Map<string, string[]>} */
+  const formSubtractions = new Map()
+  for (const row of data.components) {
+    if (!row.id || !row.subtractions?.length) continue
+    const list = formSubtractions.get(row.id) ?? []
+    for (const written of row.subtractions) if (subtracted.get(written) === `&${row.id};` && !list.includes(written)) list.push(written)
+    formSubtractions.set(row.id, list)
+  }
   return {
+    /**
+     * A component, or a form's identifier, with the other ways the same form is written. Undefined
+     * for a text the dictionary does not hold.
+     * @param {string} text @returns {CustomPart | undefined}
+     */
+    describe(text) {
+      const row = by.get(text), form = formOf.get(text)
+      if (!row && !form) return undefined
+      const id = form?.id ?? row?.id
+      const names = (form?.names ?? []).filter(name => name !== text).map(name => ({ text: name, source: by.get(name)?.source ?? null }))
+      const description = row?.description ?? form?.names.map(name => by.get(name)?.description).find(Boolean)
+      // The shortest subtractions first: one part taken from a common character reads soonest.
+      const subtractions = [...(id ? formSubtractions.get(id) ?? [] : [])].sort((a, b) => [...a].length - [...b].length)
+      return { text, ...(id ? { id } : {}), ...(description ? { description } : {}), names, subtractions }
+    },
     /** Every component, the most used of each source first. */
     components: data.components,
     /** One component by its text. @param {string} text @returns {CustomComponent | undefined} */

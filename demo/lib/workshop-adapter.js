@@ -21,9 +21,10 @@ import folds from '../../data/component-name-folds.tsv?url'
 import characterInfo from '../../data/character-info.json.gz?url'
 import chains from '../../data/zi-tools-chains.tsv.gz?url'
 import custom from '../../data/custom-components.json.gz?url'
+import customOutlines from '../../data/custom-outlines.json.gz?url'
 import characters from '../../data/character-vocabulary.tsv.gz?url'
 
-const sealAdapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, jurchen: jurchenData, ids, layers, zitools, chise: corpus, project: projectIds, overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains, custom })
+const sealAdapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, jurchen: jurchenData, ids, layers, zitools, chise: corpus, project: projectIds, overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, customOutlines, characterInfo, chains, custom })
 
 /** The adapter, with the Small Seal forms the curated palette leaves out added to its parts. */
 export const dataAdapter = { ...sealAdapter, parts: async () => {
