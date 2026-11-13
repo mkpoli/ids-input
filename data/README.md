@@ -362,9 +362,9 @@ from the snapshot's `glyphs/` directory and 134 fetched from <https://glyphwiki.
 
 - Licence of the list: the repository declares none. Its content is the IRG working document,
   published under the Unicode Terms of Use, <https://www.unicode.org/copyright.html>.
-- Licence of the outlines: GlyphWiki data. Its licence page,
-  <https://glyphwiki.org/wiki/GlyphWiki:License>, could not be read during this build (it sits
-  behind a browser check), so its terms are not restated here.
+- Licence of the outlines: GlyphWiki data, which this project's source catalogue records as free
+  to use. The licence page, <https://glyphwiki.org/wiki/GlyphWiki:License>, sits behind a browser
+  check and was not re-read for this build.
 
 ## component-names.tsv
 
