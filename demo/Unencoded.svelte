@@ -3,11 +3,11 @@
   // zi.tools give it, what it is in each notation, and the characters it stands in. A reader can add
   // pairs, which show beside the form they name.
   import { onMount } from 'svelte'
-  import SiteSelect from './ui/SiteSelect.svelte'
-  import ThemeSwitch from './ui/ThemeSwitch.svelte'
+  import PageHeader from './ui/PageHeader.svelte'
+  import Segmented from './ui/controls/Segmented.svelte'
+  import TextField from './ui/controls/TextField.svelte'
   import { translator } from '../src/svelte/index.js'
   import { LOCALES, appMessages } from './lib/locales.js'
-  import { applyTheme, storedTheme } from './lib/theme.js'
   import { load, save } from './lib/storage.js'
   import { importPairs, parsePair, parseSide } from './lib/equivalences.js'
   import dataUrl from '../data/custom-components.json.gz?url'
@@ -34,9 +34,6 @@
   const messages = $derived(LOCALES.find(([code]) => code === locale)?.[2])
   const t = $derived(translator({ ...appMessages('en'), ...messages, ...appMessages(locale) }, locale))
 
-  let theme = $state(storedTheme())
-  /** @param {import('./lib/theme.js').Theme} next */
-  const setTheme = next => { theme = next; applyTheme(next) }
 
   /** @typedef {import('./lib/custom-forms.js').FormRow} Row */
   /** @type {import('../src/core/custom-components.js').CustomComponentsData | null} */
@@ -199,46 +196,25 @@
 {/snippet}
 
 <div class="page">
-  <header class="bar">
-    <SiteSelect title={t('app.title')} label={t('app.sitesLabel')} more={t('app.sitesMore')} {locale} href={`./?lang=${locale}`} />
-    <span class="slash" aria-hidden="true">/</span>
-    <h1>{t('appendix.title')}</h1>
-    <div class="end">
-      <label class="lang">
-        <span class="ui-visually-hidden">{t('sources.language')}</span>
-        <select bind:value={locale}>
-          {#each LOCALES as [code, name] (code)}<option value={code}>{name}</option>{/each}
-        </select>
-      </label>
-      <a class="back" href={`./ucv.html?lang=${locale}`}>UCV</a>
-      <ThemeSwitch {theme} label={t('app.prefs.theme')} labels={{ system: t('app.theme.system'), light: t('app.theme.light'), dark: t('app.theme.dark') }} onchange={setTheme} />
-      <a class="back" href={`./?lang=${locale}`}>{t('sources.back')}</a>
-    </div>
-  </header>
+  <PageHeader title={t('appendix.title')} {t} bind:locale />
 
   <main>
     <div class="controls">
       <label class="search">
         <span class="ui-visually-hidden">{t('appendix.search')}</span>
-        <input type="search" value={query} oninput={event => from(() => { query = event.currentTarget.value })} placeholder={t('appendix.search')} autocomplete="off" spellcheck="false" />
+        <input class="ui-input" type="search" value={query} oninput={event => from(() => { query = event.currentTarget.value })} placeholder={t('appendix.search')} autocomplete="off" spellcheck="false" />
       </label>
       <div class="chips" role="group" aria-label={t('appendix.sourceLabel')}>
         {#each SOURCES as one (one)}
-          <button type="button" class:active={source === one} aria-pressed={source === one} onclick={() => from(() => { source = one })}>{t(`appendix.source.${one}`)} <span class="n">{rows.filter(row => matches(row, terms, one, status)).length}</span></button>
+          <button type="button" class="ui-chip" data-interactive aria-current={source === one} aria-pressed={source === one} onclick={() => from(() => { source = one })}>{t(`appendix.source.${one}`)} <span class="n">{rows.filter(row => matches(row, terms, one, status)).length}</span></button>
         {/each}
       </div>
       <div class="chips" role="group" aria-label={t('appendix.statusLabel')}>
         {#each STATUSES as one (one)}
-          <button type="button" class:active={status === one} aria-pressed={status === one} onclick={() => from(() => { status = one })}>{t(`appendix.status.${one}`)} <span class="n">{rows.filter(row => matches(row, terms, source, one)).length}</span></button>
+          <button type="button" class="ui-chip" data-interactive aria-current={status === one} aria-pressed={status === one} onclick={() => from(() => { status = one })}>{t(`appendix.status.${one}`)} <span class="n">{rows.filter(row => matches(row, terms, source, one)).length}</span></button>
         {/each}
       </div>
-      <label class="sort">
-        <span class="ui-visually-hidden">{t('appendix.sortLabel')}</span>
-        <select value={sort} onchange={event => from(() => { sort = oneOf(/** @type {const} */ (['id', 'uses']), event.currentTarget.value) })}>
-          <option value="id">{t('appendix.sort.id')}</option>
-          <option value="uses">{t('appendix.sort.uses')}</option>
-        </select>
-      </label>
+      <Segmented label={t('appendix.sortLabel')} value={sort} options={[{ value: 'id', label: t('appendix.sort.id') }, { value: 'uses', label: t('appendix.sort.uses') }]} onchange={value => from(() => { sort = oneOf(/** @type {const} */ (['id', 'uses']), value) })} />
     </div>
 
     {#if failed}
@@ -307,7 +283,7 @@
                 <td class="num" data-label={t('appendix.uses')} title={row.usedIn}>{row.uses || '—'}</td>
                 <td class="num" data-label={t('appendix.derived')}>
                   {#if row.derived.length}
-                    <button type="button" class="more" aria-expanded={opened === row.id} aria-label={`${t('appendix.derived')} ${row.derived.length}`} onclick={() => { opened = opened === row.id ? null : row.id }}>{row.derived.length}</button>
+                    <button type="button" class="ui-chip more" data-interactive aria-expanded={opened === row.id} aria-label={`${t('appendix.derived')} ${row.derived.length}`} onclick={() => { opened = opened === row.id ? null : row.id }}>{row.derived.length}</button>
                   {:else}—{/if}
                 </td>
               </tr>
@@ -328,9 +304,9 @@
       </div>
       {#if pages > 1}
         <div class="pager">
-          <button type="button" disabled={page <= 1} onclick={() => { page -= 1 }}>{t('appendix.prev')}</button>
+          <button type="button" class="ui-button" data-size="sm" disabled={page <= 1} onclick={() => { page -= 1 }}>{t('appendix.prev')}</button>
           <span>{t('appendix.page', { page, pages })}</span>
-          <button type="button" disabled={page >= pages} onclick={() => { page += 1 }}>{t('appendix.next')}</button>
+          <button type="button" class="ui-button" data-size="sm" disabled={page >= pages} onclick={() => { page += 1 }}>{t('appendix.next')}</button>
         </div>
       {/if}
     {/if}
@@ -353,15 +329,15 @@
     <section class="add" aria-labelledby="add-title">
       <h2 id="add-title">{t('appendix.form.title')}</h2>
       <form onsubmit={add}>
-        <label>{t('appendix.one')}<input bind:value={form.a} placeholder={'bsp:7 / {7}'} autocomplete="off" spellcheck="false" /></label>
-        <label>{t('appendix.other')}<input bind:value={form.b} placeholder={'chise:CDP-8BD0 / &CDP-8BD0;'} autocomplete="off" spellcheck="false" /></label>
-        <label class="note-input">{t('appendix.form.note')}<input bind:value={form.note} autocomplete="off" /></label>
-        <button type="submit" class="primary">{t('appendix.form.add')}</button>
+        <TextField label={t('appendix.one')} bind:value={form.a} placeholder={'{7}'} autocomplete="off" spellcheck={false} mono />
+        <TextField label={t('appendix.other')} bind:value={form.b} placeholder={'&CDP-8BD0;'} autocomplete="off" spellcheck={false} mono />
+        <div class="note-input"><TextField label={t('appendix.form.note')} bind:value={form.note} autocomplete="off" /></div>
+        <button type="submit" class="ui-button" data-variant="primary">{t('appendix.form.add')}</button>
       </form>
       {#if formError}<p class="error" role="alert">{formError}</p>{/if}
       <div class="actions">
-        <button type="button" onclick={exportMine} disabled={mine.length === 0}>{t('appendix.export')}</button>
-        <label class="import">{t('appendix.import')}<input type="file" accept="application/json,.json" onchange={importMine} /></label>
+        <button type="button" class="ui-button" onclick={exportMine} disabled={mine.length === 0}>{t('appendix.export')}</button>
+        <label class="ui-button import">{t('appendix.import')}<input type="file" accept="application/json,.json" onchange={importMine} /></label>
         <span class="hint">{t('appendix.form.hint')}</span>
       </div>
     </section>
@@ -370,96 +346,79 @@
 
 <style>
   .page{display:flex;flex-direction:column;min-height:100dvh}
-  .bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px max(18px,env(safe-area-inset-right)) 10px max(18px,env(safe-area-inset-left));border-bottom:1px solid var(--ids-line)}
-  h1{font-size:15px;font-weight:600;margin:0}
-  .slash{color:var(--ids-muted)}
-  .end{display:flex;align-items:center;gap:10px;margin-inline-start:auto}
-  .back{font-size:12px;color:var(--ids-muted);text-decoration:none}
-  .back:hover{color:var(--ids-ink)}
   main{width:100%;max-width:1180px;margin:0 auto;padding:26px max(18px,env(safe-area-inset-right)) 64px max(18px,env(safe-area-inset-left))}
-  .lead{max-width:70ch;margin:0 0 18px;color:var(--ids-ink-soft)}
-  .controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
-  .search input{width:min(360px,70vw);padding:7px 10px;border:1px solid var(--ids-control-border);border-radius:7px;background:var(--ids-surface);color:inherit;font:inherit}
+  .lead{max-width:70ch;margin:0 0 18px;color:var(--ui-color-ink-soft)}
+  .controls{position:sticky;top:58px;z-index:5;display:flex;gap:10px 12px;flex-wrap:wrap;align-items:center;padding:12px;margin:0 0 8px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-xl);background:color-mix(in srgb,var(--ui-color-canvas) 92%,transparent);backdrop-filter:blur(10px)}
+  .search{flex:1 1 280px;max-width:420px}
+  .search input{width:100%}
+  .note-input{flex:1 1 240px}
+  .import{position:relative;cursor:pointer}
   .chips{display:flex;gap:6px;flex-wrap:wrap}
-  .chips button{padding:4px 9px;border:1px solid var(--ids-control-border);border-radius:999px;background:var(--ids-surface);color:var(--ids-ink-soft);font:inherit;font-size:12px;cursor:pointer}
-  .chips button.active{border-color:var(--ids-accent);color:var(--ids-accent);background:var(--ids-accent-light)}
-  .n{margin-inline-start:4px;font-variant-numeric:tabular-nums;color:var(--ids-muted)}
-  .count{font-size:12px;color:var(--ids-muted);margin:10px 0}
-  .glyph-note{font-size:11.5px;color:var(--ids-muted);margin:0 0 8px}
-  .table-wrap{overflow-x:auto;border:1px solid var(--ids-line);border-radius:8px}
+  .n{margin-inline-start:4px;font-variant-numeric:tabular-nums;color:var(--ui-color-ink-muted)}
+  .count{font-size:12px;color:var(--ui-color-ink-muted);margin:10px 0}
+  .glyph-note{font-size:11.5px;color:var(--ui-color-ink-muted);margin:0 0 8px}
+  .table-wrap{overflow-x:auto;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-lg)}
   table{border-collapse:collapse;width:100%;font-size:12.5px}
-  th,td{padding:8px 10px;text-align:start;vertical-align:top;border-bottom:1px solid var(--ids-line)}
-  th{font-size:11px;font-weight:600;color:var(--ids-muted);white-space:nowrap;background:var(--ids-surface-subtle)}
+  th,td{padding:8px 10px;text-align:start;vertical-align:top;border-bottom:1px solid var(--ui-color-border)}
+  th{font-size:11px;font-weight:600;color:var(--ui-color-ink-muted);white-space:nowrap;background:var(--ui-color-surface-sunken)}
   tbody tr:last-child td{border-bottom:0}
-  tr.yours{background:color-mix(in srgb,var(--ids-accent-light) 45%,transparent)}
-  .glyph{color:var(--ids-ink)}
+  tr.yours{background:color-mix(in srgb,var(--ui-color-accent-soft) 45%,transparent)}
+  .glyph{color:var(--ui-color-ink)}
   .drawn{display:block;font-size:34px;line-height:1}
   svg.drawn{width:34px;height:34px}
-  .dash{color:var(--ids-muted)}
+  .dash{color:var(--ui-color-ink-muted)}
   .id{white-space:nowrap}
-  .id a,.link,a.name{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--ids-accent);text-decoration:none}
+  .id a,.link,a.name{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--ui-color-accent);text-decoration:none}
   .id a:hover,.link:hover,a.name:hover{text-decoration:underline}
   .id .status{display:flex;margin-top:4px}
   .names,.equals,.derived{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
   .names li,.equals li,.derived li{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
-  .tag{flex:none;padding:0 5px;border:1px solid var(--ids-line);border-radius:4px;font-size:10px;line-height:1.6;color:var(--ids-muted);white-space:nowrap}
+  .tag{flex:none;padding:0 5px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-xs);font-size:10px;line-height:1.6;color:var(--ui-color-ink-muted);white-space:nowrap}
   .tag[data-source="babelstone"],.part[data-source="babelstone"]{color:light-dark(#8a4b00,#e0a458)}
   .tag[data-source="babelstone"]{border-color:currentColor}
   .tag[data-source="chise"],.part[data-source="chise"]{color:light-dark(#1f5fa8,#7fb2ee)}
   .tag[data-source="chise"]{border-color:currentColor}
   .tag[data-source="zi-tools"],.part[data-source="zi-tools"]{color:light-dark(#1d7044,#6fcf97)}
   .tag[data-source="zi-tools"]{border-color:currentColor}
-  .part[data-source="form"]{color:var(--ids-accent)}
+  .part[data-source="form"]{color:var(--ui-color-accent)}
   a.part{text-decoration:underline dotted;text-underline-offset:4px}
   a.part:hover{text-decoration-style:solid}
   .by .name{font-size:inherit}
-  .status{display:inline-flex;align-items:center;gap:3px;font-size:10px;color:var(--ids-muted);white-space:nowrap}
+  .status{display:inline-flex;align-items:center;gap:3px;font-size:10px;color:var(--ui-color-ink-muted);white-space:nowrap}
   .status svg{width:13px;height:13px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
   .status[data-status="candidate"] svg{stroke-width:1.4;stroke-dasharray:2 2}
   .status[data-status="confirmed"],.status[data-status="verified"]{color:light-dark(#1d7044,#6fcf97)}
   .status[data-status="none"]{opacity:.7}
-  .by{font-family:var(--ids-font),var(--ids-glyph-fallback);font-size:11px;color:var(--ids-muted);overflow-wrap:anywhere}
-  .num{text-align:end;white-space:nowrap;color:var(--ids-muted);font-variant-numeric:tabular-nums}
-  .more{padding:1px 7px;border:1px solid var(--ids-control-border);border-radius:999px;background:var(--ids-surface);color:var(--ids-accent);font:inherit;font-size:11.5px;cursor:pointer}
-  .more[aria-expanded="true"]{background:var(--ids-accent-light);border-color:var(--ids-accent)}
-  .detail td{background:var(--ids-surface-subtle)}
+  .by{font-family:var(--ids-font),var(--ids-glyph-fallback);font-size:11px;color:var(--ui-color-ink-muted);overflow-wrap:anywhere}
+  .num{text-align:end;white-space:nowrap;color:var(--ui-color-ink-muted);font-variant-numeric:tabular-nums}
+  .detail td{background:var(--ui-color-surface-sunken)}
   .derived{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:6px 18px}
-  .sort select{padding:5px 8px;border:1px solid var(--ids-control-border);border-radius:7px;background:var(--ids-surface);color:inherit;font:inherit;font-size:12px}
   .char{font-family:var(--ids-font);font-size:17px;line-height:1.2}
   .identity{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
   .name{font-family:var(--ids-font),ui-monospace,monospace;font-size:15px;line-height:1.3;overflow-wrap:anywhere}
-  .scheme{font-size:10px;color:var(--ids-muted);text-transform:uppercase;letter-spacing:.02em}
-  .desc{flex-basis:100%;color:var(--ids-muted);font-size:11.5px}
-  .kind,.uses{color:var(--ids-muted);white-space:nowrap}
-  .remove{padding:0 5px;border:0;background:none;color:var(--ids-muted);font-size:16px;line-height:1;cursor:pointer}
-  .remove:hover{color:var(--ids-fault)}
-  .pager{display:flex;align-items:center;gap:10px;justify-content:center;margin:12px 0;font-size:12px;color:var(--ids-muted)}
-  .pager button{padding:5px 10px;border:1px solid var(--ids-control-border);border-radius:6px;background:var(--ids-surface);color:inherit;font:inherit;cursor:pointer}
-  .pager button:disabled{opacity:.5;cursor:default}
-  .mine{margin-top:22px;padding-top:14px;border-top:1px solid var(--ids-line)}
+  .scheme{font-size:10px;color:var(--ui-color-ink-muted);text-transform:uppercase;letter-spacing:.02em}
+  .desc{flex-basis:100%;color:var(--ui-color-ink-muted);font-size:11.5px}
+  .kind,.uses{color:var(--ui-color-ink-muted);white-space:nowrap}
+  .remove{padding:0 5px;border:0;background:none;color:var(--ui-color-ink-muted);font-size:16px;line-height:1;cursor:pointer}
+  .remove:hover{color:var(--ui-color-danger)}
+  .pager{display:flex;align-items:center;gap:10px;justify-content:center;margin:12px 0;font-size:12px;color:var(--ui-color-ink-muted)}
+  .mine{margin-top:22px;padding-top:14px;border-top:1px solid var(--ui-color-border)}
   .mine ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
   .mine li{display:flex;align-items:baseline;gap:8px;font-size:12.5px}
   .pair-name{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
-  .pair-note{color:var(--ids-muted);font-size:11.5px}
-  .add{margin-top:26px;padding-top:18px;border-top:1px solid var(--ids-line)}
+  .pair-note{color:var(--ui-color-ink-muted);font-size:11.5px}
+  .add{margin-top:26px;padding-top:18px;border-top:1px solid var(--ui-color-border)}
   h2{font-size:13px;margin:0 0 10px}
   form{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
-  form label{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--ids-muted)}
-  form input{padding:6px 8px;border:1px solid var(--ids-control-border);border-radius:6px;background:var(--ids-surface);color:inherit;font:inherit;font-size:12.5px;min-width:180px}
-  .note-input input{min-width:240px}
-  .primary{padding:6px 12px;border:1px solid var(--ids-accent);border-radius:6px;background:var(--ids-accent);color:#fff;font:inherit;font-size:12.5px;cursor:pointer}
   .actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:10px;font-size:12px}
-  .actions button{padding:5px 10px;border:1px solid var(--ids-control-border);border-radius:6px;background:var(--ids-surface);color:inherit;font:inherit;cursor:pointer}
-  .actions button:disabled{opacity:.5;cursor:default}
-  .import{display:inline-flex;align-items:center;gap:6px;cursor:pointer;color:var(--ids-accent)}
   .import input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
-  .hint{color:var(--ids-muted)}
-  .error{color:var(--ids-fault);font-size:12px;margin:8px 0 0}
-  .empty{color:var(--ids-muted);margin:18px 0}
+  .hint{color:var(--ui-color-ink-muted)}
+  .error{color:var(--ui-color-danger);font-size:12px;margin:8px 0 0}
+  .empty{color:var(--ui-color-ink-muted);margin:18px 0}
   @media (max-width:720px) {
     thead{display:none}
     table,tbody{display:block}
-    tbody tr{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:6px 10px;padding:12px 10px;border-bottom:1px solid var(--ids-line)}
+    tbody tr{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:6px 10px;padding:12px 10px;border-bottom:1px solid var(--ui-color-border)}
     tbody tr:last-child{border-bottom:0}
     tbody td{display:block;padding:0;border:0}
     td.glyph{grid-row:1 / 3}
@@ -470,8 +429,7 @@
     td.num::before{content:attr(data-label);margin-inline-end:6px;font-size:10px}
     tr.detail{display:block}
     .derived{grid-template-columns:minmax(0,1fr)}
-    .search,.search input{width:100%}
-    form label, form input{width:100%;min-width:0}
-    .primary{width:100%}
+    .search{flex-basis:100%;max-width:none}
+    .controls{position:static}
   }
 </style>
