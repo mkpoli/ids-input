@@ -1,5 +1,5 @@
 // @ts-nocheck: geometry over plain arrays, as in a drawing.
-import { entryDescription, isDescription as isWhole } from './ids.js'
+import { entryDescription, isDescription as isWhole, parse, withoutVariants, write } from './ids.js'
 
 // What the editor's preview shows around a drawing: its badge, and the boxes where nothing is drawn
 // yet (a fast layout before the engine's has loaded). The drawing itself — its file, its parts by
@@ -93,7 +93,9 @@ export function roughLayout(tree, box = [0, 0, 1, 1], flip = [false, false], cut
  */
 export function runPreview(text, { preview, drawing, signal }, update) {
   // A zi.tools entry draws its description; its notes are not part of the text asked for.
-  const asked = entryDescription(text)
+  // A variant identifier says which form of a component is meant; one glyph is drawn for each.
+  const read = /[.0-9A-Za-z]/.test(text) ? parse(text, { open: true }) : null
+  const asked = read && !read.problem && read.tree !== null ? write(withoutVariants(read.tree)) : entryDescription(text)
   const whole = isWhole(asked)
   let final = false
   const none = () => { if (!signal.aborted && !preview && !final) update({ step: 'idle' }) }

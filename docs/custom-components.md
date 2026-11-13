@@ -73,8 +73,9 @@ contains mistakes.
 ## What reads them
 
 `parse` reads the three components as one part each (`customKind`), keeps an operator's modifier
-on its node, and leaves out an entry's separator and variant identifiers. Inline variant
-identifiers, BabelStone's `^ $` and source tags are not read.
+on its node and a variant identifier on its component (`variantOf`, `variantIdentifier`), and
+reads a zi.tools or BabelStone entry as its description; `entryNotes` answers the separator,
+variants, sources and virtual forms left out.
 
 `babelStoneAdapter({ custom })` takes the data file below and answers `drawable(text)`: the
 description with each custom component written as its `draw`, and which component each part of

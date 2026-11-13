@@ -120,12 +120,39 @@ export const arity = char => (char === undefined ? 0 : ARITY.get(char) ?? 0)
 const SEPARATOR = /^\{(?:\?[0-9]?)?([^}]+)\}/u
 /** A zi.tools entry's glyph-variant definition, (.,T) or (d), after its description. @type {RegExp} */
 const DEFINITION = /(?<!#)\([0-9A-Za-z.,]+\)$/u
+/** A BabelStone entry: ^, the description, $, and the sources it is for with virtual forms in
+ * square brackets. IDS.TXT notes 4, 8 and 9. @type {RegExp} */
+const BABELSTONE_ENTRY = /^\^([^^$]+)\$(?:\(([A-Z0-9[\]]*)\))?$/u
+
+/**
+ * The notes an entry carries around its description, none of them a part of it: zi.tools' unique
+ * `separator` ({曰}, written without its braces) and `variants` ((.,T) as ['.', 'T']), BabelStone's
+ * `sources` (GHT[K] as ['G', 'H', 'T'] with `virtual` ['K']).
+ * @param {string | null | undefined} text
+ * @returns {{ separator?: string, variants?: string[], sources?: string[], virtual?: string[] }}
+ */
+export function entryNotes(text) {
+  const written = text ?? ''
+  const framed = BABELSTONE_ENTRY.exec(written)
+  if (framed) {
+    const tags = framed[2] ?? ''
+    const virtual = [...tags.matchAll(/\[([A-Z0-9]+)\]/g)].map(match => match[1])
+    const sources = tags.replace(/\[[A-Z0-9]+\]/g, '').match(/UCS2003|[A-Z]/g) ?? []
+    return { ...(sources.length ? { sources } : {}), ...(virtual.length ? { virtual } : {}) }
+  }
+  const body = entryBody(written)
+  const separator = body.start ? written.slice(1, body.start - 1) : ''
+  const after = written.slice(body.start + body.text.length)
+  const variants = after.startsWith('(') ? after.slice(1, -1).split(',') : []
+  return { ...(separator ? { separator } : {}), ...(variants.length ? { variants } : {}) }
+}
+
 /** Whether `note` names variants, as a glyph-variant definition does: letters, digits, dots, commas.
  * @param {string} note */
 const isVariantList = note => /^[0-9A-Za-z.,]*$/u.test(note)
 /** Whether `char` may name a shape in a unique separator: an ideograph, a CJK stroke or a curve,
  * as the zi.tools grammar has it. @param {string | undefined} char */
-const isIdeograph = char => typeof char === 'string' && (unicodeProperty('ideographic', char) || /^[\u31C0-\u31E3◝◞◟◜ユス]$/u.test(char))
+const isIdeograph = char => typeof char === 'string' && (unicodeProperty('ideographic', char) || /^[\u31C0-\u31E5◝◞◟◜ユス]$/u.test(char))
 
 /**
  * The description a zi.tools entry carries, and where it starts in the entry. Its unique separator
@@ -136,6 +163,9 @@ const isIdeograph = char => typeof char === 'string' && (unicodeProperty('ideogr
  */
 export function entryBody(text) {
   let body = text ?? '', start = 0
+  // BabelStone writes a description between ^ and $, its sources after it: ^⿰氵骨$(GHTJKPV).
+  const framed = BABELSTONE_ENTRY.exec(body)
+  if (framed) return { text: framed[1], start: 1 }
   if (body.startsWith('{')) {
     const separator = SEPARATOR.exec(body)
     const name = separator ? [...separator[1]] : []
@@ -153,7 +183,8 @@ export function entryBody(text) {
     const prefix = definition ? body.slice(0, -definition[0].length) : ''
     const chars = [...prefix]
     // Only a complete description takes a definition: (d) after ⿲ is its third component, not a note.
-    if (definition && prefix && arity(chars[0]) > 0 && descriptionEnd(chars) === chars.length) body = prefix
+    // A stroke chain is a description of its own: #(H)(.) is 一 in its default form.
+    if (definition && prefix && (arity(chars[0]) > 0 || (chars[0] === '#' && chars[1] === '(')) && /** @type {Reading[]} */ (['custom', 'literal', 'variant']).some(mode => endOf(chars, 0, mode) === chars.length)) body = prefix
   }
   return { text: body, start }
 }
@@ -220,28 +251,92 @@ export function modifierLength(text, at) {
  * @returns {{ tree: Part, problem?: undefined } | { problem: Problem, tree?: undefined }}
  */
 export function parse(text, { open = false } = {}) {
-  return readTree(text, open, !readsLiterally(text))
+  const read = readTree(text, open, 'custom')
+  if (!readings(text).length) return read
+  // The custom reading stands where it gives a whole description; a draft follows the reading the
+  // whole text takes, so ⿲{1} is {, 1 and } while typed as well.
+  if (!read.problem && (!open || !readTree(text, false, 'custom').problem)) return read
+  const mode = readingOf(text)
+  if (mode === 'custom') return read
+  const other = readTree(text, open, mode)
+  return other.problem ? read : other
 }
-
 /**
- * Whether `text` reads with its braces, & or # as components of their own. Braces, & and # are
- * graphic characters too: a text that is no whole description with a custom component, and is one
- * with its characters read one by one, reads that way (⿳{1} as {, 1 and }), as a draft too. A draft
- * that is whole neither way takes whichever reading has no problem, custom components first.
- * @param {string | null | undefined} text
+ * How a text is read. `custom`: a component no code point names is one part. `literal`: braces, &
+ * and # are graphic characters of their own (⿳{1} as {, 1 and }). `variant`: letters, digits and
+ * dots after a component are its zi.tools variant identifier (⿰令H刂, ⿱一.亅).
+ * @typedef {'custom' | 'literal' | 'variant'} Reading
  */
-export function readsLiterally(text) {
-  if (!/[{&#]/.test(text ?? '')) return false
-  if (!readTree(text, false, true).problem) return false
-  if (!readTree(text, false, false).problem) return true
-  return Boolean(readTree(text, true, true).problem) && !readTree(text, true, false).problem
+
+/** The other readings `text` may take when the first fails, in the order they are tried.
+ * @param {string | null | undefined} text @returns {Reading[]} */
+const readings = text => [.../** @type {Reading[]} */ (/[{&#]/.test(text ?? '') ? ['literal'] : []),
+  // Only a description takes the variant reading: 木A alone is two components, not 木 in form A.
+  .../** @type {Reading[]} */ (VARIANT_AFTER.test(text ?? '') && isSequence(text) ? ['variant'] : [])]
+
+/**
+ * The reading `text` takes: the first that gives a whole description, else the first that gives a
+ * draft, else `custom`. A draft so reads as the whole text does.
+ * @param {string | null | undefined} text @returns {Reading}
+ */
+export function readingOf(text) {
+  const modes = /** @type {Reading[]} */ (['custom', ...readings(text)])
+  for (const open of [false, true]) for (const mode of modes) if (!readTree(text, open, mode).problem) return mode
+  return 'custom'
+}
+
+/** A zi.tools variant identifier: a source letter, a UCV position, stroke-style letters, dots. */
+const VARIANT = /^[.0-9A-Za-z]+/u
+/** A variant identifier where one may stand: after an ideograph, a custom component or a chain. */
+const VARIANT_AFTER = /[\p{Ideographic}\p{Radical}\u31C0-\u31E5})\uFE00-\uFE0F\u{E0100}-\u{E01EF}リ〢〣コユス◝◞◟◜;][.0-9A-Za-z]/u
+/** The variant identifier at `chars[at]`, or ''. @param {string[]} chars @param {number} at */
+const variantAt = (chars, at) => VARIANT.exec(chars.slice(at, at + 16).join(''))?.[0] ?? ''
+/** Whether a component may carry a variant identifier: an ideograph, a stroke or shape zi.tools
+ * uses, or a custom component. @param {string} part */
+const takesVariant = part => isCustom(part) || isIdeograph([...part][0]) || /^[\p{Radical}\u31E4\u31E5リ〢〣コ]/u.test(part)
+
+/**
+ * A component and the zi.tools variant identifier written after it: 令 and H for 令H, 一 and . for
+ * 一., the component and '' where it has none. A Latin letter or digit is a component of its own.
+ * @param {string} part @returns {{ base: string, variant: string }}
+ */
+export function variantOf(part) {
+  const found = /^(.*[^.0-9A-Za-z])([.0-9A-Za-z]+)$/su.exec(part)
+  return found && takesVariant(found[1]) ? { base: found[1], variant: found[2] } : { base: part, variant: '' }
+}
+
+/** `tree` with no variant identifier on any component. @param {Part} tree @returns {Part} */
+export const withoutVariants = tree => isNode(tree) ? { ...tree, parts: tree.parts.map(withoutVariants) }
+  : tree === null ? null : variantOf(tree).base
+
+/**
+ * What a variant identifier says, as the 白式 IDS grammar sorts them (§4.3): `default` for `.`,
+ * `source` for a source letter, `ucv` for a form of an IRG UCV entry (q008a2 is form 2 of #8a),
+ * `analogy` for a form made by analogy with UCV entries (qq053194), else `style` (stroke style and
+ * position letters, one per part).
+ * @param {string} id
+ * @returns {{ kind: 'default' } | { kind: 'source', source: string } | { kind: 'ucv', sign: string, entry: string, form: number, other: string }
+ *   | { kind: 'analogy', entries: string[] } | { kind: 'style' } | null}
+ */
+export function variantIdentifier(id) {
+  if (!/^[.0-9A-Za-z]+$/.test(id)) return null
+  if (id === '.') return { kind: 'default' }
+  if (/^[BGHJKMPSTUVQ]$/.test(id)) return { kind: 'source', source: id }
+  /** @param {string} number */
+  const entry = number => number.replace(/^0+(?=\d)/, '')
+  const analogy = /^qq((?:\d{3}[a-z]?)+)$/.exec(id)
+  if (analogy) return { kind: 'analogy', entries: (analogy[1].match(/\d{3}[a-z]?/g) ?? []).map(entry) }
+  const ucv = /^([qpxy])(\d{3}[a-z]?)([1-9]|\d{2})([xy]?)$/.exec(id)
+  if (ucv) return { kind: 'ucv', sign: ucv[1], entry: entry(ucv[2]), form: Number(ucv[3]), other: ucv[4] }
+  return { kind: 'style' }
 }
 
 /**
- * @param {string | null | undefined} text @param {boolean} open @param {boolean} customs
+ * @param {string | null | undefined} text @param {boolean} open @param {Reading} mode
  * @returns {{ tree: Part, problem?: undefined } | { problem: Problem, tree?: undefined }}
  */
-function readTree(text, open, customs) {
+function readTree(text, open, mode) {
+  const customs = mode !== 'literal'
   const body = entryDescription(text)
   const chars = [...body]
   if (open && !chars.length) return { tree: null }
@@ -258,17 +353,23 @@ function readTree(text, open, customs) {
       if (char === undefined) { if (open) return null; throw 'missing' }
       // A tone mark names the tone of the syllable it follows, not of the whole description.
       const tones = () => { const end = toneMarksAt(chars, at); const marks = chars.slice(at, end).join(''); at = end; return marks }
+      // In the variant reading, the identifier after a component goes with it.
+      const variant = (/** @type {string} */ part) => {
+        const id = mode === 'variant' && takesVariant(part) ? variantAt(chars, at) : ''
+        at += id.length
+        return part + id
+      }
       // A stroke chain that names a character stands for that character.
       if (char === '#' && !emoji) {
         const chain = strokeChain(chars, at - 1)
         if (chain) {
           at = chain.end
-          return (isSelector(chars[at]) ? chain.char + chars[at++] : chain.char) + tones()
+          return variant((isSelector(chars[at]) ? chain.char + chars[at++] : chain.char) + tones())
         }
       }
       // A component no code point names is one part, written as its source writes it.
       const custom = emoji || !customs ? null : customAt(chars, at - 1)
-      if (custom) { at = custom.end; return custom.text }
+      if (custom) { at = custom.end; return variant(custom.text) }
       const n = arity(char)
       if (!n) {
         if (open && EMPTY_MARKS.includes(char)) return null
@@ -277,7 +378,8 @@ function readTree(text, open, customs) {
         if (!isComponent(char)) throw 'component'
         const cluster = hangulClusterAt(chars, at - 1)
         if (cluster) { at = cluster.end; return cluster.text + tones() }
-        return (!emoji && isSelector(chars[at]) ? char + chars[at++] : char) + tones()
+        const part = (!emoji && isSelector(chars[at]) ? char + chars[at++] : char) + tones()
+        return emoji ? part : variant(part)
       }
       const note = takesModifier(char) ? modifierAt(chars, at) : ''
       if (note) at += [...note].length + 2
@@ -319,19 +421,22 @@ export const problemOf = text => parse(text).problem ?? null
  * @returns {number}
  */
 export function descriptionEnd(chars, at = 0) {
-  const end = endOf(chars, at, true)
-  return end < 0 ? endOf(chars, at, false) : end
+  const end = endOf(chars, at, 'custom')
+  return end < 0 ? endOf(chars, at, 'literal') : end
 }
 
-/** @param {string[]} chars @param {number} at @param {boolean} customs @returns {number} */
-function endOf(chars, at, customs) {
+/** @param {string[]} chars @param {number} at @param {Reading} mode @returns {number} */
+function endOf(chars, at, mode) {
+  const customs = mode !== 'literal'
   const char = chars[at]
   if (char === undefined) return -1
   const chain = strokeChain(chars, at)
+  /** The end of a component that ends at `end`, its variant identifier included. @param {number} end @param {string} part */
+  const varied = (end, part) => mode === 'variant' && takesVariant(part) ? end + variantAt(chars, end).length : end
   // A stroke chain stands for the character it names, and takes a variation selector like one.
-  if (chain) return toneMarksAt(chars, isSelector(chars[chain.end]) ? chain.end + 1 : chain.end)
+  if (chain) return varied(toneMarksAt(chars, isSelector(chars[chain.end]) ? chain.end + 1 : chain.end), chain.char)
   const custom = customs ? customAt(chars, at) : null
-  if (custom) return custom.end
+  if (custom) return varied(custom.end, custom.text)
   const n = arity(char)
   if (!n) {
     if (!isComponent(char)) return -1
@@ -339,12 +444,12 @@ function endOf(chars, at, customs) {
     if (emoji) return toneMarksAt(chars, at + [...emoji].length)
     const cluster = hangulClusterAt(chars, at)
     if (cluster) return toneMarksAt(chars, cluster.end)
-    return toneMarksAt(chars, isSelector(chars[at + 1]) ? at + 2 : at + 1)
+    return varied(toneMarksAt(chars, isSelector(chars[at + 1]) ? at + 2 : at + 1), char)
   }
   let end = at + 1
   const note = takesModifier(char) ? modifierAt(chars, end) : ''
   if (note) end += [...note].length + 2
-  for (let k = 0; k < n && end >= 0; k++) end = endOf(chars, end, customs)
+  for (let k = 0; k < n && end >= 0; k++) end = endOf(chars, end, mode)
   return end
 }
 
