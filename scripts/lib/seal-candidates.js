@@ -8,7 +8,7 @@ import { isSmallSeal } from '../../src/adapter/seal-data.js'
  * @typedef {{ char: string, glyphAvailable: boolean, modern: string[], attested: string[], records: unknown[], sources: unknown[], modernSource: string,
  *   modernDescriptions: { char: string, text: string, regions: string, supported: boolean }[], candidates: SealCandidate[], truncated: boolean, generator: string }} SealComparison
  */
-export const SEAL_GENERATOR = 'cjk-to-seal/2'
+export const SEAL_GENERATOR = 'cjk-to-seal/3'
 
 /**
  * Candidate generation never changes the source table. The Cartesian product is

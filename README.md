@@ -307,7 +307,7 @@ composed inside its cell. A two-layer pyramid of one part follows the composer's
 instead (品, 森). `pyramidOnBase` reads a pyramid standing on one more part, ⿳口⿰口口木 and
 ⿱⿱口⿰口口木 alike, as `{ cell, layers, base }`; the composer spreads the rows over the full width
 above the base, each cell wider than it is tall, draws the base as a cell in the row below, and
-draws the spellings alike. A whole description may run past the ordinary 64-code-point length as a pyramid
+draws the spellings alike. A whole description may run past the ordinary 256-code-point length as a pyramid
 of two or more layers, its cells any part; a draft may be longer still. The composer draws up to
 64 layers (2,080 cells). The workshop's Templates tab inserts one-click pyramids of 2 to 24
 layers, its sizes in a scrollable row, and its four-icon switch points the pyramid up, down, left
@@ -649,7 +649,7 @@ and 丿/乀 and 𠄌/亅 differ in direction. `createSearch` accepts a separate
 `structuralForms` map (strict equality by default); ordinary component search
 continues to use its broader `forms` map.
 `⬚` and `？` match any part; `|` separates up to eight alternative patterns. Each pattern must
-be a complete IDS of at most 64 code points. Matching starts at the character's whole description
+be a complete IDS of at most 256 code points. Matching starts at the character's whole description
 and opens encoded components up to six levels, considering source alternatives. It does not find
 a pattern merely contained somewhere inside an unrelated outer structure. Approximation marks
 remain explicit operators. Coverage depends on the supplied descriptions and forms.

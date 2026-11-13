@@ -6,13 +6,13 @@
 // are separate; nothing here reaches into the current canvas-space Drawing or the positional core
 // tree beyond the IDS projection boundary.
 import { hangulClusterAt } from '@han-compose/composer/hangul'
-import { arity, isComponent, isMark, isModifier, isSelector, parse, splitMarks } from '../core/ids.js'
+import { LONGEST, arity, isComponent, isMark, isModifier, isSelector, parse, splitMarks } from '../core/ids.js'
 import { inspectJson } from './json.js'
 
 export const FORMAT = 'ids-input/document'
 export const VERSION = 1
 export const MAX_BYTES = 1024 * 1024
-export const MAX_SEQUENCE = 64
+export const MAX_SEQUENCE = LONGEST
 export const MAX_LAYERS = 1000
 export const MAX_DEPTH = 64
 export const MAX_EDITS = 1000

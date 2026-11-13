@@ -46,8 +46,11 @@ export const OPERATOR_GROUPS = [
   { arity: 3, ops: ['⿲', '⿳'] },
 ]
 
-/** The longest ordinary description, in code points. */
-export const LONGEST = 64
+/**
+ * The longest ordinary description, in code points. The しんぞ description kept in
+ * tests/long-description.test.js runs to 102.
+ */
+export const LONGEST = 256
 /** The longest pyramid description, in code points: 64 layers take 3,818. */
 export const PYRAMID_LONGEST = 8192
 /** The deepest operator nest the parser reads, so a long input cannot exhaust the call stack. */

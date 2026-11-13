@@ -110,25 +110,25 @@ describe('a pyramid sequence', () => {
 
   it('reads a pyramid of a long part past the ordinary length', () => {
     const short = '⿱⿱众⿰众众⿰⿱众⿰众众⿱众⿰众众'
-    const three = pyramidSequence(short, 3)
-    expect([...three].length).toBeGreaterThan(LONGEST)
-    expect(isDescription(three)).toBe(true)
-    expect(pyramidRows(tree(three))?.layers).toBe(3)
-    expect(tooLarge(tree(three))).toBe(false)
-    // Two rows count too, so a long cell can be repeated once above a row of two.
-    const long = '⿰⿱⿱众⿰众众⿰⿱众⿰众众⿱众⿰众众⿱众⿰众众'
-    const two = pyramidSequence(long, 2)
+    const five = pyramidSequence(short, 5)
+    expect([...five].length).toBeGreaterThan(LONGEST)
+    expect(isDescription(five)).toBe(true)
+    expect(pyramidRows(tree(five))?.layers).toBe(5)
+    expect(tooLarge(tree(five))).toBe(false)
+    // Two rows count too, so a long cell can be repeated once above a row of two. The cell itself
+    // exceeds what the preview draws, which no two-row pyramid can avoid at this length.
+    const cell = pyramidSequence(short, 4)
+    const two = pyramidSequence(cell, 2)
     expect([...two].length).toBeGreaterThan(LONGEST)
     expect(isDescription(two)).toBe(true)
     expect(pyramidRows(tree(two), { minLayers: 2 })?.layers).toBe(2)
-    expect(tooLarge(tree(two))).toBe(false)
   })
 
   it('reads a long pyramid on a base past the ordinary length', () => {
-    const text = '⿱' + pyramidSequence('口', 12) + '木'
+    const text = '⿱' + pyramidSequence('口', 18) + '木'
     expect([...text].length).toBeGreaterThan(LONGEST)
     expect(isDescription(text)).toBe(true)
-    expect(pyramidOnBase(tree(text))).toEqual({ cell: '口', layers: 12, base: '木' })
+    expect(pyramidOnBase(tree(text))).toEqual({ cell: '口', layers: 18, base: '木' })
     expect(tooLarge(tree(text))).toBe(false)
   })
 
@@ -163,8 +163,8 @@ describe('a pyramid sequence', () => {
   })
 
   it('reads a long pyramid as a draft after a cell changes', () => {
-    const text = pyramidSequence('口', 12), changed = text.replace('口', '木')
-    expect([...text].length).toBeGreaterThan(64)
+    const text = pyramidSequence('口', 18), changed = text.replace('口', '木')
+    expect([...text].length).toBeGreaterThan(LONGEST)
     expect(parse(changed, { open: true }).tree).not.toBeUndefined()
     expect(parse(changed).problem).toBe('character')
     expect(parse(changed, { open: true }).tree).not.toEqual(parse(text, { open: true }).tree)
