@@ -1,19 +1,24 @@
 <script>
-  // Every component the corpus names, encoded or not: BabelStone's numbered parts, CHISE entities and
-  // the characters that fill the other operands, with an equivalent where the alignment found one.
-  // The project draws a numbered part in its own Sans cut beside BabelStone Han PUA; a reader can add
-  // pairs, which appear as custom components.
+  // Every form no code point names, one row each: its identifier, the names BabelStone, CHISE and
+  // zi.tools give it, what it is in each notation, and the characters it stands in. A reader can add
+  // pairs, which show beside the form they name.
   import { onMount } from 'svelte'
   import SiteSelect from './ui/SiteSelect.svelte'
   import ThemeSwitch from './ui/ThemeSwitch.svelte'
   import { translator } from '../src/svelte/index.js'
-  import { componentDrawing } from '@han-compose/composer/component-forms'
   import { LOCALES, appMessages } from './lib/locales.js'
   import { applyTheme, storedTheme } from './lib/theme.js'
   import { load, save } from './lib/storage.js'
   import { importPairs, parsePair, parseSide } from './lib/equivalences.js'
   import { equivalences } from '../src/core/index.js'
-  import indexUrl from '../data/ids-components-index.json.gz?url'
+  import dataUrl from '../data/custom-components.json.gz?url'
+  import engineOutlines from 'ids-engine-outlines'
+  import { composerPreview } from '@han-compose/composer'
+  import IdsPartIcon from '../src/svelte/IdsPartIcon.svelte'
+  import { createCustomComponents, customsOf, parse } from '../src/core/index.js'
+  import { COMPOSER_BASE, readFrom } from './lib/composer.js'
+  import { createIconDrawings } from './lib/icons.js'
+  import { formRows, matches, querySummary } from './lib/custom-forms.js'
 
   const params = new URLSearchParams(location.search)
   const wanted = String(params.get('lang') ?? load('locale', null) ?? navigator.language ?? '')
@@ -31,18 +36,13 @@
   /** @param {import('./lib/theme.js').Theme} next */
   const setTheme = next => { theme = next; applyTheme(next) }
 
-  /** @typedef {{ cid: string, char: string | null, kind: 'number' | 'entity' | 'character' | 'custom', label: string, description: string | null, fragment: string | null, uses: number, equivalents: { cid: string, status: string, note: string }[], yours?: boolean }} Row */
-  /** @type {{ counts: { all: number, number: number, entity: number, character: number }, rows: Row[] } | null} */
-  let doc = $state(null)
+  /** @typedef {import('./lib/custom-forms.js').FormRow} Row */
+  /** @type {import('../src/core/custom-components.js').CustomComponentsData | null} */
+  let doc = $state.raw(null)
   let failed = $state(false)
-  onMount(() => {
-    let id = ''
-    try { id = decodeURIComponent(location.hash.slice(1)) } catch { return }
-    if (id) requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: 'start' })))
-  })
   onMount(async () => {
     try {
-      const response = await fetch(indexUrl)
+      const response = await fetch(dataUrl)
       if (!response.ok) throw new Error(String(response.status))
       // The published file is gzipped; the dev server may hand it over already decoded.
       const bytes = new Uint8Array(await response.arrayBuffer())
@@ -52,68 +52,66 @@
       doc = JSON.parse(text)
     } catch { failed = true }
   })
+  const custom = $derived(doc ? createCustomComponents(doc) : null)
 
-  /** Reader-added pairs, shown as custom components where the corpus does not name them. @type {{ a: string, b: string, note: string }[]} */
+  /** Reader-added pairs, shown beside the form either side names. @type {{ a: string, b: string, note: string }[]} */
   const stored = load('equivalences', [])
   let mine = $state(Array.isArray(stored)
     ? stored.filter(row => row && typeof row.a === 'string' && typeof row.b === 'string' && typeof row.note === 'string')
       .map(row => ({ a: row.a, b: row.b, note: row.note }))
     : [])
   $effect(() => save('equivalences', mine.length ? mine : undefined))
-  const customRows = $derived.by(() => {
-    const known = new Set((doc?.rows ?? []).map(row => row.cid))
-    const rows = new Map()
-    for (const pair of mine) {
-      for (const cid of [pair.a, pair.b]) {
-        if (known.has(cid) || rows.has(cid)) continue
-        const other = cid === pair.a ? pair.b : pair.a
-        rows.set(cid, {
-          cid, char: null, kind: 'custom', label: cid.replace(/^(?:chise|bsp|ucs):/, ''), description: null, fragment: null, uses: 0,
-          equivalents: [{ cid: other, status: 'yours', note: pair.note }], yours: true,
-        })
-      }
-    }
-    return [...rows.values()]
-  })
-  const rows = $derived([...customRows, ...(doc?.rows ?? [])])
+  const rows = $derived(doc ? formRows(doc, mine) : [])
 
-  let query = $state('')
-  /** @type {'all' | 'with' | 'number' | 'entity' | 'character' | 'yours'} */
-  let filter = $state('all')
-  let page = $state(1)
-  const PAGE = 100
-  const needle = $derived(query.trim().toLocaleLowerCase(locale))
-  /** @param {Row} row */
-  const haystack = row => [row.cid, row.label, row.char ?? '', row.description ?? '', row.kind, ...row.equivalents.flatMap(one => [one.cid, one.note])]
-    .join('\n').toLocaleLowerCase(locale)
-  const filtered = $derived(rows.filter(row =>
-    (filter === 'all' ? true
-      : filter === 'with' ? row.equivalents.length > 0
-        : filter === 'yours' ? Boolean(row.yours)
-          : row.kind === filter)
-    && (!needle || haystack(row).includes(needle))))
+  // The query lives in the address, so a search can be linked to.
+  const SOURCES = /** @type {const} */ (['all', 'babelstone', 'chise', 'zi-tools', 'unnamed', 'yours'])
+  const STATUSES = /** @type {const} */ (['any', 'confirmed', 'candidate', 'none'])
+  /** @template {string} T @param {readonly T[]} list @param {string | null} value @returns {T} */
+  const oneOf = (list, value) => list.find(item => item === value) ?? list[0]
+  let hashed = ''
+  try { hashed = decodeURIComponent(location.hash.slice(1)) } catch { hashed = '' }
+  let query = $state(params.get('q') ?? (/^X-\d+$/.test(hashed) ? hashed : ''))
+  let source = $state(oneOf(SOURCES, params.get('source')))
+  let status = $state(oneOf(STATUSES, params.get('status')))
+  let sort = $state(oneOf(/** @type {const} */ (['id', 'uses']), params.get('sort')))
+  let page = $state(Math.max(1, Math.floor(Number(params.get('page'))) || 1))
+  const PAGE = 50
+  $effect(() => {
+    const next = new URLSearchParams(location.search)
+    for (const [key, value, unset] of /** @type {[string, string, string][]} */ ([['q', query.trim(), ''], ['source', source, 'all'], ['status', status, 'any'], ['sort', sort, 'id'], ['page', String(page), '1']])) {
+      if (value === unset) next.delete(key); else next.set(key, value)
+    }
+    const text = next.toString()
+    history.replaceState(null, '', `${location.pathname}${text ? `?${text}` : ''}`)
+  })
+  const terms = $derived(querySummary(query))
+  const filtered = $derived.by(() => {
+    const found = rows.filter(row => matches(row, terms, source, status))
+    return sort === 'uses' ? [...found].sort((a, b) => b.uses - a.uses || a.number - b.number) : found
+  })
   const pages = $derived(Math.max(1, Math.ceil(filtered.length / PAGE)))
   const visible = $derived(filtered.slice((page - 1) * PAGE, page * PAGE))
-  $effect(() => { if (page > pages) page = pages })
-  /** @param {string} next */
-  function setFilter(next) { filter = next; page = 1 }
-  $effect(() => { void query; page = 1 })
+  $effect(() => { if (doc && page > pages) page = pages })
+  /** @param {() => void} change */
+  const from = change => { change(); page = 1 }
+  /** @param {string} id */
+  const show = id => from(() => { query = id; source = 'all'; status = 'any' })
+  let opened = $state(/** @type {string | null} */ (null))
 
+  // The drawings: the composer is asked for what draws a form, as the workshop's palette does.
+  // The composer's drawer ends a drawing when another is asked for, so the rows ask one at a time.
+  const icon = createIconDrawings(composerPreview({ base: readFrom(COMPOSER_BASE), fontStyle: 'sans', loaders: engineOutlines }))
+  const adapter = $derived(/** @type {import('../src/adapter/types.js').IdsAdapter} */ (/** @type {unknown} */ ({
+    icon, fontStyle: 'sans',
+    drawable: async (/** @type {string} */ text) => custom?.drawableLeaves(text) ?? { text, leaves: [] },
+  })))
+  /** Whether everything a form is written with draws. @param {Row} row */
+  const draws = row => {
+    const read = custom ? parse(custom.drawable(row.shown), { open: true }) : null
+    return Boolean(read && !read.problem && read.tree !== null && !customsOf(read.tree).length)
+  }
   /** @param {string} cid */
   const shortName = cid => cid.replace(/^(?:chise|bsp|ucs):/, '')
-  /** @param {Row} row */
-  const kindLabel = row => t(`appendix.kindValue.${row.kind}`)
-  /** @param {Row} row */
-  const equivalentText = row => row.equivalents.length
-    ? row.equivalents.map(one => one.cid.replace(/^(?:chise|bsp|ucs):/, '')).join(', ')
-    : '—'
-  /** The PUA glyph, only where the bundled face draws it; the Sans cut says the same set. @param {Row} row */
-  function puaOf(row) { return row.kind === 'number' && row.char && componentDrawing(row.char, 'sans') ? row.char : null }
-  /** @param {Row} row */
-  function sansOf(row) {
-    if (!row.char || row.kind === 'entity') return null
-    return componentDrawing(row.char, 'sans')
-  }
 
   let form = $state({ a: '', b: '', note: '' })
   let formError = $state('')
@@ -123,13 +121,10 @@
     const pair = parsePair(form.a, form.b)
     if (!pair) { formError = parseSide(form.a) && parseSide(form.b) ? t('appendix.form.same') : t('appendix.form.invalid'); return }
     const [one, two] = pair
-    if (mine.some(row => row.a === one && row.b === two) || (doc?.rows ?? []).some(row => row.cid === one && row.equivalents.some(other => other.cid === two))) {
-      formError = t('appendix.form.exists'); return
-    }
+    if (mine.some(row => row.a === one && row.b === two)) { formError = t('appendix.form.exists'); return }
     mine = [...mine, { a: one, b: two, note: form.note.trim() }]
     form = { a: '', b: '', note: '' }
     formError = ''
-    page = 1
   }
   /** @param {string} a @param {string} b */
   function remove(a, b) { mine = mine.filter(row => row.a !== a || row.b !== b) }
@@ -154,7 +149,6 @@
       for (const row of importPairs(JSON.parse(await file.text()))) merged.set(`${row.a}\0${row.b}`, row)
       mine = [...merged.values()]
       formError = ''
-      page = 1
     } catch { formError = t('appendix.importFailed') }
   }
 </script>
@@ -177,8 +171,6 @@
   </header>
 
   <main>
-    <p class="lead">{t('appendix.lead')}</p>
-
     <section class="equivalents" id="equivalents" aria-labelledby="equivalents-title">
       <h2 id="equivalents-title">{t('appendix.equivalents')}</h2>
       <p class="glyph-note">{t('appendix.equivalentsLead')}</p>
@@ -208,67 +200,104 @@
     <div class="controls">
       <label class="search">
         <span class="ui-visually-hidden">{t('appendix.search')}</span>
-        <input type="search" bind:value={query} placeholder={t('appendix.search')} autocomplete="off" />
+        <input type="search" value={query} oninput={event => from(() => { query = event.currentTarget.value })} placeholder={t('appendix.search')} autocomplete="off" spellcheck="false" />
       </label>
-      <div class="chips" role="group" aria-label={t('appendix.filter')}>
-        <button type="button" class:active={filter === 'all'} aria-pressed={filter === 'all'} onclick={() => setFilter('all')}>{t('appendix.all')}</button>
-        <button type="button" class:active={filter === 'with'} aria-pressed={filter === 'with'} onclick={() => setFilter('with')}>{t('appendix.withEquivalent')}</button>
-        <button type="button" class:active={filter === 'number'} aria-pressed={filter === 'number'} onclick={() => setFilter('number')}>{t('appendix.numbers')}</button>
-        <button type="button" class:active={filter === 'entity'} aria-pressed={filter === 'entity'} onclick={() => setFilter('entity')}>{t('appendix.entities')}</button>
-        <button type="button" class:active={filter === 'character'} aria-pressed={filter === 'character'} onclick={() => setFilter('character')}>{t('appendix.characters')}</button>
-        <button type="button" class:active={filter === 'yours'} aria-pressed={filter === 'yours'} onclick={() => setFilter('yours')}>{t('appendix.yours')} <span class="n">{customRows.length}</span></button>
+      <div class="chips" role="group" aria-label={t('appendix.sourceLabel')}>
+        {#each SOURCES as one (one)}
+          <button type="button" class:active={source === one} aria-pressed={source === one} onclick={() => from(() => { source = one })}>{t(`appendix.source.${one}`)} <span class="n">{rows.filter(row => matches(row, terms, one, status)).length}</span></button>
+        {/each}
       </div>
+      <div class="chips" role="group" aria-label={t('appendix.statusLabel')}>
+        {#each STATUSES as one (one)}
+          <button type="button" class:active={status === one} aria-pressed={status === one} onclick={() => from(() => { status = one })}>{t(`appendix.status.${one}`)} <span class="n">{rows.filter(row => matches(row, terms, source, one)).length}</span></button>
+        {/each}
+      </div>
+      <label class="sort">
+        <span class="ui-visually-hidden">{t('appendix.sortLabel')}</span>
+        <select value={sort} onchange={event => from(() => { sort = oneOf(/** @type {const} */ (['id', 'uses']), event.currentTarget.value) })}>
+          <option value="id">{t('appendix.sort.id')}</option>
+          <option value="uses">{t('appendix.sort.uses')}</option>
+        </select>
+      </label>
     </div>
 
     {#if failed}
       <p class="empty">{t('appendix.loadFailed')}</p>
     {:else if !doc}
       <p class="empty">{t('appendix.loading')}</p>
-    {/if}
-    <p class="count" aria-live="polite">{t('appendix.count', { count: filtered.length })}</p>
-    <p class="glyph-note">{t('appendix.glyphNote')}</p>
-
-    {#if filtered.length === 0}
-      <p class="empty">{t('appendix.empty')}</p>
     {:else}
+      <p class="count" aria-live="polite">{t('appendix.count', { count: filtered.length })}</p>
+    {/if}
+
+    {#if doc && filtered.length === 0}
+      <p class="empty">{t('appendix.empty')}</p>
+    {:else if doc}
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
               <th scope="col">{t('appendix.glyph')}</th>
-              <th scope="col">{t('appendix.component')}</th>
-              <th scope="col">{t('appendix.kind')}</th>
+              <th scope="col">{t('appendix.id')}</th>
+              <th scope="col">{t('appendix.names')}</th>
               <th scope="col">{t('appendix.equivalent')}</th>
-              <th scope="col">{t('appendix.uses')}</th>
-              <th scope="col"><span class="ui-visually-hidden">{t('appendix.form.add')}</span></th>
+              <th scope="col" class="num">{t('appendix.uses')}</th>
+              <th scope="col" class="num">{t('appendix.derived')}</th>
             </tr>
           </thead>
           <tbody>
-            {#each visible as row (`${row.kind}:${row.cid}`)}
-              <tr class:yours={row.yours}>
+            {#each visible as row (row.id)}
+              <tr id={row.id} class:yours={row.yours.length > 0}>
                 <td class="glyph">
-                  {#if puaOf(row)}<span class="pua" title={t('appendix.glyphTitle.babel')}>{puaOf(row)}</span>{/if}
-                  {#if sansOf(row)}
-                    <svg class="ours" viewBox="0 0 1000 1000" role="img" aria-label={t('appendix.glyphTitle.ours')}><path d={sansOf(row).d} fill="currentColor" /></svg>
-                  {:else if row.kind === 'character' && row.char}
-                    <span class="char">{row.char}</span>
-                  {/if}
-                  {#if !puaOf(row) && !sansOf(row) && row.kind !== 'character'}
-                    <span class="dash" title={row.fragment ?? undefined}>—</span>
-                  {/if}
+                  {#if draws(row)}<span class="drawn"><IdsPartIcon sequence={row.shown} {adapter} /></span>{:else}<span class="dash">—</span>{/if}
+                </td>
+                <td class="id">
+                  <a href={`?q=${row.id}`} onclick={event => { event.preventDefault(); show(row.id) }}>{row.id}</a>
+                  <span class="status" data-status={row.status}>{t(`appendix.status.${row.status}`)}</span>
                 </td>
                 <td>
-                  <span class="identity">
-                    <span class="name">{row.label}</span>
-                    <span class="scheme">{row.cid.split(':')[0]}</span>
-                    {#if row.description}<span class="desc">{row.description}</span>{/if}
-                  </span>
+                  <ul class="names">
+                    {#each row.names as name (name.text)}
+                      <li><span class="tag" data-source={name.source}>{t(`appendix.source.${name.source}`)}</span><span class="name" lang="ja">{name.text}</span>{#if name.description}<span class="desc" lang="ja">{name.description}</span>{/if}</li>
+                    {/each}
+                    {#each row.of as other (other.id + other.relation)}
+                      <li><span class="tag">{t(`appendix.relation.${other.relation}`)}</span><a class="name" href={`?q=${other.id}`} onclick={event => { event.preventDefault(); show(other.id) }}>{other.id}</a></li>
+                    {/each}
+                  </ul>
                 </td>
-                <td class="kind">{kindLabel(row)}</td>
-                <td class="equivalent">{equivalentText(row)}</td>
-                <td class="uses">{row.uses || '—'}</td>
-                <td>{#if row.yours && mine.some(pair => pair.a === row.cid || pair.b === row.cid)}<button type="button" class="remove" onclick={() => { const pair = mine.find(p => p.a === row.cid || p.b === row.cid); if (pair) remove(pair.a, pair.b) }} aria-label={t('appendix.remove')} title={t('appendix.remove')}>×</button>{/if}</td>
+                <td>
+                  <ul class="equals">
+                    {#each row.equivalents as item (item.in + item.text)}
+                      <li>
+                        <span class="tag" data-source={item.in}>{t(`appendix.source.${item.in}`)}</span>
+                        <span class="name" lang="ja">{item.text}</span>
+                        <span class="status" data-status={item.status}>{t(`appendix.status.${item.status}`)}</span>
+                        {#if item.count}<span class="by" lang="ja">{item.count} · {item.characters.join('')}</span>{/if}
+                        {#if item.id && item.id !== row.id}<a class="link" href={`?q=${item.id}`} onclick={event => { event.preventDefault(); show(/** @type {string} */ (item.id)) }}>{item.id}</a>{/if}
+                      </li>
+                    {/each}
+                    {#each row.yours as pair (pair.other)}<!-- one line per other side: formRows joins the notes -->
+                      <li><span class="tag">{t('appendix.yours')}</span><span class="name" lang="ja">{pair.other}</span>{#if pair.note}<span class="by">{pair.note}</span>{/if}</li>
+                    {/each}
+                  </ul>
+                </td>
+                <td class="num" data-label={t('appendix.uses')} title={row.usedIn}>{row.uses || '—'}</td>
+                <td class="num" data-label={t('appendix.derived')}>
+                  {#if row.derived.length}
+                    <button type="button" class="more" aria-expanded={opened === row.id} aria-label={`${t('appendix.derived')} ${row.derived.length}`} onclick={() => { opened = opened === row.id ? null : row.id }}>{row.derived.length}</button>
+                  {:else}—{/if}
+                </td>
               </tr>
+              {#if opened === row.id}
+                <tr class="detail">
+                  <td colspan="6">
+                    <ul class="derived">
+                      {#each row.derived as one (one.char + one.in + one.text)}
+                        <li><span class="char" lang="ja">{one.char}</span><span class="tag" data-source={one.in}>{t(`appendix.source.${one.in}`)}</span><span class="name" lang="ja">{one.text}</span><span class="status" data-status={one.status === 'verified' ? 'confirmed' : 'candidate'}>{t(`appendix.status.${one.status === 'verified' ? 'confirmed' : 'candidate'}`)}</span><span class="by" lang="ja">{one.of}</span></li>
+                      {/each}
+                    </ul>
+                  </td>
+                </tr>
+              {/if}
             {/each}
           </tbody>
         </table>
@@ -349,12 +378,32 @@
   th{font-size:11px;font-weight:600;color:var(--ids-muted);white-space:nowrap;background:var(--ids-surface-subtle)}
   tbody tr:last-child td{border-bottom:0}
   tr.yours{background:color-mix(in srgb,var(--ids-accent-light) 45%,transparent)}
-  .glyph{display:flex;align-items:center;gap:6px;color:var(--ids-ink);white-space:nowrap}
-  .pua{font-family:'IDS Numbered','Noto Sans CJK JP',serif;font-size:22px;line-height:1.2}
-  .ours{width:26px;height:26px;flex:none}
-  .char{font-family:'Noto Sans CJK JP',serif;font-size:19px;line-height:1.2}
+  .glyph{color:var(--ids-ink)}
+  .drawn{display:block;font-size:34px;line-height:1}
+  .dash{color:var(--ids-muted)}
+  .id{white-space:nowrap}
+  .id a,.link,a.name{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--ids-accent);text-decoration:none}
+  .id a:hover,.link:hover,a.name:hover{text-decoration:underline}
+  .id .status{display:block;margin-top:4px}
+  .names,.equals,.derived{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+  .names li,.equals li,.derived li{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+  .tag{flex:none;padding:0 5px;border:1px solid var(--ids-line);border-radius:4px;font-size:10px;line-height:1.6;color:var(--ids-muted);white-space:nowrap}
+  .tag[data-source="babelstone"]{color:light-dark(#8a4b00,#e0a458);border-color:currentColor}
+  .tag[data-source="chise"]{color:light-dark(#1f5fa8,#7fb2ee);border-color:currentColor}
+  .tag[data-source="zi-tools"]{color:light-dark(#1d7044,#6fcf97);border-color:currentColor}
+  .status{font-size:10px;color:var(--ids-muted);white-space:nowrap}
+  .status[data-status="confirmed"],.status[data-status="verified"]{color:light-dark(#1d7044,#6fcf97)}
+  .status[data-status="none"]{opacity:.7}
+  .by{font-family:var(--ids-font),var(--ids-glyph-fallback);font-size:11px;color:var(--ids-muted);overflow-wrap:anywhere}
+  .num{text-align:end;white-space:nowrap;color:var(--ids-muted);font-variant-numeric:tabular-nums}
+  .more{padding:1px 7px;border:1px solid var(--ids-control-border);border-radius:999px;background:var(--ids-surface);color:var(--ids-accent);font:inherit;font-size:11.5px;cursor:pointer}
+  .more[aria-expanded="true"]{background:var(--ids-accent-light);border-color:var(--ids-accent)}
+  .detail td{background:var(--ids-surface-subtle)}
+  .derived{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:6px 18px}
+  .sort select{padding:5px 8px;border:1px solid var(--ids-control-border);border-radius:7px;background:var(--ids-surface);color:inherit;font:inherit;font-size:12px}
+  .char{font-family:var(--ids-font);font-size:17px;line-height:1.2}
   .identity{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
-  .name{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+  .name{font-family:var(--ids-font),ui-monospace,monospace;font-size:15px;line-height:1.3;overflow-wrap:anywhere}
   .scheme{font-size:10px;color:var(--ids-muted);text-transform:uppercase;letter-spacing:.02em}
   .desc{flex-basis:100%;color:var(--ids-muted);font-size:11.5px}
   .kind,.uses{color:var(--ids-muted);white-space:nowrap}
@@ -385,6 +434,20 @@
   .error{color:var(--ids-fault);font-size:12px;margin:8px 0 0}
   .empty{color:var(--ids-muted);margin:18px 0}
   @media (max-width:720px) {
+    thead{display:none}
+    table,tbody{display:block}
+    tbody tr{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:6px 10px;padding:12px 10px;border-bottom:1px solid var(--ids-line)}
+    tbody tr:last-child{border-bottom:0}
+    tbody td{display:block;padding:0;border:0}
+    td.glyph{grid-row:1 / 3}
+    td.id{grid-column:2;grid-row:1 / 3}
+    td:nth-child(3),td:nth-child(4){grid-column:1 / -1}
+    td:nth-child(5){grid-column:3;grid-row:1}
+    td:nth-child(6){grid-column:3;grid-row:2}
+    td.num::before{content:attr(data-label);margin-inline-end:6px;font-size:10px}
+    tr.detail{display:block}
+    .derived{grid-template-columns:minmax(0,1fr)}
+    .search,.search input{width:100%}
     form label, form input{width:100%;min-width:0}
     .primary{width:100%}
   }
