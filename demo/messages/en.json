@@ -438,5 +438,7 @@
   "appendix.prev": "Previous",
   "appendix.next": "Next",
   "appendix.one": "One side",
-  "appendix.mine": "Your pairs"
+  "appendix.mine": "Your pairs",
+  "ucv.title": "Component variations (UCV)",
+  "ucv.source": "Source"
 }

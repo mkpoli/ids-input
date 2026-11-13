@@ -404,5 +404,18 @@
   "info.firstStrokeShort": "首筆",
   "info.script.jurchen": "女真文字",
   "info.script.kana": "假名",
-  "parts.equivalents": "CHISE：{names}"
+  "parts.equivalents": "CHISE：{names}",
+  "ids.ucv.search": "字元或條目編號",
+  "ids.ucv.all": "全部",
+  "ids.ucv.level": "級別 {level}",
+  "ids.ucv.unified": "認同",
+  "ids.ucv.compatibility": "相容",
+  "ids.ucv.disunified": "分立",
+  "ids.ucv.separated": "源分離",
+  "ids.ucv.single": "單一字形",
+  "ids.ucv.none": "沒有符合的條目。",
+  "ids.ucv.loading": "正在載入清單…",
+  "ids.ucv.failed": "無法載入清單。",
+  "ids.ucv.kind": "清單",
+  "ids.ucv.form": "字形 {name}"
 }

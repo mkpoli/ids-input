@@ -404,5 +404,18 @@
   "info.firstStrokeShort": "nét đầu",
   "info.script.jurchen": "Chữ Nữ Chân",
   "info.script.kana": "Kana",
-  "parts.equivalents": "CHISE: {names}"
+  "parts.equivalents": "CHISE: {names}",
+  "ids.ucv.search": "Chữ hoặc số mục",
+  "ids.ucv.all": "Tất cả",
+  "ids.ucv.level": "Mức {level}",
+  "ids.ucv.unified": "Hợp nhất",
+  "ids.ucv.compatibility": "Tương thích",
+  "ids.ucv.disunified": "Tách riêng",
+  "ids.ucv.separated": "Tách theo nguồn",
+  "ids.ucv.single": "Một dạng",
+  "ids.ucv.none": "Không có mục nào khớp.",
+  "ids.ucv.loading": "Đang tải danh sách…",
+  "ids.ucv.failed": "Không tải được danh sách.",
+  "ids.ucv.kind": "Danh sách",
+  "ids.ucv.form": "Dạng {name}"
 }

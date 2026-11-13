@@ -436,5 +436,7 @@
   "appendix.prev": "前へ",
   "appendix.next": "次へ",
   "appendix.one": "片方",
-  "appendix.mine": "追加した対応"
+  "appendix.mine": "追加した対応",
+  "ucv.title": "部品の統合規準（UCV）",
+  "ucv.source": "出典"
 }

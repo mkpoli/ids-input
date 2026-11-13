@@ -436,5 +436,7 @@
   "appendix.prev": "이전",
   "appendix.next": "다음",
   "appendix.one": "한쪽",
-  "appendix.mine": "내 대응"
+  "appendix.mine": "내 대응",
+  "ucv.title": "부품 통합 기준(UCV)",
+  "ucv.source": "출처"
 }
