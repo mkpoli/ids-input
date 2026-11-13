@@ -123,8 +123,9 @@ zi.tools' `ids_lv1.txt` at the pinned revision. GPL-2.0-or-later, since CHISE's 
   and a character row the `ids` of the forms it names. `difference` rows are solved; `inverse` rows turn a solved row round.
   `verified` means two or more characters give the same spelling, `candidate` that none does;
   `count` is the characters that give the same parts in any arrangement.
-- `characters`: a description of a character in a notation its source did not write, `{ char,
-  text, in, from, basis, of, status }`.
+- `characters`: a description of a character reached from another table's, `{ char, text, in,
+  from, basis, of, status, ids, attested }`. `attested` is set where the table named by `in` writes
+  that description itself; the rest are in a notation whose table did not write them.
 - `forms`: one row per form, `{ id, char, names }`; `retired` lists numbers no longer given out.
 - `strokeLetters`, `chainNames`, `sources`, `counts`.
 

@@ -488,5 +488,6 @@
   "library.uses": "Số lần dùng",
   "history.title": "Lịch sử ký pháp",
   "history.earliest": "Bằng chứng sớm nhất tìm được",
-  "history.undated": "Chưa rõ năm"
+  "history.undated": "Chưa rõ năm",
+  "appendix.derivedFrom": "Suy ra từ"
 }

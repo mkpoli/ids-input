@@ -491,5 +491,6 @@
   "library.uses": "Uses",
   "history.title": "Notation history",
   "history.earliest": "Earliest evidence found",
-  "history.undated": "Undated"
+  "history.undated": "Undated",
+  "appendix.derivedFrom": "Derived from"
 }
