@@ -13,6 +13,7 @@ import { gunzipSync, gzipSync } from 'node:zlib'
 import { customKind, customsOf, isCustom, isNode, parse, write } from '../src/core/ids.js'
 import { STROKE_CHAINS } from '@han-compose/composer/tree'
 import { atoms, besides, createFrame, plainTree, solve, subtract } from './lib/custom-equivalences.mjs'
+import { assignIds, formChar, formNumber, readLedger, writeLedger } from './lib/custom-ids.mjs'
 
 const CHECK = process.argv.includes('--check')
 const data = name => new URL(`../data/${name}`, import.meta.url)
@@ -111,7 +112,7 @@ for (const line of (await readFile(data('ids-components.tsv'), 'utf8')).split(/\
 for (const name of numbered.keys()) if (!used.has(name)) used.set(name, { chars: new Set() })
 
 // Each component in each other table's parts.
-/** @type {Map<string, { in: string, text: string, count: number, characters: string[], status: string, basis: 'difference' | 'inverse' }[]>} */
+/** @type {Map<string, { in: string, text: string, count: number, characters: string[], status: string, basis: 'difference' | 'inverse', id?: string, arrangements?: { text: string, count: number, id?: string }[] }[]>} */
 const equivalents = new Map()
 /** @type {Record<string, Record<string, Map<string, import('../src/core/ids.js').Part>>>} */
 const solved = {}
@@ -124,14 +125,15 @@ for (const from of SOURCES) for (const frame of SOURCES) {
   for (const [custom, rows] of found) {
     // Two spellings with the same parts are one shape bracketed two ways: the commoner stands, and
     // the shape is confirmed only where one spelling is given by two characters or more.
-    /** @type {Map<string, { text: string, top: number, chars: string[] }>} */
+    /** @type {Map<string, { text: string, top: number, chars: string[], spellings: Map<string, number> }>} */
     const shapes = new Map()
     for (const [text, chars] of rows) {
       const tree = /** @type {import('../src/core/ids.js').Part} */ (plainTree(text))
       const key = atoms(tree).sort().join('\0')
       const shape = shapes.get(key)
-      if (!shape) shapes.set(key, { text, top: chars.length, chars: [...chars] })
+      if (!shape) shapes.set(key, { text, top: chars.length, chars: [...chars], spellings: new Map([[text, chars.length]]) })
       else {
+        shape.spellings.set(text, chars.length)
         if (chars.length > shape.top) { shape.text = text; shape.top = chars.length }
         shape.chars.push(...chars.filter(char => !shape.chars.includes(char)))
       }
@@ -139,9 +141,15 @@ for (const from of SOURCES) for (const frame of SOURCES) {
     const ordered = [...shapes.values()].sort((a, b) => b.chars.length - a.chars.length || a.text.length - b.text.length || (a.text < b.text ? -1 : 1))
     const list = equivalents.get(custom) ?? []
     equivalents.set(custom, list)
+    /** @param {string} text */
+    const folded = text => write(frames[frame].collapse(plainTree(text)))
     for (const shape of ordered) list.push({
-      in: frame, text: write(frames[frame].collapse(plainTree(shape.text))), count: shape.chars.length,
+      in: frame, text: folded(shape.text), count: shape.chars.length,
       characters: shape.chars.slice(0, 12), status: shape.top >= 2 ? 'verified' : 'candidate', basis: 'difference',
+      // The same parts arranged another way: a different form until someone says otherwise.
+      ...(shape.spellings.size > 1 ? { arrangements: [...shape.spellings].filter(([text]) => text !== shape.text)
+        .map(([text, count]) => ({ text: folded(text), count })).filter(other => other.text !== folded(shape.text))
+        .sort((a, b) => b.count - a.count || (a.text < b.text ? -1 : 1)) } : {}),
     })
     best.set(custom, /** @type {import('../src/core/ids.js').Part} */ (plainTree(ordered[0].text)))
     // What a derived description rests on is this first expression, so its standing is that one's.
@@ -240,6 +248,80 @@ for (const row of components) {
   if (draw !== null) Object.assign(row, { draw })
 }
 const drawable = components.filter(row => 'draw' in row).length
+// Identity. A form is one thing drawn one way. Every custom component is a form, and so is every
+// expression found for one that no source names. Two names are one form only where the tables
+// confirm it: one is the other on two or more characters, or both are the same confirmed
+// expression. A source's own two names are never one form: the source tells them apart.
+const SOURCE_RANK = /** @type {Record<string, number>} */ ({ babelstone: 0, chise: 1, 'zi-tools': 2 })
+/** @param {string} a @param {string} b The order names are numbered in: BabelStone's by number, then entities, then chains. */
+const byName = (a, b) => {
+  const ka = /** @type {'numbered'} */ (customKind(a)), kb = /** @type {'numbered'} */ (customKind(b))
+  return SOURCE_RANK[SOURCE_OF[ka]] - SOURCE_RANK[SOURCE_OF[kb]] || (ka === 'numbered' ? Number(a.slice(1, -1)) - Number(b.slice(1, -1)) : 0) || (a < b ? -1 : a > b ? 1 : 0)
+}
+const names = components.map(row => row.text).sort(byName)
+/** @type {Map<string, string>} */
+const leader = new Map(names.map(name => [name, name]))
+/** @param {string} name @returns {string} */
+const find = name => { let at = name; while (leader.get(at) !== at) at = /** @type {string} */ (leader.get(at)); leader.set(name, at); return at }
+/** @type {Map<string, Set<string>>} */
+const sourcesOf = new Map(names.map(name => [name, new Set([SOURCE_OF[/** @type {'numbered'} */ (customKind(name))]])]))
+/** @type {{ a: string, b: string, count: number }[]} */
+const same = []
+/** @type {Map<string, { name: string, count: number }[]>} */
+const spelled = new Map()
+for (const row of components) for (const item of row.equivalents) {
+  if (item.basis !== 'difference' || item.status !== 'verified') continue
+  if (isCustom(item.text)) { if (leader.has(item.text)) same.push({ a: row.text, b: item.text, count: item.count }) }
+  else if (isNode(plainTree(item.text))) spelled.set(item.text, [...(spelled.get(item.text) ?? []), { name: row.text, count: item.count }])
+}
+for (const users of spelled.values()) for (const other of users.slice(1)) same.push({ a: users[0].name, b: other.name, count: Math.min(users[0].count, other.count) })
+same.sort((x, y) => y.count - x.count || byName(x.a, y.a) || byName(x.b, y.b))
+for (const { a, b } of same) {
+  const [one, two] = [find(a), find(b)].sort(byName)
+  if (one === two) continue
+  const mine = /** @type {Set<string>} */ (sourcesOf.get(one)), theirs = /** @type {Set<string>} */ (sourcesOf.get(two))
+  if ([...theirs].some(source => mine.has(source))) continue
+  leader.set(two, one)
+  for (const source of theirs) mine.add(source)
+}
+/** @type {Map<string, string[]>} */
+const members = new Map()
+for (const name of names) members.set(find(name), [...(members.get(find(name)) ?? []), name])
+// A confirmed expression is another name of its form, where one form alone has it.
+/** @type {Map<string, string>} */
+const spellingOf = new Map()
+for (const [text, users] of spelled) {
+  const forms = new Set(users.map(user => find(user.name)))
+  if (forms.size === 1) spellingOf.set(text, [...forms][0])
+}
+/** @type {{ first: string, aliases: string[] }[]} */
+const forms = [...members].map(([first, list]) => ({ first, aliases: [...list, ...[...spellingOf].filter(([, form]) => form === first).map(([text]) => text).sort()] }))
+// An expression nothing confirms, or the same parts arranged another way, is a form of its own.
+const unnamed = new Set()
+for (const row of components) for (const item of row.equivalents) {
+  if (item.basis !== 'difference') continue
+  for (const text of [...(item.status === 'verified' ? [] : [item.text]), ...(item.arrangements ?? []).map(other => other.text)]) {
+    if (!isCustom(text) && isNode(plainTree(text)) && !spellingOf.has(text)) unnamed.add(text)
+  }
+}
+for (const text of [...unnamed].sort()) forms.push({ first: text, aliases: [text] })
+
+const ledgerUrl = data('custom-ids.tsv')
+const priorLedger = readLedger(await readFile(ledgerUrl, 'utf8').catch(() => ''))
+const ledger = assignIds(forms, priorLedger, new Date().toISOString().slice(0, 10))
+/** @param {string} text @returns {string | undefined} The form a name or an expression is. */
+const idOf = text => ledger.idOf.get(text)
+for (const row of components) {
+  Object.assign(row, { id: idOf(row.text), char: formChar(/** @type {string} */ (idOf(row.text))) })
+  for (const item of row.equivalents) {
+    const id = item.basis === 'difference' ? idOf(item.text) : undefined
+    if (id) item.id = id
+    for (const other of item.arrangements ?? []) { const own = idOf(other.text); if (own) other.id = own }
+  }
+}
+const formRows = forms.map(form => ({ id: /** @type {string} */ (idOf(form.first)), char: formChar(/** @type {string} */ (idOf(form.first))), names: form.aliases }))
+  .sort((a, b) => formNumber(a.id) - formNumber(b.id))
+const retiredRows = ledger.rows.filter(row => row.note.startsWith('merged into') || row.note === 'withdrawn').map(row => ({ id: row.id, note: row.note }))
 
 // Characters: a description that names a custom component, said in another table's notation.
 /** @type {{ char: string, text: string, in: string, from: string, basis: 'substitution' | 'subtraction', of: string, status: string }[]} */
@@ -247,6 +329,9 @@ const characters = []
 const seenRow = new Set()
 /** @param {typeof characters[number]} row */
 const emit = row => {
+  // The forms the description names, by identifier.
+  const ids = [...new Set(customsOf(plainTree(row.text)).map(idOf).filter(Boolean))]
+  if (ids.length) Object.assign(row, { ids })
   const key = `${row.char}\0${row.in}\0${row.text}`
   // Only a whole description is a row: written out, a long one may pass what a description holds.
   if (seenRow.has(key) || parse(row.text).problem) return
@@ -326,7 +411,10 @@ const document = {
     verified: components.filter(row => row.equivalents.some(item => item.status === 'verified')).length,
     drawable,
     characters: characters.length,
+    forms: formRows.length,
   },
+  forms: formRows,
+  retired: retiredRows,
   strokeLetters: strokeLetters.strokes,
   chainNames: CHAIN_NAMES,
   components,
@@ -334,8 +422,9 @@ const document = {
 }
 const bytes = gzipSync(JSON.stringify(document), { level: 9 })
 const out = data('custom-components.json.gz')
+const ledgerText = writeLedger(ledger.rows)
 if (CHECK) {
   const current = await readFile(out).catch(() => null)
-  if (!current || !gunzipSync(current).equals(gunzipSync(bytes))) { console.error('data/custom-components.json.gz is stale: run bun scripts/build_custom_components.mjs'); process.exit(1) }
-} else await writeFile(out, bytes)
+  if (!current || !gunzipSync(current).equals(gunzipSync(bytes)) || ledgerText !== await readFile(ledgerUrl, 'utf8').catch(() => '')) { console.error('data/custom-components.json.gz is stale: run bun scripts/build_custom_components.mjs'); process.exit(1) }
+} else { await writeFile(out, bytes); await writeFile(ledgerUrl, ledgerText) }
 console.log(JSON.stringify(document.counts), `${bytes.length} bytes`)

@@ -19,6 +19,11 @@ descriptions of shared characters settle it (926, 371 confirmed by two or more c
 [custom IDS notation](../docs/custom-components.md). Every row is derived by this project; no
 source states it. Rebuild with `bun scripts/build_custom_components.mjs`.
 
+`custom-ids.tsv` is the ledger of form identifiers the file carries (`X-00053`, written `&X-00053;`
+in a description): identifier, a name the form is known by, the date, and `first`, `merged into …`
+or `withdrawn`. It is append-only and the build reads it before it writes it, so a number once
+given stays.
+
 Licence: GPL-2.0-or-later, as CHISE IDS, whose rows inform it; BabelStone IDS is public domain and
 Yi Bai's table MIT.
 
