@@ -469,5 +469,10 @@
   "normalization.scope.chains": "구문 분석",
   "normalization.scope.operators": "입력란",
   "ucv.title": "부품 통합 기준(UCV)",
-  "ucv.source": "출처"
+  "ucv.source": "출처",
+  "appendix.notations": "표기법",
+  "appendix.notation.babelstone": "코드 포인트가 없는 부품에 붙인 번호입니다. 파일의 주 6에 번호마다 쓰이는 곳이 나옵니다.",
+  "appendix.notation.chise": "CHISE 문자 온톨로지의 글리프를 그 이름으로 가리킵니다. 접두사는 출처 문자 집합입니다.",
+  "appendix.notation.zi-tools": "획을 쓰는 순서대로 적으며, 각 획은 앞 획이 끝난 곳에서 시작합니다. 빼기 기호는 거꾸로 쓰는 획, 끝의 z는 닫힌 선입니다.",
+  "appendix.notation.form": "출처에서 뭐라 부르든 한 자형에 이 표가 붙이는 번호입니다. 어느 기술에서나 부품으로 읽힙니다."
 }

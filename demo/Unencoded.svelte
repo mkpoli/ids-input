@@ -102,6 +102,13 @@
   /** @param {string} id */
   const show = id => from(() => { query = id; source = 'all'; status = 'any' })
   let opened = $state(/** @type {string | null} */ (null))
+  // The four ways a form is written here, each with where its notation is defined.
+  const NOTATIONS = [
+    { id: 'babelstone', sample: '{53}', where: 'BabelStone IDS.TXT, note 6', url: 'https://www.babelstone.co.uk/CJK/IDS.TXT' },
+    { id: 'chise', sample: '&CDP-8964;', where: 'CHISE IDS', url: 'https://gitlab.chise.org/CHISE/ids' },
+    { id: 'zi-tools', sample: '#(-𠃌㇉)', where: '白式 IDS §5 · zi.tools', url: 'https://nightfurysl2001.github.io/bai-ids/' },
+    { id: 'form', sample: '&X-00053;', where: 'custom-ids.tsv', url: 'https://github.com/mkpoli/ids-input/blob/main/data/custom-ids.tsv' },
+  ]
 
   // The drawings: the composer is asked for what draws a form, as the workshop's palette does.
   // The composer's drawer ends a drawing when another is asked for, so the rows ask one at a time.
@@ -199,6 +206,16 @@
   <PageHeader title={t('appendix.title')} {t} bind:locale />
 
   <main>
+    <section class="notations" aria-label={t('appendix.notations')}>
+      {#each NOTATIONS as one (one.id)}
+        <article>
+          <code class="part" data-source={one.id} lang="ja">{one.sample}</code>
+          <a href={one.url} target="_blank" rel="noreferrer">{one.where}</a>
+          <p>{t(`appendix.notation.${one.id}`)}</p>
+        </article>
+      {/each}
+    </section>
+
     <div class="controls">
       <label class="search">
         <span class="ui-visually-hidden">{t('appendix.search')}</span>
@@ -348,6 +365,12 @@
   .page{display:flex;flex-direction:column;min-height:100dvh}
   main{width:100%;max-width:1180px;margin:0 auto;padding:26px max(18px,env(safe-area-inset-right)) 64px max(18px,env(safe-area-inset-left))}
   .lead{max-width:70ch;margin:0 0 18px;color:var(--ui-color-ink-soft)}
+  .notations{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:0 0 14px}
+  .notations article{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-lg);background:var(--ui-color-surface)}
+  .notations code{font-family:var(--ids-font),var(--ui-font-mono);font-size:18px;line-height:1.3}
+  .notations a{font-size:12px;color:var(--ui-color-accent);text-decoration:none}
+  .notations a:hover{text-decoration:underline}
+  .notations p{margin:2px 0 0;font-size:12.5px;line-height:1.5;color:var(--ui-color-ink-muted)}
   .controls{position:sticky;top:58px;z-index:5;display:flex;gap:10px 12px;flex-wrap:wrap;align-items:center;padding:12px;margin:0 0 8px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-xl);background:color-mix(in srgb,var(--ui-color-canvas) 92%,transparent);backdrop-filter:blur(10px)}
   .search{flex:1 1 280px;max-width:420px}
   .search input{width:100%}

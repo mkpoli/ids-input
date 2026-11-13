@@ -469,5 +469,10 @@
   "normalization.scope.chains": "構文解析",
   "normalization.scope.operators": "入力欄",
   "ucv.title": "部品の統合規準（UCV）",
-  "ucv.source": "出典"
+  "ucv.source": "出典",
+  "appendix.notations": "記法",
+  "appendix.notation.babelstone": "符号位置のない部品に振られた番号。ファイルの注6に各番号の出現箇所があります。",
+  "appendix.notation.chise": "CHISE文字オントロジーのグリフを、そこでの名前で指します。接頭辞は出典の文字集合です。",
+  "appendix.notation.zi-tools": "筆順どおりに並べた筆画で、各画は前の画の終点から始まります。マイナスは逆向きに書く画、末尾のzは閉じた線です。",
+  "appendix.notation.form": "出典での呼び名によらず、一つの字形にこの表が付ける番号。どの記述の中でも部品として読めます。"
 }
