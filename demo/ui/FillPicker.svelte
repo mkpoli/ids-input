@@ -2,7 +2,7 @@
   // A fill in the manner of a design tool's colour panel: a saturation/value field, hue and alpha
   // sliders, a hex field and an opacity field. Every move writes one fill; the panel owns no state
   // beyond the one it is showing.
-  import { clamp, fillColourOf, hexOf, percentOf, readRgba, rgbOf, toHsva } from '../lib/fill-editor.js'
+  import { clamp, fillColourOf, hexOf, percentOf, readRgba, rgbOf, toHsva, typedHex } from '../lib/fill-editor.js'
 
   /** @type {{ fill?: import('../../src/document/fill.js').Fill | null, ink?: string, t: (key: string, params?: Record<string, string | number>) => string, onchange: (fill: import('../../src/document/fill.js').Fill) => void, oninherit: () => void }} */
   let { fill = null, ink = '#000000', t, onchange, oninherit } = $props()
@@ -77,8 +77,7 @@
   function readHex(event) {
     const input = /** @type {HTMLInputElement} */ (event.currentTarget)
     if (!HEX.test(input.value.trim())) { hexDraft = hexOf(hsva).toUpperCase(); return }
-    const next = toHsva(readRgba(input.value))
-    emit({ h: next.h, s: next.s, v: next.v, a: next.a })
+    emit(typedHex(input.value, hsva.a))
   }
   /** @param {Event} event */
   function typeAlpha(event) {

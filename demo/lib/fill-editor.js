@@ -27,6 +27,14 @@ export function readRgba(value) {
   return { r: 0, g: 0, b: 0, a: 1 }
 }
 
+/** A colour typed into the hex field. Three or six digits name no alpha, so the current one stays.
+ *  @param {string} text @param {number} alpha @returns {Hsva} */
+export function typedHex(text, alpha) {
+  const typed = String(text).trim()
+  const next = toHsva(readRgba(typed))
+  return typed.length === 5 || typed.length === 9 ? next : { ...next, a: clamp(alpha, 0, 1) }
+}
+
 /** @param {Rgba} rgba @returns {Hsva} */
 export function toHsva({ r, g, b, a }) {
   const red = clamp(r, 0, 255) / 255, green = clamp(g, 0, 255) / 255, blue = clamp(b, 0, 255) / 255

@@ -3,7 +3,7 @@ import {
   assertDocument, carriedMore, createDocumentSession, fillColour, fromSequence, readDocument, readShareDocument,
   renderScopes, replaceNode, scopesSvg, shareDocument, syncDocument, toSequence, writeDocument,
 } from '../src/document/index.js'
-import { fillColourOf, hexOf, percentOf, readRgba, toHsva } from '../demo/lib/fill-editor.js'
+import { fillColourOf, hexOf, percentOf, readRgba, toHsva, typedHex } from '../demo/lib/fill-editor.js'
 
 const identity = [1, 0, 0, 1, 0, 0]
 const square = (d = 'M0 0L10 0L10 10L0 10Z', cut = false) => ({ d, fillRule: cut ? 'evenodd' : 'nonzero', cut })
@@ -154,6 +154,14 @@ describe('a fill in the drawing', () => {
 })
 
 describe('the picker’s colour arithmetic', () => {
+  it('keeps the opacity when a typed hex names no alpha', () => {
+    expect(typedHex('#112233', 0.5).a).toBe(0.5)
+    expect(typedHex('#123', 0.5).a).toBe(0.5)
+    expect(typedHex('#11223380', 0.5).a).toBe(128 / 255)
+    expect(typedHex('#1238', 0.5).a).toBe(0x88 / 255)
+    expect(fillColourOf(typedHex('#112233', 0.5))).toBe(fillColourOf(toHsva(readRgba('#11223380'))))
+  })
+
   it('reads six and eight digit hex, and rgb()', () => {
     expect(readRgba('#123456')).toEqual({ r: 0x12, g: 0x34, b: 0x56, a: 1 })
     expect(readRgba('#12345680')).toEqual({ r: 0x12, g: 0x34, b: 0x56, a: 128 / 255 })
