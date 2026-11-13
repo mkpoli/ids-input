@@ -504,10 +504,10 @@ apart; `scopesSvg` writes that tree with scoped masks, including ㇯ subtraction
 
 `createDocumentSession(document)` holds a document, the chosen layer ID and an allocator that never
 reuses an ID. Its edits (`replace`, `decompose`, `wrap`, `unwrap`, `changeOperator`, `remove`,
-`clear`, `setTransform`) keep the selected identity, and `undo`/`redo`, `snapshot`/`restore` work over
+`clear`, `setTransform`, `setFill`) keep the selected identity, and `undo`/`redo`, `snapshot`/`restore` work over
 whole documents. `sync(tree)` reconciles an editor tree without clearing history when the tree is
 unchanged; a structural change updates the document and clears the session history because the
-editor owns structural undo. `setTransform` accepts a coalesce key, so one drag is one step.
+editor owns structural undo. `setTransform` and `setFill` accept a coalesce key, so one drag is one step.
 `session.document` returns a detached copy; use session edits to change it.
 `listen` tells a host when to redraw; a throwing listener is reported through
 `onListenerError` (or `reportError`) and does not undo the committed edit.
@@ -517,8 +517,8 @@ ID for a tab; `readSession(text)` restores them. The record omits undo history. 
 itself is the `.ids.json` file, written by `writeDocument` and read by `readDocument`.
 
 `syncDocument(document, tree, { allocator })` reconciles the editor's positional tree into the
-document at the same paths, keeping each layer's ID, name and transform through replacements and
-structural edits. Pass the long-lived session allocator so removed IDs do not return.
+document at the same paths, keeping each layer's ID, name, fill and transform through replacements
+and structural edits. Pass the long-lived session allocator so removed IDs do not return.
 `treeFromDocument` and `documentFromTree` convert between the two projections; `layerAtPath` and
 `pathOfLayer` move between editor paths and layer IDs. `layerFrames(document, source, sketch)` gives
 each layer's box, depth and four frames: the box-to-canvas frame of its geometry (`canvas`), the
@@ -1288,9 +1288,9 @@ differs from the text it was saved with; the sequence itself is the tab's toolti
 name, not written in it. The active tab has an accent line along its top, and the + button opens an empty tab.
 Every panel follows the chosen tab: the sequence, its code points, the operators and the part pickers
 at the start; the Shape or indented Tree view and the search under it; and at the end
-the drawing in a square panel with export as SVG or PNG (256 to 2048 px) on a transparent, white, black or chosen
+the drawing in a square panel with each component's fill below it, and export as SVG or PNG (256 to 2048 px) on a transparent, white, black or chosen
 background, in an ink that suits it or a chosen one, with a margin, empty slots left out unless asked
-for. The output shows the drawing's component count and stroke total beside the code points, using the character's recorded count when it has one and marking a sum from the components with `≈`. Export can include empty slots on request, including through the scoped document drawing. An incomplete drawing blocks normal export until the partial checkbox is set. File → Document title sets the title saved in `.ids.json` and embedded in SVG/PNG exports; the page title follows it. Exported SVG and PNG files carry the editable document, so Open document restores the tree, IDs and transforms. Dropping one or more `.ids.json`, SVG or PNG files anywhere on the app opens each as a tab; a drop target shows while files are over the window. Adjust layout moves, scales and turns document layers without changing the sequence; a double-click on the drawing starts it, and arrow keys
+for. A fill is a hex colour with optional alpha; a component without one takes the export's ink. The output shows the drawing's component count and stroke total beside the code points, using the character's recorded count when it has one and marking a sum from the components with `≈`. Export can include empty slots on request, including through the scoped document drawing. An incomplete drawing blocks normal export until the partial checkbox is set. File → Document title sets the title saved in `.ids.json` and embedded in SVG/PNG exports; the page title follows it. Exported SVG and PNG files carry the editable document, so Open document restores the tree, IDs and transforms. Dropping one or more `.ids.json`, SVG or PNG files anywhere on the app opens each as a tab; a drop target shows while files are over the window. Adjust layout moves, scales and turns document layers without changing the sequence; a double-click on the drawing starts it, and arrow keys
 nudge, `+` and `-` scale evenly, `[` and `]` turn, and `0` resets. An edge handle scales one axis,
 a corner handle scales both, and Shift makes a corner even. The changes stay with their tab and export
 through the scoped drawing. The Layers dialog edits the same layer

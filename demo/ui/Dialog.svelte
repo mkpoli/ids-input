@@ -1,8 +1,8 @@
 <script>
   // Dialogs are modal by default. Settings sit beside their trigger on desktop; mobile uses a drawer.
   import Icon from './Icon.svelte'
-  /** @type {{ open: boolean, title: string, closeLabel: string, wide?: boolean, popover?: boolean, anchor?: HTMLElement | null, children: import('svelte').Snippet }} */
-  let { open = $bindable(false), title, closeLabel, wide = false, popover = false, anchor = null, children } = $props()
+  /** @type {{ open: boolean, title: string, closeLabel: string, wide?: boolean, narrow?: boolean, popover?: boolean, anchor?: HTMLElement | null, children: import('svelte').Snippet }} */
+  let { open = $bindable(false), title, closeLabel, wide = false, narrow = false, popover = false, anchor = null, children } = $props()
   /** @type {HTMLDialogElement | null} */ let dialog = $state(null)
   /** @type {HTMLElement | null} */ let returnFocus = null
   let mobile = $state(matchMedia('(max-width: 640px)').matches)
@@ -13,11 +13,16 @@
   function position() {
     mobile = matchMedia('(max-width: 640px)').matches
     const rect = anchor?.getBoundingClientRect()
-    top = rect ? rect.bottom + 8 : 52
     // The drawer is 380px wide, or the window less its margins; a trigger near the left edge would
     // otherwise put its right edge against that trigger and carry the drawer off the left side.
     const width = Math.min(380, Math.max(0, innerWidth - 16))
     right = rect ? Math.max(8, Math.min(innerWidth - rect.right, innerWidth - width - 8)) : 16
+    // Open below the trigger where the drawer fits, else above it, so a trigger near the foot of the
+    // window still shows the whole drawer.
+    const height = dialog?.getBoundingClientRect().height || Math.min(360, innerHeight - 24)
+    if (!rect) { top = 52; return }
+    const below = rect.bottom + 8, above = rect.top - height - 8
+    top = below + height <= innerHeight ? below : above >= 8 ? above : Math.max(8, innerHeight - height - 8)
   }
   $effect(() => {
     if (!dialog) return
@@ -64,7 +69,7 @@
   onfocusin={event => { if (open && popover && !mobile && !dialog?.contains(/** @type {Node} */ (event.target)) && event.target !== anchor) { restoreFocus = false; open = false } }} />
 
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-<dialog bind:this={dialog} class:wide class:drawer={popover} class:popover style:--top="{top}px" style:--right="{right}px"
+<dialog bind:this={dialog} class:wide class:narrow class:drawer={popover} class:popover style:--top="{top}px" style:--right="{right}px"
   aria-labelledby="{uid}-title" aria-modal={!popover || mobile ? 'true' : undefined}
   onclose={() => { if (!dialog?.open) open = false }} oncancel={event => { event.preventDefault(); open = false }}
   onkeydown={key}
@@ -80,11 +85,12 @@
   dialog{width:min(480px,calc(100vw - 32px));max-height:min(86vh,760px);padding:0;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-3xl);background:var(--ui-color-surface);color:var(--ui-color-ink);box-shadow:var(--ui-shadow-2)}
   dialog.wide{width:min(680px,calc(100vw - 32px))}
   dialog.popover{position:fixed;inset:var(--top) var(--right) auto auto;margin:0;width:min(380px,calc(100vw - 16px));max-height:calc(100dvh - var(--top) - 12px);z-index:var(--ui-z-modal);border-radius:var(--ui-radius-xl)}
+  dialog.popover.narrow{width:min(280px,calc(100vw - 16px))}
   dialog::backdrop{background:var(--ui-color-overlay);backdrop-filter:blur(2px)}
   header{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;gap:var(--ui-space-lg);padding:14px 16px 10px 20px;background:var(--ui-color-surface);border-bottom:1px solid var(--ui-color-border)}
   h2{margin:0;font-size:var(--ui-text-lg);font-weight:var(--ui-weight-bold)}
   .body{padding:16px 20px 20px;overflow:auto}
   @media (max-width:640px){
-    dialog.drawer{position:fixed;inset:auto 0 0;margin:0;width:100%;max-width:none;max-height:85dvh;border-radius:var(--ui-radius-3xl) var(--ui-radius-3xl) 0 0;padding-bottom:env(safe-area-inset-bottom)}
+    dialog.popover.drawer{position:fixed;inset:auto 0 0;margin:0;width:100%;max-width:none;max-height:85dvh;border-radius:var(--ui-radius-3xl) var(--ui-radius-3xl) 0 0;padding-bottom:env(safe-area-inset-bottom)}
   }
 </style>

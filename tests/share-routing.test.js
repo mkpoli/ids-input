@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { readdirSync } from 'node:fs'
 import { metaFor, pathOf, routeFor } from '../worker/page.js'
 import { CARD_VERSION } from '../worker/card-version.js'
 import { linkTo } from '../demo/lib/share.js'
@@ -17,6 +18,11 @@ describe('Pages sequence routing', () => {
     for (const path of ['/', '/robots.txt', '/favicon.svg', '/assets/app.js', '/og/fonts/a.ttf', '/og/data/a.json.gz', '/embed', '/compare', '/engines', '/sources', '/design', '/engines/', '/embed/', '/index.html', '/s/⿰木口']) {
       expect(route(path)).toEqual({ kind: 'asset' })
     }
+  })
+  it('serves every published page by its extensionless address', () => {
+    const built = ['/open-data', '/unencoded', '/ucv', '/normalization']
+    const copied = readdirSync(new URL('../demo/public/', import.meta.url)).filter(file => file.endsWith('.html')).map(file => `/${file.slice(0, -5)}`)
+    for (const path of [...built, ...copied]) expect(route(path)).toEqual({ kind: 'asset' })
   })
   it('handles trailing slashes and default cards', () => {
     expect(route('/⿰木口/')).toEqual({ kind: 'page', sequence: '⿰木口' })
