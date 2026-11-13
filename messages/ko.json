@@ -399,5 +399,19 @@
   "info.firstStrokeShort": "첫 획",
   "info.script.jurchen": "여진 문자",
   "info.script.kana": "가나",
-  "parts.equivalents": "CHISE: {names}"
+  "parts.equivalents": "CHISE: {names}",
+  "ids.pick.variations": "UCV",
+  "ids.ucv.search": "글자 또는 항목 번호",
+  "ids.ucv.all": "전체",
+  "ids.ucv.level": "레벨 {level}",
+  "ids.ucv.unified": "통합",
+  "ids.ucv.compatibility": "호환",
+  "ids.ucv.disunified": "분리",
+  "ids.ucv.separated": "원전 분리",
+  "ids.ucv.single": "단일 자형",
+  "ids.ucv.none": "일치하는 항목이 없습니다.",
+  "ids.ucv.loading": "목록을 불러오는 중…",
+  "ids.ucv.failed": "목록을 불러오지 못했습니다.",
+  "ids.ucv.kind": "목록",
+  "ids.ucv.form": "자형 {name}"
 }

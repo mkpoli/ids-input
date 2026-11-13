@@ -1,7 +1,8 @@
 <script>
   // Where parts come from, in tabs: components and characters the adapter's search finds, by name or
   // by a drawing, the parts palette (IdsParts), the parts of any character or description typed
-  // (IdsFrom) and structure templates (IdsTemplates), each only where the adapter can answer it. A
+  // (IdsFrom), structure templates (IdsTemplates) and the IRG's component variations
+  // (IdsVariations), each only where the adapter can answer it. A
   // part picked goes in `editor`'s chosen slot, or the first empty one; parts can also be dragged
   // onto the tree. Arrow keys, Home and End move between the tabs.
   import { tick, untrack } from 'svelte'
@@ -11,10 +12,11 @@
   import IdsParts from './IdsParts.svelte'
   import IdsSketch from './IdsSketch.svelte'
   import IdsTemplates from './IdsTemplates.svelte'
+  import IdsVariations from './IdsVariations.svelte'
   import { loadJurchenStrokes, loadKanaStrokes, loadStrokeRecords, loadTangutStrokes } from './strokes.js'
   import { strokeSummary } from './i18n.js'
 
-  /** @typedef {'find' | 'parts' | 'from' | 'templates'} Tab */
+  /** @typedef {'find' | 'parts' | 'from' | 'templates' | 'variations'} Tab */
   /** @type {{ editor: import('./editor.svelte.js').Editor, pickers?: Tab[], recentKey?: string | null, tab?: Tab | null, fromText?: string, title?: boolean, equivalents?: Map<string, string[]> }} */
   let { editor, pickers = ['find', 'parts', 'from', 'templates'], recentKey = 'ids-input.recentParts', tab = $bindable(null), fromText = $bindable(''), title = true, equivalents } = $props()
   const t = $derived(editor.t)
@@ -151,6 +153,7 @@
               {/if}
             </div>
           {:else if name === 'templates'}<IdsTemplates {editor} />
+          {:else if name === 'variations'}<IdsVariations {editor} />
           {:else if name === 'parts'}<IdsParts {adapter} disabled={editor.disabled} messages={editor.messages} locale={editor.locale} {recentKey} {equivalents} onpick={part => editor.take(part, undefined, { loose: isMarks(part) })} />
           {:else}<IdsFrom {adapter} lookup={editor.lookup} disabled={editor.disabled} messages={editor.messages} locale={editor.locale} bind:text={fromText} ontake={part => editor.take(part)} />{/if}
         </div>
