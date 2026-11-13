@@ -559,7 +559,8 @@
       {/if}
     {/if}
     {#if customChar}
-      {#if status === 'failed'}<p class="muted" role="status">{t('info.failed')}</p>
+      {#if status === 'loading'}<p class="muted" role="status">{t('parts.loading')}</p>
+      {:else if status === 'failed'}<p class="muted" role="status">{t('info.failed')}</p>
       {:else if custom}
         {@const subtractions = custom.subtractions.slice(0, SUBTRACTIONS)}
         {#if custom.description}<p class="custom-note" lang="en">{custom.description}</p>{/if}
@@ -568,7 +569,7 @@
             <p class="label">{t('info.custom.names')}</p>
             <div class="spellings">
               {#each custom.names as name (name.text)}
-                <button type="button" class="relation spelling" disabled={disabled || !onpick} aria-label={t('info.insert', { part: name.text })} onclick={() => pick(name.text)}>
+                <button type="button" class="relation spelling" disabled={disabled || !onpick} aria-label={`${t('info.insert', { part: name.text })}${name.source ? ` · ${t(`info.custom.source.${name.source}`)}` : ''}`} onclick={() => pick(name.text)}>
                   <span class="spelled" lang="ja">{name.text}</span>{#if name.source}<span class="label">{t(`info.custom.source.${name.source}`)}</span>{/if}
                 </button>
               {/each}
