@@ -64,11 +64,6 @@
     { n: 'Rikiya Takehi 武樋力哉', u: 'https://x.com/rikiyatakehi_jp' },
     { n: '彩(ひかり)', u: 'https://x.com/naokas_y' }
   ]
-  const groups = [
-    { label: 'app.about.reported', people: reported },
-    { label: 'app.about.quoted', people: quoted },
-    { label: 'app.about.reposted', people: reposted }
-  ]
 </script>
 
 <script>
@@ -76,24 +71,43 @@
   import Dialog from './Dialog.svelte'
   /** @type {{ open: boolean, t: (key: string, params?: Record<string, string | number>) => string }} */
   let { open = $bindable(false), locale, t } = $props()
+  // The workshop's other pages, each named by its own title.
+  const pages = $derived([
+    { path: 'sources.html', label: t('sources.title') },
+    { path: 'unencoded.html', label: t('appendix.title') },
+    { path: 'component-atlas.html', label: t('app.atlas') },
+    { path: 'ucv.html', label: t('ucv.title') },
+    { path: 'normalization.html', label: t('normalization.title') },
+    { path: 'open-data.html', label: t('app.openData') },
+    { path: 'compare.html', label: t('app.compare') },
+    { path: 'engines.html', label: t('app.engines') }
+  ])
+  const groups = $derived([
+    { label: t('app.about.reported'), people: reported },
+    { label: t('app.about.quoted'), people: quoted },
+    { label: t('app.about.reposted'), people: reposted }
+  ])
 </script>
 
 <Dialog bind:open title={t('app.about.title')} closeLabel={t('app.close')} wide>
   <div class="about">
     <p class="lead">{t('app.about.lead')}</p>
-    <p class="links"><a href="https://github.com/mkpoli/ids-input" target="_blank" rel="noreferrer">ids-input</a> · <a href="https://github.com/mkpoli/han-compose" target="_blank" rel="noreferrer">han-compose</a> · <a href="https://mkpo.li" rel="me">mkpoli</a> · <a href="./compare.html">{t('app.compare')}</a> · <a href="./engines.html">{t('app.engines')}</a> · <a href="./component-atlas.html">{t('app.atlas')}</a> · <a href={`./normalization.html?lang=${locale}`}>{t('normalization.title')}</a></p>
+    <p class="links"><a href="https://github.com/mkpoli/ids-input" target="_blank" rel="noreferrer">ids-input</a> · <a href="https://github.com/mkpoli/han-compose" target="_blank" rel="noreferrer">han-compose</a> · <a href="https://mkpo.li" rel="me">mkpoli</a></p>
+    <h3>{t('app.about.pages')}</h3>
+    <ul class="list">
+      {#each pages as page}
+        <li><a href={`./${page.path}?lang=${locale}`}>{page.label}</a></li>
+      {/each}
+    </ul>
     <h3>{t('app.about.licenses')}</h3>
     <p><a href="https://github.com/mkpoli/ids-input/blob/main/LICENSE" rel="license">{t('app.about.codeLicense')}</a></p>
     <p>{t('app.about.dataLicense')} <a href="https://github.com/mkpoli/ids-input/blob/main/data/README.md">{t('app.about.sources')}</a></p>
     <p>{t('app.about.outputLicense')}</p>
-    <h3>{t('app.footer.sources')}</h3>
-    <p>{t('app.about.fullSources')}</p>
-    <p><a class="catalogue" href={`./sources.html?lang=${locale}`}>{t('app.about.openSources')}</a> · <a class="catalogue" href={`./unencoded.html?lang=${locale}`}>{t('app.about.openEquivalences')}</a></p>
     <h3>{t('app.about.acknowledgments')}</h3>
     <p>{t('app.about.feedbackThanks')}</p>
     {#each groups as group}
-      <h4>{t(group.label)}</h4>
-      <ul class="thanks">
+      <h4>{group.label}</h4>
+      <ul class="list">
         {#each group.people as person}
           <li><a href={person.u} target="_blank" rel="noreferrer">{person.n}</a></li>
         {/each}
@@ -110,8 +124,7 @@
   h4{margin:var(--ui-space-md) 0 var(--ui-space-3xs);font-size:var(--ui-text-sm);font-weight:var(--ui-weight-semibold);color:var(--ui-color-ink)}
   a{color:var(--ui-color-accent);font-weight:var(--ui-weight-semibold);text-underline-offset:2px}
   p{margin:var(--ui-space-3xs) 0 0;color:var(--ui-color-ink-muted);font-size:var(--ui-text-sm);line-height:1.45}
-  .thanks{margin:var(--ui-space-3xs) 0 0;padding:0;list-style:none}
-  .thanks li{display:inline;color:var(--ui-color-ink-muted);font-size:var(--ui-text-sm);line-height:1.9}
-  .thanks li+li::before{content:' · '}
-  .catalogue{white-space:nowrap}
+  .list{display:flex;flex-wrap:wrap;margin:var(--ui-space-3xs) 0 0;padding:0;list-style:none}
+  .list li{color:var(--ui-color-ink-muted);font-size:var(--ui-text-sm);line-height:1.9;min-width:0}
+  .list li:not(:last-child)::after{content:'·';margin-inline:.4em}
 </style>
