@@ -10,7 +10,7 @@ import { componentIndex } from './containing.js'
 import { createSearch, readForms, readStructuralForms } from '../core/search.js'
 import { createNameSearch, readFolds, readNames } from '../core/names.js'
 import { unicodeProperty } from '../core/unicode.js'
-import { isComponent, isSequence, parse, write } from '../core/ids.js'
+import { isComponent, isCustom, isSequence, parse, write } from '../core/ids.js'
 import { createCustomComponents } from '../core/custom-components.js'
 import { chainCharacter as chainName, readChainEntries } from '../core/chain-entries.js'
 import { readSketchTemplates } from '../core/sketch-data.js'
@@ -742,6 +742,15 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
     } } : {}),
     /** @param {string} char @param {import('./types.js').Options} [options] */
     async structure(char, { signal } = {}) {
+      // A component no code point names is described by what it is in the other tables.
+      if (custom && isCustom(char)) {
+        const row = (await readCustom()).get(char)
+        signal?.throwIfAborted()
+        const seen = new Set()
+        return [...(row?.fragment ? [{ text: row.fragment, regions: '', sources: ['babelstone'] }] : []),
+          ...(row?.equivalents ?? []).filter(item => item.basis === 'difference').map(item => ({ text: item.text, regions: '', sources: [item.in] }))]
+          .filter(sequence => !seen.has(sequence.text) && seen.add(sequence.text))
+      }
       const found = (await readSearch()).table.get(char) ?? []
       signal?.throwIfAborted()
       // A computed character-first description replaces its source in the decomposition tree;

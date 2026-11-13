@@ -565,6 +565,15 @@
     session.clearTransform(node.id)
     layerChanged()
   }
+  /** Whether the output drawing can be adjusted. */
+  const canAdjust = $derived(Boolean((drawing || scopes) && !drawing?.cut))
+  /** Start direct editing from a double-click on the drawing. @param {MouseEvent} event */
+  function startAdjust(event) {
+    if (adjusting || !canAdjust) return
+    // Only the drawing box starts it; the toolbar and the caption keep their own double-click.
+    if (!(event.target instanceof Element) || !event.target.closest('.ids-preview-large')) return
+    adjusting = true
+  }
   // The address starts on the tab shown, as it does after every change.
   history.replaceState(null, '', linkTo(editor.draft, location, addressDocument(sessionFor(initial).document)))
   // Each change stays in its tab and is written into the address, so the link opens it; the tabs
@@ -1483,7 +1492,7 @@
           controls="output-panel" reverse onchange={width => resizeColumn('output', width)} onreset={() => resizeColumn('output', null)} />
       </div>
       <section class="pane output" class:phone-active={phonePane === 'output'} class:adjusting={adjusting} id="output-panel" aria-label={t('app.output')}>
-        <div class="preview" data-character-info-avoid>
+        <div class="preview" data-character-info-avoid ondblclick={startAdjust}>
           {#if !large}
             {#key activeId}
               <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false}
@@ -1523,7 +1532,7 @@
               onclick={() => { const tab = current(); if (tab) { keepTabSession(tab); layerOpen = true } }}>{t('app.layers.label')}</button>
             <button type="button" class="adjust-toggle" bind:this={largeButton} aria-haspopup="dialog" aria-controls="large-preview" aria-expanded={large} disabled={editor.tree === null}
               onclick={() => { large = true }}><Icon name="search" size={15} />{t('app.preview.large')}</button>
-            <button type="button" class="adjust-toggle" aria-pressed={adjusting} disabled={(!drawing && !scopes) || Boolean(drawing?.cut)}
+            <button type="button" class="adjust-toggle" aria-pressed={adjusting} disabled={!canAdjust}
               title={drawing?.cut ? t('ids.adjust.unavailable') : undefined}
               onclick={() => { adjusting = !adjusting }}>{t(adjusting ? 'ids.adjust.done' : 'ids.adjust.title')}</button>
             <button type="button" class="adjust-toggle adjust-report" onclick={() => { reportOpen = true }}><Icon name="mail" size={15} />{t('app.report.title')}</button>

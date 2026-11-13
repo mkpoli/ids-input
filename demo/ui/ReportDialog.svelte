@@ -5,6 +5,7 @@
   import { tick, untrack } from 'svelte'
   import { DEFAULTS, scopedSvgOf, svgOf } from '../lib/exporting.js'
   import { LIMITS, ReportError, reportSnapshot, sendReport } from '../lib/report.js'
+  import { keepContact, storedContact } from '../lib/report-contact.js'
   import Dialog from './Dialog.svelte'
 
   /** @type {{ open: boolean, endpoint: string, sequence: string, link: string,
@@ -27,7 +28,9 @@
   })
 
   let symptom = $state(''), busy = $state(false), failure = $state('')
-  let contact = $state('')
+  // The address typed for an earlier report comes back, so it is typed once; a report sent with the
+  // field empty forgets it.
+  let contact = $state(storedContact())
   // The drawing goes along while there is one, until the reporter says otherwise; a deep link opens
   // the dialog before the preview has drawn anything.
   let chosenImage = $state(/** @type {boolean | null} */ (null))
@@ -52,14 +55,15 @@
     t('app.report.workspace'),
     t('app.report.console'),
   ])
-  // Opening again after a report was sent starts a fresh form; an unsent account is kept.
+  // Opening again after a report was sent starts a fresh account; the contact and an unsent account
+  // are kept.
   let shown = false
   $effect(() => {
     if (!open) { shown = false; return }
     if (shown) return
     shown = true
     untrack(() => {
-      if (answer) { answer = null; symptom = ''; contact = '' }
+      if (answer) { answer = null; symptom = '' }
       failure = ''
       chosenImage = null
     })
@@ -79,6 +83,8 @@
     try {
       const snapshot = await reportSnapshot({ sequence, link, symptom: said, contact: reach, workspace: workspace(), drawing, scopes, slots, emoji, cut, cutLeaf, preview: preview(), locale, theme, face, composer })
       answer = await sendReport(endpoint, { symptom: said, contact: reach, image, snapshot })
+      // The address of the report that arrived is the one the next form fills in.
+      keepContact(reach)
       // The form is gone with the focused Send button; the issue is what to look at now.
       tick().then(() => requestAnimationFrame(() => saved?.focus()))
     } catch (error) {

@@ -1,7 +1,7 @@
 // @ts-check
 // Decomposition: the characters or the description typed into "Take parts from", each character's
 // descriptions as an adapter gives them, and the way the tree of them is stepped through by keys.
-import { arity, customAt, customOrFirst, isNode, readingOf, isComponent, isDescription, isSequence, isShuishu, leaves, modifierAt, parse, takesModifier } from './ids.js'
+import { arity, customAt, customLength, customOrFirst, isCustom, isNode, readingOf, isComponent, isDescription, isSequence, isShuishu, leaves, modifierAt, parse, takesModifier } from './ids.js'
 import { emojiPrefix } from '@han-compose/composer/emoji'
 
 import { unicodeProperty } from './unicode.js'
@@ -46,7 +46,8 @@ export function tokens(text) {
   let at = 0
   while (at < written.length) {
     const rest = written.slice(at)
-    const token = emojiPrefix(rest) || (!complete ? /^\{\d+\}/.exec(rest)?.[0] : '') || [...rest][0]
+    // A custom component is one token wherever it stands, alone in the text too.
+    const token = emojiPrefix(rest) || (!complete ? rest.slice(0, customLength(rest)) : '') || [...rest][0]
     at += token.length
 
     if (SELECTOR.test(token) && out.length) out[out.length - 1] += token
@@ -120,7 +121,7 @@ export const unencoded = token => /^\{(\d+)\}$/.exec(token ?? '')?.[1] ?? null
 export const lookupChar = part => customOrFirst(part)
 
 /** Whether a part can be looked up: one encoded component, not ？. @param {unknown} part @returns {part is string} */
-export const decomposable = part => typeof part === 'string' && unencoded(part) === null && isComponent(lookupChar(part)) && lookupChar(part) !== '？'
+export const decomposable = part => typeof part === 'string' && (isCustom(part) || isComponent(lookupChar(part)) && lookupChar(part) !== '？')
 
 /**
  * What is decomposed for the text typed: a description (typed with operators or their ASCII names)

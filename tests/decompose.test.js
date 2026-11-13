@@ -45,7 +45,8 @@ describe('a character\'s descriptions', () => {
     expect(tokens('⿱&CDP-8BD0;心')).toEqual(['⿱', '&CDP-8BD0;', '心'])
     expect(unencoded('{22}')).toBe('22')
     expect(unencoded('一')).toBeNull()
-    expect(namedParts('⿱⿰{27}{27}一')).toEqual(['一'])
+    // An unencoded component is a part that can be taken apart, like a character.
+    expect(namedParts('⿱⿰{27}{27}一')).toEqual(['{27}', '一'])
   })
   it('has none while loading', () => {
     expect(variants(undefined)).toEqual([])

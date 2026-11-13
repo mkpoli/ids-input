@@ -1,5 +1,5 @@
 <script>
-  import { parse, arity } from '../core/ids.js'
+  import { parse, arity, customLength, isCustom, unfinishedCustom } from '../core/ids.js'
   import { unalias } from '../core/aliases.js'
   import { replacementPrefix, replacementQuery } from '../core/replacement.js'
   import { replacementExpression, replacementInput } from '../core/replacement-expression.js'
@@ -137,6 +137,22 @@
     if (!field || !text || parse(unalias(text), { open: true }).problem) return false
     if (field.selectionStart === field.selectionEnd) {
       const offset = field.selectionStart ?? 0
+      // A custom component is typed as text until its closing mark: &, C, D, P are no parts of
+      // their own. Once closed it goes in as one part, as if pasted whole.
+      const opened = unfinishedCustom(editor.draft.slice(0, offset))
+      if (opened >= 0 && [...text].length === 1) {
+        const written = editor.draft.slice(opened, offset) + text
+        if (customLength(written) !== written.length) return false
+        field.value = editor.draft.slice(0, opened) + editor.draft.slice(offset)
+        field.setSelectionRange(opened, opened)
+        editor.edit(field)
+        if (replaceText(written)) return true
+        field.value = editor.draft.slice(0, opened) + written + editor.draft.slice(opened)
+        field.setSelectionRange(opened + written.length, opened + written.length)
+        editor.edit(field)
+        return true
+      }
+      if (text === '&' || text === '{' || (text === '(' && editor.draft[offset - 1] === '#')) return false
       const inserted = unalias(text)
       const candidate = unalias(editor.draft.slice(0, offset) + text + editor.draft.slice(offset))
       if (parse(editor.draft, {open:true}).problem || (!arity(inserted) && !parse(candidate, {open:true}).problem)) return false
@@ -215,7 +231,7 @@
 <label class="ids-field">
   {#if label}<span class="ids-title">{t('ids.label')}</span>{/if}
   <div class="sequence-wrap" class:composing style:--scope-height={`${scopeHeight}px`}>
-    <div class="sequence-paint" bind:this={paint} style={metrics} aria-hidden="true"><div class="sequence-viewport"><div class="sequence-run" bind:this={textRun} style:transform={`translateX(${-scroll}px)`}>{#if spans.length}{#each spans as token}<span data-character={token.text || '◌'} data-path={token.path.join('.')} class:missing={!token.text} class:tinted={editor.isTinted(token.path)} class:hovered={editor.isHovered(token.path)} class:selected={editor.isSelected(token.path)} style:--tint={tint(token.path, operatorToken(token))}>{token.text || '◌'}</span>{/each}{:else}{editor.draft}{/if}{#if paintedScopes.length}<svg class="sequence-scopes" width="100%" height={scopeHeight} aria-hidden="true">{#each paintedScopes as scope}<g data-path={scope.path.join('.')}><path class="scope-lead" class:scope-tinted={scope.tinted} class:scope-hovered={scope.hovered} class:scope-selected={scope.selected} style:--tint={tint(scope.path, true)} data-path={scope.path.join('.')} d={scope.lead}/>{#each scope.segments as segment}<path class="scope-segment" class:scope-missing={segment.missing} class:scope-tinted={segment.tinted} class:scope-hovered={segment.hovered} class:scope-selected={segment.selected} style:--tint={tint(segment.path)} data-path={segment.path.join('.')} d={segment.d}/>{/each}</g>{/each}</svg>{/if}</div></div></div>
+    <div class="sequence-paint" bind:this={paint} style={metrics} aria-hidden="true"><div class="sequence-viewport"><div class="sequence-run" bind:this={textRun} style:transform={`translateX(${-scroll}px)`}>{#if spans.length}{#each spans as token}<span data-character={token.text || '◌'} data-path={token.path.join('.')} class:missing={!token.text} class:custom={isCustom(token.text)} class:tinted={editor.isTinted(token.path)} class:hovered={editor.isHovered(token.path)} class:selected={editor.isSelected(token.path)} style:--tint={tint(token.path, operatorToken(token))}>{token.text || '◌'}</span>{/each}{:else}{editor.draft}{/if}{#if paintedScopes.length}<svg class="sequence-scopes" width="100%" height={scopeHeight} aria-hidden="true">{#each paintedScopes as scope}<g data-path={scope.path.join('.')}><path class="scope-lead" class:scope-tinted={scope.tinted} class:scope-hovered={scope.hovered} class:scope-selected={scope.selected} style:--tint={tint(scope.path, true)} data-path={scope.path.join('.')} d={scope.lead}/>{#each scope.segments as segment}<path class="scope-segment" class:scope-missing={segment.missing} class:scope-tinted={segment.tinted} class:scope-hovered={segment.hovered} class:scope-selected={segment.selected} style:--tint={tint(segment.path)} data-path={segment.path.join('.')} d={segment.d}/>{/each}</g>{/each}</svg>{/if}</div></div></div>
   <input bind:this={field} value={editor.draft} style:padding-right={`calc(10px + ${drawnSlots + 8}px)`} disabled={editor.disabled} lang="ja" spellcheck="false" autocomplete="off"
     aria-label={label ? undefined : t('ids.label')} {placeholder} aria-invalid={Boolean(editor.problem)}
     onselect={select} onkeyup={select} onclick={select} onbeforeinput={beforeInput} onpaste={paste} onpointermove={hover} onpointerleave={() => editor.hover(null)} onscroll={() => scroll = field?.scrollLeft ?? 0} oninput={edit} oncompositionstart={startComposition} oncompositionend={endComposition} onblur={() => editor.settle()}
@@ -238,6 +254,8 @@
   .sequence-wrap{position:relative;min-width:0}
   .sequence-paint{position:absolute;inset:1px;padding:6px 10px;overflow:hidden;pointer-events:none;border-radius:7px;font:22px var(--_font);white-space:pre}
   .sequence-paint span.tinted{color:color-mix(in oklab,var(--_ink) 76%,var(--tint));background:color-mix(in oklab,var(--tint) 12%,transparent)}
+  /* A part no code point names is written by its code: marked, so it does not read as loose punctuation. */
+  .sequence-paint span.custom{text-decoration:underline dotted color-mix(in oklab,var(--_accent) 70%,transparent);text-decoration-thickness:2px;text-underline-offset:5px}
   .sequence-paint span:first-child{border-radius:3px 0 0 3px}
   .sequence-paint span:last-of-type{border-radius:0 3px 3px 0}
   .sequence-paint span:only-of-type{border-radius:3px}

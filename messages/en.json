@@ -154,6 +154,8 @@
   "ids.hints.title": "Common in part {n} of {name}",
   "ids.hints.count.one": "Used in this slot by 1 character",
   "ids.hints.count.other": "Used in this slot by {count} characters",
+  "ids.hints.more": "Show {count} more",
+  "ids.hints.less": "Show fewer",
   "ids.inline.label": "Edit part",
   "ids.slot": "Chosen part",
   "ids.slotHint": "Type a part",

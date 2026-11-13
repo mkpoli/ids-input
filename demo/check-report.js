@@ -120,6 +120,30 @@ try {
   assert.equal(sent.image?.type, 'image/png', 'the drawing is sent as a PNG')
   assert.ok(sent.image.value.startsWith('\x89PNG'), 'and it is a PNG')
   assert.ok(sent.image.value.length > 1000, `of some size: ${sent.image.value.length}`)
+
+  // The address is kept across a reload, so the next report does not ask for it again.
+  assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('ids-input:reportContact') ?? 'null')), '@someone', 'the contact is written down')
+  await page.reload({ waitUntil: 'domcontentloaded' })
+  await page.getByRole('menuitem', { name: 'File', exact: true }).waitFor({ timeout: 60000 })
+  await page.getByRole('menuitem', { name: 'File', exact: true }).click()
+  await page.getByRole('menuitem', { name: 'Report a problem', exact: true }).click()
+  await dialog.waitFor({ timeout: 5000 })
+  assert.equal(await dialog.getByRole('textbox', { name: 'How to reach you (optional)' }).inputValue(), '@someone', 'the contact is kept for the next report')
+  assert.equal(await dialog.locator('textarea').inputValue(), '', 'the next report starts with a fresh account')
+
+  // Sending a report with the field cleared forgets the address.
+  await dialog.locator('textarea').fill('The next report has no way back.')
+  await dialog.getByRole('textbox', { name: 'How to reach you (optional)' }).fill('')
+  await dialog.getByRole('button', { name: 'Send report' }).click()
+  await dialog.getByRole('link', { name: 'Issue #123' }).waitFor({ timeout: 10000 })
+  assert.equal(parts(body()).contact, undefined, 'a report sent without an address carries none')
+  await page.reload({ waitUntil: 'domcontentloaded' })
+  await page.getByRole('menuitem', { name: 'File', exact: true }).waitFor({ timeout: 60000 })
+  await page.getByRole('menuitem', { name: 'File', exact: true }).click()
+  await page.getByRole('menuitem', { name: 'Report a problem', exact: true }).click()
+  await dialog.waitFor({ timeout: 5000 })
+  assert.equal(await dialog.getByRole('textbox', { name: 'How to reach you (optional)' }).inputValue(), '', 'the cleared address stays forgotten')
+  await dialog.getByRole('button', { name: 'Close', exact: true }).click()
   assert.deepEqual(errors, [])
   await page.close()
 

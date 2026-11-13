@@ -152,6 +152,8 @@
   "ids.hints.title": "{name}の{n}番目でよく使われる部品",
   "ids.hints.count.one": "この位置では1字がこの部品を使っています",
   "ids.hints.count.other": "この位置では{count}字がこの部品を使っています",
+  "ids.hints.more": "さらに{count}個表示",
+  "ids.hints.less": "表示を減らす",
   "ids.inline.label": "部品を編集",
   "ids.slot": "選んだ部品",
   "ids.slotHint": "部品を入力",

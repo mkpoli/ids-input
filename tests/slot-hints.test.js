@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { isComponent, parse, OPERATORS } from '../src/core/ids.js'
-import { hintsAt, SLOT_HINTS, SLOT_HINT_METADATA, slotHints } from '../src/core/hints.js'
-import { auditSlots, buildSlotHints, TOP } from '../scripts/build_slot_hints.mjs'
+import { hintsAt, SLOT_HINTS, SLOT_HINT_DEFAULT, SLOT_HINT_METADATA, slotHints } from '../src/core/hints.js'
+import { auditSlots, buildSlotHints, DEFAULT, TOP } from '../scripts/build_slot_hints.mjs'
+import { renderAppendix } from '../scripts/build_slot_hints_appendix.mjs'
 import { readBundledSources } from '../scripts/build_structure_templates.mjs'
 
 const descriptions = (...texts) => texts.map(text => ({ text, regions: '' }))
@@ -15,7 +16,7 @@ describe('slot hints', () => {
       const entry = catalog.operators.find(item => item.op === op)
       expect(entry.slots).toHaveLength(arity)
       for (const slot of entry.slots) {
-        expect(slot.hints.length).toBeLessThanOrEqual(TOP)
+        expect(slot.hints.length).toBe(Math.min(TOP, slot.total))
         expect(slot.total).toBeGreaterThanOrEqual(slot.hints.length)
         for (let i = 1; i < slot.hints.length; i++) expect(slot.hints[i - 1][1]).toBeGreaterThanOrEqual(slot.hints[i][1])
         expect(slot.hints.every(([part, count]) => [...part].length === 1 && isComponent(part) && count > 0)).toBe(true)
@@ -23,8 +24,11 @@ describe('slot hints', () => {
     }
     expect(SLOT_HINTS.size).toBe(OPERATORS.length)
     expect(SLOT_HINT_METADATA.statistics.slots).toBe(35)
-    expect(SLOT_HINT_METADATA.statistics.hintEntries).toBe(415)
+    expect(SLOT_HINT_METADATA.statistics.hintEntries).toBe(1419)
     expect(SLOT_HINT_METADATA.statistics.coveredCharacters).toBe(101864)
+    expect(SLOT_HINT_DEFAULT).toBe(DEFAULT)
+    expect(SLOT_HINT_DEFAULT).toBe(24)
+    expect(TOP).toBe(48)
   })
   it('offers the components the examples in the request name', () => {
     const left = slotHints('⿰', 0).map(([part]) => part)
@@ -82,6 +86,10 @@ describe('slot hints', () => {
     const expected = JSON.parse(readFileSync(new URL('../src/core/slot-hints.json', import.meta.url), 'utf8'))
     expect(actual).toEqual(expected)
     expect(sources.every(source => /^[a-f0-9]{64}$/.test(source.compressedSha256) && /^[a-f0-9]{64}$/.test(source.textSha256))).toBe(true)
+  })
+  it('reproduces the checked-in appendix from the catalogue', () => {
+    const catalog = JSON.parse(readFileSync(new URL('../src/core/slot-hints.json', import.meta.url), 'utf8'))
+    expect(renderAppendix(catalog)).toBe(readFileSync(new URL('../docs/slot-hints.md', import.meta.url), 'utf8'))
   })
   it('answers for a leaf slot through its parent operator', () => {
     const tree = parse('⿰木⿱口⬚', { open: true }).tree
