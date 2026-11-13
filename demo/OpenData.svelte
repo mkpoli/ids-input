@@ -7,6 +7,7 @@
   import { applyTheme, storedTheme } from './lib/theme.js'
   import ThemeSwitch from './ui/ThemeSwitch.svelte'
   import manifest from '../data/open-data/manifest.json'
+  import strokes from '../data/open-strokes/manifest.json'
 
   const en = appMessages('en')
 
@@ -16,6 +17,7 @@
 
   /** @param {number} bytes */
   const size = bytes => bytes < 1024 ? `${bytes} B` : `${Math.round(bytes / 1024)} KB`
+  const mainland = strokes.coverage.find(row => row.style === 'mainland'), taiwan = strokes.coverage.find(row => row.style === 'taiwan')
 </script>
 
 <svelte:head>
@@ -95,6 +97,26 @@
     <p class="cite">IDS Input. Open IDS descriptions, version {manifest.version}.
       <a href="https://ids.mkpo.li/open-data">https://ids.mkpo.li/open-data</a></p>
 
+    <h2 id="strokes">Stroke orders</h2>
+    <p class="lead">The stroke order of Han characters in mainland and Taiwan writing, each row from
+      a named source or induced from one and marked so.</p>
+    <ul class="stats">
+      <li><b>{mainland?.recorded.toLocaleString('en')}</b><span>mainland, recorded</span></li>
+      <li><b>{taiwan?.recorded.toLocaleString('en')}</b><span>Taiwan, recorded</span></li>
+      <li><b>{taiwan?.ids.toLocaleString('en')}</b><span>Taiwan, induced from IDS</span></li>
+      <li><b>{((mainland?.equivalent ?? 0) + (taiwan?.equivalent ?? 0)).toLocaleString('en')}</b><span>by equivalence</span></li>
+    </ul>
+    <ul class="files stroke-files">
+      {#each [...strokes.files, { name: 'manifest.json', bytes: 0 }, { name: 'README.md', bytes: 0 }] as file (file.name)}
+        <li>
+          <a href={`/data/open-strokes/${file.name}`}>{file.name}</a>
+          {#if file.bytes}<span class="meta">{size(file.bytes)}</span>{/if}
+        </li>
+      {/each}
+    </ul>
+    <p class="note">Each file keeps its source's terms:
+      {#each strokes.sources as source, index (source.key)}{index ? '; ' : ''}<a href={source.url}>{source.key}</a> {source.licence.spdx ?? source.licence.name}{/each}.</p>
+
     <h2>Rebuild</h2>
     <p>The files are built from this repository with <code>bun scripts/build_open_ids.mjs</code>;
       <code>--check</code> fails when a committed file differs.</p>
@@ -103,6 +125,7 @@
 
 <style>
   .page{display:flex;flex-direction:column;min-height:100dvh}
+  .stroke-files{margin-top:12px}
   .bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px max(18px,env(safe-area-inset-right)) 10px max(18px,env(safe-area-inset-left));
     border-bottom:1px solid var(--ui-color-border);background:color-mix(in srgb,var(--ui-color-canvas) 88%,transparent);backdrop-filter:blur(10px);position:sticky;top:0;z-index:10}
   .slash{color:var(--ui-color-border-strong)}
