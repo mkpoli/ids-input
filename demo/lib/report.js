@@ -14,8 +14,12 @@ import { DESKTOP, SITE } from './desktop.js'
 /** @typedef {{ sequence: string, link: string, document: string, context: string, image: Blob | null }} ReportSnapshot */
 /** @typedef {{ number: number, url: string, duplicate: boolean }} ReportAnswer */
 
-/** The sizes the intake accepts; the request is held to them here too. */
-export const LIMITS = { symptom: 4000, sequence: 2000, contact: 200, link: 4000, document: 200 * 1024, context: 32 * 1024, image: 5 * 1024 * 1024 }
+/** The sizes the intake accepts; the request is held to them here too. The dispatch GitHub takes is
+ *  smaller than any field's, so `dispatch` is the real bound: the workspace and the context share
+ *  what the other fields leave of it (`MAX_DISPATCH` in `workers/reports/src/index.js`). */
+export const LIMITS = { symptom: 4000, sequence: 2000, contact: 200, link: 4000, dispatch: 30_000, image: 5 * 1024 * 1024 }
+// The origin the Worker adds to the dispatch, and the room the estimate leaves itself.
+const DISPATCH_ROOM = 512
 const RING = 20, LINE = 500, BURST = 100, ATTRIBUTE = 120
 // Long enough for 8 MB on a slow phone, short enough that a hung intake gives the dialog back.
 const SEND_TIMEOUT = 60_000
@@ -233,36 +237,105 @@ function redacted(value) {
   return value
 }
 
-/** The workspace as JSON within the intake's size: a report from a busy set of tabs loses its last
- *  tabs rather than its whole document. @param {unknown} workspace @returns {string} */
-export function workspaceJson(workspace) {
-  const whole = /** @type {{ tabs?: unknown[], droppedTabs?: number }} */ (redacted(workspace ?? {}))
-  const tabs = Array.isArray(whole.tabs) ? [...whole.tabs] : []
+/** The workspace as JSON within `limit` bytes: a report from a busy set of tabs loses its last tabs,
+ *  the one being looked at last, then the documents of the tabs it keeps, rather than the whole
+ *  workspace. The counts say what was left out. @param {unknown} workspace @param {number} limit
+ *  @returns {string} */
+export function workspaceJson(workspace, limit) {
+  const whole = /** @type {{ tabs?: Record<string, unknown>[], droppedTabs?: number, droppedDocuments?: number }} */ (redacted(workspace ?? {}))
+  const hadTabs = Array.isArray(whole.tabs)
+  const tabs = hadTabs ? [...whole.tabs] : []
   const all = tabs.length
-  let text = JSON.stringify(whole)
-  while (tabs.length > 1 && byteLength(text) > LIMITS.document) {
-    tabs.pop()
-    text = JSON.stringify({ ...whole, tabs, droppedTabs: (whole.droppedTabs ?? 0) + all - tabs.length })
+  const droppedTabs = whole.droppedTabs ?? 0
+  let droppedDocuments = whole.droppedDocuments ?? 0
+  /** @param {number} tabsGone */
+  const text = tabsGone => JSON.stringify({
+    ...whole,
+    ...(hadTabs ? { tabs } : {}),
+    ...(tabsGone ? { droppedTabs: tabsGone } : {}),
+    ...(droppedDocuments ? { droppedDocuments } : {}),
+  })
+  const activeTab = typeof whole.activeTab === 'string' ? whole.activeTab : ''
+  let json = text(droppedTabs)
+  // The tabs go from the end, but the one being looked at stays while any other does.
+  while (tabs.length > 1 && byteLength(json) > limit) {
+    let index = tabs.length - 1
+    while (index >= 0 && tabs[index]?.id === activeTab) index--
+    if (index < 0) break
+    tabs.splice(index, 1)
+    json = text(droppedTabs + all - tabs.length)
   }
-  return text
+  // A document can be larger than the whole dispatch on its own; its tab still says what was open.
+  // The active tab keeps its document until the others have gone.
+  for (const keepActive of [true, false]) {
+    for (let index = tabs.length - 1; index >= 0 && byteLength(json) > limit; index--) {
+      const tab = tabs[index]
+      if (!tab || typeof tab !== 'object' || !('document' in tab)) continue
+      if (keepActive && tab.id === activeTab) continue
+      const { document: _document, ...kept } = tab
+      tabs[index] = kept
+      droppedDocuments++
+      json = text(droppedTabs + all - tabs.length)
+    }
+  }
+  return byteLength(json) <= limit ? json : '{}'
 }
 
 /** The size of a string in UTF-8 bytes, which is what the intake measures. @param {string} text */
 const byteLength = text => new TextEncoder().encode(text).length
 
-/** The context as JSON within its size: the oldest log entries go first, then the font list.
- *  @param {Record<string, unknown>} context @param {LogEntry[]} entries */
-function contextJson(context, entries) {
+/** The context as JSON within `limit` bytes: the oldest log entries go first, then the font list.
+ *  @param {Record<string, unknown>} context @param {LogEntry[]} entries @param {number} limit */
+function contextJson(context, entries, limit) {
   let kept = entries
   for (;;) {
     const text = JSON.stringify({ ...context, console: kept })
-    if (byteLength(text) <= LIMITS.context) return text
+    if (byteLength(text) <= limit) return text
     if (kept.length) { kept = kept.slice(1); continue }
     const trimmed = JSON.stringify({ ...context, fonts: [], userAgent: String(context.userAgent).slice(0, 200), console: [] })
-    if (byteLength(trimmed) <= LIMITS.context) return trimmed
+    if (byteLength(trimmed) <= limit) return trimmed
     const { appVersion, commit, route, viewport, locale, theme, face, local } = context
-    return JSON.stringify({ appVersion, commit, route: String(route).slice(0, 200), viewport, locale, theme, face, local, console: [] })
+    const least = JSON.stringify({ appVersion, commit, route: String(route).slice(0, 200), viewport, locale, theme, face, local, console: [] })
+    return byteLength(least) <= limit ? least : '{}'
   }
+}
+
+/**
+ * The workspace and the context within the dispatch the intake hands the Action. The other fields
+ * cost what they cost; the context is fitted first, and the workspace takes what is left. Both are
+ * cut rather than the report being refused, and the workspace says what it dropped.
+ * @param {{ symptom: string, sequence: string, link: string, contact: string, workspace: unknown,
+ *   context: Record<string, unknown>, entries: LogEntry[] }} source
+ * @returns {{ document: string, context: string }}
+ */
+export function fitToDispatch({ symptom, sequence, link, contact, workspace, context, entries }) {
+  const budget = LIMITS.dispatch - DISPATCH_ROOM
+  /** @param {string} document @param {string} contextText */
+  const size = (document, contextText) => byteLength(JSON.stringify({ symptom, sequence, link, contact, document, context: contextText }))
+  let contextText = contextJson(context, entries, budget)
+  // Quoting a context costs more than its own bytes; each pass takes the excess off the next fit.
+  for (let tries = 0; tries < 8; tries++) {
+    const over = size('', contextText) - budget
+    if (over <= 0) break
+    const next = byteLength(contextText) - over - 64
+    if (next < 2) { contextText = '{}'; break }
+    contextText = contextJson(context, entries, next)
+  }
+  let document = workspaceJson(workspace, Math.max(2, budget - size('', contextText)))
+  for (let tries = 0; tries < 8; tries++) {
+    const over = size(document, contextText) - budget
+    if (over <= 0) break
+    const next = byteLength(document) - over - 64
+    if (next < 2) { document = ''; break }
+    document = workspaceJson(workspace, next)
+  }
+  // The workspace is the last thing to go when the fields that cannot shrink are already measured.
+  if (size(document, contextText) > budget) {
+    document = ''
+    // A context that even the smallest shape cannot fit goes with it; only the fixed fields remain.
+    if (size('', contextText) > budget) contextText = '{}'
+  }
+  return { document, context: contextText }
 }
 
 /** The colours the preview's scoped rules give an empty slot and a stroke; standalone, the clone
@@ -315,8 +388,8 @@ export async function reportImage({ drawing, scopes, slots = [], emoji, cut, cut
 
 /**
  * Everything a report carries, read once at submit so nothing re-renders while it is sent.
- * @param {Drawn & { sequence: string, link: string, workspace: unknown, preview: Element | null,
- *   locale: string, theme: string, face: string, composer: string }} source
+ * @param {Drawn & { sequence: string, link: string, symptom: string, contact: string, workspace: unknown,
+ *   preview: Element | null, locale: string, theme: string, face: string, composer: string }} source
  * @returns {Promise<ReportSnapshot>}
  */
 export async function reportSnapshot(source) {
@@ -324,14 +397,18 @@ export async function reportSnapshot(source) {
   // sequence, and nothing is drawing, so there is nothing to wait for.
   const sequence = EMPTY_MARKS.includes(source.sequence) ? '' : source.sequence.slice(0, LIMITS.sequence)
   if (sequence) await settled(source.preview)
-  const taken = {
+  const link = shareLink(source.link)
+  const fitted = fitToDispatch({
+    symptom: source.symptom.slice(0, LIMITS.symptom),
     sequence,
-    link: shareLink(source.link),
-    document: workspaceJson(source.workspace),
-    context: contextJson(reportContext(source, source.preview), consoleRing()),
-  }
+    link,
+    contact: source.contact.trim().slice(0, LIMITS.contact),
+    workspace: source.workspace,
+    context: reportContext(source, source.preview),
+    entries: consoleRing(),
+  })
   // The context keeps what was on screen; the picture may wait for the first drawing.
-  return { ...taken, image: await reportImage(source, source.preview) }
+  return { sequence, link, ...fitted, image: await reportImage(source, source.preview) }
 }
 
 /** What the intake said went wrong. */
@@ -348,9 +425,8 @@ export async function sendReport(endpoint, { symptom, contact, image, snapshot }
   body.set('symptom', symptom.slice(0, LIMITS.symptom))
   if (snapshot.sequence) body.set('sequence', snapshot.sequence)
   if (snapshot.link) body.set('link', snapshot.link)
-  // A workspace past the field's size rides as the file field instead.
-  if (byteLength(snapshot.document) <= LIMITS.document) body.set('document', snapshot.document)
-  else body.set('documentFile', new File([snapshot.document], 'workspace.ids.json', { type: 'application/json' }))
+  // The snapshot has already fitted the workspace and the context to the dispatch.
+  body.set('document', snapshot.document)
   body.set('context', snapshot.context)
   const reach = contact.trim().slice(0, LIMITS.contact)
   if (reach) body.set('contact', reach)

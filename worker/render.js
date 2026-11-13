@@ -4,7 +4,7 @@
 // still gets a card, with the empty frame.
 import { compose, dataUrls, sketch as composerSketch, unpack } from '@han-compose/composer'
 import { documentView } from '@han-compose/composer/document-view'
-import { boxCorners } from '../src/document/index.js'
+import { boxCorners, layerFrames, renderScopes } from '../src/document/index.js'
 import { sourceFor } from '@han-compose/composer/source'
 import { cardSvg, SIZE, codePoint } from './card.js'
 import { JURCHEN_VARIANT, OPERATORS } from '../src/core/ids.js'
@@ -107,7 +107,7 @@ async function drawDocument(env, sequence, document) {
   await source.ready()
   const drawing = await compose(source, sequence, { separate: true, fontStyle: 'sans' })
   const sketch = await composerSketch(source, sequence)
-  return { view: documentView(document, drawing, sketch), drawing }
+  return { view: documentView(document, drawing, sketch, { renderer: { layerFrames, renderScopes } }), drawing }
 }
 
 /** Rasterized card PNG. @param {any} env @param {string} sequence @param {any} drawing @param {string | null} char */

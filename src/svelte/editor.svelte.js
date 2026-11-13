@@ -4,19 +4,21 @@
 // them out as it likes; `IdsInput` puts them together as one editor.
 //
 // The sequence is held twice, kept in step: as text in the field, which also takes the ASCII operator
-// names (LR or lr for ⿰), and as a tree, where an empty slot shows (and is written) as ⬚. One part of
-// the tree is chosen at a time. Every change is a named step in the history ("Split ⬚ with ⿰",
+// names (LR or lr for ⿰), and as a tree. The field draws an empty slot as ⬚ and the operands a node
+// still misses after the typed text, their scope lines in the warning colour. One part of the tree is
+// chosen at a time. Every change is a named step in the history ("Split ⬚ with ⿰",
 // "Put 木"), so it can be undone and redone, a hundred steps each way; a run of typing in the field
 // is one step.
 import { insertAt } from './insertion.js'
 import { tokens, rangeToken } from './tokens.js'
 import { tick } from 'svelte'
 import { applyOperator, clear, entryBody, isDescription, isMarks, isNode, nextEmpty, normalizeMarks, parse, partAt, paths, place as placed, reorderSiblings,
-  replaceAt, samePath, sameTree, swapParts, unwrap, withMarks, write } from '../core/ids.js'
+  replaceAt, samePath, sameTree, swapParts, unwrap, withMarks, write, writeDraft } from '../core/ids.js'
 import { namingOperator, unalias } from '../core/aliases.js'
 import { commandFor } from '../core/keys.js'
 import { createHistory } from '../core/history.js'
 import { lookupChar } from '../core/decompose.js'
+import { variationBase, withVariation } from '../core/variation.js'
 import { replacementQuery, resolveReplacement } from '../core/replacement.js'
 import { replacementExpression, replacementInput, resolveReplacementExpression, unaliasReplacementInput } from '../core/replacement-expression.js'
 import { createLookup } from './lookup.svelte.js'
@@ -181,9 +183,10 @@ export function createEditor(options) {
     invalidateResolution()
     history.clear(); caret = null; hovered = null; note = ''; change = null; typing = false; run = false
     const read = parse(start, { open: true })
-    // A pasted ＋ for an empty slot is written back as ⬚.
     tree = read.tree ?? null; chosen = null; piece = ''
-    draft = read.problem || tree === null ? start : write(tree)
+    // The text stays as given, so the slots a reader wrote stay written; a pasted ＋ for an empty
+    // slot is written back as ⬚.
+    draft = start.replaceAll('＋', '⬚')
     sync()
   }
   /** @param {Part} next @param {Path | null} select @param {string} [written] */
@@ -194,7 +197,7 @@ export function createEditor(options) {
     tree = next; chosen = select; selectionVersion++; note = ''
     // An empty tree is an empty field, not an empty slot (⬚); a slot is written inside a node.
     // A draft the tree cannot read yet (it is not a description) is put back as it was typed.
-    if (!typing) draft = written ?? (next === null ? '' : write(next))
+    if (!typing) draft = written ?? (next === null ? '' : writeDraft(next))
     const part = select ? partAt(next, select) : undefined
     piece = text(part)
     if (typeof part === 'string') lookup.read(lookupChar(part))
@@ -328,6 +331,22 @@ export function createEditor(options) {
     return apply(replaceAt(tree, path, char), path, t('ids.do.merge', { part: write(part), char }), { destructive: true })
   }
   /**
+   * Write the component at `at` (the chosen one by default) as `sequence`: its character, or one
+   * of its variation sequences. Its marks stay, and it stays chosen. False where that part is not a
+   * component of that character.
+   * @param {string} sequence @param {Path | null} [at]
+   */
+  function vary(sequence, at) {
+    if (disabled()) return false
+    const path = at === undefined ? chosen : at
+    if (!path) return false
+    const part = partAt(tree, path)
+    if (typeof part !== 'string' || variationBase(part) === null || variationBase(part) !== variationBase(sequence)) return false
+    const next = withVariation(part, sequence)
+    if (next === part) return false
+    return apply(replaceAt(tree, path, next), path, t('ids.do.replace', { from: text(part), part: text(next) }))
+  }
+  /**
    * A part or a node as written (a palette part, a part taken from a tree, a sequence), put in place.
    * With `loose`, a run of marks annotates the whole description instead of filling a slot. False
    * when the part could not be put anywhere, so a picker can keep what the reader was holding.
@@ -429,10 +448,10 @@ export function createEditor(options) {
     apply(found.tree, null, t('ids.do.type', { text: written || '∅' }), {}, from)
     typing = false
   }
-  /** Leaving the field: what it holds is written back as the tree has it. */
+  /** Leaving the field: what it holds stays, apart from a pasted ＋ becoming ⬚. */
   function settle() {
     run = false
-    if (!typed.problem && tree !== null) { draft = write(tree); sync() }
+    if (draft.includes('＋')) { draft = draft.replaceAll('＋', '⬚'); sync() }
   }
   /** The part field: what it holds goes in the chosen slot, and the choice moves on to the next empty one. */
   function enter() {
@@ -543,7 +562,7 @@ export function createEditor(options) {
     get locale() { return options().locale ?? 'en' },
     get t() { return t },
     lookup, name, text, pathKey,
-    reset, operator, put, merge, take, reorder, swap, empty, remove, open, choose, edit, settle, enter, undo, redo, keydown, focusChosen, snapshot, restore,
+    reset, operator, put, merge, vary, take, reorder, swap, empty, remove, open, choose, edit, settle, enter, undo, redo, keydown, focusChosen, snapshot, restore,
     resolveChain,
     resolveInput, cancelResolution,
     /** Jump `n` steps back (negative) or forward through the history. @param {number} n */

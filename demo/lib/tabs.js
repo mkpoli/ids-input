@@ -2,7 +2,7 @@
 // with the active tab under `ids-input:activeTab`. A tab holds the text in its field and the text it
 // was last saved with, so an edit since then can be marked. The tree itself is in memory only, in
 // the editor (see `snapshot` and `restore`).
-import { parse, write } from '../../src/core/index.js'
+import { parse, write, writeDraft } from '../../src/core/index.js'
 import { load, save } from './storage.js'
 
 /** @typedef {{ id: string, sequence: string, saved: string, whole: string, document?: import('../../src/document/index.js').SessionRecord }} Tab */
@@ -29,18 +29,25 @@ const wholeOf = sequence => {
   const read = parse(sequence, { open: true })
   return !read.problem && read.tree !== null ? write(read.tree) : ''
 }
-/** A tab's text as the editor writes it where it can, else as it was. @param {string} text */
-const readable = text => wholeOf(text) || text
+/** A sequence as the field writes it, the operands it misses left out, or `''` when it cannot be read. @param {string} sequence */
+const draftForm = sequence => {
+  const read = parse(sequence, { open: true })
+  return !read.problem && read.tree !== null ? writeDraft(read.tree) : ''
+}
 
-/** `sequence` as the editor writes it, for comparing with a tab's text. @param {string} sequence */
-export const canonical = sequence => readable(sequence)
+/**
+ * Whether two texts describe the same draft, whatever slots each one writes at the end: a tab kept
+ * from an earlier build holds ⬚ where the field now leaves the slot out.
+ * @param {string} a @param {string} b
+ */
+export const sameSequence = (a, b) => a === b || (draftForm(a) !== '' && draftForm(a) === draftForm(b))
 
 /** A tab's sequence for its name, or '' when it has none; the caller adds its untitled label. @param {Tab} tab */
 export const tabName = tab => (tab.whole || (tab.sequence && tab.sequence !== '⬚')) ? tab.sequence : ''
 
 /** A new tab over `sequence`, clean against `saved` (the sequence itself by default). @param {string} sequence @param {string} [saved] @param {Tab['document']} [document] @returns {Tab} */
 export function makeTab(sequence = '', saved = sequence, document = undefined) {
-  return { id: newId(), sequence: readable(sequence), saved: readable(saved), whole: wholeOf(sequence), ...(document ? { document } : {}) }
+  return { id: newId(), sequence, saved, whole: wholeOf(sequence), ...(document ? { document } : {}) }
 }
 
 /** The tabs kept from an earlier visit, oldest first. @returns {Tab[]} */
@@ -51,8 +58,8 @@ export function readTabs() {
   return kept.flatMap(item => {
     if (!item || typeof item.id !== 'string' || typeof item.sequence !== 'string' || seen.has(item.id)) return []
     seen.add(item.id)
-    const sequence = readable(item.sequence)
-    const saved = typeof item.saved === 'string' ? readable(item.saved) : sequence
+    const sequence = item.sequence
+    const saved = typeof item.saved === 'string' ? item.saved : sequence
     const document = item.document && typeof item.document === 'object' && !Array.isArray(item.document)
       ? /** @type {Tab['document']} */ (item.document)
       : undefined

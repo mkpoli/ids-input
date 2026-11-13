@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test'
-import { EMPTY, LONGEST, OPERATORS, OPERATOR_GROUPS, applyOperator, arity, clear, descriptionEnd, entryBody, entryDescription, isComponent, isDescription, isLetter, isSequence, leaves, nextEmpty,
-  parse, partAt, paths, place, problemOf, replaceAt, samePath, swapOp, unwrap, wrap, write } from '../src/core/index.js'
+import { lookupChar, tokens } from '../src/core/decompose.js'
+import { entryNotes, readingOf, variantIdentifier, variantOf, withoutVariants, customKind, customsOf, EMPTY, LONGEST, OPERATORS, OPERATOR_GROUPS, applyOperator, arity, clear, descriptionEnd, entryBody, entryDescription, isComponent, isDescription, isLetter, isSequence, leaves, nextEmpty,
+  parse, partAt, paths, place, problemOf, replaceAt, samePath, swapOp, unwrap, wrap, write, writeDraft } from '../src/core/index.js'
 
 const tree = text => parse(text, { open: true }).tree
 
@@ -79,8 +80,8 @@ describe('a whole description', () => {
     // A variation selector and a tone mark after a stroke chain belong to it.
     expect(descriptionEnd([...'#(H)\uFE00'])).toBe(5)
     expect(descriptionEnd([...'#(H)\uFE00\u302E木'])).toBe(6)
-    // A chain that names no character stays as it is, to be read or rejected as usual.
-    expect(parse('⿰#(ZZZ)木').problem).toBe('extra')
+    // A chain that names no character is a component of its own.
+    expect(parse('⿰#(ZZZ)木').tree).toEqual({ op: '⿰', parts: ['#(ZZZ)', '木'] })
     expect(write(parse('⿰#木').tree)).toBe('⿰#木')
 
 
@@ -162,6 +163,19 @@ describe('a draft read as the editor reads it', () => {
     for (const text of ['⿰⿱匕失⿱コ疋', '⿲亻⬚木', '⿲亻？木', '⿾疋', '⿻⬚⬚']) expect(write(tree(text))).toBe(text)
     expect(write(null)).toBe(EMPTY)
     expect(parse('⿰⬚木').problem).toBe('component')
+  })
+  it('leaves the operands a draft still misses at its end out of the field text', () => {
+    expect(writeDraft(tree('⿰亻'))).toBe('⿰亻')
+    expect(writeDraft(tree('⿳木'))).toBe('⿳木')
+    expect(writeDraft(tree('⿳⬚木'))).toBe('⿳⬚木')
+    expect(writeDraft(tree('⿲木⬚⬚'))).toBe('⿲木')
+    expect(writeDraft(tree('⿳⿳艹土⿱我弓⬚⬚'))).toBe('⿳⿳艹土⿱我弓')
+    // A slot with a part after it stays written, or that part would move into the operator before it.
+    const inner = { op: '⿰', parts: [{ op: '⿱', parts: ['木', null] }, '日'] }
+    expect(writeDraft(inner)).toBe('⿰⿱木⬚日')
+    // A mark follows the last operand, so a marked node keeps its slots written.
+    for (const text of ['⿰木⬚ˊ', '⿳木⬚⬚ˊ', '⿰⬚木ˊ']) expect(writeDraft(tree(text))).toBe(text)
+    for (const text of ['⿰亻', '⿳木', '⿳⬚木', '⿳⿳艹土⿱我弓', '⿰⿱木⬚日']) expect(tree(writeDraft(tree(text)))).toEqual(tree(text))
   })
 })
 
@@ -279,4 +293,82 @@ it('treats emoji sequences as single components', () => {
     expect(write(result.tree)).toBe(sequence)
     expect(descriptionEnd([...sequence])).toBe([...sequence].length)
   }
+})
+
+describe('components no code point names', () => {
+  it('reads each as one part, in its source spelling', () => {
+    expect(parse('⿹{53}一').tree).toEqual({ op: '⿹', parts: ['{53}', '一'] })
+    expect(parse('⿱&CDP-8BD0;心').tree).toEqual({ op: '⿱', parts: ['&CDP-8BD0;', '心'] })
+    expect(parse('⿱丿⿹#(-𠃌㇉)一').tree).toEqual({ op: '⿱', parts: ['丿', { op: '⿹', parts: ['#(-𠃌㇉)', '一'] }] })
+    for (const text of ['⿹{53}一', '⿱&CDP-8BD0;心', '⿱丿⿹#(-𠃌㇉)一', '⿰&U-i001+4E00;&GT-K01666;']) expect(write(parse(text).tree)).toBe(text)
+  })
+  it('names the notation', () => {
+    expect(customKind('{53}')).toBe('numbered')
+    expect(customKind('&CDP-8BD0;')).toBe('entity')
+    expect(customKind('#(-𠃌㇉)')).toBe('chain')
+    expect(customKind('一')).toBeNull()
+    expect(customKind('{53}一')).toBeNull()
+    expect(customsOf(parse('⿰{5}⿱&A-1;木').tree)).toEqual(['{5}', '&A-1;'])
+  })
+  it('leaves unfinished or malformed ones to the ordinary reading', () => {
+    expect(parse('⿰{木').tree).toEqual({ op: '⿰', parts: ['{', '木'] })
+    expect(parse('⿰{5木').problem).toBe('extra')
+    // A draft reads as the whole description does.
+    for (const text of ['⿲{1}', '⿳{1}', '⿰⿰{1}']) expect(parse(text, { open: true }).tree).toEqual(parse(text).tree)
+    expect(parse('⿰{5}', { open: true }).tree).toEqual({ op: '⿰', parts: ['{5}', null] })
+    expect(lookupChar('&CDP-8BD0;')).toBe('&CDP-8BD0;')
+    expect(lookupChar('木\u{E0100}')).toBe('木')
+    expect(parse('⿰木#(HSN)').tree).toEqual({ op: '⿰', parts: ['木', '#(HSN)'] })
+    expect(parse('⿲{木}').tree).toEqual({ op: '⿲', parts: ['{', '木', '}'] })
+    expect(descriptionEnd([...'⿰{5}木と'])).toBe(5)
+  })
+})
+
+describe('notes that are no part of a description', () => {
+  it('reads a zi.tools variant identifier with the component it follows', () => {
+    expect(parse('⿱一.亅').tree).toEqual({ op: '⿱', parts: ['一.', '亅'] })
+    expect(parse('⿰令dhs刂(J)').tree).toEqual({ op: '⿰', parts: ['令dhs', '刂'] })
+    expect(parse('⿰⿸厂.兆t斗(.)').tree).toEqual({ op: '⿰', parts: [{ op: '⿸', parts: ['厂.', '兆t'] }, '斗'] })
+    expect(parse('⿱丿⿹#(-𠃌㇉)一.(.)').tree).toEqual({ op: '⿱', parts: ['丿', { op: '⿹', parts: ['#(-𠃌㇉)', '一.'] }] })
+    expect(parse('⿻[1:]丨.日.').tree).toEqual({ op: '⿻', note: '1:', parts: ['丨.', '日.'] })
+    for (const text of ['⿱一.亅', '⿰令dhs刂', '⿰丰..p阝']) expect(write(parse(text).tree)).toBe(text)
+    expect(tokens('⿰令H刂')).toEqual(['⿰', '令H', '刂'])
+  })
+  it('keeps the ordinary reading where it holds', () => {
+    // A Latin letter is a component of its own wherever the description reads that way.
+    expect(parse('⿲令H刂').tree).toEqual({ op: '⿲', parts: ['令', 'H', '刂'] })
+    expect(parse('⿰木A').tree).toEqual({ op: '⿰', parts: ['木', 'A'] })
+    expect(parse('木A', { open: true }).problem).toBe('extra')
+    expect(readingOf('⿰木A')).toBe('custom')
+    expect(readingOf('⿱一.亅')).toBe('variant')
+    expect(readingOf('⿳{1}')).toBe('literal')
+  })
+  it('separates a component from its identifier and says what the identifier is', () => {
+    expect(variantOf('令H')).toEqual({ base: '令', variant: 'H' })
+    expect(variantOf('{53}t')).toEqual({ base: '{53}', variant: 't' })
+    expect(variantOf('A')).toEqual({ base: 'A', variant: '' })
+    expect(variantOf('木')).toEqual({ base: '木', variant: '' })
+    expect(write(withoutVariants(parse('⿰令dhs刂').tree))).toBe('⿰令刂')
+    expect(variantIdentifier('.')).toEqual({ kind: 'default' })
+    expect(variantIdentifier('T')).toEqual({ kind: 'source', source: 'T' })
+    expect(variantIdentifier('q008a2')).toEqual({ kind: 'ucv', sign: 'q', entry: '8a', form: 2, other: '' })
+    expect(variantIdentifier('q3932')).toEqual({ kind: 'ucv', sign: 'q', entry: '393', form: 2, other: '' })
+    expect(variantIdentifier('q454a17')).toEqual({ kind: 'ucv', sign: 'q', entry: '454a', form: 17, other: '' })
+    expect(variantIdentifier('qq053194')).toEqual({ kind: 'analogy', entries: ['53', '194'] })
+    expect(variantIdentifier('dhs')).toEqual({ kind: 'style' })
+    expect(variantIdentifier('(')).toBeNull()
+  })
+  it('reads a BabelStone entry as its description, and names its sources', () => {
+    expect(parse('^⿰氵骨$(GHTJKPV)').tree).toEqual({ op: '⿰', parts: ['氵', '骨'] })
+    expect(parse('^⿹{53}一$(G)').tree).toEqual({ op: '⿹', parts: ['{53}', '一'] })
+    expect(entryBody('^⿰氵骨$(GHTJKPV)')).toEqual({ text: '⿰氵骨', start: 1 })
+    expect(entryNotes('^⿻一𡳾$(GHTV[B])')).toEqual({ sources: ['G', 'H', 'T', 'V'], virtual: ['B'] })
+    expect(entryNotes('^⿰丨丨$(UCS2003)')).toEqual({ sources: ['UCS2003'] })
+    expect(entryNotes('{?0丗}⿻⿺𠃊〢一(P)')).toEqual({ separator: '?0丗', variants: ['P'] })
+    expect(entryNotes('⿻乚一(.,T)')).toEqual({ variants: ['.', 'T'] })
+    expect(entryNotes('⿰木木')).toEqual({})
+    expect(entryBody('#(H)(.)').text).toBe('#(H)')
+    expect(entryBody('{一}#(T)(t)')).toEqual({ text: '#(T)', start: 3 })
+    expect(parse('#(丨b一-丨)(y)', { open: true }).tree).toBe('#(丨b一-丨)')
+  })
 })

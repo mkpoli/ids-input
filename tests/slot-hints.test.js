@@ -24,8 +24,8 @@ describe('slot hints', () => {
     }
     expect(SLOT_HINTS.size).toBe(OPERATORS.length)
     expect(SLOT_HINT_METADATA.statistics.slots).toBe(35)
-    expect(SLOT_HINT_METADATA.statistics.hintEntries).toBe(1415)
-    expect(SLOT_HINT_METADATA.statistics.coveredCharacters).toBe(101290)
+    expect(SLOT_HINT_METADATA.statistics.hintEntries).toBe(1419)
+    expect(SLOT_HINT_METADATA.statistics.coveredCharacters).toBe(101864)
     expect(SLOT_HINT_DEFAULT).toBe(DEFAULT)
     expect(SLOT_HINT_DEFAULT).toBe(24)
     expect(TOP).toBe(48)

@@ -142,7 +142,7 @@ try {
   await adjacent.locator('.parts-filter').fill(String.fromCodePoint(0x1161))
   await adjacent.locator('.parts-grid .part').first().click()
   await adjacent.waitForTimeout(700)
-  assert.equal(await adjacent.locator('.ids-field input').first().inputValue(), `⿰${String.fromCodePoint(0x1100)}⬚`)
+  assert.equal(await adjacent.locator('.ids-field input').first().inputValue(), `⿰${String.fromCodePoint(0x1100)}`)
   assert.match(await adjacent.locator('.status').first().innerText(), /read back as different parts/)
   await adjacent.close()
 

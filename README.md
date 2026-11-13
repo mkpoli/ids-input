@@ -122,7 +122,7 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
 | prop | | |
 | --- | --- | --- |
 | `adapter` | required | see [Adapters](#adapters) |
-| `value` | bindable | the text in the field, `⬚` for each empty slot |
+| `value` | bindable | the text in the field; an empty slot inside the parts is `⬚`, and the operands a node still misses at the end are drawn as `◌` without being part of the text |
 | `char` | | start from this character's first description when `value` is not a sequence |
 | `onuse(sequence)` | | called with a whole sequence; the Use button shows only when given |
 | `onchange(text, whole)` | | every change, and whether the sequence is whole |
@@ -174,7 +174,10 @@ A finger drags the same way on a touch screen, where the browser starts no drag 
 or a group by its operator button, and `Space` on another box places it; `Escape` lets it go, and in
 the indented Tree view the arrows move the focus between rows while a box is lifted. The context
 menu (right click, the Menu key or `Shift+F10`) splits or swaps with any operator, clears, removes a
-level or copies that part's sequence. "Take parts from" reads a character dropped on it.
+level or copies that part's sequence. A component the adapter's `variationSequences` lists has a
+button in its corner that opens its variation sequences, each drawn by the adapter's `icon`;
+choosing one writes its selector after the character (`editor.vary(sequence, path)`), and the
+context menu lists them too. "Take parts from" reads a character dropped on it.
 Double-clicking a part in either structure view edits it in place. While a single-part slot is
 edited, a panel lists the components that slot takes most often across BabelStone IDS and Yi Bai
 IDS, with the count in each button's tooltip; choosing one puts it in the slot, Tab reaches the
@@ -191,12 +194,21 @@ to an editable IDS (`⿰木火`). The lookup opens as few components as possible
 shallowest occurrence; where several are equally shallow, the last is used. If the target cannot be found in the available descriptions, the entered text
 remains in the field. Resolution is bounded to eight opened components and 128 candidate trees.
 
+`IdsVariations` (`t`, bindable `query`, and `href(text)` or `ontake(text)`) lists the IRG's unifiable
+and non-unifiable component variations from `data/ucv.json`, each form drawn from
+`data/ucv-forms.json.gz`; the workshop shows it as its `/ucv` page.
+
+With `variations`, `IdsPartTools` also offers the forms the IRG unifies with the chosen component
+(its UCV entries, read from `data/ucv.json` when a component is first chosen); `variationsHref(entry)`
+gives each entry number a link.
+
 `IdsParts` (`adapter`, `onpick(part)`) and `IdsFrom` (`adapter`, `ontake(text)`, bindable `text`)
 also work without an editor. A pick that returns `false` was not placed, so the Hangul compose
 keyboard keeps its letters. `IdsSketch` (`adapter`, `onpick(part)`, `onclose()`) is the Find tab's
 drawing pad; it asks the adapter for the palette and takes its glyph shapes from the page's
 `--ids-font`. The Components panel shows the most used parts first, then every Han
 component of one stroke count, including compound IDS, grouped by first stroke. Palette text can be selected and copied;
+its stroke keys (横 豎 撇 點 折) list the parts written with the strokes typed, in writing order, fewest strokes first, and switch off the keys no part goes on with.
 compound cells show their sequence and expose the stroke count on hover. `adapter.icon` supplies their outlines;
 without it, the cells use a font-based layout. Icon rendering must accept concurrent
 requests independently of the main preview. The components take colours from CSS custom properties with light and dark defaults
@@ -229,12 +241,13 @@ control are in [design/README.md](design/README.md).
 ### Core
 
 ```js
-import { parse, write, applyOperator, unwrap, unalias, commandFor, createHistory, enclosedRepeatSequence, hintsAt, pyramidOnBase, pyramidRows, pyramidSequence, repeatSequence, SLOT_HINT_DEFAULT, slotHints } from 'ids-input'
+import { parse, write, writeDraft, applyOperator, unwrap, unalias, commandFor, createHistory, enclosedRepeatSequence, hintsAt, pyramidOnBase, pyramidRows, pyramidSequence, repeatSequence, SLOT_HINT_DEFAULT, slotHints } from 'ids-input'
 
 parse('⿰亻⿱七木').tree        // { op: '⿰', parts: ['亻', { op: '⿱', parts: ['七', '木'] }] }
 parse('⿰亻').problem           // 'missing'
 parse('⿰亻', { open: true })   // a draft: { tree: { op: '⿰', parts: ['亻', null] } }
 write(applyOperator(parse('⿰亻失').tree, [1], '⿱').tree)  // '⿰亻⿱失⬚'
+writeDraft(parse('⿳木').tree)  // '⿳木': the two operands still missing stay out of the field text
 unalias('lr亻ud匕失')           // '⿰亻⿱匕失'
 commandFor({ key: '&', code: 'Digit1' })  // { command: 'operator', op: '⿰' }, on any layout
 
@@ -385,11 +398,28 @@ carries no variant data. A modifier after an operator (`⿻[1:]丨日`, `⿴[1]�
 stays with that operator and is written back with it: overlays, the enclosures and subtraction take
 one, other operators keep a bracket as a component, and its matrix or index narrows where a part
 sits or which occurrence an operator acts on. The layout draws the description as it does without
-one, so previewing such a description is approximate. Stroke chains (`#(H)`) are not read yet.
+one, so previewing such a description is approximate.
 
 A zi.tools stroke chain that names a stroke or a character reads as that character: `#(H)` is 一,
-`#(Wg)` is ㇁, and `#(-丨𠃍-一z)` is 口. Chains that name no character the published grammar lists
-stay in the text, to be read as their parts or rejected as usual.
+`#(Wg)` is ㇁, and `#(-丨𠃍-一z)` is 口.
+
+A component no code point names is one part, in its source's spelling: BabelStone's numbered
+component `{53}`, a CHISE entity `&CDP-8BD0;`, and any other zi.tools stroke chain `#(-𠃌㇉)`.
+`customKind(part)` answers `'numbered'`, `'entity'`, `'chain'` or null, `customsOf(tree)` lists the
+ones a tree names, and `isEncodedDescription(text)` tells a description of characters only. Where a
+text reads only with `{`, `&` or `#` as characters of their own (`⿳{1}`), it reads that way.
+
+`data/custom-components.json.gz` says what each of them is in the other tables' notation and what
+draws it; pass it as `custom` to `babelStoneAdapter` and the preview draws `⿹{53}一` as 鸟. See
+[custom IDS notation](docs/custom-components.md).
+
+Notes that are no part of a description are read around it. A zi.tools variant identifier stays on
+the component it follows (`⿰令dhs刂` has the parts `令dhs` and 刂) where the description reads no
+other way; `variantOf(part)` separates the two, `variantIdentifier(id)` says whether it names a
+source, a form of an IRG UCV entry (`q008a2`: form 2 of #8a) or a stroke style, and
+`withoutVariants(tree)` drops them, as the preview does before it draws. A BabelStone entry
+`^⿰氵骨$(GHTJKPV)` reads as its description, like a zi.tools entry; `entryNotes(text)` answers the
+separator, variants, sources and virtual forms either kind carries.
 
 A zi.tools description that carries a stroke chain this package cannot draw resolves to the
 character the published table gives it: pasting `⿱丿⿹#(-𠃌㇉)一` gives 乌. The host supplies that
@@ -513,6 +543,7 @@ records live in [`src/document/store.js`](src/document/store.js); file bindings 
 interface IdsAdapter {
   structure(char, options?): Promise<{ text: string, regions?: string }[]>   // required
   variants?(part, options?): Promise<{ char: string, count?: number }[]>
+  variationSequences?(): Promise<Map<string, string[]>>   // 者 → [者 U+8005 U+E0101], the sequences the preview draws
   search?(query, options?): Promise<{ char: string, label?: string }[]>
   containing?(parts, options?): Promise<{ items: string[], more?: boolean }>
   parts?(options?): Promise<PalettePart[]>
@@ -884,7 +915,7 @@ which are laid out as equal cells. Under Vite, keep both packages out of depende
 (`optimizeDeps: { exclude: ['ids-input', '@han-compose/composer'] }`) so the Worker's URL resolves;
 `composerPreview({ base, worker })` takes a function making the Worker for other bundlers.
 
-The demo draws Sans from `https://ids-input-composer.mkpoli.workers.dev/a83fc941166b-sans-compose-layout-v4-f6/`,
+The demo draws Sans from `https://ids-input-composer.mkpoli.workers.dev/a83fc941166b-sans-compose-layout-v4-f6+variants/`,
 Serif from the serif export, Fangsong from the Zhuque Fangsong export, and Kaisho from the Kureedo export; `?composer=<url>` or
 `VITE_COMPOSER_BASE` points every face at another copy of one export. A face that cannot draw a
 description draws the encoded character it names in that face, else the Sans export's drawing.
@@ -1347,12 +1378,13 @@ transforms, the active tab, the view, face, theme, language and panel widths) an
 document: the version and build commit (`__APP_VERSION__` and `__BUILD_COMMIT__`, the commit the CI
 built), the route without its query, the viewport, pixel ratio, user agent, loaded font families,
 the preview's step and label, and the last twenty console warnings, errors and failed requests
-collected by the ring `demo/main.js` installs before the app mounts. Anything naming the reporter's
-own machine — a local address, a `file:` URL, a `/@fs/` or home path, wherever it appears, including
-inside a logged line — is taken out before the report leaves, and the share link is rebuilt on the
-published site with only the parameters that open the sequence. The answer replaces the form with
-the issue it became; a report matching an open issue says so and links to it, and a refused or
-timed-out one keeps the text and offers another try.
+collected by the ring `demo/main.js` installs before the app mounts. A workspace too large for the
+intake loses its last tabs, then their documents; the JSON counts what was left out. Anything
+naming the reporter's own machine — a local address, a `file:` URL, a `/@fs/` or home path, wherever
+it appears, including inside a logged line — is taken out before the report leaves, and the share
+link is rebuilt on the published site with only the parameters that open the sequence. The answer
+replaces the form with the issue it became; a report matching an open issue says so and links to
+it, and a refused or timed-out one keeps the text and offers another try.
 
 ### Desktop app
 

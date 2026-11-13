@@ -77,7 +77,7 @@
     // screen when Send was pressed.
     const said = symptom, reach = contact, image = withImage
     try {
-      const snapshot = await reportSnapshot({ sequence, link, workspace: workspace(), drawing, scopes, slots, emoji, cut, cutLeaf, preview: preview(), locale, theme, face, composer })
+      const snapshot = await reportSnapshot({ sequence, link, symptom: said, contact: reach, workspace: workspace(), drawing, scopes, slots, emoji, cut, cutLeaf, preview: preview(), locale, theme, face, composer })
       answer = await sendReport(endpoint, { symptom: said, contact: reach, image, snapshot })
       // The form is gone with the focused Send button; the issue is what to look at now.
       tick().then(() => requestAnimationFrame(() => saved?.focus()))

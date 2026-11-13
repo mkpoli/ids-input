@@ -10,6 +10,23 @@ README with the fields and the source list; CC0 1.0. Built by `bun scripts/build
 from the starter catalogue in `demo/lib/examples.js`, its source records and
 `data/ids-components.tsv`.
 
+## `custom-components.json.gz`
+
+The components no code point names in BabelStone IDS (`{53}`), CHISE IDS (`&CDP-8BD0;`) and
+zi.tools (`#(-𠃌㇉)`): 1,672 of them, what each is in the other tables' notation where the tables'
+descriptions of shared characters settle it (973, 373 confirmed by two or more characters), and
+9,259 descriptions of characters that follow. Fields, method and limits:
+[custom IDS notation](../docs/custom-components.md). Every row is derived by this project; no
+source states it. Rebuild with `bun scripts/build_custom_components.mjs`.
+
+`custom-ids.tsv` is the ledger of form identifiers the file carries (`X-00053`, written `&X-00053;`
+in a description): identifier, a name the form is known by, the date, and `first`, `merged into …`
+or `withdrawn`. It is append-only and the build reads it before it writes it, so a number once
+given stays.
+
+Licence: GPL-2.0-or-later, as CHISE IDS, whose rows inform it; BabelStone IDS is public domain and
+Yi Bai's table MIT.
+
 ## `yi-bai-ids.tsv.gz`
 
 Standard IDS descriptions from Yi Bai's level-1 IDS dataset at commit
@@ -331,6 +348,41 @@ SHA-256 of this copy `7e12d79da41b18f5fbf8fb0eae2adc31aa9f57e6e2eabe79836804c072
 (Unicode License v3, <https://www.unicode.org/license.txt>; 348 rows) and cjkvi-variants'
 `radical-variants.txt` at e4f1da2 (public domain, <https://github.com/cjkvi/cjkvi-variants>; 219
 rows), each row naming its source.
+
+## `ucv.json` and `ucv-forms.json.gz`
+
+The IRG's lists of unifiable (UCV, 599 entries) and non-unifiable (NUCV, 14 entries) component
+variations, compiled from `iwds.xml` in the IWDS data files at commit
+`8302302d615ff1c1f60ae335b118b10060be0ed4`, <https://github.com/yi-bai/iwds>, SHA-256
+`886b426ea3d1d329749e02b32cccd5082d31d6cf1b996ea37bdae5ac593ca491`. That file generates IRG N2978,
+"UCV & NUCV Lists", version 2026-10-20, <https://www.unicode.org/irg/docs/n2978-Complete.pdf>,
+listed as Series 2 of <https://www.unicode.org/irg/IWDS.html>. Rebuild with
+`bun scripts/build_ucv.mjs`.
+
+`ucv.json` holds the source's groups and, per entry: `id`, `kind` (`unifiable` or
+`not-unifiable`), `level`, `group`, `forms`, the source's own `components` text, the criterion it
+cites (`jis` for the JIS X 0213 unification criterion, `jisx0212`, `hydcd` for the Hanyu Da Cidian
+new and old forms, `annexS` for ISO/IEC 10646 Annex S), and the example characters: `unified`,
+`compatibility` as `[unified, compatibility]` pairs, `disunified` and `sourceSeparations` as groups
+of characters coded apart, and `single` for the non-unifiable list's characters that keep one form, each with the `examples`
+that contain it and, where the source gives a number in their place, its `count`. `charts`
+names the older code chart an example is shown from, `unifiedMore` marks a list the source ends
+with an ellipsis, `note`, `references` and the `review` links are the source's.
+
+A form is the GlyphWiki glyph the source names. `text` is given when that name is a character, a
+description or a character with a variation selector; `of` gives the character a named form
+belongs to (`u540c-08-var-001` is a form of 同); other names (`cdp-`, `aj1-`, `koseki-`, `twedu-`,
+a numbered variant of a description) carry neither.
+
+`ucv-forms.json.gz` maps a glyph name to its outline, one SVG path in a 200-unit square: 1,461
+from the snapshot's `glyphs/` directory and 134 fetched from <https://glyphwiki.org/> on
+2026-11-13, listed under `source.glyphs.fetched`. Eleven names have no drawing in either place.
+
+- Licence of the list: the repository declares none. Its content is the IRG working document,
+  published under the Unicode Terms of Use, <https://www.unicode.org/copyright.html>.
+- Licence of the outlines: GlyphWiki data, which this project's source catalogue records as free
+  to use. The licence page, <https://glyphwiki.org/wiki/GlyphWiki:License>, sits behind a browser
+  check and was not re-read for this build.
 
 ## component-names.tsv
 
@@ -1197,6 +1249,36 @@ The table holds counts alone. KanjiVG records no five-stroke class, and one cann
 paths: kana strokes are curved, so a turn and a curve carry the same turning angle, and a classifier
 built on that angle labelled ア, コ and ヨ wrongly. A class column waits for a source that names
 stroke types.
+
+## `stroke-orders.json.gz`
+
+The stroke order of the Han parts of the palette, for finding a part by the strokes it is written
+with: 10,650 `keys` in palette order with one entry of `orders` each, the codes separated by a
+space, a letter a stroke (`letters`: h 横, s 豎, p 撇, n 點, z 折). 90 KB gzipped, read when a
+stroke key of the Components panel is first reached. Built by `scripts/build_stroke_orders.mjs`
+from `ids-parts.json`.
+
+- Licence: **LGPL-3.0**, as the `first` column of `ids-parts.json`; the source authors and the
+  licence texts are in `data/licences/`.
+- Source: Rime five-stroke dictionary, revision `1e8fff9b9494ddec23b0cbc526bcfd8171a6fd48`,
+  <https://github.com/rime/rime-stroke>, SHA-256
+  `b3e93dce89c185f45c3d6e189b86b3a8626913352cc85e1094c786579a665791`. Authors: 四季的風, 雪齋,
+  Kunki Chou and 宋天.
+- A character the dictionary writes more than one way keeps every code, in the dictionary's order
+  (小 `zpn spn`, 乃 `pz zp`); 4,701 parts have more than one. The codes follow Chinese stroke
+  order and can differ from Japanese order, and a code can count strokes differently from Unihan's
+  `kTotalStrokes`.
+- A part of one stroke takes the class `ids-parts.json` gives it, so a CJK stroke symbol and the
+  ideograph Unicode calls its equivalent read alike (㇕ and 𠃍 are `z`).
+- The compound parts, BabelStone's numbered components and the radical forms the dictionary does
+  not name have no entry and are not found by strokes.
+
+## `open-strokes/`
+
+The open stroke-order release served at <https://ids.mkpo.li/open-data#strokes>: Taiwan's standard order
+from CNS 全字庫, Rime's five-stroke dictionary, and orders induced by equivalence or from
+BabelStone IDS for characters a source lacks. Its own `README.md` gives the fields, rules, licences
+and how often the rules agree with the sources. Built by `scripts/build_open_strokes.mjs`.
 
 ## `han-parts.json.gz`
 

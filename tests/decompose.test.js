@@ -34,14 +34,15 @@ describe('a character\'s descriptions', () => {
     expect(found[0].tree).toEqual({ op: '⿳', parts: ['𭁟', '冖', '⺼'] })
   })
   // BabelStone IDS names unencoded components by number.
-  it('keeps a sequence naming an unencoded component as text, with its encoded parts', () => {
+  it('reads an unencoded component as one part', () => {
     const [found] = variants(ready(['⿹{22}一']))
-    expect(found.tree).toBeNull()
+    expect(found.tree).toEqual({ op: '⿹', parts: ['{22}', '一'] })
     expect(tokens('⿹{22}一')).toEqual(['⿹', '{22}', '一'])
     // A stroke chain reads as the character it names, its variation selector with it.
     expect(tokens('⿰#(H)木')).toEqual(['⿰', '一', '木'])
     expect(tokens('⿰#(H)\u{E0100}木')).toEqual(['⿰', '一\u{E0100}', '木'])
-    expect(tokens('⿰#(ZZZ)木')).toEqual(['⿰', '#', '(', 'Z', 'Z', 'Z', ')', '木'])
+    expect(tokens('⿰#(ZZZ)木')).toEqual(['⿰', '#(ZZZ)', '木'])
+    expect(tokens('⿱&CDP-8BD0;心')).toEqual(['⿱', '&CDP-8BD0;', '心'])
     expect(unencoded('{22}')).toBe('22')
     expect(unencoded('一')).toBeNull()
     expect(namedParts('⿱⿰{27}{27}一')).toEqual(['一'])
