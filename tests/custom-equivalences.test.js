@@ -56,7 +56,7 @@ describe('data/custom-components.json.gz', () => {
     for (const row of doc.components) for (const item of row.equivalents) {
       expect(['babelstone', 'chise', 'zi-tools']).toContain(item.in)
       expect(item.in).not.toBe(row.source)
-      expect(item.status).toBe(item.count >= 2 ? 'verified' : 'candidate')
+      if (item.status === 'verified') expect(item.count).toBeGreaterThanOrEqual(2)
       expect(parse(item.text, { open: true }).problem).toBeUndefined()
     }
   })
@@ -74,6 +74,9 @@ describe('data/custom-components.json.gz', () => {
     expect(of('乌').find(row => row.in === 'babelstone')).toMatchObject({ text: '⿹㇯{53}丶一', basis: 'subtraction', of: '㇯鸟丶', from: 'zi-tools' })
     expect(of('鸟').find(row => row.in === 'zi-tools')).toMatchObject({ text: '⿹⿱丿⿴#(-𠃌㇉)丶一', basis: 'substitution', of: '⿹{53}一' })
     for (const row of doc.characters) expect(parse(row.text).problem).toBeUndefined()
+    // A character is never said in terms of itself, nor a doubled part taken out once.
+    for (const row of doc.characters) expect(row.text.includes(row.char)).toBe(false)
+    expect(of('千').some(row => row.basis === 'subtraction' && row.of.startsWith('㇯𠦅'))).toBe(false)
   })
 
   it('records the stroke letters with their sources', () => {

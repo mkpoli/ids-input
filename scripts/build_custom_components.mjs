@@ -115,12 +115,15 @@ for (const name of numbered.keys()) if (!used.has(name)) used.set(name, { chars:
 const equivalents = new Map()
 /** @type {Record<string, Record<string, Map<string, import('../src/core/ids.js').Part>>>} */
 const solved = {}
+/** Component and frame, where the expression standing for the component there is confirmed. @type {Set<string>} */
+const firm = new Set()
 for (const from of SOURCES) for (const frame of SOURCES) {
   if (from === frame) continue
   const found = solve(tables[from], frames[frame])
   const best = (solved[from] ??= {})[frame] = new Map()
   for (const [custom, rows] of found) {
-    // Two spellings with the same parts are one shape bracketed two ways: the commoner stands.
+    // Two spellings with the same parts are one shape bracketed two ways: the commoner stands, and
+    // the shape is confirmed only where one spelling is given by two characters or more.
     /** @type {Map<string, { text: string, top: number, chars: string[] }>} */
     const shapes = new Map()
     for (const [text, chars] of rows) {
@@ -138,9 +141,11 @@ for (const from of SOURCES) for (const frame of SOURCES) {
     equivalents.set(custom, list)
     for (const shape of ordered) list.push({
       in: frame, text: write(frames[frame].collapse(plainTree(shape.text))), count: shape.chars.length,
-      characters: shape.chars.slice(0, 12), status: shape.chars.length >= 2 ? 'verified' : 'candidate', basis: 'difference',
+      characters: shape.chars.slice(0, 12), status: shape.top >= 2 ? 'verified' : 'candidate', basis: 'difference',
     })
     best.set(custom, /** @type {import('../src/core/ids.js').Part} */ (plainTree(ordered[0].text)))
+    // What a derived description rests on is this first expression, so its standing is that one's.
+    if (ordered[0].top >= 2) firm.add(`${custom}\0${frame}`)
   }
 }
 
@@ -196,8 +201,7 @@ const emit = row => {
   seenRow.add(key)
   characters.push(row)
 }
-const verified = new Set()
-for (const [custom, list] of equivalents) for (const row of list) if (row.status === 'verified') verified.add(`${custom}\0${row.in}`)
+const verified = firm
 
 for (const from of SOURCES) for (const into of SOURCES) {
   if (from === into) continue
@@ -225,6 +229,8 @@ for (const from of SOURCES) for (const into of SOURCES) {
     if (!isNode(first)) continue
     for (const inner of first.parts) {
       if (typeof inner !== 'string' || isCustom(inner) || inner === outer || !tables[into].has(inner)) continue
+      // Where the character stands twice, which one is left is not known.
+      if (atoms(first).filter(atom => atom === inner).length !== 1) continue
       const others = besides(first, inner)
       const gone = others.flatMap(part => atoms(whole.expand(part)))
       for (const tree of customTrees) {
@@ -238,7 +244,8 @@ for (const from of SOURCES) for (const into of SOURCES) {
           return null
         }
         const rest = subtract(tree, gone, holds, named)
-        if (rest === null || failed || !customsOf(rest).length) continue
+        // A result that still names the character says it in terms of itself.
+        if (rest === null || failed || !customsOf(rest).length || atoms(rest).some(atom => atom === inner || atom.includes(inner))) continue
         emit({ char: inner, text: write(rest), in: from, from: into, basis: 'subtraction', of: `㇯${outer}${others.map(write).join('')}`,
           status: customsOf(tree).every(custom => verified.has(`${custom}\0${into}`)) ? 'verified' : 'candidate' })
       }
