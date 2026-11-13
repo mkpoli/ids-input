@@ -87,6 +87,7 @@
  * @property {'sans' | 'serif' | 'fangsong' | 'kaisho'} [fontStyle] Style for bundled component outlines.
  * @property {(char: string, options?: Options) => Promise<Sequence[]>} structure A character's descriptions, each with its source regions; a derived Tangut character-first description replaces its source description and is marked `derived`. A description may be a single distinct component; [] means no smaller parts are recorded.
  * @property {(part: string, options?: Options) => Promise<Swap[]>} [variants] Components that can stand in place of `part`.
+ * @property {() => Promise<Map<string, string[]>>} [variationSequences] Every character the preview draws variation sequences of, with those sequences (者 → 者 U+8005 U+E0101), the plain character left out.
  * @property {(query: string, options?: Options) => Promise<Found[]>} [search] Components and characters found by what is typed: a character, a code point, a name, a word or a reading.
  * @property {(sequence: string, options?: Options & { exact?: boolean }) => Promise<string[]>} [encoded] The encoded characters a whole description describes exactly; with `exact`, only the description with its operator modifiers, without the same description's modifiers dropped.
  * @property {(sequence: string, options?: Options) => Promise<string[]>} [overwrite] The encoded characters a whole description draws as, for a context-adapted variant (⿰𦚏𳳳 as 龍).
@@ -100,6 +101,8 @@
  * @property {(options?: Options) => Promise<PalettePart[]>} [parts] The parts palette.
  * @property {(strokes: DrawingPoint[][], options?: Options) => Promise<string[]>} [recognizeDrawing] Whole characters a drawing names, closest first.
  * @property {(options?: Options) => Promise<SketchTemplate[]>} [sketchTemplates] The palette's glyph shapes for drawing search, prepared or built from the page's fonts.
+ * @property {(sequence: string, options?: Options) => Promise<{ text: string, leaves: number[] }>} [drawable] A description with each component no code point names ({53}, &CDP-8BD0;, #(-𠃌㇉)) written as what draws it, and for each component of that text the place of the component it draws; a preview is asked for this text.
+ * @property {(options?: Options) => Promise<import('../core/custom-components.js').CustomComponent[]>} [customComponents] The components no code point names, with what each is in the other tables' notation.
  * @property {(sequence: string, options?: Options) => Promise<Drawing | null>} [icon] A compound palette icon. Must support concurrent requests independently of the editor preview; null leaves a font-based layout.
  * @property {(sequence: string, options?: Options) => Promise<string | null>} [drawing] The URL of a final image of a whole description, or null; it is shown in place of the preview.
  * @property {((sequence: string, options?: PreviewOptions) => Promise<Drawing>) & { warm?: (sequence?: string) => void }} [preview] A description drawn, empty slots (⬚) and all; `onSketch` hears where each part goes before the drawing is done. It rejects when it cannot draw, with an Error named `TooLargeError` for a description larger than it draws. `warm` starts the export's manifest and layout before the first drawing; it may be told the sequence being previewed.

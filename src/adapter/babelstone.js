@@ -11,6 +11,7 @@ import { createSearch, readForms, readStructuralForms } from '../core/search.js'
 import { createNameSearch, readFolds, readNames } from '../core/names.js'
 import { unicodeProperty } from '../core/unicode.js'
 import { isComponent, isSequence, parse, write } from '../core/ids.js'
+import { createCustomComponents } from '../core/custom-components.js'
 import { chainCharacter as chainName, readChainEntries } from '../core/chain-entries.js'
 import { readSketchTemplates } from '../core/sketch-data.js'
 import { download } from '@han-compose/composer/retry'
@@ -232,6 +233,7 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  *   parts?: string | URL, forms?: string | URL, formsText?: string, names?: string | URL, namesText?: string,
  *   folds?: string | URL, foldsText?: string, characters?: string | URL, charactersText?: string,
  *   chains?: string | URL,
+ *   custom?: string | URL | import('../core/custom-components.js').CustomComponentsData,
  *   characterInfo?: string | URL | import('./character-info.js').CharacterInfoData,
  *   layers?: string | URL, layersText?: string,
 
@@ -243,7 +245,7 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  *   worker?: (() => Worker) | null }} options
  * @returns {IdsAdapter & { table: () => Promise<Map<string, Sequence[]>> }}
  */
-export function babelStoneAdapter({ ids, zitools, chise, project, components, componentsText, overwrite, overwriteText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, chains, characterInfo, layers, layersText, smallSeal, sketches, shuishu, jurchen, table: given, palette: givenPalette, fetch: get = download,
+export function babelStoneAdapter({ ids, zitools, chise, project, components, componentsText, overwrite, overwriteText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, chains, custom, characterInfo, layers, layersText, smallSeal, sketches, shuishu, jurchen, table: given, palette: givenPalette, fetch: get = download,
 
   worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./search-worker.js', import.meta.url), { type: 'module' }) } = {}) {
   /** @type {Promise<Map<string, Sequence[]>> | null} */
@@ -333,6 +335,12 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
     if (!response.ok) throw new Error(`${url}: ${response.status}`)
     return response
   }
+  /** @type {Promise<ReturnType<typeof createCustomComponents>> | null} */
+  let customComponents = null
+  /** The dictionary of components no code point names, loaded once. */
+  const readCustom = () => customComponents ??= (async () => createCustomComponents(
+    typeof custom === 'string' || custom instanceof URL ? JSON.parse(await readText(await load(custom))) : /** @type {import('../core/custom-components.js').CustomComponentsData} */ (custom)))()
+    .catch(error => { customComponents = null; throw error })
   /** @type {Promise<import('./seal-data.js').SmallSealData | null> | null} */
   let seal = null
   const readSeal = () => seal ??= (async () => {
@@ -706,6 +714,16 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
       for (const [char, rows] of table) sorted.set(char, byRank(rows))
       return sorted
     },
+    ...(custom ? {
+      async customComponents(/** @type {import('./types.js').Options} */ { signal } = {}) {
+        signal?.throwIfAborted()
+        return (await readCustom()).components
+      },
+      async drawable(/** @type {string} */ sequence, /** @type {import('./types.js').Options} */ { signal } = {}) {
+        signal?.throwIfAborted()
+        return /[{&#]/.test(sequence) ? (await readCustom()).drawableLeaves(sequence) : { text: sequence, leaves: [] }
+      },
+    } : {}),
     ...(characterInfo ? { async characterInfo(/** @type {string} */ char, /** @type {import('./types.js').Options} */ { signal } = {}) {
       signal?.throwIfAborted()
       const { doc, lookup } = await readInformation()

@@ -13,6 +13,7 @@
   import { APPROXIMATE, composableDescription } from '@han-compose/composer/compose'
   import { hasTangut } from '@han-compose/composer/tangut'
   import { composerPreview as composerAt } from '@han-compose/composer'
+  import { variationSequences } from '@han-compose/composer/variants'
   import engineOutlines from 'ids-engine-outlines'
   import { EMPTY_MARKS, OPERATORS, characterStrokes, componentQuery, isJurchen, isShuishu, parse, substituteSequences, unalias } from '../src/core/index.js'
   import { loadStrokeRecords } from '../src/svelte/strokes.js'
@@ -37,6 +38,7 @@
   import folds from '../data/component-name-folds.tsv?url'
   import characterInfo from '../data/character-info.json.gz?url'
   import chains from '../data/zi-tools-chains.tsv.gz?url'
+  import custom from '../data/custom-components.json.gz?url'
   import characters from '../data/character-vocabulary.tsv.gz?url'
   import { LOCALES, appMessages } from './lib/locales.js'
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
@@ -133,7 +135,7 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const sealAdapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, jurchen: jurchenData, ids, layers, zitools, chise: corpus, project: projectIds, overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains })
+  const sealAdapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, jurchen: jurchenData, ids, layers, zitools, chise: corpus, project: projectIds, overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains, custom })
 
   const operatorSet = new Set(OPERATORS.map(([op]) => op))
   const babel = { ...sealAdapter, recognizeDrawing, parts: async () => {
@@ -378,7 +380,15 @@
   }
   const componentStyle = $derived(face === 'serif' ? 'serif' : face === 'fangsong' ? 'fangsong' : face === 'klee' ? 'kaisho' : 'sans')
   const icons = $derived(iconsAt(base, componentStyle))
-  const adapter = $derived({ ...babel, preview: previewFor(base, separate, componentStyle), icon: icons, fontStyle: componentStyle })
+  // One function for each export, so a tree asks again only when the face changes.
+  /** @type {Map<string, () => Promise<Map<string, string[]>>>} */
+  const sequenceLists = new Map()
+  /** @param {string} at */
+  const sequencesAt = at => {
+    if (!sequenceLists.has(at)) sequenceLists.set(at, () => variationSequences(readFrom(at)))
+    return /** @type {() => Promise<Map<string, string[]>>} */ (sequenceLists.get(at))
+  }
+  const adapter = $derived({ ...babel, preview: previewFor(base, separate, componentStyle), icon: icons, fontStyle: componentStyle, variationSequences: sequencesAt(base) })
   const wanted = String(params.get('lang') ?? load('locale', null) ?? navigator.language ?? '')
   // A browser asking for Traditional Chinese names its region or script, never the catalogue's code.
   const traditional = /^zh-(?:Hant|TW|HK|MO)\b/i
@@ -1433,7 +1443,7 @@
               <div class="tree-list" role="tabpanel" id="tree-panel" aria-labelledby="tree-tab"><IdsTreeList {editor} /></div>
             {/key}
           {/if}
-          <div class="block tools-row"><IdsPartTools {editor} {keyHints} bind:slot status={false} /></div>
+          <div class="block tools-row"><IdsPartTools {editor} {keyHints} bind:slot status={false} variations variationsHref={entry => `./ucv.html?lang=${locale}#ucv-${entry}`} /></div>
         </section>
         <div class="split" role="separator" aria-orientation="horizontal" aria-label={t('app.panels.resize')} title={`${t('app.panels.resize')} (${Math.round(split)}%)`}
           aria-valuemin="35" aria-valuemax="78" aria-valuenow={Math.round(split)} tabindex="0"
