@@ -8,7 +8,7 @@ without a component runtime.
 design/
   tokens.css   colour, type, space, shape, motion and layer tokens
   base.css     reset, document face, one focus ring, scrollbars, selection
-  controls.css buttons, fields, checkbox, radio, switch, segmented, range, colour
+  controls.css buttons, select menus, fields, checkbox, radio, switch, segmented, range, colour
   index.css    the three layers, in order
 ```
 
@@ -117,6 +117,7 @@ use a disabled class: use the `disabled` attribute.
 | --- | --- | --- |
 | A label for a value or a filter state | Chip (`.ui-chip`) | Compact, with `data-variant="accent" \| "danger" \| "selected"`; interactive chips take `data-interactive` and `aria-current` |
 | A list of options in a popup | Menu (`.ui-menu`, `.ui-menu-item`) | Roving focus, roles and the checked marker in one layer |
+| A compact choice whose trigger carries an icon or a formatted value | Select menu (`.ui-select-menu`) | A button opens a listbox; the trigger keeps its shape and the selected option is marked |
 | A compact choice between two or three views | Switch bar (`.ui-switch-bar`) | A two- or three-part switch for menus and toolbars; the raised half takes `--ui-color-switch-highlight` |
 | A row that opens or selects something | List row (`.ui-list-row`) | `data-interactive`, `aria-selected` or `aria-current` show the state |
 | Work in progress | Spinner (`.ui-spinner`), progress (`.ui-progress`), `aria-busy` on a button | Motion collapses under reduced motion; forced colours keep the shapes |
@@ -139,6 +140,36 @@ A checkbox, radio and switch are native `<input>` elements. The system removes t
 with `appearance: none` and draws the box, dot or track; it does not replace the element with a div
 and ARIA. Keep it that way: form submission, autofill, screen readers, forced-colours mode and the
 keyboard all come with the element.
+
+## Select menu
+
+The native `.ui-select` is still the control for a form: it brings the platform's list, typeahead
+and autofill. A select menu is the design-system choice for a short list behind a styled trigger,
+such as a language in a toolbar or a layout with an icon:
+
+```html
+<div class="ui-field">
+  <span class="ui-label" id="layout-label">Default layout</span>
+  <div class="ui-select-menu">
+    <button type="button" class="ui-button ui-select-menu-trigger"
+      aria-haspopup="listbox" aria-expanded="false" aria-controls="layout-list"
+      aria-labelledby="layout-label layout-value">
+      <span class="ui-select-menu-value" id="layout-value">Balanced</span>
+      <svg class="ui-select-menu-chevron" aria-hidden="true">…</svg>
+    </button>
+    <ul class="ui-menu ui-select-menu-list" id="layout-list" role="listbox" aria-labelledby="layout-label">
+      <li class="ui-menu-item" role="option" aria-selected="true">Balanced</li>
+      <li class="ui-menu-item" role="option" aria-selected="false">Compact</li>
+    </ul>
+  </div>
+</div>
+```
+
+The reference wiring, including focus and keyboard movement, is `demo/ui/controls/SelectMenu.svelte`.
+The trigger is one tab stop; ArrowDown, ArrowUp, Enter or Space open it; arrows, Home and End move
+inside the list; Enter or Space choose; Escape closes and returns the focus. `aria-selected` marks
+the chosen option. The list is a `.ui-menu`, so its surface, focus ring and checked marker are the
+same in every site.
 
 ## States
 
