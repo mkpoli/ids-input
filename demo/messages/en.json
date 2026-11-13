@@ -217,7 +217,7 @@
   "app.replacement.loading": "Looking up components…",
   "app.replacement.notFound": "Could not find that component in the character.",
   "app.replacement.failed": "Could not look up the character. Please try again.",
-  "app.replacement.tooLong": "The three inputs together must be at most 64 code points.",
+  "app.replacement.tooLong": "The three inputs together are longer than a description this editor accepts.",
   "app.source.openTangut": "Meanings in English, Japanese and Chinese, eight reconstructions and two sound glosses for Tangut characters, for the character information panel.",
   "app.source.tangutComponentMeaning": "The horse-related semantic association of component 𘥇 (2020-04-21).",
   "app.replacement.nestedHint": "You can also paste a nested expression into the sequence field, for example ⿱🔄林木火水.",

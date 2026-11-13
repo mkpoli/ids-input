@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { replacementExpression, replacementInput, replacementPrefix, replacementQuery, resolveReplacement, resolveReplacementExpression, unaliasReplacementInput, write } from '../src/core/index.js'
+import { LONGEST, replacementExpression, replacementInput, replacementPrefix, replacementQuery, resolveReplacement, resolveReplacementExpression, unaliasReplacementInput, write } from '../src/core/index.js'
 
 const table = new Map(Object.entries({
   林: ['⿰木木'], 森: ['⿱木林'], 赢: ['⿱吂⿲月贝凡'],
@@ -41,7 +41,7 @@ describe('zi.tools replacement expressions', () => {
     expect(replacementQuery('🔄林木？︀')).toBeNull()
     expect(replacementQuery('🔄⿰木？︀木火')).toBeNull()
     expect(replacementQuery('🔄⿰木⬚木火')).toBeNull()
-    expect(replacementQuery('🔄' + '⿾'.repeat(65) + '木木火')).toBeNull()
+    expect(replacementQuery('🔄' + '⿾'.repeat(LONGEST + 1) + '木木火')).toBeNull()
   })
   it('replaces a component or subtree with an IDS, including within opened descriptions', async () => {
     expect(await resolve('🔄⿰木木木火')).toBe('⿰火木')
@@ -72,18 +72,20 @@ describe('zi.tools replacement expressions', () => {
     expect(calls).toBe(1)
   })
   it('does not return a result too long for the editor', async () => {
+    const deep = '⿾'.repeat(LONGEST - 12)
     const query = replacementQuery(`🔄甲木${'⿾'.repeat(10)}火`)
-    const result = await resolveReplacement(query, async () => [{ text: `⿰${'⿾'.repeat(58)}木日` }])
+    const result = await resolveReplacement(query, async () => [{ text: `⿰${deep}木日` }])
     expect(result).toBeNull()
   })
   it('tries another match if the preferred result would be too long', async () => {
+    const deep = '⿾'.repeat(LONGEST - 12)
     const query = replacementQuery(`🔄甲木${'⿾'.repeat(10)}火`)
     const result = await resolveReplacement(query, async char => char === '甲'
-      ? [{ text: `⿰${'⿾'.repeat(58)}日木` }, { text: '⿰木口' }] : [])
+      ? [{ text: `⿰${deep}日木` }, { text: '⿰木口' }] : [])
     expect(write(result)).toBe(`⿰${'⿾'.repeat(10)}火口`)
   })
   it('can replace a subtree after an expansion temporarily exceeds the editor length', async () => {
-    const target = `${'⿾'.repeat(59)}木`
+    const target = `${'⿾'.repeat(LONGEST - 5)}木`
     const query = replacementQuery(`🔄⿰甲日${target}火`)
     const result = await resolveReplacement(query, async char => char === '甲'
       ? [{ text: `⿲${target}乙丙` }] : [])
@@ -129,7 +131,7 @@ describe('zi.tools replacement expressions', () => {
     expect(replacementExpression('⿰木日')).toBeNull()
     const deeplyNested = '🔄'.repeat(22) + '木'.repeat(45)
     expect(await ask(deeplyNested)).toBe('木')
-    expect(replacementExpression('⿾'.repeat(257) + '🔄林木火')).toBeNull()
+    expect(replacementExpression('⿾'.repeat(LONGEST * 4 + 1) + '🔄林木火')).toBeNull()
   })
   it('aborts an in-flight nested replacement without opening further components', async () => {
     const controller = new AbortController()

@@ -375,7 +375,7 @@ operations. Invalid import leaves the open document untouched.
 | limit | value |
 | --- | --- |
 | file bytes | 1 MiB |
-| projected IDS | 64 Unicode code points |
+| projected IDS | 256 Unicode code points |
 | layers, including groups and slots | 1000 |
 | layer depth, root at depth 0 | 64 |
 | geometry edits | 1000 |

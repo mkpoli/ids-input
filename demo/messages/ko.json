@@ -215,7 +215,7 @@
   "app.replacement.loading": "부품 찾는 중…",
   "app.replacement.notFound": "글자에서 해당 부품을 찾을 수 없습니다.",
   "app.replacement.failed": "글자를 조회하지 못했습니다. 다시 시도해 주세요.",
-  "app.replacement.tooLong": "세 입력의 코드 포인트 합계는 64개 이하여야 합니다.",
+  "app.replacement.tooLong": "세 입력을 합치면 이 편집기가 다루는 기술 길이를 넘습니다.",
   "app.source.openTangut": "문자 정보 패널에 표시하는 서하 문자의 영어·일본어·중국어 뜻, 여덟 체계의 재구음과 두 가지 음주.",
   "app.source.tangutComponentMeaning": "부품𘥇과 말의 의미 사이의 관련성(2020년4월21일).",
   "app.replacement.nestedHint": "⿱🔄林木火水처럼 바꾸기가 포함된 식을 순서 입력란에 붙여 넣을 수도 있습니다.",

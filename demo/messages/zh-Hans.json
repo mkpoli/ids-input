@@ -215,7 +215,7 @@
   "app.replacement.loading": "正在查找部件…",
   "app.replacement.notFound": "在该字中未找到这个部件。",
   "app.replacement.failed": "无法查询该字，请重试。",
-  "app.replacement.tooLong": "三个输入合计不能超过 64 个码位。",
+  "app.replacement.tooLong": "三个输入合计超出本编辑器可处理的描述长度。",
   "app.source.openTangut": "文字信息面板中西夏字的英、日、中释义、八种拟音和两种音注。",
   "app.source.tangutComponentMeaning": "部件𘥇与马相关的语义关联（2020年4月21日）。",
   "app.replacement.nestedHint": "也可以把含替换的表达式粘贴到序列输入框，例如 ⿱🔄林木火水。",
