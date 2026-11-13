@@ -539,12 +539,18 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
     const find = char => { let root = char; while (groups.has(root) && groups.get(root) !== root) root = /** @type {string} */ (groups.get(root)); return root }
     const grouped = (/** @type {PalettePart} */ part) => (part.kind === 'c' || part.kind === 'd') && !isSequence(part.part) && !PALETTE_SEPARATE.has(part.part)
     for (const part of rows) {
-      if (!part.group || !grouped(part)) continue
+      if (!part.group || !grouped(part) || PALETTE_SEPARATE.has(part.group)) continue
       const a = find(part.group), b = find(part.part)
       groups.set(a, a)
       if (a !== b) groups.set(b, a)
     }
-    return rows.map(part => grouped(part) && groups.has(part.part) ? { ...part, group: find(part.part) } : part)
+    const sizes = new Map()
+    for (const part of rows) if (grouped(part) && groups.has(part.part)) sizes.set(find(part.part), (sizes.get(find(part.part)) ?? 0) + 1)
+    return rows.map(part => {
+      if (grouped(part) && groups.has(part.part) && sizes.get(find(part.part)) > 1) return { ...part, group: find(part.part) }
+      const { group, ...rest } = part
+      return group ? rest : part
+    })
   })
     .catch(error => { palette = null; throw error })
 

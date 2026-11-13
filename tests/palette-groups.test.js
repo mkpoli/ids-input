@@ -58,6 +58,13 @@ it('places Unicode look-alikes beside each other and joins them with variant fam
     .toEqual([{ part: '口', kind: 'c', group: '口' }, { part: '木', kind: 'c' }, { part: '囗', kind: 'd', group: '口' }])
 })
 
+it('keeps separated parts out of look-alike groups', async () => {
+  const palette = paletteRows({ columns: ['part', 'kind'], parts: [['口', 'c'], ['木', 'c'], ['甲', 'c'], ['己', 'c'], ['已', 'c']], lookalikes: ['口甲', '己已'] })
+  const rows = await babelStoneAdapter({ palette }).parts()
+  expect(rows.filter(row => row.group)).toEqual([])
+  expect(adjacentGroups(rows).map(row => row.part)).toEqual(['口', '木', '甲', '己', '已'])
+})
+
 it('keeps the palette usable when forms are absent or cannot be fetched', async () => {
   const palette = [part('馬'), part('木'), part('马')]
   expect(await babelStoneAdapter({ palette }).parts()).toEqual(palette)
