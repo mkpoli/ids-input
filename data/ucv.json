@@ -562,7 +562,9 @@
     }
    ],
    "components": "害𡧱",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02068"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02068"
+   ]
   },
   {
    "id": "5",
@@ -654,7 +656,9 @@
     }
    ],
    "components": "契𢍆𢍠𭑕𭚘",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01815"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01815"
+   ]
   },
   {
    "id": "6",
@@ -823,7 +827,9 @@
     }
    ],
    "components": "烕⿵戊天",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=02000"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=02000"
+   ]
   },
   {
    "id": "9",
@@ -1031,7 +1037,9 @@
     }
    ],
    "components": "參㕘",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03783"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03783"
+   ]
   },
   {
    "id": "18",
@@ -1450,7 +1458,9 @@
      "閲"
     ]
    ],
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01607"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01607"
+   ]
   },
   {
    "id": "27a",
@@ -1527,7 +1537,9 @@
     }
    ],
    "components": "𬉸谷",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02836"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02836"
+   ]
   },
   {
    "id": "28",
@@ -2329,7 +2341,9 @@
     }
    ],
    "components": "血",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02580"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02580"
+   ]
   },
   {
    "id": "52",
@@ -2540,7 +2554,9 @@
    ],
    "components": "凡凢",
    "jis": "37",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03297"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03297"
+   ]
   },
   {
    "id": "55",
@@ -3049,7 +3065,10 @@
     }
    ],
    "components": "勇⿱⺈男⿱刀男",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02624"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02624",
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02382"
+   ]
   },
   {
    "id": "70",
@@ -3095,7 +3114,9 @@
      "告"
     ]
    ],
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=01918",
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=01918"
+   ],
    "charts": {
     "勂": "ucs2003"
    }
@@ -3116,7 +3137,9 @@
     }
    ],
    "components": "呆𣎼",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00125"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00125"
+   ]
   },
   {
    "id": "71",
@@ -3316,7 +3339,9 @@
    ],
    "components": "冓",
    "jis": "46",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=00226"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=00226"
+   ]
   },
   {
    "id": "77",
@@ -3506,7 +3531,9 @@
     }
    ],
    "components": "⿱⬚⿱⬚𰀄⿱⬚亡",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=00476"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=00476"
+   ]
   },
   {
    "id": "83",
@@ -3816,7 +3843,9 @@
     }
    ],
    "components": "舀𱬹⿱爫罒",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02046"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02046"
+   ]
   },
   {
    "id": "91",
@@ -4005,7 +4034,9 @@
     }
    ],
    "components": "雩𩁹",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00580"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00580"
+   ]
   },
   {
    "id": "94",
@@ -4424,7 +4455,9 @@
    ],
    "unifiedMore": true,
    "note": "A third item was removed as specified in IRGN2647 Appendix B.",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02361"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02361"
+   ]
   },
   {
    "id": "104",
@@ -4652,7 +4685,11 @@
     }
    ],
    "components": "廷𢌜",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00150"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00150",
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01465",
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01466"
+   ]
   },
   {
    "id": "109c",
@@ -4670,7 +4707,9 @@
     }
    ],
    "components": "余",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04623"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04623"
+   ]
   },
   {
    "id": "109d",
@@ -4699,7 +4738,11 @@
     }
    ],
    "components": "𧵩⿱𠆴貝責⿱束貝",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02885"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02885",
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03822",
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02808"
+   ]
   },
   {
    "id": "109e",
@@ -4721,7 +4764,9 @@
     }
    ],
    "components": "畬畲𤲞",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00901"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00901"
+   ]
   },
   {
    "id": "109f",
@@ -4739,7 +4784,9 @@
     }
    ],
    "components": "𨑲迋",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03984"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03984"
+   ]
   },
   {
    "id": "110",
@@ -5208,7 +5255,9 @@
     }
    ],
    "components": "助𦔳",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=03107"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=03107"
+   ]
   },
   {
    "id": "115",
@@ -5280,7 +5329,9 @@
     "亶",
     "擅"
    ],
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01395",
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01395"
+   ],
    "charts": {
     "亶": "ucs2003",
     "擅": "ucs2003"
@@ -6200,7 +6251,9 @@
     }
    ],
    "components": "夐",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=03540"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=03540"
+   ]
   },
   {
    "id": "133",
@@ -6276,7 +6329,9 @@
     }
    ],
    "components": "彦⿸产𡿨",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=04803"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=04803"
+   ]
   },
   {
    "id": "134",
@@ -6459,7 +6514,9 @@
     }
    ],
    "components": "菴𤲅",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01263"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01263"
+   ]
   },
   {
    "id": "140",
@@ -6597,7 +6654,9 @@
     }
    ],
    "components": "幼㓜",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=00390"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=00390"
+   ]
   },
   {
    "id": "141b",
@@ -6615,7 +6674,9 @@
     }
    ],
    "components": "刀力",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=00261"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=00261"
+   ]
   },
   {
    "id": "141c",
@@ -6632,7 +6693,9 @@
     }
    ],
    "components": "尼",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=01145"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=01145"
+   ]
   },
   {
    "id": "141d",
@@ -6658,7 +6721,9 @@
     }
    ],
    "components": "倉𫝉⿱亽君⿱亼君",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=01253"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=01253"
+   ]
   },
   {
    "id": "141e",
@@ -6676,7 +6741,9 @@
     }
    ],
    "components": "攴支",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=01693"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=01693"
+   ]
   },
   {
    "id": "142",
@@ -6731,7 +6798,9 @@
    "unified": [
     "忘"
    ],
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02495",
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02495"
+   ],
    "charts": {
     "忘": "ucs2003"
    }
@@ -7106,7 +7175,9 @@
    ],
    "components": "負𧴥",
    "note": "IRGN2506AppendixB (3) Item 2",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04741"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04741"
+   ]
   },
   {
    "id": "150",
@@ -7225,7 +7296,9 @@
     }
    ],
    "components": "乞𠧒",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=00132"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=00132"
+   ]
   },
   {
    "id": "151d",
@@ -7247,7 +7320,9 @@
     }
    ],
    "components": "哀𭈆⿳𠂉口𧘇",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00172"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00172"
+   ]
   },
   {
    "id": "151e",
@@ -7265,7 +7340,9 @@
     }
    ],
    "components": "衣⿱𠂉𧘇",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=01717"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=01717"
+   ]
   },
   {
    "id": "152",
@@ -7702,7 +7779,9 @@
      "𣚣"
     ]
    ],
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01172"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01172"
+   ]
   },
   {
    "id": "158",
@@ -7731,7 +7810,9 @@
      "韠"
     ]
    ],
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=04844"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=04844"
+   ]
   },
   {
    "id": "159",
@@ -7937,7 +8018,9 @@
      "熙"
     ]
    ],
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=01146"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=01146"
+   ]
   },
   {
    "id": "163",
@@ -8171,7 +8254,11 @@
      "𦯵"
     ]
    ],
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01363",
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01363",
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02380",
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03787"
+   ],
    "charts": {
     "舄": "ucs2003"
    }
@@ -8401,7 +8488,9 @@
     ]
    ],
    "note": "add \"cdp-89e7\" to UCV#173 @ IRG#52.",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=01633"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=01633"
+   ]
   },
   {
    "id": "173a",
@@ -8422,7 +8511,9 @@
     }
    ],
    "components": "寅𡩟",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02107"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02107"
+   ]
   },
   {
    "id": "174",
@@ -8671,7 +8762,9 @@
     }
    ],
    "components": "沓㳫",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00571"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00571"
+   ]
   },
   {
    "id": "178b",
@@ -8689,7 +8782,9 @@
     }
    ],
    "components": "春舂",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04730"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04730"
+   ]
   },
   {
    "id": "179",
@@ -9349,7 +9444,9 @@
     }
    ],
    "components": "墨𱗐",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=00737"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=00737"
+   ]
   },
   {
    "id": "185",
@@ -9618,7 +9715,9 @@
     ]
    ],
    "note": "Only for etymological relation with 曾(once).",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01168"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01168"
+   ]
   },
   {
    "id": "188",
@@ -9667,7 +9766,9 @@
    ],
    "components": "雨",
    "note": "Only for rain.",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=04625"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=04625"
+   ]
   },
   {
    "id": "188b",
@@ -9949,7 +10050,9 @@
      "敻"
     ]
    ],
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=03388"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=03388"
+   ]
   },
   {
    "id": "195",
@@ -10530,7 +10633,9 @@
     }
    ],
    "components": "㐄牛",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=00104"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=00104"
+   ]
   },
   {
    "id": "211",
@@ -10624,7 +10729,9 @@
      "鐕"
     ]
    ],
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00214"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00214"
+   ]
   },
   {
    "id": "213a",
@@ -10686,7 +10793,9 @@
     }
    ],
    "components": "朁替㬱",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02507"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02507"
+   ]
   },
   {
    "id": "214",
@@ -11198,7 +11307,9 @@
     }
    ],
    "components": "圥⿱土八⿱㞢儿⿱㞢八",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=01740"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=01740"
+   ]
   },
   {
    "id": "222b",
@@ -11310,7 +11421,9 @@
      "䛇"
     ]
    ],
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02472"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02472"
+   ]
   },
   {
    "id": "225",
@@ -11403,7 +11516,9 @@
      "𧶠"
     ]
    ],
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=03545"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=03545"
+   ]
   },
   {
    "id": "228",
@@ -11560,7 +11675,9 @@
     }
    ],
    "components": "⿳𠂊灬⬚⿳𠂉灬⬚⿳亠灬⬚",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=02847"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=02847"
+   ]
   },
   {
    "id": "230b",
@@ -11576,7 +11693,9 @@
     }
    ],
    "components": "⿳𠂊⬚⿳𠂉⬚",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=02847"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=02847"
+   ]
   },
   {
    "id": "231",
@@ -11684,7 +11803,9 @@
     }
    ],
    "components": "幾㡬",
-   "review": "https://hc.jsecs.org/irg/ws2015/app/index.php?id=02491"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2015/app/index.php?id=02491"
+   ]
   },
   {
    "id": "232b",
@@ -11720,7 +11841,9 @@
     }
    ],
    "components": "垂𡸁",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00546"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00546"
+   ]
   },
   {
    "id": "232d",
@@ -11738,7 +11861,9 @@
     }
    ],
    "components": "虎⿸虍人",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03491"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03491"
+   ]
   },
   {
    "id": "232e",
@@ -11774,7 +11899,9 @@
     }
    ],
    "components": "𧾷𤴔",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02508"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02508"
+   ]
   },
   {
    "id": "232g",
@@ -11792,7 +11919,9 @@
     }
    ],
    "components": "羲𦏁",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=01681"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=01681"
+   ]
   },
   {
    "id": "232h",
@@ -11810,7 +11939,9 @@
     }
    ],
    "components": "戊戉",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=03636"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=03636"
+   ]
   },
   {
    "id": "232i",
@@ -11828,7 +11959,9 @@
     }
    ],
    "components": "婬",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02147"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02147"
+   ]
   },
   {
    "id": "232j",
@@ -11846,7 +11979,9 @@
     }
    ],
    "components": "夗夘",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=03576"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=03576"
+   ]
   },
   {
    "id": "233",
@@ -13536,7 +13671,9 @@
     ]
    ],
    "references": "266a",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01902"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01902"
+   ]
   },
   {
    "id": "267",
@@ -13785,7 +13922,9 @@
      "翺"
     ]
    ],
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03173"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03173"
+   ]
   },
   {
    "id": "274",
@@ -13862,7 +14001,9 @@
      "𨖀"
     ]
    ],
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03571"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03571"
+   ]
   },
   {
    "id": "275a",
@@ -13880,7 +14021,9 @@
     }
    ],
    "components": "虫䖝",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=03436"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=03436"
+   ]
   },
   {
    "id": "276",
@@ -14734,11 +14877,33 @@
    "single": [
     {
      "char": "𠩵",
-     "text": ""
+     "examples": []
     },
     {
      "char": "厤",
-     "text": "磿㷴㻺㽁𠟄𠪺𡐰𡓸𡙽𢹠𣦯𤯍𦠩𧝏𧯏𨬑𩞨𩱔𩴣𪅼𪙪"
+     "examples": [
+      "磿",
+      "㷴",
+      "㻺",
+      "㽁",
+      "𠟄",
+      "𠪺",
+      "𡐰",
+      "𡓸",
+      "𡙽",
+      "𢹠",
+      "𣦯",
+      "𤯍",
+      "𦠩",
+      "𧝏",
+      "𧯏",
+      "𨬑",
+      "𩞨",
+      "𩱔",
+      "𩴣",
+      "𪅼",
+      "𪙪"
+     ]
     }
    ]
   },
@@ -14986,7 +15151,9 @@
      "𪯶"
     ]
    ],
-   "review": "https://hc.jsecs.org/irg/ws2017/app/?id=03062"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/?id=03062"
+   ]
   },
   {
    "id": "298g",
@@ -15040,7 +15207,9 @@
     }
    ],
    "components": "決决",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=04900"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=04900"
+   ]
   },
   {
    "id": "298j",
@@ -15058,7 +15227,9 @@
     }
    ],
    "components": "对対",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00448"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00448"
+   ]
   },
   {
    "id": "298k",
@@ -15076,7 +15247,9 @@
     }
    ],
    "components": "奎",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00828"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00828"
+   ]
   },
   {
    "id": "298l",
@@ -15094,7 +15267,9 @@
     }
    ],
    "components": "睿䜭",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00428"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00428"
+   ]
   },
   {
    "id": "298m",
@@ -15111,7 +15286,9 @@
     }
    ],
    "components": "匝",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04070"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04070"
+   ]
   },
   {
    "id": "298n",
@@ -15129,7 +15306,9 @@
     }
    ],
    "components": "聊𦕅",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03599"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03599"
+   ]
   },
   {
    "id": "298o",
@@ -15147,7 +15326,9 @@
     }
    ],
    "components": "屰𭁄",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03965"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03965"
+   ]
   },
   {
    "id": "298p",
@@ -15165,7 +15346,9 @@
     }
    ],
    "components": "齊",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04941"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04941"
+   ]
   },
   {
    "id": "298q",
@@ -15183,7 +15366,9 @@
     }
    ],
    "components": "㡀𰏘",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01610"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01610"
+   ]
   },
   {
    "id": "298r",
@@ -15201,7 +15386,9 @@
     }
    ],
    "components": "㐱⿱大彡",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04533"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04533"
+   ]
   },
   {
    "id": "298s",
@@ -15255,7 +15442,9 @@
     }
    ],
    "components": "𰕎",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=01422"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=01422"
+   ]
   },
   {
    "id": "298v",
@@ -15273,7 +15462,9 @@
     }
    ],
    "components": "辜",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02354"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02354"
+   ]
   },
   {
    "id": "298w",
@@ -15291,7 +15482,10 @@
     }
    ],
    "components": "𦉍罌⿱䀠瓦甖䀠賏",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02478"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02478",
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=00770"
+   ]
   },
   {
    "id": "298x",
@@ -15309,7 +15503,9 @@
     }
    ],
    "components": "埀",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=00146"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=00146"
+   ]
   },
   {
    "id": "298y",
@@ -15326,7 +15522,9 @@
     }
    ],
    "components": "⿰亻丨亻",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=00180"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=00180"
+   ]
   },
   {
    "id": "298z",
@@ -15344,7 +15542,9 @@
     }
    ],
    "components": "專",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=00350"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=00350"
+   ]
   },
   {
    "id": "298za",
@@ -15362,7 +15562,9 @@
     }
    ],
    "components": "來",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=04124"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=04124"
+   ]
   },
   {
    "id": "298zb",
@@ -15380,7 +15582,9 @@
     }
    ],
    "components": "⿱丵𠮛⿱丵口",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=00292"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=00292"
+   ]
   },
   {
    "id": "298zc",
@@ -15398,7 +15602,9 @@
     }
    ],
    "components": "康𥹺",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02821"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02821"
+   ]
   },
   {
    "id": "298zd",
@@ -15569,7 +15775,9 @@
      "難"
     ]
    ],
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=02052"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=02052"
+   ]
   },
   {
    "id": "303",
@@ -15644,7 +15852,9 @@
    ],
    "components": "貝⿱且八",
    "note": "Only for meaning of shell.",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=03589"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=03589"
+   ]
   },
   {
    "id": "305",
@@ -15853,7 +16063,9 @@
     }
    ],
    "components": "⿱艹⿰⬚⬚⿰⬚⿱艹⬚",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02098"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02098"
+   ]
   },
   {
    "id": "307d",
@@ -15883,7 +16095,9 @@
     }
    ],
    "components": "啟啓",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04234"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04234"
+   ]
   },
   {
    "id": "307e",
@@ -15899,7 +16113,9 @@
     }
    ],
    "components": "⿱雨⿰⬚⬚⿰⬚⿱雨⬚",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02950"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02950"
+   ]
   },
   {
    "id": "307f",
@@ -15915,7 +16131,9 @@
     }
    ],
    "components": "⿱𥫗⿰⬚⬚⿰⬚⿱𥫗⬚",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02950"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02950"
+   ]
   },
   {
    "id": "308",
@@ -16111,7 +16329,9 @@
     }
    ],
    "components": "吉𠮷",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02862"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02862"
+   ]
   },
   {
    "id": "312b",
@@ -16128,7 +16348,9 @@
     }
    ],
    "components": "𠚏",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04266"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04266"
+   ]
   },
   {
    "id": "312c",
@@ -16146,7 +16368,9 @@
     }
    ],
    "components": "𢛢",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04626"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04626"
+   ]
   },
   {
    "id": "312d",
@@ -16162,7 +16386,10 @@
     }
    ],
    "components": "⿱𣪊⬚⿹𣪊⬚",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02417"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02417",
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03165"
+   ]
   },
   {
    "id": "312e",
@@ -16180,7 +16407,9 @@
     }
    ],
    "components": "未末",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=00457"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=00457"
+   ]
   },
   {
    "id": "313",
@@ -16265,7 +16494,9 @@
     ]
    ],
    "note": "IRGN2506AppendixB (3) Item 7",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00445"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00445"
+   ]
   },
   {
    "id": "314",
@@ -16553,7 +16784,11 @@
      "洄"
     ]
    ],
-   "review": "https://hc.jsecs.org/irg/ws2015/app/index.php?id=02179"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2015/app/index.php?id=02179",
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00416",
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03067"
+   ]
   },
   {
    "id": "317c",
@@ -16575,7 +16810,9 @@
     }
    ],
    "components": "嗇𮧌",
-   "review": "https://hc.jsecs.org/irg/ws2015/app/index.php?id=00913"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2015/app/index.php?id=00913"
+   ]
   },
   {
    "id": "318",
@@ -16695,7 +16932,9 @@
      "青"
     ]
    ],
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=02018"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=02018"
+   ]
   },
   {
    "id": "320",
@@ -16965,7 +17204,9 @@
     }
    ],
    "components": "耎䎡",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00183"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00183"
+   ]
   },
   {
    "id": "323",
@@ -17226,11 +17467,27 @@
    "single": [
     {
      "char": "間",
-     "text": "墹𣊺𤩎𥼴𦗬𧒄𧢑𩴦"
+     "examples": [
+      "墹",
+      "𣊺",
+      "𤩎",
+      "𥼴",
+      "𦗬",
+      "𧒄",
+      "𧢑",
+      "𩴦"
+     ]
     },
     {
      "char": "閒",
-     "text": "𦠥𣩞𤡥𧤽𨎫𩦂"
+     "examples": [
+      "𦠥",
+      "𣩞",
+      "𤡥",
+      "𧤽",
+      "𨎫",
+      "𩦂"
+     ]
     }
    ]
   },
@@ -17475,7 +17732,9 @@
     }
    ],
    "components": "聚𬥁",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04023"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04023"
+   ]
   },
   {
    "id": "330",
@@ -17651,11 +17910,25 @@
    "single": [
     {
      "char": "禀",
-     "text": ""
+     "examples": []
     },
     {
      "char": "稟",
-     "text": "𠏟𡗋𢀮𢶸𣱭𤢤𤯑𥋶𦡣𨮍𩆐𩇆𩼤"
+     "examples": [
+      "𠏟",
+      "𡗋",
+      "𢀮",
+      "𢶸",
+      "𣱭",
+      "𤢤",
+      "𤯑",
+      "𥋶",
+      "𦡣",
+      "𨮍",
+      "𩆐",
+      "𩇆",
+      "𩼤"
+     ]
     }
    ],
    "charts": {
@@ -17690,11 +17963,20 @@
    "single": [
     {
      "char": "廩",
-     "text": "𠘡𡄁𡓔𡾭𢤭𤃢𤒢𦢵"
+     "examples": [
+      "𠘡",
+      "𡄁",
+      "𡓔",
+      "𡾭",
+      "𢤭",
+      "𤃢",
+      "𤒢",
+      "𦢵"
+     ]
     },
     {
      "char": "廪",
-     "text": ""
+     "examples": []
     }
    ],
    "charts": {
@@ -18057,7 +18339,9 @@
      "𦃛"
     ]
    ],
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03246"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03246"
+   ]
   },
   {
    "id": "343a",
@@ -18076,7 +18360,9 @@
    ],
    "components": "卩阝",
    "note": "See ROK normalization rule 282",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00395"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00395"
+   ]
   },
   {
    "id": "344",
@@ -18456,7 +18742,9 @@
     }
    ],
    "components": "⿳亡罒⿲月⬚丸⿳𠫓罒⿲月⬚丸",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=03449"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=03449"
+   ]
   },
   {
    "id": "353",
@@ -18663,7 +18951,9 @@
      "拋"
     ]
    ],
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03517"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03517"
+   ]
   },
   {
    "id": "354c",
@@ -18689,7 +18979,9 @@
     }
    ],
    "components": "⿱大干𭑃⿱大𰀁𡗢",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03767"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03767"
+   ]
   },
   {
    "id": "354d",
@@ -18711,7 +19003,10 @@
     }
    ],
    "components": "爪瓜𤓰",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02901"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02901",
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02466"
+   ]
   },
   {
    "id": "354e",
@@ -18751,7 +19046,9 @@
     }
    ],
    "components": "鬲𮫙",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=04295"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=04295"
+   ]
   },
   {
    "id": "354g",
@@ -18769,7 +19066,9 @@
     }
    ],
    "components": "弓𠔃",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=03707"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=03707"
+   ]
   },
   {
    "id": "354h",
@@ -18791,7 +19090,9 @@
     }
    ],
    "components": "達𨔶逹",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=00166"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=00166"
+   ]
   },
   {
    "id": "354i",
@@ -18809,7 +19110,9 @@
     }
    ],
    "components": "䂓規",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=00543"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=00543"
+   ]
   },
   {
    "id": "354j",
@@ -18827,7 +19130,9 @@
     }
    ],
    "components": "呙⿱口禸",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=01956"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=01956"
+   ]
   },
   {
    "id": "355",
@@ -19461,7 +19766,9 @@
    ],
    "components": "壮壯",
    "note": "In Annex S, along with 荘莊 and 装裝, are source separation examples. As an exception, this rule is not applied to the proposed U+2E5A2 disunification per decision on IRG Meeting #66.",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02085"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02085"
+   ]
   },
   {
    "id": "363b",
@@ -19479,7 +19786,9 @@
    ],
    "components": "状狀",
    "note": "In Annex S, it is a source separation example.",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02085"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02085"
+   ]
   },
   {
    "id": "363c",
@@ -19497,7 +19806,9 @@
    ],
    "components": "妆妝",
    "note": "In Annex S, it is a source separation example.",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02085"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02085"
+   ]
   },
   {
    "id": "364",
@@ -19736,7 +20047,9 @@
      "虛"
     ]
    ],
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03496"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03496"
+   ]
   },
   {
    "id": "370a",
@@ -19754,7 +20067,9 @@
     }
    ],
    "components": "戲戱",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=00611"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=00611"
+   ]
   },
   {
    "id": "371",
@@ -20110,7 +20425,11 @@
      "畄"
     ]
    ],
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01207"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01207",
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01208",
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02095"
+   ]
   },
   {
    "id": "381",
@@ -20203,11 +20522,35 @@
    "single": [
     {
      "char": "冐",
-     "text": "猒𢽵𥀦𦑉𦠡𩎂"
+     "examples": [
+      "猒",
+      "𢽵",
+      "𥀦",
+      "𦑉",
+      "𦠡",
+      "𩎂"
+     ]
     },
     {
      "char": "冒",
-     "text": "勖毷萺蝐賵赗𢯾𢺫𣯀𤲰𥈆𥸖𦽹𧛕𨩩𪃑"
+     "examples": [
+      "勖",
+      "毷",
+      "萺",
+      "蝐",
+      "賵",
+      "赗",
+      "𢯾",
+      "𢺫",
+      "𣯀",
+      "𤲰",
+      "𥈆",
+      "𥸖",
+      "𦽹",
+      "𧛕",
+      "𨩩",
+      "𪃑"
+     ]
     }
    ]
   },
@@ -20450,7 +20793,9 @@
      "晋"
     ]
    ],
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=01541"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=01541"
+   ]
   },
   {
    "id": "389",
@@ -20526,7 +20871,9 @@
      "媫"
     ]
    ],
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=00151"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=00151"
+   ]
   },
   {
    "id": "390",
@@ -20630,7 +20977,10 @@
      "𩣜"
     ]
    ],
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01797"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01797",
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02475"
+   ]
   },
   {
    "id": "391",
@@ -20739,7 +21089,9 @@
    "unified": [
     "涵"
    ],
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02873"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02873"
+   ]
   },
   {
    "id": "395",
@@ -20779,7 +21131,9 @@
      "𣷉"
     ]
    ],
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01924"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01924"
+   ]
   },
   {
    "id": "397",
@@ -20817,14 +21171,39 @@
    "single": [
     {
      "char": "𣦼",
-     "text": "儏𡄄𩽐璨薒㣓𡦞𢷂𥢽𥴷𥽆𦪫𧒷𨮏𩯞𩼇𩾍𪆶𪞆"
+     "examples": [
+      "儏",
+      "𡄄",
+      "𩽐",
+      "璨",
+      "薒",
+      "㣓",
+      "𡦞",
+      "𢷂",
+      "𥢽",
+      "𥴷",
+      "𥽆",
+      "𦪫",
+      "𧒷",
+      "𨮏",
+      "𩯞",
+      "𩼇",
+      "𩾍",
+      "𪆶",
+      "𪞆"
+     ]
     },
     {
      "char": "⿰歹又",
-     "text": "殩𠸅"
+     "examples": [
+      "殩",
+      "𠸅"
+     ]
     }
    ],
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=00367"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=00367"
+   ]
   },
   {
    "id": "397a",
@@ -20847,7 +21226,9 @@
    ],
    "components": "殄𱥃",
    "note": "See ROK normalization rule 173",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04457"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04457"
+   ]
   },
   {
    "id": "397b",
@@ -20865,7 +21246,9 @@
     }
    ],
    "components": "歹歺",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01926"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01926"
+   ]
   },
   {
    "id": "398",
@@ -20978,7 +21361,9 @@
      "帶"
     ]
    ],
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=00141"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=00141"
+   ]
   },
   {
    "id": "401",
@@ -21083,11 +21468,28 @@
    "single": [
     {
      "char": "奐",
-     "text": "𪣷𠗫𡚥𡺌𪲰𤚙𥈉𫃴𧎑𨩉𩝆𫙪𧗽𦝝"
+     "examples": [
+      "𪣷",
+      "𠗫",
+      "𡚥",
+      "𡺌",
+      "𪲰",
+      "𤚙",
+      "𥈉",
+      "𫃴",
+      "𧎑",
+      "𨩉",
+      "𩝆",
+      "𫙪",
+      "𧗽",
+      "𦝝"
+     ]
     },
     {
      "char": "奂",
-     "text": "㬇"
+     "examples": [
+      "㬇"
+     ]
     }
    ],
    "note": "IRGN2481 Item 7, IRG#52 entry #18",
@@ -21331,11 +21733,31 @@
    "single": [
     {
      "char": "网",
-     "text": "About 10"
+     "examples": [
+      "A",
+      "b",
+      "o",
+      "u",
+      "t",
+      "1",
+      "0"
+     ]
     },
     {
      "char": "罒",
-     "text": "More than 300"
+     "examples": [
+      "M",
+      "o",
+      "r",
+      "e",
+      "t",
+      "h",
+      "a",
+      "n",
+      "3",
+      "0",
+      "0"
+     ]
     }
    ]
   },
@@ -21359,7 +21781,10 @@
     }
    ],
    "components": "罒𦉪罓",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=03498"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=03498",
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03123"
+   ]
   },
   {
    "id": "403",
@@ -21724,14 +22149,37 @@
    "single": [
     {
      "char": "艸",
-     "text": "About 50"
+     "examples": [
+      "A",
+      "b",
+      "o",
+      "u",
+      "t",
+      "5",
+      "0"
+     ]
     },
     {
      "char": "艹",
-     "text": "More than 3000"
+     "examples": [
+      "M",
+      "o",
+      "r",
+      "e",
+      "t",
+      "h",
+      "a",
+      "n",
+      "3",
+      "0",
+      "0",
+      "0"
+     ]
     }
    ],
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03339"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03339"
+   ]
   },
   {
    "id": "405",
@@ -22168,11 +22616,61 @@
    "single": [
     {
      "char": "攵",
-     "text": "𢼥𢽤𣀿敢𢽒𢽺𢽌𢽘𧒥𧸞𤉺𤊮𢽓𢽗…(About 400)"
+     "examples": [
+      "𢼥",
+      "𢽤",
+      "𣀿",
+      "敢",
+      "𢽒",
+      "𢽺",
+      "𢽌",
+      "𢽘",
+      "𧒥",
+      "𧸞",
+      "𤉺",
+      "𤊮",
+      "𢽓",
+      "𢽗",
+      "(",
+      "A",
+      "b",
+      "o",
+      "u",
+      "t",
+      "4",
+      "0",
+      "0",
+      ")"
+     ]
     },
     {
      "char": "攴",
-     "text": "𢼿𢿩𢿚𢾬𣀰𢽅𢾈𢾠𢿺𣀄𧥚𣁀𧥙𢾴…(About 200)"
+     "examples": [
+      "𢼿",
+      "𢿩",
+      "𢿚",
+      "𢾬",
+      "𣀰",
+      "𢽅",
+      "𢾈",
+      "𢾠",
+      "𢿺",
+      "𣀄",
+      "𧥚",
+      "𣁀",
+      "𧥙",
+      "𢾴",
+      "(",
+      "A",
+      "b",
+      "o",
+      "u",
+      "t",
+      "2",
+      "0",
+      "0",
+      ")"
+     ]
     }
    ]
   },
@@ -22224,11 +22722,48 @@
    "single": [
     {
      "char": "亀",
-     "text": "䆴𦅥𦿷𪚲"
+     "examples": [
+      "䆴",
+      "𦅥",
+      "𦿷",
+      "𪚲"
+     ]
     },
     {
      "char": "龜",
-     "text": "龞䶯䶰䶱䶲𤒅𦫉𩙠𪚪𪚬𪚭𪚮𪚯𪚰𪚱𪚳𪚵𪚶𪚷𪚸𪚹𪚻𪚼𪚽𪛀𪛁𪛂𪛅𪛆𪛇𪛈"
+     "examples": [
+      "龞",
+      "䶯",
+      "䶰",
+      "䶱",
+      "䶲",
+      "𤒅",
+      "𦫉",
+      "𩙠",
+      "𪚪",
+      "𪚬",
+      "𪚭",
+      "𪚮",
+      "𪚯",
+      "𪚰",
+      "𪚱",
+      "𪚳",
+      "𪚵",
+      "𪚶",
+      "𪚷",
+      "𪚸",
+      "𪚹",
+      "𪚻",
+      "𪚼",
+      "𪚽",
+      "𪛀",
+      "𪛁",
+      "𪛂",
+      "𪛅",
+      "𪛆",
+      "𪛇",
+      "𪛈"
+     ]
     }
    ]
   },
@@ -22260,7 +22795,9 @@
    "single": [
     {
      "char": "⿷目",
-     "text": "𪚫"
+     "examples": [
+      "𪚫"
+     ]
     }
    ]
   },
@@ -22319,7 +22856,9 @@
    ],
    "components": "乖⿱丿",
    "note": "USAT06670",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=00051"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=00051"
+   ]
   },
   {
    "id": "411",
@@ -22365,7 +22904,9 @@
     }
    ],
    "components": "⿲人⬚人⿲口⬚口⿲厶⬚厶⿲人⬚口⿲口⬚厶⿲厶⬚人⿲人⬚厶⿲口⬚人⿲厶⬚口",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=00182"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=00182"
+   ]
   },
   {
    "id": "412",
@@ -22383,7 +22924,9 @@
     }
    ],
    "components": "乎𠂠",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=00395"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=00395"
+   ]
   },
   {
    "id": "413",
@@ -22401,7 +22944,9 @@
     }
    ],
    "components": "黎𪏭",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=00591"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=00591"
+   ]
   },
   {
    "id": "414",
@@ -22418,7 +22963,9 @@
     }
    ],
    "components": "𡍮⿱一",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=00744"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=00744"
+   ]
   },
   {
    "id": "415",
@@ -22436,7 +22983,9 @@
     }
    ],
    "components": "尞𤊽",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=00984"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=00984"
+   ]
   },
   {
    "id": "416",
@@ -22458,7 +23007,9 @@
     }
    ],
    "components": "票㶾⿳覀二火",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=01175"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=01175"
+   ]
   },
   {
    "id": "417",
@@ -22477,7 +23028,9 @@
    ],
    "components": "⿱⬚月⿱⬚肉",
    "note": "Only for meaning of meat.",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=01203"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=01203"
+   ]
   },
   {
    "id": "418",
@@ -22499,7 +23052,10 @@
     }
    ],
    "components": "眉𭕘睂",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=01861"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=01861",
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01157"
+   ]
   },
   {
    "id": "419",
@@ -22517,7 +23073,9 @@
     }
    ],
    "components": "尋𡬶",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=02397"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=02397"
+   ]
   },
   {
    "id": "420",
@@ -22535,7 +23093,9 @@
     }
    ],
    "components": "𦙃⿱⿺𠃊口目",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=02866"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=02866"
+   ]
   },
   {
    "id": "421",
@@ -22565,7 +23125,10 @@
     }
    ],
    "components": "覃⿱覀𤰞",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=03407"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=03407",
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=03329"
+   ]
   },
   {
    "id": "422",
@@ -22583,7 +23146,9 @@
     }
    ],
    "components": "朿束",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=03777"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=03777"
+   ]
   },
   {
    "id": "423",
@@ -22605,7 +23170,10 @@
     }
    ],
    "components": "走𧺆𣥚",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=04131"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=04131",
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02009"
+   ]
   },
   {
    "id": "424",
@@ -22709,7 +23277,9 @@
      "𮪍"
     ]
    ],
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=04182"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=04182"
+   ]
   },
   {
    "id": "425",
@@ -22745,7 +23315,9 @@
      "𧣱"
     ]
    ],
-   "review": "https://hc.jsecs.org/irg/ws2015/app/index.php?id=01989"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2015/app/index.php?id=01989"
+   ]
   },
   {
    "id": "426",
@@ -22762,7 +23334,9 @@
     }
    ],
    "components": "⿱止缶",
-   "review": "https://hc.jsecs.org/irg/ws2015/app/index.php?id=01529"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2015/app/index.php?id=01529"
+   ]
   },
   {
    "id": "427",
@@ -22780,7 +23354,9 @@
     }
    ],
    "components": "卵𡖉",
-   "review": "https://hc.jsecs.org/irg/ws2015/app/index.php?id=01869"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2015/app/index.php?id=01869"
+   ]
   },
   {
    "id": "427a",
@@ -22798,7 +23374,9 @@
     }
    ],
    "components": "夘卯",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04910"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04910"
+   ]
   },
   {
    "id": "428",
@@ -22830,7 +23408,9 @@
      "𥤳"
     ]
    ],
-   "review": "https://hc.jsecs.org/irg/ws2015/app/index.php?id=02595"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2015/app/index.php?id=02595"
+   ]
   },
   {
    "id": "429",
@@ -22879,7 +23459,9 @@
     }
    ],
    "components": "⿱䒑八⿳⿰一一一⿰一一",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02673"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02673"
+   ]
   },
   {
    "id": "431",
@@ -23010,7 +23592,9 @@
     }
    ],
    "components": "享⿳亠丷子",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=01957"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=01957"
+   ]
   },
   {
    "id": "438",
@@ -23027,7 +23611,9 @@
     }
    ],
    "components": "凹",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=02335"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=02335"
+   ]
   },
   {
    "id": "439",
@@ -23057,7 +23643,10 @@
    ],
    "components": "瓦𭂬⿵几二𭺛𭺜",
    "note": "Only for etymological relation with 瓦(tile).",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=02688"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=02688",
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02325"
+   ]
   },
   {
    "id": "440",
@@ -23077,7 +23666,9 @@
     }
    ],
    "components": "𡉵⿰土𪟨⿻北乚",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=03197"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=03197"
+   ]
   },
   {
    "id": "441",
@@ -23131,7 +23722,9 @@
    ],
    "components": "鬼",
    "note": "Only for etymological relation with 鬼(ghost).",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=04844"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=04844"
+   ]
   },
   {
    "id": "442",
@@ -23153,7 +23746,9 @@
     }
    ],
    "components": "粦⿱𰉗⿰夕𰀁⿱𰉗舛",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=03027"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=03027"
+   ]
   },
   {
    "id": "442a",
@@ -23171,7 +23766,9 @@
     }
    ],
    "components": "桀𱣎",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03902"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03902"
+   ]
   },
   {
    "id": "443",
@@ -23189,7 +23786,9 @@
     }
    ],
    "components": "鹿𢉖",
-   "review": "https://hc.jsecs.org/irg/ws2017/app/index.php?id=02229"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2017/app/index.php?id=02229"
+   ]
   },
   {
    "id": "444",
@@ -23209,7 +23808,9 @@
     }
    ],
    "components": "⿱此⬚",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04577"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04577"
+   ]
   },
   {
    "id": "445",
@@ -23227,7 +23828,9 @@
     }
    ],
    "components": "⿱死⬚⿱夗⬚",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04702"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04702"
+   ]
   },
   {
    "id": "446",
@@ -23245,7 +23848,9 @@
     }
    ],
    "components": "豈⿱止豆",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01364"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01364"
+   ]
   },
   {
    "id": "447",
@@ -23265,7 +23870,9 @@
     }
    ],
    "components": "㖾",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00534"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00534"
+   ]
   },
   {
    "id": "448",
@@ -23283,7 +23890,11 @@
     }
    ],
    "components": "賓賔",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00671"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00671",
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02529",
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01397"
+   ]
   },
   {
    "id": "449",
@@ -23305,7 +23916,9 @@
     }
    ],
    "components": "罙",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03409"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03409"
+   ]
   },
   {
    "id": "450",
@@ -23323,7 +23936,9 @@
     }
    ],
    "components": "夒",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02325"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02325"
+   ]
   },
   {
    "id": "451",
@@ -23772,7 +24387,9 @@
    ],
    "components": "解觧",
    "note": "IRGN2506AppendixB (3) Item 10",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03642"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03642"
+   ]
   },
   {
    "id": "458",
@@ -23791,7 +24408,9 @@
    ],
    "components": "翏",
    "note": "See ROK normalization rule 125",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03255"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03255"
+   ]
   },
   {
    "id": "459",
@@ -23809,7 +24428,9 @@
     }
    ],
    "components": "番畨",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01613"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01613"
+   ]
   },
   {
    "id": "460",
@@ -23827,7 +24448,9 @@
     }
    ],
    "components": "易昜",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03293"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03293"
+   ]
   },
   {
    "id": "461",
@@ -23845,7 +24468,9 @@
     }
    ],
    "components": "虖𧆠",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03083"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03083"
+   ]
   },
   {
    "id": "462",
@@ -23863,7 +24488,9 @@
     }
    ],
    "components": "脊",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04561"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04561"
+   ]
   },
   {
    "id": "463",
@@ -23881,7 +24508,9 @@
     }
    ],
    "components": "𫥎",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03094"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03094"
+   ]
   },
   {
    "id": "464",
@@ -23899,7 +24528,9 @@
     }
    ],
    "components": "頟𬱃",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01195"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01195"
+   ]
   },
   {
    "id": "464b",
@@ -23916,7 +24547,9 @@
     }
    ],
    "components": "𱂥⿰名页",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04424"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04424"
+   ]
   },
   {
    "id": "465",
@@ -23938,7 +24571,9 @@
     }
    ],
    "components": "曼𭦟𭦗",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02710"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02710"
+   ]
   },
   {
    "id": "466",
@@ -23956,7 +24591,9 @@
     }
    ],
    "components": "祭𥙊",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01165"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01165"
+   ]
   },
   {
    "id": "467",
@@ -23974,7 +24611,9 @@
     }
    ],
    "components": "旨𣅀",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04852"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04852"
+   ]
   },
   {
    "id": "468",
@@ -24000,7 +24639,10 @@
     }
    ],
    "components": "肉𠕎𮌇⿴囗仌",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00969"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00969",
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00258"
+   ]
   },
   {
    "id": "469",
@@ -24018,7 +24660,9 @@
     }
    ],
    "components": "史㕜",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04497"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04497"
+   ]
   },
   {
    "id": "470",
@@ -24040,7 +24684,9 @@
     }
    ],
    "components": "丮𢩦𠃨",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01335"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01335"
+   ]
   },
   {
    "id": "471",
@@ -24062,7 +24708,9 @@
     }
    ],
    "components": "奈柰𥘾",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02879"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02879"
+   ]
   },
   {
    "id": "472",
@@ -24080,7 +24728,9 @@
     }
    ],
    "components": "韋𮧯",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04146"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=04146"
+   ]
   },
   {
    "id": "473",
@@ -24098,7 +24748,9 @@
     }
    ],
    "components": "其",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00412"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00412"
+   ]
   },
   {
    "id": "474",
@@ -24116,7 +24768,9 @@
     }
    ],
    "components": "矛𭿵",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02724"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02724"
+   ]
   },
   {
    "id": "475",
@@ -24134,7 +24788,9 @@
     }
    ],
    "components": "允𠃔",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03006"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=03006"
+   ]
   },
   {
    "id": "476",
@@ -24152,7 +24808,9 @@
     }
    ],
    "components": "蟸蠡",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00332"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=00332"
+   ]
   },
   {
    "id": "477",
@@ -24170,7 +24828,9 @@
     }
    ],
    "components": "繭𧁧",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02670"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02670"
+   ]
   },
   {
    "id": "478",
@@ -24188,7 +24848,9 @@
     }
    ],
    "components": "忄巾",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01224"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01224"
+   ]
   },
   {
    "id": "479",
@@ -24206,7 +24868,9 @@
     }
    ],
    "components": "朋⿰月习",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02761"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02761"
+   ]
   },
   {
    "id": "480",
@@ -24223,7 +24887,9 @@
     }
    ],
    "components": "蒲",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02061"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02061"
+   ]
   },
   {
    "id": "481",
@@ -24241,7 +24907,9 @@
     }
    ],
    "components": "宣𭁴",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02520"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=02520"
+   ]
   },
   {
    "id": "482",
@@ -24259,7 +24927,9 @@
     }
    ],
    "components": "隂陰",
-   "review": "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01176"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2021/app/index.php?id=01176"
+   ]
   },
   {
    "id": "483",
@@ -24333,7 +25003,9 @@
    ],
    "components": "隷隸𨽻𨽾𫕙𨽹",
    "note": "IRGN2675 Item 6",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=04021"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=04021"
+   ]
   },
   {
    "id": "486",
@@ -24367,7 +25039,9 @@
    ],
    "components": "虍𭅰𮓗𭅯𬻉",
    "note": "IRGN2723",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=03379"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=03379"
+   ]
   },
   {
    "id": "487",
@@ -24385,7 +25059,9 @@
     }
    ],
    "components": "兜兠",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02138"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02138"
+   ]
   },
   {
    "id": "488",
@@ -24403,7 +25079,9 @@
     }
    ],
    "components": "老𦒳",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=03262"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=03262"
+   ]
   },
   {
    "id": "489",
@@ -24421,7 +25099,9 @@
     }
    ],
    "components": "叚𫨻",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=04628"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=04628"
+   ]
   },
   {
    "id": "490",
@@ -24439,7 +25119,9 @@
     }
    ],
    "components": "莽莾",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=01504"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=01504"
+   ]
   },
   {
    "id": "491",
@@ -24465,7 +25147,9 @@
     }
    ],
    "components": "彝𢑱𢑴彛",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02196"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02196"
+   ]
   },
   {
    "id": "492",
@@ -24491,7 +25175,9 @@
     }
    ],
    "components": "鼎𣇓𪔂",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=03920"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=03920"
+   ]
   },
   {
    "id": "493",
@@ -24509,7 +25195,9 @@
     }
    ],
    "components": "离𮂬",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02809"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02809"
+   ]
   },
   {
    "id": "494",
@@ -24527,7 +25215,9 @@
     }
    ],
    "components": "𣳾𭜮",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=03361"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=03361"
+   ]
   },
   {
    "id": "495",
@@ -24561,7 +25251,9 @@
     }
    ],
    "components": "囟𦥓𠚁⿱人凶⿱八⿶凵人𲘟",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02969"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02969"
+   ]
   },
   {
    "id": "496a",
@@ -24598,7 +25290,9 @@
     }
    ],
    "components": "𢽠",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02446"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02446"
+   ]
   },
   {
    "id": "496b",
@@ -24636,7 +25330,9 @@
     }
    ],
    "components": "𢽃",
-   "review": "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02446"
+   "review": [
+    "https://hc.jsecs.org/irg/ws2024/app/index.php?id=02446"
+   ]
   }
  ]
 }
