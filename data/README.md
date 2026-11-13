@@ -347,9 +347,10 @@ listed as Series 2 of <https://www.unicode.org/irg/IWDS.html>. Rebuild with
 cites (`jis` for the JIS X 0213 unification criterion, `jisx0212`, `hydcd` for the Hanyu Da Cidian
 new and old forms, `annexS` for ISO/IEC 10646 Annex S), and the example characters: `unified`,
 `compatibility` as `[unified, compatibility]` pairs, `disunified` and `sourceSeparations` as groups
-of characters coded apart, and `single` for the non-unifiable list's one-form characters. `charts`
+of characters coded apart, and `single` for the non-unifiable list's characters that keep one form, each with the `examples`
+that contain it. `charts`
 names the older code chart an example is shown from, `unifiedMore` marks a list the source ends
-with an ellipsis, `note`, `references` and `review` are the source's.
+with an ellipsis, `note`, `references` and the `review` links are the source's.
 
 A form is the GlyphWiki glyph the source names. `text` is given when that name is a character, a
 description or a character with a variation selector; `of` gives the character a named form

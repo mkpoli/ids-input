@@ -131,10 +131,10 @@ for (const match of xml.matchAll(/<(group|subgroup)\s([^>]*)>|<\/(group|subgroup
       compatibility: list(one('compatibles'))?.map(char => [char.normalize('NFC'), char]),
       disunified: groupsOf(one('disunified')),
       sourceSeparations: groupsOf(one('SourceCodeSeparation')),
-      single: [...match[5].matchAll(/<single\s([^>]*)>([\s\S]*?)<\/single>/g)].map(single => ({ ...attributes(single[1]), text: unescape(single[2]).trim() })),
+      single: [...match[5].matchAll(/<single\s([^>]*)>([\s\S]*?)<\/single>/g)].map(single => ({ ...attributes(single[1]), examples: list(unescape(single[2])) ?? [] })),
       references: one('references'),
       note: one('note'),
-      review: one('ReviewSystem'),
+      review: fields.ReviewSystem,
       charts,
     }
     if (!entry.single.length) delete (/** @type {any} */ (entry)).single
@@ -159,6 +159,7 @@ for (let i = 0; i < names.length; i += 24) {
 const fetched = []
 for (const name of missing.sort()) {
   const response = await fetch(`https://glyphwiki.org/glyph/${name}.svg`, { headers: { 'user-agent': 'ucv-forms-build' } })
+  if (!response.ok && response.status !== 404) throw new Error(`GlyphWiki ${name}: HTTP ${response.status}`)
   const d = response.ok ? outline(await response.text()) : ''
   if (d) { outlines[name] = d; fetched.push(name) }
   await new Promise(resolve => setTimeout(resolve, 150))

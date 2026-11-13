@@ -50,3 +50,8 @@ it('draws nearly every form', () => {
   expect(absent.length).toBeLessThanOrEqual(11)
   expect(outlines['u540c-08']).toMatch(/^M[\d. ]+L/)
 })
+
+it('keeps every review link and the characters a single form appears in', () => {
+  expect(data.entries.flatMap((/** @type {{ review?: string[] }} */ row) => row.review ?? [])).toHaveLength(232)
+  expect(entry('325').single[0]).toEqual({ char: '間', examples: ['墹', '𣊺', '𤩎', '𥼴', '𦗬', '𧒄', '𧢑', '𩴦'] })
+})
