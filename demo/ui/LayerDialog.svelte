@@ -2,7 +2,7 @@
   // A document view of the active description: the composer's separated drawing, rendered through
   // the layer document, with a layer list and an affine transform for the chosen layer.
   import { documentSource } from '@han-compose/composer/document-source'
-  import { affineForChain, applyAffine, boxCorners, findLayer, fingerprintGeometry, invertAffine, layerAtPath, layerFrames, pathOfLayer, renderScopes, scopesSvg } from '../../src/document/index.js'
+  import { affineForChain, applyAffine, applyGeometryEdits, boxCorners, findLayer, fingerprintGeometry, invertAffine, layerAtPath, layerFrames, pathOfLayer, renderScopes, scopesSvg, transformPath } from '../../src/document/index.js'
   import Dialog from './Dialog.svelte'
 
   /** @typedef {import('../../src/document/index.js').DocumentSession} DocumentSession */
@@ -110,6 +110,22 @@
     strokeId = strokeId === id ? null : id
     if (strokeId) { mode = 'affine'; applyError = '' }
   }
+
+  /** The chosen layer's strokes on the canvas, for clicking one on the drawing. */
+  const strokePaths = $derived.by(() => {
+    if (!selected || !source || !strokes.length) return []
+    const frame = layout.get(selected.id)
+    if (!frame?.supported) return []
+    let geometry
+    try { geometry = source.geometry(selected) } catch { return [] }
+    if (!geometry) return []
+    const edited = applyGeometryEdits(geometry, doc?.geometryEdits ?? [], selected.id).geometry
+    return strokes.flatMap(stroke => {
+      const d = stroke.pieces.map(index => edited.pieces[index]?.d).filter(Boolean)
+        .map(piece => transformPath(piece, [{ type: 'affine', matrix: frame.canvas }]).d).join('')
+      return d ? [{ id: stroke.id, d }] : []
+    })
+  })
 
   /** @param {Node} node */
   const label = node => node.kind === 'component' ? node.char : node.kind === 'operator' ? node.op : node.kind === 'slot' ? '⬚' : 'group'
@@ -465,6 +481,10 @@
               {@const [x, y, width, height] = selection.box}
               <svg class="handles" viewBox="0 0 1000 1000"
                 onpointermove={moveDrag} onpointerup={endDrag} onpointercancel={endDrag}>
+                {#each strokePaths as stroke (stroke.id)}
+                  <path class="stroke-hit" class:active={stroke.id === strokeId} d={stroke.d} data-stroke={stroke.id}
+                    onclick={() => chooseStroke(stroke.id)} />
+                {/each}
                 <rect class="select-box" x={x} y={y} width={width} height={height} />
                 <circle class="handle move" cx={x + width / 2} cy={y + height / 2} r="26"
                   role="button" tabindex="-1" aria-label={t('app.layers.transform')}
@@ -588,8 +608,10 @@
   .canvas img{display:block;width:100%;height:100%;object-fit:contain}
   .handles{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:all;touch-action:none}
   /* The figure is a white export in both schemes, so its handles stay a dark blue. */
-  .select-box{fill:none;stroke:#2944c7;stroke-width:3;vector-effect:non-scaling-stroke}
+  .select-box{fill:none;stroke:#2944c7;stroke-width:3;vector-effect:non-scaling-stroke;pointer-events:none}
   .handle{fill:#fff;stroke:#2944c7;stroke-width:3;vector-effect:non-scaling-stroke;pointer-events:all;cursor:grab}
+  .stroke-hit{fill:rgba(41,68,199,0.001);pointer-events:all;cursor:pointer}
+  .stroke-hit:hover,.stroke-hit.active{fill:rgba(41,68,199,0.18)}
   .handle.move{cursor:move}
   .handle.rotate{cursor:crosshair}
   .handle.scale{cursor:nwse-resize}
