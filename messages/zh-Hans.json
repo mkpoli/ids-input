@@ -410,8 +410,8 @@
   "ids.ucv.separated": "源分离",
   "ids.ucv.single": "单一字形",
   "ids.ucv.none": "没有匹配的条目。",
-  "ids.ucv.loading": "正在载入列表…",
-  "ids.ucv.failed": "无法载入列表。",
+  "ids.ucv.loading": "正在加载列表…",
+  "ids.ucv.failed": "无法加载列表。",
   "ids.ucv.kind": "列表",
   "ids.ucv.form": "字形 {name}"
 }

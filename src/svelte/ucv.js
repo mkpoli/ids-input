@@ -7,14 +7,14 @@ import { createUcvIndex } from '../core/ucv.js'
 /** @type {Promise<{ index: import('../core/ucv.js').UcvIndex, groups: import('../core/ucv.js').UcvData['groups'], outlines: Record<string, string> }> | null} */
 let reading = null
 
-/** @param {string} name */
-const text = name => download(new URL(`../../data/${name}`, import.meta.url))
-  .then(response => response.ok ? response.arrayBuffer() : Promise.reject(new Error(name)))
+/** @param {URL} url */
+const read = url => download(url)
+  .then(response => response.ok ? response.arrayBuffer() : Promise.reject(new Error(url.pathname)))
   .then(unpack).then(JSON.parse)
 
 /** The lists as an index, their groups, and each form's outline as an SVG path in a 200-unit square. */
 export function loadUcv() {
-  reading ??= Promise.all([text('ucv.json'), text('ucv-forms.json.gz')])
+  reading ??= Promise.all([read(new URL('../../data/ucv.json', import.meta.url)), read(new URL('../../data/ucv-forms.json.gz', import.meta.url))])
     .then(([data, outlines]) => ({ index: createUcvIndex(data), groups: data.groups, outlines }))
     .catch(error => { reading = null; throw error })
   return reading

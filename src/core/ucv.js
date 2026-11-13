@@ -26,7 +26,7 @@
  * @property {string[][]} [compatibility] Pairs of a unified ideograph and its compatibility ideograph.
  * @property {string[][]} [disunified] Groups of characters coded apart.
  * @property {string[][]} [sourceSeparations] Groups kept apart by the source separation rule.
- * @property {{ char?: string, glyph?: string, examples: string[] }[]} [single] A character that keeps one form, and the characters it appears in.
+ * @property {{ char?: string, glyph?: string, examples: string[], count?: string }[]} [single] A character that keeps one form, and the characters it appears in.
  * @property {string} [note]
  * @property {string} [references]
  * @property {string[]} [review]
@@ -70,9 +70,9 @@ export function entryCharacters(entry) {
  * @typedef {object} UcvIndex
  * @property {UcvEntry[]} entries
  * @property {(query: string, options?: { kind?: UcvEntry['kind'] | null }) => UcvEntry[]} find
- *   The entries a query asks for: an entry number (with or without its letter), or any of its
- *   characters as a form or an example. Entries whose form is asked for come first; an empty query
- *   gives every entry in the source's order.
+ *   The entries a query asks for: an entry number (with or without its letters), or any of its
+ *   characters as a form or an example. An entry with the whole query as a form comes first, then
+ *   those with one of its characters as a form; an empty query gives every entry in the source's order.
  * @property {(char: string) => UcvEntry[]} formsOf The entries one of whose forms is `char`.
  */
 
@@ -91,11 +91,14 @@ export function createUcvIndex(data) {
   return {
     entries,
     find(query, { kind = null } = {}) {
-      const asked = query.trim()
+      // An entry number may be typed full-width; characters are compared as written.
+      const typed = query.trim(), folded = typed.normalize('NFKC')
+      const asked = /^\d+[a-z]*$/i.test(folded) ? folded : typed
       const kept = (/** @type {UcvEntry} */ entry) => !kind || entry.kind === kind
       if (!asked) return entries.filter(kept)
-      if (/^\d+[a-z]?$/.test(asked)) {
-        return entries.filter(entry => kept(entry) && (entry.id === asked || entry.id.replace(/[a-z]$/, '') === asked))
+      if (/^\d+[a-z]*$/i.test(asked)) {
+        const id = asked.toLowerCase().replace(/^0+(?=\d)/, '')
+        return entries.filter(entry => kept(entry) && (entry.id === id || entry.id.replace(/[a-z]+$/, '') === id))
       }
       const wanted = [...new Set([...bare(asked)].filter(char => !/\s/u.test(char)))]
       const whole = bare(asked)
@@ -104,7 +107,7 @@ export function createUcvIndex(data) {
       entries.forEach((entry, index) => {
         if (!kept(entry)) return
         const { forms, examples } = characters[index]
-        const score = forms.has(whole) || wanted.some(char => forms.has(char)) ? 2 : wanted.some(char => examples.has(char)) ? 1 : 0
+        const score = forms.has(whole) ? 3 : wanted.some(char => forms.has(char)) ? 2 : wanted.some(char => examples.has(char)) ? 1 : 0
         if (score) hits.push({ entry, score, index })
       })
       return hits.sort((a, b) => b.score - a.score || a.index - b.index).map(hit => hit.entry)

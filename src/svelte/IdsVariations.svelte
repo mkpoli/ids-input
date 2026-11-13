@@ -26,17 +26,21 @@
     const picked = editor.picked
     return typeof picked === 'string' && picked && !isNode(picked) ? picked : ''
   })
-  const asked = $derived(query.trim() || chosen)
+  // The chosen part narrows the list only where it has entries; otherwise the whole list stays.
+  const followed = $derived(!query.trim() && chosen && list.index?.find(chosen, { kind }).length ? chosen : '')
+  const asked = $derived(query.trim() || followed)
   const found = $derived(list.index ? list.index.find(asked, { kind }) : [])
-  // Entries are drawn a page at a time; the end of the page coming into view draws the next.
-  let limit = $state(PAGE)
-  $effect(() => { void asked; void kind; limit = PAGE })
+  // Entries are drawn a page at a time; the end of the page coming into view draws the next, and a
+  // new question starts again from the first page.
+  let pages = $state({ asked: '', kind: /** @type {string | null} */ (null), count: 1 })
+  const limit = $derived(pages.asked === asked && pages.kind === kind ? pages.count * PAGE : PAGE)
   const shown = $derived(found.slice(0, limit))
   /** @param {HTMLElement} node */
   function more(node) {
-    if (typeof IntersectionObserver === 'undefined') { limit = Infinity; return }
+    const grow = (/** @type {number} */ by) => { pages = { asked, kind, count: Math.ceil(limit / PAGE) + by } }
+    if (typeof IntersectionObserver === 'undefined') { grow(Infinity); return }
     const observer = new IntersectionObserver(entries => {
-      if (entries.some(entry => entry.isIntersecting)) limit += PAGE
+      if (entries.some(entry => entry.isIntersecting)) grow(1)
     }, { rootMargin: '200px' })
     observer.observe(node)
     return { destroy: () => observer.disconnect() }
@@ -58,7 +62,7 @@
 <div class="ids-ucv">
   <div class="ids-ucv-row">
     <input type="search" bind:value={query} disabled={editor.disabled} lang="ja" spellcheck="false" autocomplete="off"
-      aria-label={t('ids.ucv.search')} placeholder={chosen || t('ids.ucv.search')} />
+      aria-label={t('ids.ucv.search')} placeholder={followed || t('ids.ucv.search')} />
     <div class="ids-ucv-kinds" role="group" aria-label={t('ids.ucv.kind')}>
       {#each KINDS as [value, label] (label)}
         <button type="button" class:active={kind === value} aria-pressed={kind === value} onclick={() => kind = value}>{label ?? t('ids.ucv.all')}</button>
@@ -111,6 +115,7 @@
                   </span>
                 {/each}
                 {#if row.key === 'unified' && entry.unifiedMore}<span class="ids-ucv-more" aria-hidden="true">…</span>{/if}
+                {#if row.key === 'single'}{#each entry.single ?? [] as single, at (at)}{#if single.count}<span class="ids-ucv-more">{single.char} {single.count}</span>{/if}{/each}{/if}
               </span>
             </div>
           {/each}
@@ -146,7 +151,7 @@
   .ids-ucv-examples{display:grid;grid-template-columns:minmax(4.5em,max-content) 1fr;gap:8px;align-items:baseline}
   .ids-ucv-label{font-size:11px;color:var(--_muted)}
   .ids-ucv-groups{display:flex;flex-wrap:wrap;gap:2px 8px;min-width:0}
-  .ids-ucv-group{display:inline-flex}
+  .ids-ucv-group{display:inline-flex;flex-wrap:wrap;min-width:0}
   .ids-ucv-char{border:0;background:transparent;padding:0 1px;font-family:var(--_font);font-size:20px;line-height:1.25;border-radius:4px}
   .ids-ucv-char:not(:disabled):hover{background:var(--_accent-light);color:var(--_accent)}
   .ids-ucv-more{color:var(--_muted)}

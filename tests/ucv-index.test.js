@@ -39,3 +39,19 @@ it('counts a compatibility ideograph among an entry\'s examples', () => {
   expect(entryCharacters(entry).examples.has('\u{2F920}')).toBe(true)
   expect(entryCharacters(entry).forms).toEqual(new Set(['同']))
 })
+
+it('reaches an entry numbered with two letters, however the number is typed', () => {
+  expect(ids(index.find('298za'))).toEqual(['298za'])
+  expect(ids(index.find('298'))).toContain('298zd')
+  expect(ids(index.find('322B'))).toEqual(['322b'])
+  expect(ids(index.find('３２１'))).toEqual(['321'])
+  expect(ids(index.find('08'))).toContain('8a')
+})
+
+it('puts the entry whose form is the whole description first', () => {
+  expect(ids(index.find('⿱宀丰'))[0]).toBe('4')
+})
+
+it('does not take a count in words for characters', () => {
+  expect(index.find('About')).toEqual([])
+})
