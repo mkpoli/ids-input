@@ -23,7 +23,9 @@ describe('zi.tools replacement expressions', () => {
     expect(replacementQuery('⿰🔄木')).toBeNull()
     expect(replacementPrefix('  RP林LR')).toBe(true)
     expect(replacementQuery('  RP林LR')).toEqual({ source: '林', target: 'L', replacement: 'R' })
-    expect(replacementQuery('RP{1}')).toEqual({ source: '{', target: '1', replacement: '}' })
+    // A numbered component is one component, so this names one of the three.
+    expect(replacementQuery('RP{1}')).toBeNull()
+    expect(replacementQuery('RP{1}{2}{3}')).toEqual({ source: '{1}', target: '{2}', replacement: '{3}' })
   })
   it('replaces one nearest occurrence, with the last among equally shallow parts', async () => {
     expect(await resolve('🔄林木火')).toBe('⿰木火')

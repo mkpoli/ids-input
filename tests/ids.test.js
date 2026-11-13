@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { EMPTY, LONGEST, OPERATORS, OPERATOR_GROUPS, applyOperator, arity, clear, descriptionEnd, entryBody, entryDescription, isComponent, isDescription, isLetter, isSequence, leaves, nextEmpty,
+import { customKind, customsOf, EMPTY, LONGEST, OPERATORS, OPERATOR_GROUPS, applyOperator, arity, clear, descriptionEnd, entryBody, entryDescription, isComponent, isDescription, isLetter, isSequence, leaves, nextEmpty,
   parse, partAt, paths, place, problemOf, replaceAt, samePath, swapOp, unwrap, wrap, write, writeDraft } from '../src/core/index.js'
 
 const tree = text => parse(text, { open: true }).tree
@@ -79,8 +79,8 @@ describe('a whole description', () => {
     // A variation selector and a tone mark after a stroke chain belong to it.
     expect(descriptionEnd([...'#(H)\uFE00'])).toBe(5)
     expect(descriptionEnd([...'#(H)\uFE00\u302E木'])).toBe(6)
-    // A chain that names no character stays as it is, to be read or rejected as usual.
-    expect(parse('⿰#(ZZZ)木').problem).toBe('extra')
+    // A chain that names no character is a component of its own.
+    expect(parse('⿰#(ZZZ)木').tree).toEqual({ op: '⿰', parts: ['#(ZZZ)', '木'] })
     expect(write(parse('⿰#木').tree)).toBe('⿰#木')
 
 
@@ -292,4 +292,28 @@ it('treats emoji sequences as single components', () => {
     expect(write(result.tree)).toBe(sequence)
     expect(descriptionEnd([...sequence])).toBe([...sequence].length)
   }
+})
+
+describe('components no code point names', () => {
+  it('reads each as one part, in its source spelling', () => {
+    expect(parse('⿹{53}一').tree).toEqual({ op: '⿹', parts: ['{53}', '一'] })
+    expect(parse('⿱&CDP-8BD0;心').tree).toEqual({ op: '⿱', parts: ['&CDP-8BD0;', '心'] })
+    expect(parse('⿱丿⿹#(-𠃌㇉)一').tree).toEqual({ op: '⿱', parts: ['丿', { op: '⿹', parts: ['#(-𠃌㇉)', '一'] }] })
+    for (const text of ['⿹{53}一', '⿱&CDP-8BD0;心', '⿱丿⿹#(-𠃌㇉)一', '⿰&U-i001+4E00;&GT-K01666;']) expect(write(parse(text).tree)).toBe(text)
+  })
+  it('names the notation', () => {
+    expect(customKind('{53}')).toBe('numbered')
+    expect(customKind('&CDP-8BD0;')).toBe('entity')
+    expect(customKind('#(-𠃌㇉)')).toBe('chain')
+    expect(customKind('一')).toBeNull()
+    expect(customKind('{53}一')).toBeNull()
+    expect(customsOf(parse('⿰{5}⿱&A-1;木').tree)).toEqual(['{5}', '&A-1;'])
+  })
+  it('leaves unfinished or malformed ones to the ordinary reading', () => {
+    expect(parse('⿰{木').tree).toEqual({ op: '⿰', parts: ['{', '木'] })
+    expect(parse('⿰{5木').problem).toBe('extra')
+    expect(parse('⿰木#(HSN)').tree).toEqual({ op: '⿰', parts: ['木', '#(HSN)'] })
+    expect(parse('⿲{木}').tree).toEqual({ op: '⿲', parts: ['{', '木', '}'] })
+    expect(descriptionEnd([...'⿰{5}木と'])).toBe(5)
+  })
 })
