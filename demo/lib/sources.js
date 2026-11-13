@@ -134,6 +134,7 @@ const USED_IN = /** @type {Record<string, string[]>} */ ({
   'irg-ws2021': ['examples'],
   nightfury: ['decompose'],
   tatami: ['examples'],
+  'commons-shinzo': ['decompose'],
   'l2-19-230r': ['palette', 'examples'],
   zitools: ['decompose', 'palette', 'info'],
   yedict: ['decompose'],
@@ -998,8 +999,26 @@ export const SOURCES = [
       vi: 'Các nhóm 二同系, 三同系, 四同系 và 過畳系 đứng sau các ví dụ lặp. Trang dẫn 山口翔平 về 理義字 và 『童子字尽安見』「理義字集」, không nêu nguồn cho ví dụ của mình; mô tả từng chữ lấy từ BabelStone.',
     },
   },
-
-
+  {
+    id: 'commons-shinzo',
+    category: 'references',
+    tags: ['ids'],
+    title: 'しんぞ漢字',
+    url: 'https://commons.wikimedia.org/wiki/Category:しんぞ漢字',
+    more: ['https://commons.wikimedia.org/wiki/Category:Ideographic_description_sequences'],
+    licence: 'CC BY-SA 4.0',
+    date: 'last edited 2026-11-02',
+    read: '2026-11-14',
+    summary: {
+      en: 'The unencoded character しんぞ sets 疒 around 翳, 輒, 袮, 雷, 鏡 and other parts, in a 102-code-point description. Wikimedia cannot use that description as a page name, so the category is titled しんぞ漢字.',
+      ja: '未符号化の「しんぞ」。疒の中に翳・輒・袮・雷・鏡などを重ね、記述は102コードポイント。ウィキメディアはこの記述をページ名にできないため、カテゴリ名は「しんぞ漢字」になっている。',
+      'zh-Hans': '未编码的「しんぞ」：疒中叠着翳、輒、袮、雷、鏡等部件，描述长102个码位。维基媒体无法用这段描述作页面名，分类因此以「しんぞ漢字」命名。',
+      'zh-Hant': '未編碼的「しんぞ」：疒中疊著翳、輒、袮、雷、鏡等部件，描述長102個碼位。維基媒體無法用這段描述作頁面名，分類因此以「しんぞ漢字」命名。',
+      ko: '미부호화 문자 しんぞ. 疒 안에 翳, 輒, 袮, 雷, 鏡 따위를 겹쳐 놓았고 기술은 102코드포인트다. 위키미디어는 이 기술을 문서 제목으로 쓸 수 없어 분류 이름은 しんぞ漢字이다.',
+      vi: 'Chữ しんぞ chưa được mã hóa: 疒 bọc 翳, 輒, 袮, 雷, 鏡 và các bộ khác, với mô tả dài 102 điểm mã. Wikimedia không thể dùng mô tả này làm tên trang nên thể loại mang tên しんぞ漢字.',
+    },
+    note: 'The category prints the description in full, counts 103 Unicode characters and records 314 UTF-8 bytes; the description is 102 code points. The parser accepts it as a whole description; the composer caps a drawing at 24 operators, so the workshop edits this description without drawing it. The Commons category for IDS is [Ideographic description sequences](https://commons.wikimedia.org/wiki/Category:Ideographic_description_sequences).',
+  },
   {
     id: 'l2-19-230r',
     category: 'references',
