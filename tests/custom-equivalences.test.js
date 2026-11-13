@@ -59,7 +59,7 @@ describe('data/custom-components.json.gz', () => {
     for (const row of doc.components) for (const item of row.equivalents) {
       expect(['babelstone', 'chise', 'zi-tools']).toContain(item.in)
       expect(item.in).not.toBe(row.source)
-      expect(item.status).toBe(item.count >= 2 ? 'verified' : 'candidate')
+      if (item.status === 'verified') expect(item.count).toBeGreaterThanOrEqual(2)
       expect(parse(item.text, { open: true }).problem).toBeUndefined()
     }
   })
@@ -77,6 +77,9 @@ describe('data/custom-components.json.gz', () => {
     expect(of('乌').find(row => row.in === 'babelstone')).toMatchObject({ text: '⿹㇯{53}丶一', basis: 'subtraction', of: '㇯鸟丶', from: 'zi-tools' })
     expect(of('鸟').find(row => row.in === 'zi-tools')).toMatchObject({ text: '⿹⿱丿⿴#(-𠃌㇉)丶一', basis: 'substitution', of: '⿹{53}一' })
     for (const row of doc.characters) expect(parse(row.text).problem).toBeUndefined()
+    // A character is never said in terms of itself, nor a doubled part taken out once.
+    for (const row of doc.characters) expect(row.text.includes(row.char)).toBe(false)
+    expect(of('千').some(row => row.basis === 'subtraction' && row.of.startsWith('㇯𠦅'))).toBe(false)
   })
 
   it('records the stroke letters with their sources', () => {
@@ -119,11 +122,19 @@ describe('what draws a custom component', () => {
 
   it('reaches a preview through the adapter', async () => {
     const adapter = babelStoneAdapter({ table: new Map(), custom: doc })
-    expect(await adapter.drawable('⿹{22}一')).toBe('⿹⿺㇉一一')
+    expect(await adapter.drawable('⿹{22}一')).toEqual({ text: '⿹⿺㇉一一', leaves: [0, 0, 1] })
     const asked = []
-    const ask = askDrawable(async text => { asked.push(text); return null }, adapter.drawable)
-    await ask('⿹{22}一')
-    await ask('⿰木木')
+    const ask = askDrawable(async (text, { onSketch } = {}) => {
+      asked.push(text)
+      onSketch?.([{ index: 0, box: [0, 0, 100, 500], empty: false }, { index: 1, box: [0, 500, 600, 100], empty: false }, { index: 2, box: [300, 300, 200, 50], empty: false }])
+      return { d: '', parts: [{ leaf: 0, origin: 'glyph ㇉', box: [], d: '' }, { leaf: 1, origin: 'glyph 一', box: [], d: '' }, { leaf: 2, origin: 'glyph 一', box: [], d: '' }] }
+    }, adapter.drawable)
+    // The parts and the sketch are numbered by the components of the description asked for.
+    let sketch = null
+    const drawn = await ask('⿹{22}一', { onSketch: leaves => { sketch = leaves } })
+    expect(drawn.parts.map(part => part.leaf)).toEqual([0, 0, 1])
+    expect(sketch).toEqual([{ index: 0, box: [0, 0, 600, 600], empty: false }, { index: 1, box: [300, 300, 200, 50], empty: false }])
+    expect((await ask('⿰木木')).parts.map(part => part.leaf)).toEqual([0, 1, 2])
     expect(asked).toEqual(['⿹⿺㇉一一', '⿰木木'])
     expect(askDrawable(undefined, adapter.drawable)).toBeUndefined()
   })

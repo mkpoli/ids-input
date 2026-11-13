@@ -92,7 +92,8 @@ zi.tools' `ids_lv1.txt` at the pinned revision. GPL-2.0-or-later, since CHISE's 
   glyph of BabelStone Han PUA, or the first equivalent made of characters only. 929 have one.
 - `equivalents`: what the component is in another table, `{ in, text, count, characters, status,
   basis }`. `difference` rows are solved; `inverse` rows turn a solved row round.
-  `verified` means two or more characters give the same parts, `candidate` one.
+  `verified` means two or more characters give the same spelling, `candidate` that none does;
+  `count` is the characters that give the same parts in any arrangement.
 - `characters`: a description of a character in a notation its source did not write, `{ char,
   text, in, from, basis, of, status }`.
 - `strokeLetters`, `chainNames`, `sources`, `counts`.
@@ -113,17 +114,19 @@ zi.tools    鸟 = ⿴乌丶    乌 = ⿱丿⿹#(-𠃌㇉)一
 ```
 
 A part is taken out only where it stands exactly as often as it is removed. Spellings with the same
-parts count as one shape, and the commoner bracketing is kept. Solved components count as their
-parts in later rounds.
+parts count as one shape, and the commoner bracketing is kept. A component two or more characters
+solve counts as its parts in later rounds; a row derived from it is `verified` only where that
+expression is.
 
 `substitution` rows replace each custom component of a description by its equivalent.
 `subtraction` rows start from a table that describes one character as another beside further
 parts (鸟 = ⿴乌丶, so 乌 = ㇯鸟丶), take the other table's description of the larger one (⿹{53}一) and
-write the subtraction on the part that holds what is removed: 乌 = ⿹㇯{53}丶一.
+write the subtraction on the part that holds what is removed: 乌 = ⿹㇯{53}丶一. A character that
+stands twice in the larger one, or that the result would still name, gives no row.
 
 ### Limits
 
 - The first description of a character stands for it, whatever source it is for; a regional
   difference between two tables shows up as a `candidate` that no second character confirms.
 - A description with ⿾, ⿿ or ㇯ is one opaque part.
-- 3 of 121 numbered components, 636 of 1,387 entities and 56 of 117 chains have no equivalent yet.
+- 3 of 121 numbered components, 639 of 1,387 entities and 57 of 117 chains have no equivalent yet.

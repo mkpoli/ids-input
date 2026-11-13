@@ -162,8 +162,8 @@ export function subtract(tree, gone, holds, named) {
  *
  * For each character both tables describe, and each description of it in `from` that names exactly
  * one custom component not yet solved, the component is the frame's description of the character
- * without the frame's parts of everything else the description names. A component solved earlier
- * counts as its parts, so the rounds go on until nothing new is found.
+ * without the frame's parts of everything else the description names. A component two or more
+ * characters solved earlier counts as its parts, so the rounds go on until nothing new is found.
  *
  * @param {Table} from @param {ReturnType<typeof createFrame>} frame
  * @returns {Map<string, Map<string, string[]>>} Component, then each expression found for it with
@@ -199,11 +199,12 @@ export function solve(from, frame) {
         }
       }
     }
-    // The expression most characters give stands for the component in later rounds.
+    // An expression two or more characters give stands for the component in later rounds. One a
+    // single character gives does not: a later row would rest on it and look better attested.
     for (const [custom, rows] of found) {
       if (best.has(custom)) continue
-      const [text] = [...rows].sort((a, b) => b[1].length - a[1].length || a[0].length - b[0].length)[0]
-      const tree = plainTree(text)
+      const [text, chars] = [...rows].sort((a, b) => b[1].length - a[1].length || a[0].length - b[0].length || (a[0] < b[0] ? -1 : 1))[0]
+      const tree = chars.length >= 2 ? plainTree(text) : null
       if (tree !== null) best.set(custom, tree)
     }
     if (!added) break

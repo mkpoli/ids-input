@@ -2,7 +2,7 @@
 // The dictionary of components no code point names (`data/custom-components.json.gz`), looked up:
 // what a component is, and a description with each of them written as something a composer draws.
 import { isCustom } from './custom.js'
-import { isNode, parse, write } from './ids.js'
+import { isNode, leaves, parse, write } from './ids.js'
 
 /**
  * @typedef {{ in: string, text: string, count: number, characters: string[], status: 'verified' | 'candidate', basis: 'difference' | 'inverse' }} CustomEquivalent
@@ -28,6 +28,24 @@ export function createCustomComponents(data) {
     if (tree !== undefined) drawn.set(text, tree)
     return tree
   }
+  /** @param {string} text @returns {{ text: string, leaves: number[] }} */
+  const swapped = text => {
+    const read = /[{&#]/.test(text) ? parse(text, { open: true }) : null
+    if (!read || read.problem) return { text, leaves: [] }
+    /** @type {number[]} */
+    const from = []
+    let place = 0
+    /** @param {import('./ids.js').Part} part @returns {import('./ids.js').Part} */
+    const swap = part => {
+      if (isNode(part)) return { ...part, parts: part.parts.map(swap) }
+      const drawn = part !== null && isCustom(part) ? drawTree(part) ?? part : part
+      for (let k = leaves(drawn).length; k > 0; k--) from.push(place)
+      place++
+      return drawn
+    }
+    const tree = swap(read.tree)
+    return { text: write(tree), leaves: from }
+  }
   return {
     /** Every component, the most used of each source first. */
     components: data.components,
@@ -39,14 +57,13 @@ export function createCustomComponents(data) {
      * does not read.
      * @param {string} text @returns {string}
      */
-    drawable(text) {
-      if (!/[{&#]/.test(text)) return text
-      const read = parse(text, { open: true })
-      if (read.problem) return text
-      /** @param {import('./ids.js').Part} part @returns {import('./ids.js').Part} */
-      const swap = part => isNode(part) ? { ...part, parts: part.parts.map(swap) }
-        : part !== null && isCustom(part) ? drawTree(part) ?? part : part
-      return write(swap(read.tree))
-    },
+    drawable: text => swapped(text).text,
+    /**
+     * The same, with where each component of the answer comes from: `leaves[i]` is the place, in
+     * reading order, of the component of `text` that the answer's component `i` draws. A custom
+     * component drawn by a description gives several places the same number.
+     * @param {string} text @returns {{ text: string, leaves: number[] }}
+     */
+    drawableLeaves: text => swapped(text),
   }
 }
