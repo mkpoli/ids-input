@@ -251,9 +251,12 @@
       applyLocal([scale, 0, 0, scale, center[0] * (1 - scale), center[1] * (1 - scale)], base, chosenLayer.id, `key-${key}`)
       return
     }
+    // A turn is made on the canvas, as the rotate handle makes it: in the layer's own frame, which a
+    // slot can squash, it would shear the part.
+    const [cx, cy] = applyAffine(frame.full, center)
     const degrees = key === '[' ? -(event.shiftKey ? 15 : 5) : event.shiftKey ? 15 : 5
     const radians = degrees * Math.PI / 180, cos = Math.cos(radians), sin = Math.sin(radians)
-    applyLocal([cos, sin, -sin, cos, center[0] - cos * center[0] + sin * center[1], center[1] - sin * center[0] - cos * center[1]], base, chosenLayer.id, `key-${key}`)
+    applyCanvas([cos, sin, -sin, cos, cx - cos * cx + sin * cy, cy - sin * cx - cos * cy], base, chosenLayer.id, frame.place, `key-${key}`)
   }
   /** @param {string} id */
   function chooseLayer(id) {
