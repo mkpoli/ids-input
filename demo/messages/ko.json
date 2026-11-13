@@ -457,5 +457,7 @@
   "normalization.scope.forms": "팔레트 · 검색",
   "normalization.scope.families": "팔레트",
   "normalization.scope.chains": "구문 분석",
-  "normalization.scope.operators": "입력란"
+  "normalization.scope.operators": "입력란",
+  "ucv.title": "부품 통합 기준(UCV)",
+  "ucv.source": "출처"
 }

@@ -77,6 +77,7 @@ export const FEATURES = /** @type {const} */ ([
 
 /** What each source is used in. Kept beside the entries so a new source has to say. */
 const USED_IN = /** @type {Record<string, string[]>} */ ({
+  'iwds-ucv': ['decompose'],
   babelstone: ['decompose', 'palette', 'search', 'composer', 'info', 'examples'],
   'babelstone-tangut': ['decompose', 'palette', 'composer', 'examples'],
   'yi-bai': ['decompose', 'search'],
@@ -944,6 +945,27 @@ export const SOURCES = [
       ko: '확장 J의 𳳳(U+33473), 베트남 이체와 龍의 kStrange.',
       vi: '𳳳 (U+33473) trong Extension J, một dị thể Việt Nam và kStrange của 龍.',
     },
+  },
+  {
+    id: 'iwds-ucv',
+    category: 'data',
+    tags: ['irg', 'forms'],
+    title: 'IRG Working Documents Series 2: UCV & NUCV Lists (IRG N2978)',
+    people: ['IRG', 'Taichi Kawabata', 'Yi Bai'],
+    url: 'https://www.unicode.org/irg/docs/n2978-Complete.pdf',
+    more: ['https://www.unicode.org/irg/IWDS.html', 'https://github.com/yi-bai/iwds'],
+    licence: 'Unicode Terms of Use for the document; the data repository declares no licence',
+    date: '2026-10-20',
+    read: '2026-11-13',
+    summary: {
+      en: 'The unifiable and non-unifiable component variations with their example characters, read from the data file the document is generated from; form drawings are GlyphWiki glyphs.',
+      ja: '統合可能・統合不可の部品差とその例字。文書の生成元データファイルから読み込み、字形はGlyphWikiのグリフを用いる。',
+      'zh-Hans': '可认同与不可认同的部件差异及其例字，读自生成该文件的数据文件；字形图取自GlyphWiki。',
+      'zh-Hant': '可認同與不可認同的部件差異及其例字，讀自產生該文件的資料檔；字形圖取自GlyphWiki。',
+      ko: '통합 가능·통합 불가 부품 차이와 예시 글자. 문서를 생성하는 데이터 파일에서 읽었으며, 자형 그림은 GlyphWiki 글리프이다.',
+      vi: 'Các biến thể bộ phận hợp nhất được và không hợp nhất được cùng chữ ví dụ, đọc từ tệp dữ liệu sinh ra tài liệu; hình dạng lấy từ GlyphWiki.',
+    },
+    used: ['data/ucv.json', 'data/ucv-forms.json.gz'],
   },
   {
     id: 'irg-ws2021',

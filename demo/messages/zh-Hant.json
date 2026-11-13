@@ -457,5 +457,7 @@
   "normalization.scope.forms": "部件面板·搜尋",
   "normalization.scope.families": "部件面板",
   "normalization.scope.chains": "解析",
-  "normalization.scope.operators": "輸入框"
+  "normalization.scope.operators": "輸入框",
+  "ucv.title": "部件認同規則（UCV）",
+  "ucv.source": "來源"
 }

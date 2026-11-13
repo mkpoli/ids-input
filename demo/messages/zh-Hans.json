@@ -457,5 +457,7 @@
   "normalization.scope.forms": "部件面板·搜索",
   "normalization.scope.families": "部件面板",
   "normalization.scope.chains": "解析",
-  "normalization.scope.operators": "输入框"
+  "normalization.scope.operators": "输入框",
+  "ucv.title": "部件认同规则（UCV）",
+  "ucv.source": "来源"
 }

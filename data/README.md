@@ -349,6 +349,41 @@ SHA-256 of this copy `7e12d79da41b18f5fbf8fb0eae2adc31aa9f57e6e2eabe79836804c072
 `radical-variants.txt` at e4f1da2 (public domain, <https://github.com/cjkvi/cjkvi-variants>; 219
 rows), each row naming its source.
 
+## `ucv.json` and `ucv-forms.json.gz`
+
+The IRG's lists of unifiable (UCV, 599 entries) and non-unifiable (NUCV, 14 entries) component
+variations, compiled from `iwds.xml` in the IWDS data files at commit
+`8302302d615ff1c1f60ae335b118b10060be0ed4`, <https://github.com/yi-bai/iwds>, SHA-256
+`886b426ea3d1d329749e02b32cccd5082d31d6cf1b996ea37bdae5ac593ca491`. That file generates IRG N2978,
+"UCV & NUCV Lists", version 2026-10-20, <https://www.unicode.org/irg/docs/n2978-Complete.pdf>,
+listed as Series 2 of <https://www.unicode.org/irg/IWDS.html>. Rebuild with
+`bun scripts/build_ucv.mjs`.
+
+`ucv.json` holds the source's groups and, per entry: `id`, `kind` (`unifiable` or
+`not-unifiable`), `level`, `group`, `forms`, the source's own `components` text, the criterion it
+cites (`jis` for the JIS X 0213 unification criterion, `jisx0212`, `hydcd` for the Hanyu Da Cidian
+new and old forms, `annexS` for ISO/IEC 10646 Annex S), and the example characters: `unified`,
+`compatibility` as `[unified, compatibility]` pairs, `disunified` and `sourceSeparations` as groups
+of characters coded apart, and `single` for the non-unifiable list's characters that keep one form, each with the `examples`
+that contain it and, where the source gives a number in their place, its `count`. `charts`
+names the older code chart an example is shown from, `unifiedMore` marks a list the source ends
+with an ellipsis, `note`, `references` and the `review` links are the source's.
+
+A form is the GlyphWiki glyph the source names. `text` is given when that name is a character, a
+description or a character with a variation selector; `of` gives the character a named form
+belongs to (`u540c-08-var-001` is a form of 同); other names (`cdp-`, `aj1-`, `koseki-`, `twedu-`,
+a numbered variant of a description) carry neither.
+
+`ucv-forms.json.gz` maps a glyph name to its outline, one SVG path in a 200-unit square: 1,461
+from the snapshot's `glyphs/` directory and 134 fetched from <https://glyphwiki.org/> on
+2026-11-13, listed under `source.glyphs.fetched`. Eleven names have no drawing in either place.
+
+- Licence of the list: the repository declares none. Its content is the IRG working document,
+  published under the Unicode Terms of Use, <https://www.unicode.org/copyright.html>.
+- Licence of the outlines: GlyphWiki data, which this project's source catalogue records as free
+  to use. The licence page, <https://glyphwiki.org/wiki/GlyphWiki:License>, sits behind a browser
+  check and was not re-read for this build.
+
 ## component-names.tsv
 
 The names, words and readings people use for components, for the parts finder's search: 絞絲 and

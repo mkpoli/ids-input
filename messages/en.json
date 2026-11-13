@@ -408,5 +408,19 @@
   "info.firstStrokeShort": "first",
   "info.script.jurchen": "Jurchen character",
   "info.script.kana": "Kana",
-  "parts.equivalents": "CHISE: {names}"
+  "parts.equivalents": "CHISE: {names}",
+  "ids.ucv.search": "Character or entry number",
+  "ids.ucv.all": "All",
+  "ids.ucv.level": "Level {level}",
+  "ids.ucv.unified": "Unified",
+  "ids.ucv.compatibility": "Compatibility",
+  "ids.ucv.disunified": "Disunified",
+  "ids.ucv.separated": "Source separation",
+  "ids.ucv.single": "Single form",
+  "ids.ucv.none": "No entry matches.",
+  "ids.ucv.loading": "Loading the list…",
+  "ids.ucv.failed": "The list could not be loaded.",
+  "ids.ucv.kind": "List",
+  "ids.ucv.form": "Form {name}",
+  "ids.alternatives.unifiable": "Unifiable forms"
 }

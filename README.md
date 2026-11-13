@@ -192,6 +192,14 @@ to an editable IDS (`⿰木火`). The lookup opens as few components as possible
 shallowest occurrence; where several are equally shallow, the last is used. If the target cannot be found in the available descriptions, the entered text
 remains in the field. Resolution is bounded to eight opened components and 128 candidate trees.
 
+`IdsVariations` (`t`, bindable `query`, and `href(text)` or `ontake(text)`) lists the IRG's unifiable
+and non-unifiable component variations from `data/ucv.json`, each form drawn from
+`data/ucv-forms.json.gz`; the workshop shows it as its `/ucv` page.
+
+With `variations`, `IdsPartTools` also offers the forms the IRG unifies with the chosen component
+(its UCV entries, read from `data/ucv.json` when a component is first chosen); `variationsHref(entry)`
+gives each entry number a link.
+
 `IdsParts` (`adapter`, `onpick(part)`) and `IdsFrom` (`adapter`, `ontake(text)`, bindable `text`)
 also work without an editor. A pick that returns `false` was not placed, so the Hangul compose
 keyboard keeps its letters. `IdsSketch` (`adapter`, `onpick(part)`, `onclose()`) is the Find tab's
@@ -904,7 +912,7 @@ which are laid out as equal cells. Under Vite, keep both packages out of depende
 (`optimizeDeps: { exclude: ['ids-input', '@han-compose/composer'] }`) so the Worker's URL resolves;
 `composerPreview({ base, worker })` takes a function making the Worker for other bundlers.
 
-The demo draws Sans from `https://ids-input-composer.mkpoli.workers.dev/a83fc941166b-sans-compose-layout-v4-f6/`,
+The demo draws Sans from `https://ids-input-composer.mkpoli.workers.dev/a83fc941166b-sans-compose-layout-v4-f6+variants/`,
 Serif from the serif export, Fangsong from the Zhuque Fangsong export, and Kaisho from the Kureedo export; `?composer=<url>` or
 `VITE_COMPOSER_BASE` points every face at another copy of one export. A face that cannot draw a
 description draws the encoded character it names in that face, else the Sans export's drawing.

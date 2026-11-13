@@ -1442,7 +1442,7 @@
               <div class="tree-list" role="tabpanel" id="tree-panel" aria-labelledby="tree-tab"><IdsTreeList {editor} /></div>
             {/key}
           {/if}
-          <div class="block tools-row"><IdsPartTools {editor} {keyHints} bind:slot status={false} /></div>
+          <div class="block tools-row"><IdsPartTools {editor} {keyHints} bind:slot status={false} variations variationsHref={entry => `./ucv.html?lang=${locale}#ucv-${entry}`} /></div>
         </section>
         <div class="split" role="separator" aria-orientation="horizontal" aria-label={t('app.panels.resize')} title={`${t('app.panels.resize')} (${Math.round(split)}%)`}
           aria-valuemin="35" aria-valuemax="78" aria-valuenow={Math.round(split)} tabindex="0"

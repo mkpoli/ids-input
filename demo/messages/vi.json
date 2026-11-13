@@ -457,5 +457,7 @@
   "normalization.scope.forms": "Bảng bộ phận · Tìm kiếm",
   "normalization.scope.families": "Bảng bộ phận",
   "normalization.scope.chains": "Bộ phân tích",
-  "normalization.scope.operators": "Ô nhập"
+  "normalization.scope.operators": "Ô nhập",
+  "ucv.title": "Biến thể bộ phận (UCV)",
+  "ucv.source": "Nguồn"
 }

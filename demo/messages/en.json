@@ -460,5 +460,7 @@
   "normalization.scope.forms": "Palette · Search",
   "normalization.scope.families": "Palette",
   "normalization.scope.chains": "Parser",
-  "normalization.scope.operators": "Field"
+  "normalization.scope.operators": "Field",
+  "ucv.title": "Component variations (UCV)",
+  "ucv.source": "Source"
 }

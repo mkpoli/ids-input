@@ -457,5 +457,7 @@
   "normalization.scope.forms": "パレット・検索",
   "normalization.scope.families": "パレット",
   "normalization.scope.chains": "構文解析",
-  "normalization.scope.operators": "入力欄"
+  "normalization.scope.operators": "入力欄",
+  "ucv.title": "部品の統合規準（UCV）",
+  "ucv.source": "出典"
 }
