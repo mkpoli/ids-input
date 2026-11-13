@@ -50,6 +50,9 @@ try {
     await page.waitForFunction(before => { const d = document.querySelector('#output-panel .ids-preview svg path')?.getAttribute('d'); return d && d !== before }, plain)
     assert.equal(await page.locator('.ids-menu').count(), 0, 'choosing closes the list')
     assert.ok(await page.locator('.ids-tree .ids-part.chosen .ids-form svg').count(), 'the tree shows the chosen glyph')
+    // The drawing may still be refined after its first paint, so later steps compare against this one.
+    await page.waitForTimeout(1500)
+    const dotted = await drawing()
     await shot('variants-after')
 
     // The keyboard: the button opens the list on the form in use, the arrows move, Enter chooses.
@@ -59,7 +62,7 @@ try {
     await page.keyboard.press('ArrowLeft')
     await page.keyboard.press('Enter')
     assert.equal(await field.inputValue(), '⿰氵者', 'the plain character is written again')
-    await page.waitForFunction(before => document.querySelector('#output-panel .ids-preview svg path')?.getAttribute('d') === before, plain)
+    await page.waitForFunction(before => { const d = document.querySelector('#output-panel .ids-preview svg path')?.getAttribute('d'); return d && d !== before }, dotted)
 
     // The context menu lists them too; Escape leaves the description as it is.
     await page.locator('.ids-tree .ids-part').nth(1).click({ button: 'right' })
