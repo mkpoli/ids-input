@@ -124,7 +124,7 @@ export function runPreview(text, { preview, drawing, signal }, update) {
 export function askDrawable(ask, drawable) {
   if (!ask || !drawable) return ask
   const wrapped = async (text, options) => {
-    const swap = /[{&#]/.test(text) ? await drawable(text, { signal: options?.signal }).catch(() => null) : null
+    const swap = /[{&#㇯]/.test(text) ? await drawable(text, { signal: options?.signal }).catch(() => null) : null
     if (!swap || swap.text === text) return ask(text, options)
     const place = index => swap.leaves[index] ?? index
     const onSketch = options?.onSketch && (sketch => options.onSketch(ownSketch(sketch, place)))

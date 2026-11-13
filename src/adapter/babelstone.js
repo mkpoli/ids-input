@@ -739,7 +739,7 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
       },
       async drawable(/** @type {string} */ sequence, /** @type {import('./types.js').Options} */ { signal } = {}) {
         signal?.throwIfAborted()
-        return /[{&#]/.test(sequence) ? (await readCustom()).drawableLeaves(sequence) : { text: sequence, leaves: [] }
+        return /[{&#㇯]/.test(sequence) ? (await readCustom()).drawableLeaves(sequence) : { text: sequence, leaves: [] }
       },
     } : {}),
     ...(characterInfo ? { async characterInfo(/** @type {string} */ char, /** @type {import('./types.js').Options} */ { signal } = {}) {
