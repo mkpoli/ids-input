@@ -108,7 +108,8 @@ export function createDocumentSession(initial = emptyDocument(), { reserved = []
     assertDocument(next)
     for (const id of documentIds(next)) allocator.reserve(id)
     const last = done.at(-1)
-    if (key && last?.key === key) {
+    // An undo ends a gesture: the next move starts its own step and drops the redo branch.
+    if (key && last?.key === key && !undone.length) {
       document = next
       chosen = nextChosen && findLayer(document.root, nextChosen) ? nextChosen : null
       notify()

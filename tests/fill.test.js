@@ -104,6 +104,20 @@ describe('a fill in a session', () => {
     expect(session.steps.done.filter(label => label === 'Fill 木')).toHaveLength(1)
   })
 
+  it('drops the redo branch when a picker moves again after an undo', () => {
+    const session = createDocumentSession(fromSequence('木'))
+    const id = session.document.root.id
+    session.setFill({ type: 'solid', colour: '#ff0000' }, id, { coalesce: 'pick-1' })
+    session.setTitle('Example')
+    session.undo()
+    session.setFill({ type: 'solid', colour: '#00ff00' }, id, { coalesce: 'pick-1' })
+    expect(session.canRedo).toBe(false)
+    expect(session.redo()).toBe(false)
+    expect(session.document.root.fill).toEqual({ type: 'solid', colour: '#00ff00' })
+    session.undo()
+    expect(session.document.root.fill).toEqual({ type: 'solid', colour: '#ff0000' })
+  })
+
   it('refuses a fill on a layer that is not a component', () => {
     const session = createDocumentSession(fromSequence('⿰木口'))
     expect(() => session.setFill({ type: 'solid', colour: '#000000' }, session.document.root.id)).toThrow('only a component')
