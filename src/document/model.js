@@ -7,6 +7,7 @@
 // tree beyond the IDS projection boundary.
 import { hangulClusterAt } from '@han-compose/composer/hangul'
 import { LONGEST, arity, isComponent, isMark, isModifier, isSelector, parse, splitMarks } from '../core/ids.js'
+import { validateFill } from './fill.js'
 import { inspectJson } from './json.js'
 
 export const FORMAT = 'ids-input/document'
@@ -31,7 +32,7 @@ const SLOT = '⬚'
 /** @typedef {Operation[]} Chain */
 /** @typedef {Record<string, unknown>} Extensions */
 /** @typedef {{ id: string, name?: string, transform?: Chain, extensions?: Extensions }} Layer */
-/** @typedef {Layer & { kind: 'component', char: string }} Component */
+/** @typedef {Layer & { kind: 'component', char: string, fill?: import('./fill.js').Fill }} Component */
 /** @typedef {Layer & { kind: 'operator', op: string, children: Node[], marks?: string, note?: string }} OperatorNode */
 /** @typedef {Layer & { kind: 'slot' }} Slot */
 /** @typedef {Layer & { kind: 'group', child: Node }} Group */
@@ -293,7 +294,8 @@ function validateNode(value, path, depth, ids, issues, end = true) {
   }
   validateLayerFields(value, path, issues)
   if (value.kind === 'component') {
-    closedFields(value, ['id', 'kind', 'char', 'name', 'transform', 'extensions'], path, issues)
+    closedFields(value, ['id', 'kind', 'char', 'name', 'transform', 'fill', 'extensions'], path, issues)
+    if (value.fill !== undefined) validateFill(value.fill, `${path}/fill`, issues)
     if (typeof value.char !== 'string') issues.push({ path: `${path}/char`, message: 'a component needs text' })
     else {
       let { base, marks } = splitMarks(value.char)

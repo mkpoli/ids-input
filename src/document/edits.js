@@ -23,7 +23,11 @@ function common(node) {
 
 /** @param {Node} base @param {Node} replacement */
 function keepIdentity(base, replacement) {
-  return /** @type {Node} */ ({ ...common(base), ...replacement, id: base.id })
+  /** @type {Record<string, unknown>} */
+  const kept = { ...common(base), ...replacement, id: base.id }
+  // A fill belongs to a painted component; a layer of another kind has no ink to fill.
+  if (base.kind === 'component' && base.fill !== undefined && replacement.kind === 'component') kept.fill = base.fill
+  return /** @type {Node} */ (kept)
 }
 
 /**
