@@ -2,6 +2,10 @@
   "name": "ids-input-workshop",
   "main": "worker/index.js",
   "compatibility_date": "2026-10-30",
+  // The drawing engine names its data files against its module URL. A bundled Worker has no such
+  // URL (workerd gives the bare module name, which `new URL` refuses), so it is given a base; the
+  // Worker reads those files from its own assets by path and never fetches these URLs.
+  "define": { "import.meta.url": "\"https://assets/og/module.js\"" },
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
