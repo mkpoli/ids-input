@@ -46,6 +46,7 @@
   "ids.draw.results": "Bộ phận gần giống",
   "ids.draw.undo": "Hoàn tác một nét",
   "ids.empty": "Ô trống",
+  "ids.emptyTip": "Phần chưa điền. Phần không ứng với chữ nào thì ghi bằng ？.",
   "ids.find.placeholder": "水 / water / 💧",
   "ids.from.atomic": "Chưa có dữ liệu về các bộ phận nhỏ hơn",
   "ids.from.collapse": "Ẩn các bộ phận của {part}",

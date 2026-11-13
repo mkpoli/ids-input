@@ -46,6 +46,7 @@
   "ids.draw.results": "비슷한 부품",
   "ids.draw.undo": "한 획 되돌리기",
   "ids.empty": "빈 자리",
+  "ids.emptyTip": "아직 채우지 않은 자리입니다. 해당하는 글자가 없는 부분은 ？로 나타냅니다.",
   "ids.find.placeholder": "水 / water / 💧",
   "ids.from.atomic": "더 나눈 기록 없음",
   "ids.from.collapse": "{part}의 구성 요소 숨기기",

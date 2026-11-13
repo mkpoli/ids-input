@@ -46,6 +46,7 @@
   "ids.draw.results": "Similar parts",
   "ids.draw.undo": "Undo stroke",
   "ids.empty": "Empty slot",
+  "ids.emptyTip": "A part still to fill. ？ stands for a part no character names.",
   "ids.find.placeholder": "水 / water / 💧",
   "ids.from.atomic": "No smaller parts recorded",
   "ids.from.collapse": "Hide the parts of {part}",
