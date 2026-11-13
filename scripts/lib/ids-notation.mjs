@@ -13,7 +13,7 @@ const CHAIN = /#\([^)]*\)/u
 /** A zi.tools entry's unique separator before the description: `{曰}`, `{?0丗}`, `{𡮂J}`. */
 const SEPARATOR = /^\{(?:\?[0-9]?)?[^}]+\}/u
 /** A zi.tools entry's glyph-variant definition after the description: `(.,T)`, `(d)`. */
-const DEFINITION = /\([0-9A-Za-z.,]+\)\s*$/u
+const DEFINITION = /(?<!#)\([0-9A-Za-z.,]+\)\s*$/u
 
 /** @typedef {'plain' | 'note' | 'modifier' | 'chain' | 'note+modifier' | 'note+chain' | 'modifier+chain' | 'note+modifier+chain'} Notation */
 

@@ -1,5 +1,5 @@
 // @ts-nocheck: geometry over plain arrays, as in a drawing.
-import { entryDescription, isDescription as isWhole } from './ids.js'
+import { entryDescription, isDescription as isWhole, parse, withoutVariants, write } from './ids.js'
 
 // What the editor's preview shows around a drawing: its badge, and the boxes where nothing is drawn
 // yet (a fast layout before the engine's has loaded). The drawing itself — its file, its parts by
@@ -93,7 +93,9 @@ export function roughLayout(tree, box = [0, 0, 1, 1], flip = [false, false], cut
  */
 export function runPreview(text, { preview, drawing, signal }, update) {
   // A zi.tools entry draws its description; its notes are not part of the text asked for.
-  const asked = entryDescription(text)
+  // A variant identifier says which form of a component is meant; one glyph is drawn for each.
+  const read = /[.0-9A-Za-z]/.test(text) ? parse(text, { open: true }) : null
+  const asked = read && !read.problem && read.tree !== null ? write(withoutVariants(read.tree)) : entryDescription(text)
   const whole = isWhole(asked)
   let final = false
   const none = () => { if (!signal.aborted && !preview && !final) update({ step: 'idle' }) }
@@ -109,6 +111,44 @@ export function runPreview(text, { preview, drawing, signal }, update) {
   }, error => {
     if (!signal.aborted && !final) update({ step: error?.name === 'TooLargeError' ? 'capped' : error?.name === 'UnavailableError' ? 'unavailable' : 'failed' })
   })
+}
+
+/**
+ * `ask` asked for what draws a description: `drawable` writes each component no code point names as
+ * a character or a description first, and the answer's parts and sketch are numbered by the
+ * components of the description asked for, so a part chosen in the tree is the part drawn. Without
+ * either, `ask` as it is.
+ * @template {((text: string, options?: any) => Promise<any>) | undefined} T
+ * @param {T} ask @param {((text: string, options?: any) => Promise<{ text: string, leaves: number[] }>) | undefined} drawable @returns {T}
+ */
+export function askDrawable(ask, drawable) {
+  if (!ask || !drawable) return ask
+  const wrapped = async (text, options) => {
+    const swap = /[{&#]/.test(text) ? await drawable(text, { signal: options?.signal }).catch(() => null) : null
+    if (!swap || swap.text === text) return ask(text, options)
+    const place = index => swap.leaves[index] ?? index
+    const onSketch = options?.onSketch && (sketch => options.onSketch(ownSketch(sketch, place)))
+    const drawn = await ask(swap.text, { ...options, onSketch })
+    if (!drawn) return drawn
+    /** @param {{ leaf?: number }} item */
+    const own = item => item.leaf === undefined ? item : { ...item, leaf: place(item.leaf) }
+    return { ...drawn, ...(drawn.parts ? { parts: drawn.parts.map(own) } : {}), ...(drawn.emoji ? { emoji: drawn.emoji.map(own) } : {}) }
+  }
+  if (ask.warm) wrapped.warm = ask.warm
+  return wrapped
+}
+
+/** A sketch's leaves gathered by the component each draws: one leaf per place, its box around all
+ * of them. @param {{ index: number, box: number[], empty: boolean }[]} sketch @param {(index: number) => number} place */
+function ownSketch(sketch, place) {
+  const out = new Map()
+  for (const leaf of sketch) {
+    const index = place(leaf.index), [x, y, w, h] = leaf.box, seen = out.get(index)
+    if (!seen) { out.set(index, { ...leaf, index, box: [x, y, w, h] }); continue }
+    const x0 = Math.min(seen.box[0], x), y0 = Math.min(seen.box[1], y)
+    seen.box = [x0, y0, Math.max(seen.box[0] + seen.box[2], x + w) - x0, Math.max(seen.box[1] + seen.box[3], y + h) - y0]
+  }
+  return [...out.values()].sort((a, b) => a.index - b.index)
 }
 
 /** Path data with nothing but its commands and numbers, its line breaks and tabs kept as separators. */
