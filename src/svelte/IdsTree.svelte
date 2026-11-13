@@ -14,7 +14,7 @@
   // level or copies that part's sequence. An empty slot shows as ⬚. A component the preview draws
   // variation sequences of has a button that lists them, each as the preview draws it; the menu
   // lists them too.
-  import { OPERATOR_GROUPS, isNode, partAt, samePath, write } from '../core/ids.js'
+  import { OPERATOR_GROUPS, isCustom, isNode, partAt, samePath, write } from '../core/ids.js'
   import { codePoints, variationBase, variationOf, withVariation } from '../core/variation.js'
   import IdsPartIcon from './IdsPartIcon.svelte'
   import OperatorIcon from './OperatorIcon.svelte'
@@ -325,7 +325,7 @@
       data-path={key(path)} data-hover-path={key(path)} disabled={editor.disabled} title={`${part === null ? label : t('ids.choose', { part })}${path.length ? ` · ${t('ids.dragSibling')}` : ''}`}
       aria-label={parent ? t('ids.part', { part: label, n: parent.n, name: editor.name(parent.op) }) : label}
       onclick={() => editor.choose(path)} oncontextmenu={event => contextmenu(event, path)} onkeydown={event => partKey(event, path)}
-      ondragover={event => dragover(event, path)} ondragleave={() => { overPath = null; overSwap = false }} ondrop={event => drop(event, path)}>{#if part !== null && varied(part) && editor.adapter.icon}<span class="ids-form"><IdsPartIcon sequence={variationOf(part)} adapter={editor.adapter} />{part.slice(variationOf(part).length)}</span>{:else}{part ?? '⬚'}{/if}</button>
+      ondragover={event => dragover(event, path)} ondragleave={() => { overPath = null; overSwap = false }} ondrop={event => drop(event, path)}>{#if part !== null && isCustom(part)}<span class="ids-custom"><IdsPartIcon sequence={part} adapter={editor.adapter} /><span class="ids-custom-name">{part}</span></span>{:else if part !== null && varied(part) && editor.adapter.icon}<span class="ids-form"><IdsPartIcon sequence={variationOf(part)} adapter={editor.adapter} />{part.slice(variationOf(part).length)}</span>{:else}{part ?? '⬚'}{/if}</button>
     {#if formsOf(part).length}
       {@const open = menu?.forms === true && samePath(menu.path, path)}
       <button type="button" class="ids-forms-toggle" class:varied={varied(part)} disabled={editor.disabled} aria-haspopup="menu" aria-expanded={open}
@@ -478,6 +478,8 @@
   [data-op="⿹"] > .ids-parts > [data-index="0"] > .ids-part{place-items:start end}
   [data-op="⿺"] > .ids-parts > [data-index="0"] > .ids-part{place-items:end start}
   [data-op="⿽"] > .ids-parts > [data-index="0"] > .ids-part{place-items:end end}
+  .ids-custom{display:grid;justify-items:center;gap:1px;max-width:100%;line-height:1}
+  .ids-custom-name{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:500 10px/1.2 var(--ids-ui-font,system-ui,sans-serif);color:var(--_muted)}
   .ids-part{display:grid;place-items:center;width:100%;height:100%;min-width:0;min-height:0;box-sizing:border-box;padding:min(2px,2cqh) min(4px,2cqw);font-size:min(var(--ids-part-size,32px),max(0px,calc(66cqh - 3px)),max(0px,calc(66cqw - 3px)));line-height:1.4;overflow:hidden;
     font-family:var(--_font);color:var(--_ink);background:var(--_surface);border:min(1px,1cqw,1cqh) solid var(--_line);border-radius:min(8px,8cqw,8cqh)}
   .ids-part:not(:disabled):hover{border-color:var(--_line-strong)}

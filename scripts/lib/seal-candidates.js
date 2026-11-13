@@ -1,5 +1,5 @@
 // @ts-check
-import { isNode, parse, write, LONGEST } from '../../src/core/ids.js'
+import { customsOf, isNode, parse, write, LONGEST } from '../../src/core/ids.js'
 import { isSmallSeal } from '../../src/adapter/seal-data.js'
 
 /**
@@ -49,7 +49,7 @@ export function createSealCandidates(doc, table, forms = new Map(), modernSource
     const variants = []
     for (const name of modern) for (const sequence of table.get(name) ?? []) {
       const parsed = parse(sequence.text)
-      const supported = !parsed.problem && isNode(parsed.tree)
+      const supported = !parsed.problem && isNode(parsed.tree) && !customsOf(parsed.tree).length
       result.modernDescriptions.push({ char: name, text: sequence.text, regions: sequence.regions ?? '', supported })
       if (!supported) continue
       /** @param {string} component */

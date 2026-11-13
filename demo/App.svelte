@@ -38,6 +38,7 @@
   import folds from '../data/component-name-folds.tsv?url'
   import characterInfo from '../data/character-info.json.gz?url'
   import chains from '../data/zi-tools-chains.tsv.gz?url'
+  import custom from '../data/custom-components.json.gz?url'
   import characters from '../data/character-vocabulary.tsv.gz?url'
   import { LOCALES, appMessages } from './lib/locales.js'
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
@@ -133,7 +134,7 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const sealAdapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, jurchen: jurchenData, ids, layers, zitools, chise: corpus, project: projectIds, overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains })
+  const sealAdapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, jurchen: jurchenData, ids, layers, zitools, chise: corpus, project: projectIds, overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains, custom })
 
   const operatorSet = new Set(OPERATORS.map(([op]) => op))
   const babel = { ...sealAdapter, recognizeDrawing, parts: async () => {
