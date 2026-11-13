@@ -10,7 +10,6 @@
   import { applyTheme, storedTheme } from './lib/theme.js'
   import { load, save } from './lib/storage.js'
   import { importPairs, parsePair, parseSide } from './lib/equivalences.js'
-  import { equivalences } from '../src/core/index.js'
   import dataUrl from '../data/custom-components.json.gz?url'
   import engineOutlines from 'ids-engine-outlines'
   import { composerPreview } from '@han-compose/composer'
@@ -30,7 +29,6 @@
   $effect(() => { document.documentElement.lang = locale })
   const messages = $derived(LOCALES.find(([code]) => code === locale)?.[2])
   const t = $derived(translator({ ...appMessages('en'), ...messages, ...appMessages(locale) }, locale))
-  const equivalents = equivalences()
 
   let theme = $state(storedTheme())
   /** @param {import('./lib/theme.js').Theme} next */
@@ -172,32 +170,6 @@
   </header>
 
   <main>
-    <section class="equivalents" id="equivalents" aria-labelledby="equivalents-title">
-      <h2 id="equivalents-title">{t('appendix.equivalents')}</h2>
-      <p class="glyph-note">{t('appendix.equivalentsLead')}</p>
-      <p class="glyph-note">Sources: <a href="https://ashide.otodo.net/setumei/ziboziso.html" target="_blank" rel="noreferrer">葦手入力</a> · <a href="https://www.unicode.org/reports/tr38/#kStrange" target="_blank" rel="noreferrer">Unihan kStrange</a> · <a href="https://www.babelstone.co.uk/CJK/IDS.TXT" target="_blank" rel="noreferrer">BabelStone IDS</a></p>
-      <h3>{t('info.script.kana')}</h3>
-      <div class="equiv-grid">
-        {#each equivalents.kana as row (row.shapes[0])}
-          <div class="equiv" lang="ja">
-            <span class="equiv-shapes">{row.shapes.join(' ')}</span>
-            <span class="equiv-arrow" aria-hidden="true">→</span>
-            <span class="equiv-parts">{row.components.join(' ')}</span>
-          </div>
-        {/each}
-      </div>
-      <h3>{t('parts.tab.hangul')}</h3>
-      <div class="equiv-grid">
-        {#each equivalents.hangul as row (row.shapes[0])}
-          <div class="equiv" lang="ko">
-            <span class="equiv-shapes">{row.shapes.join(' ')}</span>
-            <span class="equiv-arrow" aria-hidden="true">→</span>
-            <span class="equiv-parts">{row.components.join(' ')}</span>
-          </div>
-        {/each}
-      </div>
-    </section>
-
     <div class="controls">
       <label class="search">
         <span class="ui-visually-hidden">{t('appendix.search')}</span>
@@ -355,16 +327,6 @@
   .back:hover{color:var(--ids-ink)}
   main{width:100%;max-width:1180px;margin:0 auto;padding:26px max(18px,env(safe-area-inset-right)) 64px max(18px,env(safe-area-inset-left))}
   .lead{max-width:70ch;margin:0 0 18px;color:var(--ids-ink-soft)}
-  .equivalents{scroll-margin-top:80px;margin:0 0 22px;padding:14px 16px;border:1px solid var(--ids-line);border-radius:8px;background:var(--ids-surface)}
-  .equivalents h2{font-size:14px;margin:0 0 6px}
-  .equivalents h3{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ids-muted);margin:14px 0 8px}
-  .equiv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
-  .equiv{display:flex;align-items:baseline;gap:5px;min-width:0;padding:5px 8px;border:1px solid var(--ids-line);border-radius:6px;background:var(--ids-surface);font-family:var(--ids-font);font-size:13px}
-  .equiv-shapes{font-weight:600;color:var(--ids-ink);white-space:nowrap}
-  .equiv-arrow{color:var(--ids-muted)}
-  .equiv-parts{color:var(--ids-ink-soft);overflow-wrap:anywhere}
-  .equivalents a{color:var(--ids-accent);text-decoration:none}
-  .equivalents a:hover{text-decoration:underline}
   .controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
   .search input{width:min(360px,70vw);padding:7px 10px;border:1px solid var(--ids-control-border);border-radius:7px;background:var(--ids-surface);color:inherit;font:inherit}
   .chips{display:flex;gap:6px;flex-wrap:wrap}
@@ -408,7 +370,6 @@
   .scheme{font-size:10px;color:var(--ids-muted);text-transform:uppercase;letter-spacing:.02em}
   .desc{flex-basis:100%;color:var(--ids-muted);font-size:11.5px}
   .kind,.uses{color:var(--ids-muted);white-space:nowrap}
-  .equivalent{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:var(--ids-ink-soft);max-width:36ch}
   .remove{padding:0 5px;border:0;background:none;color:var(--ids-muted);font-size:16px;line-height:1;cursor:pointer}
   .remove:hover{color:var(--ids-fault)}
   .pager{display:flex;align-items:center;gap:10px;justify-content:center;margin:12px 0;font-size:12px;color:var(--ids-muted)}

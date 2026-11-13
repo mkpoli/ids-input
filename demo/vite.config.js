@@ -159,7 +159,7 @@ export default defineConfig({
     // A fallback shard is fetched when a character needs it; inlined, the small ones would ride in
     // the first scripts as base64, which hardly compresses.
     assetsInlineLimit: file => file.endsWith('.woff2') ? false : undefined,
-    rollupOptions: { input: { index: `${import.meta.dirname}/index.html`, compare: `${import.meta.dirname}/compare.html`, engines: `${import.meta.dirname}/engines.html`, sources: `${import.meta.dirname}/sources.html`, embed: `${import.meta.dirname}/embed.html`, design: `${import.meta.dirname}/design.html`, 'open-data': `${import.meta.dirname}/open-data.html`, unencoded: `${import.meta.dirname}/unencoded.html`, ucv: `${import.meta.dirname}/ucv.html` } } },
+    rollupOptions: { input: { index: `${import.meta.dirname}/index.html`, compare: `${import.meta.dirname}/compare.html`, engines: `${import.meta.dirname}/engines.html`, sources: `${import.meta.dirname}/sources.html`, embed: `${import.meta.dirname}/embed.html`, design: `${import.meta.dirname}/design.html`, 'open-data': `${import.meta.dirname}/open-data.html`, unencoded: `${import.meta.dirname}/unencoded.html`, ucv: `${import.meta.dirname}/ucv.html`, normalization: `${import.meta.dirname}/normalization.html` } } },
   // The drawing engine's files, outside this checkout's root: a dependency that is a directory is
   // read where it stands, and its Worker is a `file:` module the page asks for by that path.
   server: { fs: { strict: false, allow: ['..', join(import.meta.dirname, '..', 'node_modules', '@han-compose', 'composer')] } },
