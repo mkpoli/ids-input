@@ -11,8 +11,11 @@
   // put where it is dropped, and a part of the tree
   // dropped beside a sibling moves there or on any other part switches places with it; the context
   // menu (right click, the Menu key or Shift+F10) splits or swaps with any operator, clears, removes a
-  // level or copies that part's sequence. An empty slot shows as ⬚.
+  // level or copies that part's sequence. An empty slot shows as ⬚. A component the preview draws
+  // variation sequences of has a button that lists them, each as the preview draws it; the menu
+  // lists them too.
   import { OPERATOR_GROUPS, isCustom, isNode, partAt, samePath, write } from '../core/ids.js'
+  import { codePoints, variationBase, variationOf, withVariation } from '../core/variation.js'
   import IdsPartIcon from './IdsPartIcon.svelte'
   import OperatorIcon from './OperatorIcon.svelte'
   import { shortcut } from './shortcut.js'
@@ -24,6 +27,29 @@
   const t = $derived(editor.t)
 
   const sizes = $derived(treeSizes(editor.tree))
+
+  // The variation sequences the preview draws, by character, read once for each adapter that lists them.
+  const listSequences = $derived(editor.adapter.variationSequences)
+  let sequences = $state.raw(/** @type {Map<string, string[]>} */ (new Map()))
+  $effect(() => {
+    const list = listSequences
+    sequences = new Map()
+    if (!list) return
+    let current = true
+    /** @type {ReturnType<typeof setTimeout> | undefined} */ let timer
+    // A read that fails is tried again, twice, a little later each time.
+    const read = (/** @type {number[]} */ waits) => list().then(found => { if (current) sequences = found },
+      () => { if (current && waits.length) timer = setTimeout(() => read(waits.slice(1)), waits[0]) })
+    read([2000, 8000])
+    return () => { current = false; clearTimeout(timer) }
+  })
+  /** What a component can be written as: its character, then each of its variation sequences. None where it has no sequence. @param {Part | undefined} part */
+  function formsOf(part) {
+    const base = variationBase(part), found = base === null ? undefined : sequences.get(base)
+    return base !== null && found?.length ? [base, ...found] : []
+  }
+  /** Whether the component is written with a variation selector. @param {Part} part */
+  const varied = part => typeof part === 'string' && variationBase(part) !== null && variationOf(part) !== variationBase(part)
   /** @param {Path} path */
   const key = path => path.join('.')
 
@@ -113,6 +139,7 @@
   /** @param {PointerEvent} event */
   function touchDown(event) {
     if (event.pointerType !== 'touch' || editor.disabled) return
+    if (/** @type {HTMLElement} */ (event.target).closest('.ids-forms-toggle')) return
     const box = /** @type {HTMLElement} */ (event.target).closest('[data-hover-path]')
     if (!(box instanceof HTMLElement) || !rootEl?.contains(box) || box.closest('.inline-edit,input,textarea')) return
     const written = box.getAttribute('data-hover-path') ?? ''
@@ -172,7 +199,7 @@
   }
 
   // The context menu of a part: where it opened, and for which part.
-  let menu = $state(/** @type {{ path: Path, x: number, y: number } | null} */ (null))
+  let menu = $state(/** @type {{ path: Path, x: number, y: number, forms?: boolean } | null} */ (null))
   /** @type {HTMLElement | null} */ let menuEl = $state(null)
   /** @type {HTMLElement | null} */ let rootEl = $state(null)
   $effect(() => { if (rootEl) return watchFallback(rootEl) })
@@ -184,10 +211,19 @@
   function openMenu(path, x, y) {
     if (editor.disabled) return
     // Placed where it opened, over everything (so no scrolled or clipped box moves or cuts it), kept inside the window.
-    const W = 230, H = 280
+    const W = 260, H = 280 + (formsOf(partAt(editor.tree, path)).length ? 30 + Math.ceil(formsOf(partAt(editor.tree, path)).length / 6) * 42 : 0)
     menu = { path, x: Math.max(8, Math.min(x, innerWidth - W - 8)), y: Math.max(8, Math.min(y, innerHeight - H - 8)) }
     editor.choose(path, { toggle: false })
-    queueMicrotask(() => /** @type {HTMLElement | null | undefined} */ (menuEl?.querySelector('[role="menuitem"]'))?.focus())
+    queueMicrotask(() => /** @type {HTMLElement | null | undefined} */ (menuEl?.querySelector('[role^="menuitem"]'))?.focus())
+  }
+  /** The variation sequences of the component at `path`, listed under its button. @param {Path} path @param {HTMLElement} anchor */
+  function openForms(path, anchor) {
+    if (editor.disabled) return
+    const forms = formsOf(partAt(editor.tree, path)), r = anchor.getBoundingClientRect()
+    const W = Math.min(forms.length, 6) * 42 + 14, H = Math.ceil(forms.length / 6) * 42 + 40
+    menu = { path, forms: true, x: Math.max(8, Math.min(r.left, innerWidth - W - 8)), y: r.bottom + 4 + H > innerHeight - 8 ? Math.max(8, r.top - H - 4) : r.bottom + 4 }
+    editor.choose(path, { toggle: false })
+    queueMicrotask(() => /** @type {HTMLElement | null | undefined} */ (menuEl?.querySelector('[aria-checked="true"]') ?? menuEl?.querySelector('[role^="menuitem"]'))?.focus())
   }
   /** @param {MouseEvent} event @param {Path} path */
   function contextmenu(event, path) { event.preventDefault(); openMenu(path, event.clientX, event.clientY) }
@@ -218,14 +254,17 @@
     }
   }
   function closeMenu({ refocus = true } = {}) {
+    // A list opened from a component's button gives the focus back to that button.
+    const toggle = menu?.forms ? /** @type {HTMLElement | null | undefined} */ (rootEl?.querySelector(`.ids-forms-toggle[data-hover-path="${CSS.escape(key(menu.path))}"]`)) : null
     menu = null
-    if (refocus) editor.focusChosen(rootEl)
+    if (!refocus) return
+    if (toggle) toggle.focus(); else editor.focusChosen(rootEl)
   }
   /** @param {() => void} act */
   function run(act) { act(); closeMenu() }
   /** @param {KeyboardEvent} event */
   function menuKey(event) {
-    const items = /** @type {HTMLElement[]} */ ([...(menuEl?.querySelectorAll('[role="menuitem"]:not([disabled])') ?? [])])
+    const items = /** @type {HTMLElement[]} */ ([...(menuEl?.querySelectorAll('[role^="menuitem"]:not([disabled])') ?? [])])
     const at = items.indexOf(/** @type {HTMLElement} */ (document.activeElement))
     const step = /** @type {Record<string, number>} */ ({ ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 })[event.key]
     if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeMenu() }
@@ -234,6 +273,7 @@
     else if (event.key === 'Home' || event.key === 'End') { event.preventDefault(); items[event.key === 'Home' ? 0 : items.length - 1]?.focus() }
   }
   const menuPart = $derived(menu ? partAt(editor.tree, menu.path) : undefined)
+  const menuForms = $derived(formsOf(menuPart))
   /** A click on a node's frame, away from its parts and buttons, chooses it. @param {MouseEvent} event @param {Path} path */
   function frameClick(event, path) {
     if (editor.disabled) return
@@ -285,7 +325,17 @@
       data-path={key(path)} data-hover-path={key(path)} disabled={editor.disabled} title={`${part === null ? label : t('ids.choose', { part })}${path.length ? ` · ${t('ids.dragSibling')}` : ''}`}
       aria-label={parent ? t('ids.part', { part: label, n: parent.n, name: editor.name(parent.op) }) : label}
       onclick={() => editor.choose(path)} oncontextmenu={event => contextmenu(event, path)} onkeydown={event => partKey(event, path)}
-      ondragover={event => dragover(event, path)} ondragleave={() => { overPath = null; overSwap = false }} ondrop={event => drop(event, path)}>{#if part !== null && isCustom(part)}<span class="ids-custom"><IdsPartIcon sequence={part} adapter={editor.adapter} /><span class="ids-custom-name">{part}</span></span>{:else}{part ?? '⬚'}{/if}</button>
+      ondragover={event => dragover(event, path)} ondragleave={() => { overPath = null; overSwap = false }} ondrop={event => drop(event, path)}>{#if part !== null && isCustom(part)}<span class="ids-custom"><IdsPartIcon sequence={part} adapter={editor.adapter} /><span class="ids-custom-name">{part}</span></span>{:else if part !== null && varied(part) && editor.adapter.icon}<span class="ids-form"><IdsPartIcon sequence={variationOf(part)} adapter={editor.adapter} />{part.slice(variationOf(part).length)}</span>{:else}{part ?? '⬚'}{/if}</button>
+    {#if formsOf(part).length}
+      {@const open = menu?.forms === true && samePath(menu.path, path)}
+      <button type="button" class="ids-forms-toggle" class:varied={varied(part)} disabled={editor.disabled} aria-haspopup="menu" aria-expanded={open}
+        aria-label={t('ids.variants.label', { part: variationBase(part) ?? '' })} title={t('ids.variants.label', { part: variationBase(part) ?? '' })}
+        data-hover-path={key(path)} ondragover={event => dragover(event, path)} ondragleave={() => { overPath = null; overSwap = false }} ondrop={event => drop(event, path)}
+        onkeydown={event => { if (event.key === 'Backspace' || event.key === 'Delete') event.stopPropagation() }}
+        onpointerdown={event => { if (open) event.stopPropagation() }} onclick={event => { if (open) closeMenu(); else openForms(path, event.currentTarget) }}>
+        <svg viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+      </button>
+    {/if}
     {/if}
   {/if}
 {/snippet}
@@ -308,7 +358,7 @@
     if (swallowed) { swallowed = false; event.stopImmediatePropagation(); event.preventDefault(); return }
     if (event.detail !== 1) return
     const target = /** @type {HTMLElement} */ (event.target)
-    clickPath = target.closest('.ids-unwrap,.ids-menu,.inline-edit') ? null : target.closest('[data-hover-path]')?.getAttribute('data-hover-path') ?? null
+    clickPath = target.closest('.ids-unwrap,.ids-menu,.inline-edit,.ids-forms-toggle') ? null : target.closest('[data-hover-path]')?.getAttribute('data-hover-path') ?? null
   }} ondblclick={event => {
     if (clickPath == null) return
     const path = clickPath
@@ -324,6 +374,17 @@
     <!-- svelte-ignore a11y_interactive_supports_focus -->
     <div class="ids-menu" role="menu" tabindex="-1" aria-label={t('ids.menu.label', { part: editor.sequenceAt(menu.path) })} bind:this={menuEl}
       style:left="{menu.x}px" style:top="{menu.y}px" onkeydown={menuKey}>
+      {#if menuForms.length && typeof menuPart === 'string'}
+        <p class="ids-menu-title">{t('ids.variants.label', { part: menuForms[0] })}</p>
+        <div class="ids-menu-forms">
+          {#each menuForms as form (form)}
+            <button type="button" role="menuitemradio" class="ids-menu-form" aria-checked={variationOf(menuPart) === form} title={codePoints(form)} aria-label={codePoints(form)}
+              onclick={() => run(() => editor.vary(form, /** @type {Path} */ (menu?.path)))}><IdsPartIcon sequence={form} adapter={editor.adapter} /></button>
+          {/each}
+        </div>
+      {/if}
+      {#if !menu.forms}
+      {#if menuForms.length}<div class="ids-menu-sep" role="separator"></div>{/if}
       <p class="ids-menu-title">{isNode(menuPart) ? t('ids.menu.swap') : t('ids.menu.split')}</p>
       <div class="ids-menu-ops">
         {#each OPERATOR_GROUPS.flatMap(group => group.ops) as op (op)}
@@ -339,6 +400,7 @@
       <button type="button" role="menuitem" class="ids-menu-item" disabled={!filled}
         onclick={() => { const text = editor.sequenceAt(/** @type {Path} */ (menu?.path)); run(() => { navigator.clipboard?.writeText(text).catch(() => {}) }) }}>
         <span>{t('ids.menu.copy')}</span><span class="ids-menu-seq" lang="ja">{editor.sequenceAt(menu.path)}</span></button>
+      {/if}
     </div>
   {/if}
 </div>
@@ -353,7 +415,7 @@
     --_focus:var(--ids-focus,light-dark(#2944c7,#8ea8ff));--_fault:var(--ids-fault,light-dark(#b42318,#ff8a80));
     --_font:var(--ids-font,"IDS Numbered","IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Jurchen","IDS Operators","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif);
     position:relative;display:grid;place-items:center;min-width:0;min-height:0;padding:16px;color:var(--_ink)}
-  .ids-tree-root{display:grid;width:min(100%,420px);aspect-ratio:1;min-height:0;container-type:size}
+  .ids-tree-root{position:relative;display:grid;width:min(100%,420px);aspect-ratio:1;min-height:0;container-type:size}
   .ids-tree-root > *{height:100%;min-height:0}
   :where(.ids-tree) button{font:inherit;color:inherit;border:1px solid var(--_line);border-radius:6px;background:var(--_surface);cursor:pointer}
   :where(.ids-tree) button:disabled{cursor:default;opacity:.55}
@@ -387,7 +449,7 @@
   .ids-op :global(svg){width:16em;height:16em}
   .ids-op :global(svg *){vector-effect:none}
   .ids-parts{flex:1;display:flex;gap:6em;min-width:0;min-height:0}
-  .ids-cell{flex:1;display:grid;min-width:0;min-height:0;container-type:size}
+  .ids-cell{position:relative;flex:1;display:grid;min-width:0;min-height:0;container-type:size}
   .ids-cell:has(:global(.inline-edit)){position:relative;z-index:2}
   .row > .ids-parts{flex-direction:row}
   .column > .ids-parts,.stack > .ids-parts{flex-direction:column}
@@ -428,6 +490,21 @@
   .ids-part.over{border:min(2px,2cqw,2cqh) solid var(--_accent);border-style:solid}
   .ids-part.swap{border:min(2px,2cqw,2cqh) solid var(--_accent);border-style:solid;background:var(--_accent-light)}
 
+  .ids-form{display:inline-flex;align-items:center}
+  /* The variation sequences of a component, opened from its corner. */
+  .ids-forms-toggle{position:absolute;z-index:1;right:3px;bottom:3px;display:grid;place-items:center;width:18px;height:18px;padding:0;border-radius:5px;color:var(--_muted);background:var(--_surface)}
+  .ids-forms-toggle svg{width:12px;height:12px}
+  .ids-forms-toggle:not(:disabled):hover,.ids-forms-toggle[aria-expanded="true"],.ids-forms-toggle.varied{color:var(--_accent);border-color:var(--_accent)}
+  /* An enclosing part keeps its button in the band its glyph stands in, clear of the part inside. */
+  .enclosure > .ids-parts > .ids-cell[data-index="0"] > .ids-forms-toggle{right:1px;bottom:1px;width:14px;height:14px}
+  .enclosure > .ids-parts > .ids-cell[data-index="0"] > .ids-forms-toggle svg{width:10px;height:10px}
+  :is([data-op="⿸"],[data-op="⿵"]) > .ids-parts > .ids-cell[data-index="0"] > .ids-forms-toggle{bottom:auto;top:1px}
+  [data-op="⿹"] > .ids-parts > .ids-cell[data-index="0"] > .ids-forms-toggle{right:auto;bottom:auto;left:1px;top:1px}
+  :is([data-op="⿷"],[data-op="⿽"]) > .ids-parts > .ids-cell[data-index="0"] > .ids-forms-toggle{right:auto;left:1px}
+  @container (max-height:40px) or (max-width:40px){
+    .ids-forms-toggle{display:none}
+  }
+
   /* Device-pixel minimum borders and controls cannot fit in the smallest cells.
      Clip the header visually while keeping its node button available to keyboard navigation. */
   @container (max-height:12px) or (max-width:12px){
@@ -436,12 +513,16 @@
     .ids-part,.ids-part.chosen,.ids-part.over,.ids-part.swap{border-width:0;padding:0}
   }
 
-  .ids-menu{position:fixed;z-index:50;display:flex;flex-direction:column;gap:2px;width:max-content;max-width:260px;padding:6px;
+  .ids-menu{position:fixed;z-index:50;display:flex;flex-direction:column;gap:2px;width:max-content;max-width:270px;padding:6px;
     border:1px solid var(--_line);border-radius:10px;background:var(--_surface);box-shadow:0 10px 30px rgb(0 0 0 / .18)}
   .ids-menu-title{margin:2px 6px 4px;font-size:11px;color:var(--_muted)}
   .ids-menu-ops{display:grid;grid-template-columns:repeat(6,32px);gap:2px}
   .ids-menu-op{display:grid;place-items:center;height:30px;padding:0;border-color:transparent !important;background:none !important}
   .ids-menu-op:hover,.ids-menu-op:focus-visible{background:var(--_accent-light) !important}
+  .ids-menu-forms{display:grid;grid-template-columns:repeat(6,40px);gap:2px}
+  .ids-menu-form{display:grid;place-items:center;height:40px;padding:0;font-size:30px;border-color:transparent !important;background:none !important}
+  .ids-menu-form:hover,.ids-menu-form:focus-visible{background:var(--_surface-selected) !important}
+  .ids-menu-form[aria-checked="true"]{border-color:var(--_accent) !important;background:var(--_accent-light) !important}
   .ids-menu-sep{height:1px;margin:4px 2px;background:var(--_line)}
   .ids-menu-item{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:6px 8px;font-size:13px;text-align:left;
     border-color:transparent !important;background:none !important}

@@ -166,6 +166,7 @@
   "ids.unwrap": "去掉这层",
   "ids.unwrapHint": "去掉这一层，把第一个非空部件留在原位",
   "ids.unwrapNode": "去掉{what}",
+  "ids.variants.label": "{part}的异体字序列",
   "ids.view.label": "视图",
   "ids.view.shape": "结构图",
   "ids.view.tree": "树形",
