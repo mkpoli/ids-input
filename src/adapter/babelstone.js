@@ -530,8 +530,8 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
     for (const root of variants.values()) variants.set(root, root)
     return rows.map(part => {
       if (part.kind !== 'c' && part.kind !== 'd' || isSequence(part.part) || PALETTE_SEPARATE.has(part.part)) return part
-      const variantGroup = variants.get(part.part)
-      return variantGroup ? { ...part, variantGroup } : part
+      const group = variants.get(part.part)
+      return group ? { ...part, group } : part
     })
   })
     .catch(error => { palette = null; throw error })
