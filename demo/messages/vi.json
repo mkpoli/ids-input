@@ -396,7 +396,6 @@
   "appendix.equivalentsLead": "Tìm kiếm đọc những ký tự này như cách viết khác của cùng một bộ phận. Katakana nửa độ rộng dùng hàng độ rộng đầy đủ; kana có dấu hữu thanh được tìm nguyên dạng.",
   "appendix.search": "ID, tên, bộ phận hoặc chữ",
   "appendix.yours": "Của tôi",
-  "appendix.count": "{count} dạng",
   "appendix.empty": "Không có dạng nào khớp.",
   "appendix.loading": "Đang tải bảng…",
   "appendix.loadFailed": "Không tải được bảng.",
@@ -430,7 +429,7 @@
   "appendix.source.chise": "CHISE",
   "appendix.source.zi-tools": "zi.tools",
   "appendix.source.unnamed": "Chưa có tên",
-  "appendix.source.yours": "Của bạn",
+  "appendix.source.yours": "Của tôi",
   "appendix.statusLabel": "Trạng thái",
   "appendix.status.any": "Bất kỳ",
   "appendix.status.confirmed": "Đã xác nhận",
@@ -440,5 +439,7 @@
   "appendix.relation.arrangement": "Cách xếp khác của",
   "appendix.sortLabel": "Thứ tự",
   "appendix.sort.id": "Theo ID",
-  "appendix.sort.uses": "Theo số lần dùng"
+  "appendix.sort.uses": "Theo số lần dùng",
+  "appendix.count.other": "{count} dạng",
+  "appendix.relation.confirmed": "Đã xác nhận cho"
 }

@@ -74,7 +74,7 @@
   let source = $state(oneOf(SOURCES, params.get('source')))
   let status = $state(oneOf(STATUSES, params.get('status')))
   let sort = $state(oneOf(/** @type {const} */ (['id', 'uses']), params.get('sort')))
-  let page = $state(Math.max(1, Number(params.get('page')) || 1))
+  let page = $state(Math.max(1, Math.floor(Number(params.get('page'))) || 1))
   const PAGE = 50
   $effect(() => {
     const next = new URLSearchParams(location.search)
@@ -275,15 +275,15 @@
                         {#if item.id && item.id !== row.id}<a class="link" href={`?q=${item.id}`} onclick={event => { event.preventDefault(); show(/** @type {string} */ (item.id)) }}>{item.id}</a>{/if}
                       </li>
                     {/each}
-                    {#each row.yours as pair (pair.other)}
+                    {#each row.yours as pair (pair.other)}<!-- one line per other side: formRows joins the notes -->
                       <li><span class="tag">{t('appendix.yours')}</span><span class="name" lang="ja">{pair.other}</span>{#if pair.note}<span class="by">{pair.note}</span>{/if}</li>
                     {/each}
                   </ul>
                 </td>
-                <td class="num" title={row.usedIn}>{row.uses || '—'}</td>
-                <td class="num">
+                <td class="num" data-label={t('appendix.uses')} title={row.usedIn}>{row.uses || '—'}</td>
+                <td class="num" data-label={t('appendix.derived')}>
                   {#if row.derived.length}
-                    <button type="button" class="more" aria-expanded={opened === row.id} onclick={() => { opened = opened === row.id ? null : row.id }}>{row.derived.length}</button>
+                    <button type="button" class="more" aria-expanded={opened === row.id} aria-label={`${t('appendix.derived')} ${row.derived.length}`} onclick={() => { opened = opened === row.id ? null : row.id }}>{row.derived.length}</button>
                   {:else}—{/if}
                 </td>
               </tr>
@@ -291,7 +291,7 @@
                 <tr class="detail">
                   <td colspan="6">
                     <ul class="derived">
-                      {#each row.derived.slice(0, 60) as one (one.char + one.in + one.text)}
+                      {#each row.derived as one (one.char + one.in + one.text)}
                         <li><span class="char" lang="ja">{one.char}</span><span class="tag" data-source={one.in}>{t(`appendix.source.${one.in}`)}</span><span class="name" lang="ja">{one.text}</span><span class="status" data-status={one.status === 'verified' ? 'confirmed' : 'candidate'}>{t(`appendix.status.${one.status === 'verified' ? 'confirmed' : 'candidate'}`)}</span><span class="by" lang="ja">{one.of}</span></li>
                       {/each}
                     </ul>
@@ -444,6 +444,7 @@
     td:nth-child(3),td:nth-child(4){grid-column:1 / -1}
     td:nth-child(5){grid-column:3;grid-row:1}
     td:nth-child(6){grid-column:3;grid-row:2}
+    td.num::before{content:attr(data-label);margin-inline-end:6px;font-size:10px}
     tr.detail{display:block}
     .derived{grid-template-columns:minmax(0,1fr)}
     .search,.search input{width:100%}

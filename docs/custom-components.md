@@ -94,7 +94,9 @@ zi.tools' `ids_lv1.txt` at the pinned revision. GPL-2.0-or-later, since CHISE's 
 - `draw`: what a composer draws in the component's place — BabelStone's fragment, the private-use
   glyph of BabelStone Han PUA, or the best equivalent made of characters only. 972 have one.
 - `equivalents`: what the component is in another table, `{ in, text, count, characters, status,
-  basis }`. `difference` rows are solved; `inverse` rows turn a solved row round.
+  basis, id, arrangements }`; `id` is the form the text is, and `arrangements` the same parts
+  bracketed another way, each a form of its own. A component carries its form's `id` and `char`,
+  and a character row the `ids` of the forms it names. `difference` rows are solved; `inverse` rows turn a solved row round.
   `verified` means two or more characters give the same spelling, `candidate` that none does;
   `count` is the characters that give the same parts in any arrangement.
 - `characters`: a description of a character in a notation its source did not write, `{ char,

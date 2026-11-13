@@ -398,7 +398,6 @@
   "appendix.equivalentsLead": "The search reads these as alternative spellings of a component. Halfwidth katakana uses its fullwidth row; a kana with a voicing mark stays literal.",
   "appendix.search": "ID, name, part or character",
   "appendix.yours": "Yours",
-  "appendix.count": "{count} forms",
   "appendix.empty": "No form matches.",
   "appendix.loading": "Loading the table…",
   "appendix.loadFailed": "The table could not be loaded.",
@@ -442,5 +441,8 @@
   "appendix.relation.arrangement": "Arrangement of",
   "appendix.sortLabel": "Order",
   "appendix.sort.id": "By ID",
-  "appendix.sort.uses": "By uses"
+  "appendix.sort.uses": "By uses",
+  "appendix.count.one": "{count} form",
+  "appendix.count.other": "{count} forms",
+  "appendix.relation.confirmed": "Confirmed for"
 }

@@ -13,7 +13,7 @@ import { isCustom } from '../../src/core/index.js'
  * @property {number} number
  * @property {string} shown What is drawn for it: a name, or its expression.
  * @property {FormName[]} names
- * @property {{ id: string, relation: 'candidate' | 'arrangement' }[]} of The forms an unnamed one was found for.
+ * @property {{ id: string, relation: 'confirmed' | 'candidate' | 'arrangement' }[]} of The forms an unnamed one was found for.
  * @property {FormEquivalent[]} equivalents
  * @property {{ other: string, note: string }[]} yours
  * @property {number} uses
@@ -48,9 +48,9 @@ export function formRows(doc, mine = []) {
     list.push({ char: row.char, text: row.text, in: row.in, of: row.of, status: row.status })
   }
   // Where an unnamed form comes from: the forms it was found for.
-  /** @type {Map<string, { id: string, relation: 'candidate' | 'arrangement' }[]>} */
+  /** @type {Map<string, { id: string, relation: 'confirmed' | 'candidate' | 'arrangement' }[]>} */
   const origin = new Map()
-  /** @param {string | undefined} to @param {string | undefined} id @param {'candidate' | 'arrangement'} relation */
+  /** @param {string | undefined} to @param {string | undefined} id @param {'confirmed' | 'candidate' | 'arrangement'} relation */
   const point = (to, id, relation) => {
     if (!to || !id || to === id) return
     const list = origin.get(to) ?? []
@@ -59,7 +59,8 @@ export function formRows(doc, mine = []) {
   }
   for (const row of doc.components) for (const item of /** @type {any[]} */ (row.equivalents)) {
     if (item.basis !== 'difference') continue
-    if (!isCustom(item.text)) point(item.id, row.id, 'candidate')
+    // Two forms of one source may share a confirmed expression; it is then neither's own name.
+    if (!isCustom(item.text)) point(item.id, row.id, item.status === 'verified' ? 'confirmed' : 'candidate')
     for (const other of item.arrangements ?? []) point(other.id, row.id, 'arrangement')
   }
   const pairs = mine.map(pair => ({ a: sideText(pair.a), b: sideText(pair.b), note: pair.note }))
@@ -76,19 +77,33 @@ export function formRows(doc, mine = []) {
       if (item.id === form.id && isCustom(item.text)) continue
       const key = `${item.in}\0${item.text}`, status = item.status === 'verified' ? 'confirmed' : 'candidate'
       const seen = equal.get(key)
-      if (!seen || (seen.status === 'candidate' && status === 'confirmed')) equal.set(key, { in: item.in, text: item.text, status, count: item.count, characters: item.characters, ...(item.id ? { id: item.id } : {}) })
+      // Two names of the form may give the same equivalent: the characters behind both count.
+      const characters = [...new Set([...(seen?.characters ?? []), ...item.characters])]
+      equal.set(key, { in: item.in, text: item.text, status: seen?.status === 'confirmed' ? 'confirmed' : status,
+        count: Math.max(seen?.count ?? 0, item.count, characters.length), characters, ...(item.id ?? seen?.id ? { id: item.id ?? seen?.id } : {}) })
     }
     const equivalents = [...equal.values()].sort((a, b) => Number(b.status === 'confirmed') - Number(a.status === 'confirmed') || b.count - a.count)
     const of = origin.get(form.id) ?? []
-    const mineHere = pairs.flatMap(pair => form.names.includes(pair.a) ? [{ other: pair.b, note: pair.note }] : form.names.includes(pair.b) ? [{ other: pair.a, note: pair.note }] : [])
+    // A name is matched whatever its case was typed in; two pairs to one other side are one line.
+    const lower = form.names.map(name => name.toLowerCase())
+    /** @type {Map<string, { other: string, note: string }>} */
+    const paired = new Map()
+    for (const pair of pairs) {
+      const other = lower.includes(pair.a.toLowerCase()) ? pair.b : lower.includes(pair.b.toLowerCase()) ? pair.a : null
+      if (other === null) continue
+      const seen = paired.get(other)
+      paired.set(other, { other, note: [seen?.note, pair.note].filter(Boolean).join(' · ') })
+    }
+    const mineHere = [...paired.values()]
     const usedIn = [...new Set(named.flatMap(row => [.../** @type {string} */ (/** @type {any} */ (row).usedIn ?? row.examples.join(''))]))].join('')
-    const status = named.length > 1 || equivalents.some(item => item.status === 'confirmed') ? 'confirmed' : equivalents.length || of.length ? 'candidate' : 'none'
+    const status = named.length > 1 || equivalents.some(item => item.status === 'confirmed') || of.some(other => other.relation === 'confirmed') ? 'confirmed' : equivalents.length || of.length ? 'candidate' : 'none'
+    const mentions = derived.get(form.id) ?? []
     const hay = [form.id, `&${form.id};`, ...names.flatMap(name => [name.text, name.description ?? '']),
       ...equivalents.flatMap(item => [item.text, item.characters.join(''), item.id ?? '']), ...of.map(other => other.id),
-      usedIn, ...mineHere.flatMap(pair => [pair.other, pair.note])].join('\n').toLowerCase()
+      usedIn, ...mentions.flatMap(row => [row.char, row.text]), ...mineHere.flatMap(pair => [pair.other, pair.note])].join('\n').toLowerCase()
     return {
       id: form.id, number: Number(form.id.slice(2)), shown: named.find(row => row.draw)?.text ?? form.names[0], names, of, equivalents, yours: mineHere,
-      uses: [...usedIn].length, usedIn, derived: derived.get(form.id) ?? [], status: /** @type {FormRow['status']} */ (status), hay,
+      uses: [...usedIn].length, usedIn, derived: mentions, status: /** @type {FormRow['status']} */ (status), hay,
     }
   }).sort((a, b) => a.number - b.number)
 }

@@ -33,6 +33,11 @@ describe('the appendix table of forms', () => {
     expect(arranged.names[0].source).toBe('unnamed')
     expect(arranged.of).toContainEqual({ id: outside.id, relation: 'arrangement' })
     expect(arranged.status).toBe('candidate')
+    // An expression two forms of one source both confirm belongs to neither; it says so.
+    const shared = rows.filter(row => row.of.some(other => other.relation === 'confirmed'))
+    for (const row of shared) expect(row.status).toBe('confirmed')
+    // Two names giving one equivalent pool their characters.
+    for (const row of rows) for (const item of row.equivalents) expect(item.count).toBeGreaterThanOrEqual(Math.min(item.characters.length, 1))
   })
   it('finds a form by identifier, name, description, part or a character it stands in', () => {
     expect(find(outside.id).map(row => row.id)).toContain(outside.id)
@@ -42,6 +47,9 @@ describe('the appendix table of forms', () => {
     expect(find('outside of 鸟').map(row => row.id)).toEqual([outside.id])
     expect(find('鸟').map(row => row.id)).toContain(outside.id)
     expect(find('#(-𠃌㇉)').length).toBeGreaterThan(1)
+    // A character whose derived description names the form finds it too.
+    const derivedOnly = outside.derived.find(row => !outside.usedIn.includes(row.char))
+    expect(find(derivedOnly.char).map(row => row.id)).toContain(outside.id)
     // Every term must hold.
     expect(find('鸟 zzz')).toEqual([])
     expect(find('')).toHaveLength(rows.length)
@@ -62,5 +70,8 @@ describe('the appendix table of forms', () => {
     expect(row.yours).toEqual([{ other: '鸟', note: 'checked' }])
     expect(mine.filter(row => matches(row, [], 'yours', 'any')).map(row => row.id)).toEqual([outside.id])
     expect(matches(row, querySummary('checked'), 'all', 'any')).toBe(true)
+    // Two pairs to one other side are one line, and a name matches in any case.
+    const twice = formRows(doc, [{ a: 'bsp:53', b: 'ucs:9E1F', note: 'one' }, { a: 'chise:cdp-8964', b: 'ucs:9E1F', note: 'two' }])
+    expect(twice.find(row => row.id === outside.id).yours).toEqual([{ other: '鸟', note: 'one · two' }])
   })
 })
