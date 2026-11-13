@@ -66,5 +66,15 @@ export function customKind(component) {
  * follows it. @param {string | null | undefined} component @returns {string} */
 export const customOrFirst = component => customKind(component) !== null ? /** @type {string} */ (component) : [...(component ?? '')][0] ?? ''
 
+/** A custom component still being written: its opening mark and what may follow it, to the end. */
+const UNFINISHED = /(?:\{[0-9]{0,4}|&[A-Za-z0-9+_-]{0,46}|#\([^\s()[\]{}#&;]{0,45})$/u
+
+/**
+ * Where a custom component still being written starts in `text`, which ends inside it: `⿰木&CD`
+ * answers 2. -1 where the text ends outside one. A `#` alone opens none: a chain starts at `#(`.
+ * @param {string} text @returns {number}
+ */
+export const unfinishedCustom = text => UNFINISHED.exec(text)?.index ?? -1
+
 /** Whether a component is a custom one. @param {string | null | undefined} component */
 export const isCustom = component => customKind(component) !== null

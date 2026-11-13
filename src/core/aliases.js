@@ -1,6 +1,6 @@
 // @ts-check
 // ASCII names for the operators, so a sequence can be typed without an input method.
-import { modifierLength } from './ids.js'
+import { customLength, modifierLength, unfinishedCustom } from './ids.js'
 
 /**
  * The names 字統网 (zi.tools) gives the operators in its IDS search: LR ⿰, UD ⿱, LL ⿲ (left, middle,
@@ -27,7 +27,8 @@ const translate = run => {
 /**
  * `text` with the ASCII operator names in it written as operators. A run of capitals is read in
  * pairs from the left (LLR is ⿲R); a run in any case is read when it is made of names only (lr, Ud).
- * A zi.tools modifier is copied untouched: its letters are an index or a matrix, not a name.
+ * A zi.tools modifier is copied untouched: its letters are an index or a matrix, not a name. So is
+ * a custom component, whole or still being written.
  * @param {string | null | undefined} text
  */
 export const unalias = text => {
@@ -37,6 +38,12 @@ export const unalias = text => {
   while (at < source.length) {
     if (source[at] === '[') {
       const length = modifierLength(source, at)
+      if (length) { out += source.slice(at, at + length); at += length; continue }
+    }
+    // The letters of a custom component are its name, written or still being written: &UU+5368;
+    // and #(SH) hold no operator.
+    if (source[at] === '&' || source[at] === '{' || source[at] === '#') {
+      const length = customLength(source, at) || (unfinishedCustom(source) === at ? source.length - at : 0)
       if (length) { out += source.slice(at, at + length); at += length; continue }
     }
     run.lastIndex = at
