@@ -115,6 +115,7 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
+  const operatorSet = new Set(OPERATORS.map(([op]) => op))
   const babel = { ...dataAdapter, recognizeDrawing }
   // Direct layer editing belongs to the active document tab.
   let adjusting = $state(false)
