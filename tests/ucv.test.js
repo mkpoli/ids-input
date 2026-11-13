@@ -59,7 +59,7 @@ it('keeps every review link and the characters a single form appears in', () => 
 it('keeps a count the source writes in words apart from the example characters', () => {
   expect(entry('402').single).toEqual([{ char: '网', examples: [], count: 'About 10' }, { char: '罒', examples: [], count: 'More than 300' }])
   const examples = data.entries.flatMap((/** @type {any} */ row) => [row.unified ?? [], row.compatibility ?? [], row.disunified ?? [], row.sourceSeparations ?? [], (row.single ?? []).map((/** @type {any} */ single) => single.examples)]).flat(3)
-  expect(examples.filter((/** @type {string} */ char) => /^[\x00-\x7f]$/.test(char))).toEqual([])
+  expect(examples.filter((/** @type {string} */ char) => /** @type {number} */ (char.codePointAt(0)) < 128)).toEqual([])
 })
 
 it('reads a group title the source quotes either way', () => {
