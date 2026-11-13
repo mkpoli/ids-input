@@ -9,7 +9,7 @@
   // while the preview's data cannot be read at all, the placeholders stand with no badge.
   import { fade } from 'svelte/transition'
   import { EMPTY, leaves, samePath, write } from '../core/ids.js'
-  import { EMOJI_CUT_MATRIX, FACE, STROKE, badge, emojiPlace, emojiTransform, placeholder, roughLayout, runPreview } from '../core/preview.js'
+  import { askDrawable, EMOJI_CUT_MATRIX, FACE, STROKE, badge, emojiPlace, emojiTransform, placeholder, roughLayout, runPreview } from '../core/preview.js'
   import { documentView } from '@han-compose/composer/document-view'
   import { affineForChain, applyAffine, boxCorners, findLayer, invertAffine, layerAtPath, multiplyAffine, pathOfLayer, scopesMarkup } from '../document/index.js'
   import { layerFrames, renderScopes } from '../document/index.js'
@@ -54,7 +54,7 @@
   // A description is drawn after a short pause in editing. A newer one aborts the one before, and an
   // answer for a description since replaced is dropped.
   $effect(() => {
-    const text = sequence, empty = text === EMPTY, ask = adapter.preview, final = adapter.drawing
+    const text = sequence, empty = text === EMPTY, ask = askDrawable(adapter.preview, adapter.drawable), final = adapter.drawing
     sketched = null
     if (empty || !(ask || final)) { step = 'idle'; shown = null; return }
     step = 'loading'

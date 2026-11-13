@@ -111,6 +111,19 @@ export function runPreview(text, { preview, drawing, signal }, update) {
   })
 }
 
+/**
+ * `ask` asked for what draws a description: `drawable` writes each component no code point names as
+ * a character or a description first. Without either, `ask` as it is.
+ * @template {((text: string, options?: any) => Promise<any>) | undefined} T
+ * @param {T} ask @param {((text: string, options?: any) => Promise<string>) | undefined} drawable @returns {T}
+ */
+export function askDrawable(ask, drawable) {
+  if (!ask || !drawable) return ask
+  const wrapped = async (text, options) => ask(/[{&#]/.test(text) ? await drawable(text, { signal: options?.signal }).catch(() => text) : text, options)
+  if (ask.warm) wrapped.warm = ask.warm
+  return wrapped
+}
+
 /** Path data with nothing but its commands and numbers, its line breaks and tabs kept as separators. */
 const pathData = d => String(d ?? '').replace(/[\t\n\r]/g, ' ').replace(/[^MLHVCSQTAZmlhvcsqtaz0-9.,eE+\- ]/g, '')
 /** A transform list with nothing but SVG transform functions: its letters, numbers, spaces, commas and brackets. */

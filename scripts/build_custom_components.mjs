@@ -184,6 +184,45 @@ const components = [...used].map(([text, entry]) => {
   }
 }).sort((a, b) => SOURCES.indexOf(a.source) - SOURCES.indexOf(b.source) || b.uses - a.uses || (a.text < b.text ? -1 : 1))
 
+// What draws each component: BabelStone's fragment or the private-use glyph of its font, else the
+// first equivalent that names characters only, confirmed ones first and subtractions last.
+const palette = JSON.parse(await readFile(data('ids-parts.json'), 'utf8'))
+const glyphAt = palette.columns.indexOf('glyph')
+const glyphs = new Map(palette.parts.filter(row => row[glyphAt]).map(row => [row[0], row[glyphAt]]))
+/** @type {Map<string, string>} */
+const draws = new Map()
+/** @param {string} text @returns {string | null} `text` with its custom components drawn, or null. */
+const drawnText = text => {
+  const tree = plainTree(text)
+  if (tree === null) return null
+  let whole = true
+  /** @param {import('../src/core/ids.js').Part} part @returns {import('../src/core/ids.js').Part} */
+  const swap = part => {
+    if (isNode(part)) return { op: part.op, parts: part.parts.map(swap) }
+    if (part === null || !isCustom(part)) return part
+    const draw = draws.get(part)
+    if (draw === undefined) { whole = false; return part }
+    return plainTree(draw)
+  }
+  const out = write(swap(tree))
+  return whole && [...out].length <= 64 ? out : null
+}
+for (let round = 0; round < 4; round++) for (const row of components) {
+  if (draws.has(row.text)) continue
+  const candidates = [
+    ...(row.fragment ? [row.fragment] : []), ...(glyphs.has(row.text) ? [glyphs.get(row.text)] : []),
+    ...[...row.equivalents].sort((a, b) => Number(a.basis === 'inverse') - Number(b.basis === 'inverse')
+      || Number(b.status === 'verified') - Number(a.status === 'verified') || b.count - a.count).map(item => item.text),
+  ]
+  for (const candidate of candidates) {
+    const draw = drawnText(candidate)
+    if (draw === null) continue
+    draws.set(row.text, draw)
+    Object.assign(row, { draw })
+    break
+  }
+}
+
 // Characters: a description that names a custom component, said in another table's notation.
 /** @type {{ char: string, text: string, in: string, from: string, basis: 'substitution' | 'subtraction', of: string, status: string }[]} */
 const characters = []
@@ -265,6 +304,7 @@ const document = {
     bySource: Object.fromEntries(SOURCES.map(source => [source, components.filter(row => row.source === source).length])),
     withEquivalent: components.filter(row => row.equivalents.length).length,
     verified: components.filter(row => row.equivalents.some(item => item.status === 'verified')).length,
+    drawable: draws.size,
     characters: characters.length,
   },
   strokeLetters: strokeLetters.strokes,

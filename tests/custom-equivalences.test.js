@@ -2,7 +2,10 @@ import { describe, expect, it } from 'bun:test'
 import { existsSync, readFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
 import { spawnSync } from 'node:child_process'
-import { parse, write } from '../src/core/ids.js'
+import { customsOf, parse, write } from '../src/core/ids.js'
+import { createCustomComponents } from '../src/core/custom-components.js'
+import { askDrawable } from '../src/core/preview.js'
+import { babelStoneAdapter } from '../src/adapter/babelstone.js'
 import { atoms, besides, createFrame, plainTree, solve, subtract, without } from '../scripts/lib/custom-equivalences.mjs'
 
 /** @param {Record<string, string[]>} rows */
@@ -87,4 +90,41 @@ describe('data/custom-components.json.gz', () => {
     const run = spawnSync('bun', ['scripts/build_custom_components.mjs', '--check'], { cwd: new URL('..', import.meta.url).pathname })
     expect(run.status).toBe(0)
   }, 120000)
+})
+
+describe('what draws a custom component', () => {
+  const doc = JSON.parse(gunzipSync(readFileSync(new URL('../data/custom-components.json.gz', import.meta.url))).toString('utf8'))
+  const custom = createCustomComponents(doc)
+
+  it('writes a description with characters, private-use glyphs or descriptions in their place', () => {
+    expect(custom.get('{22}').draw).toBe('⿺㇉一')
+    expect(custom.drawable('⿹{22}一')).toBe('⿹⿺㇉一一')
+    // An entity draws as the number it is confirmed to be, and that as its glyph.
+    expect(custom.get('&CDP-8BD0;').draw).toBe(custom.get('{7}').draw)
+    expect(custom.drawable('⿱&CDP-8BD0;心').codePointAt(1)).toBe(0xf4f3)
+    // A number BabelStone gives no fragment draws as the glyph its font has for it.
+    expect([...custom.drawable('⿹{53}一')]).toHaveLength(3)
+    expect(custom.drawable('⿹{53}一').codePointAt(1)).toBe(0xf2e7)
+    expect(customsOf(parse(custom.drawable('⿱丿⿹#(-𠃌㇉)一')).tree)).toEqual([])
+  })
+
+  it('leaves the rest as it is', () => {
+    expect(custom.drawable('⿰木木')).toBe('⿰木木')
+    expect(custom.drawable('⿰木{9999}')).toBe('⿰木{9999}')
+    expect(custom.drawable('⿰{木')).toBe('⿰{木')
+    expect(custom.drawable('⿻[1:]丨{22}')).toBe('⿻[1:]丨⿺㇉一')
+    for (const row of doc.components) if (row.draw) expect(customsOf(parse(row.draw, { open: true }).tree)).toEqual([])
+    expect(doc.counts.drawable).toBe(doc.components.filter(row => row.draw).length)
+  })
+
+  it('reaches a preview through the adapter', async () => {
+    const adapter = babelStoneAdapter({ table: new Map(), custom: doc })
+    expect(await adapter.drawable('⿹{22}一')).toBe('⿹⿺㇉一一')
+    const asked = []
+    const ask = askDrawable(async text => { asked.push(text); return null }, adapter.drawable)
+    await ask('⿹{22}一')
+    await ask('⿰木木')
+    expect(asked).toEqual(['⿹⿺㇉一一', '⿰木木'])
+    expect(askDrawable(undefined, adapter.drawable)).toBeUndefined()
+  })
 })

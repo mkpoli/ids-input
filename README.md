@@ -394,6 +394,10 @@ component `{53}`, a CHISE entity `&CDP-8BD0;`, and any other zi.tools stroke cha
 ones a tree names, and `isEncodedDescription(text)` tells a description of characters only. Where a
 text reads only with `{`, `&` or `#` as characters of their own (`⿳{1}`), it reads that way.
 
+`data/custom-components.json.gz` says what each of them is in the other tables' notation and what
+draws it; pass it as `custom` to `babelStoneAdapter` and the preview draws `⿹{53}一` as 鸟. See
+[custom IDS notation](docs/custom-components.md).
+
 A zi.tools description that carries a stroke chain this package cannot draw resolves to the
 character the published table gives it: pasting `⿱丿⿹#(-𠃌㇉)一` gives 乌. The host supplies that
 table as `chains` (the workshop's `data/zi-tools-chains.tsv.gz`); without it the text stays.

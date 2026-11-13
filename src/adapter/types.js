@@ -100,6 +100,8 @@
  * @property {(options?: Options) => Promise<PalettePart[]>} [parts] The parts palette.
  * @property {(strokes: DrawingPoint[][], options?: Options) => Promise<string[]>} [recognizeDrawing] Whole characters a drawing names, closest first.
  * @property {(options?: Options) => Promise<SketchTemplate[]>} [sketchTemplates] The palette's glyph shapes for drawing search, prepared or built from the page's fonts.
+ * @property {(sequence: string, options?: Options) => Promise<string>} [drawable] A description with each component no code point names ({53}, &CDP-8BD0;, #(-𠃌㇉)) written as what draws it; a preview is asked for this text.
+ * @property {(options?: Options) => Promise<import('../core/custom-components.js').CustomComponent[]>} [customComponents] The components no code point names, with what each is in the other tables' notation.
  * @property {(sequence: string, options?: Options) => Promise<Drawing | null>} [icon] A compound palette icon. Must support concurrent requests independently of the editor preview; null leaves a font-based layout.
  * @property {(sequence: string, options?: Options) => Promise<string | null>} [drawing] The URL of a final image of a whole description, or null; it is shown in place of the preview.
  * @property {((sequence: string, options?: PreviewOptions) => Promise<Drawing>) & { warm?: (sequence?: string) => void }} [preview] A description drawn, empty slots (⬚) and all; `onSketch` hears where each part goes before the drawing is done. It rejects when it cannot draw, with an Error named `TooLargeError` for a description larger than it draws. `warm` starts the export's manifest and layout before the first drawing; it may be told the sequence being previewed.
