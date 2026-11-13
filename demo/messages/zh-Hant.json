@@ -86,6 +86,16 @@
   "app.font.serif": "襯線",
   "app.font.fangsong": "仿宋",
   "app.font.klee": "楷書",
+  "app.fills.title": "部件填色",
+  "app.fills.fill": "填色",
+  "app.fills.area": "飽和度與明度",
+  "app.fills.hue": "色相",
+  "app.fills.alpha": "不透明度",
+  "app.fills.hex": "十六進位顏色",
+  "app.fills.inherit": "使用字色",
+  "app.fills.textColour": "字色",
+  "app.fills.clear": "清除「{part}」的填色",
+  "app.fills.pick": "「{part}」的填色",
   "app.footer.sources": "來源",
   "app.history.label": "歷史",
   "app.history.empty": "尚無更改",
@@ -436,5 +446,7 @@
   "appendix.prev": "上一頁",
   "appendix.next": "下一頁",
   "appendix.one": "一側",
-  "appendix.mine": "我的對應"
+  "appendix.mine": "我的對應",
+  "app.fills.alphaPercent": "不透明度 (%)",
+  "app.fills.unavailable": "圖形可以拆成部件後才能設定填色。"
 }

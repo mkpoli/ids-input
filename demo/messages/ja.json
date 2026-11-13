@@ -86,6 +86,16 @@
   "app.font.serif": "明朝",
   "app.font.fangsong": "仿宋",
   "app.font.klee": "楷書",
+  "app.fills.title": "パーツの塗り",
+  "app.fills.fill": "塗り",
+  "app.fills.area": "彩度と明度",
+  "app.fills.hue": "色相",
+  "app.fills.alpha": "不透明度",
+  "app.fills.hex": "16進カラー",
+  "app.fills.inherit": "文字色を使う",
+  "app.fills.textColour": "文字色",
+  "app.fills.clear": "「{part}」の塗りを消す",
+  "app.fills.pick": "「{part}」の塗り",
   "app.footer.sources": "出典",
   "app.history.label": "履歴",
   "app.history.empty": "まだ変更なし",
@@ -436,5 +446,7 @@
   "appendix.prev": "前へ",
   "appendix.next": "次へ",
   "appendix.one": "片方",
-  "appendix.mine": "追加した対応"
+  "appendix.mine": "追加した対応",
+  "app.fills.alphaPercent": "不透明度 (%)",
+  "app.fills.unavailable": "パーツに分けられる図になると塗りを設定できます。"
 }

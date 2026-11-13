@@ -55,6 +55,7 @@
   import AboutDialog from './ui/AboutDialog.svelte'
   import SponsorDialog from './ui/SponsorDialog.svelte'
   import ExportPanel from './ui/ExportPanel.svelte'
+  import PartFills from './ui/PartFills.svelte'
   import FaceSample from './ui/FaceSample.svelte'
   import TitleDialog from './ui/TitleDialog.svelte'
   import { download } from './lib/files.js'
@@ -1522,6 +1523,8 @@
             {/if}
           </div>
         </div>
+        <PartFills session={currentSession()} version={documentTick} chosen={editor.chosen} disabled={!scopes} {t}
+          onchoose={path => editor.choose(path, { toggle: false })} onchange={layerChanged} />
         <dialog id="large-preview" class="large-dialog" bind:this={largeDialog} aria-label={t('app.preview.large')}
           oncancel={() => { large = false }} onclose={() => { large = false; tick().then(() => { if (largeButton && !largeButton.disabled) largeButton.focus(); else largeButton?.closest('.adjust')?.querySelector('button:not(:disabled)')?.focus() }) }}
           onclick={event => {
