@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test'
-import { lookupChar, tokens } from '../src/core/decompose.js'
-import { entryNotes, readingOf, variantIdentifier, variantOf, withoutVariants, customKind, customsOf, EMPTY, LONGEST, OPERATORS, OPERATOR_GROUPS, applyOperator, arity, clear, descriptionEnd, entryBody, entryDescription, isComponent, isDescription, isLetter, isSequence, leaves, nextEmpty,
+import { decomposable, lookupChar, tokens } from '../src/core/decompose.js'
+import { unalias } from '../src/core/aliases.js'
+import { normalizeMarks, splitMarks, unfinishedCustom, entryNotes, readingOf, variantIdentifier, variantOf, withoutVariants, customKind, customsOf, EMPTY, LONGEST, OPERATORS, OPERATOR_GROUPS, applyOperator, arity, clear, descriptionEnd, entryBody, entryDescription, isComponent, isDescription, isLetter, isSequence, leaves, nextEmpty,
   parse, partAt, paths, place, problemOf, replaceAt, samePath, swapOp, unwrap, wrap, write, writeDraft } from '../src/core/index.js'
 
 const tree = text => parse(text, { open: true }).tree
@@ -370,5 +371,45 @@ describe('notes that are no part of a description', () => {
     expect(entryBody('#(H)(.)').text).toBe('#(H)')
     expect(entryBody('{一}#(T)(t)')).toEqual({ text: '#(T)', start: 3 })
     expect(parse('#(丨b一-丨)(y)', { open: true }).tree).toBe('#(丨b一-丨)')
+  })
+})
+
+describe('a custom component as it is typed and looked up', () => {
+  it('says where one still being written starts', () => {
+    expect(unfinishedCustom('⿰木&CD')).toBe(2)
+    expect(unfinishedCustom('⿰木{5')).toBe(2)
+    expect(unfinishedCustom('#(一-')).toBe(0)
+    expect(unfinishedCustom('&')).toBe(0)
+    expect(unfinishedCustom('⿰木&CDP-8964;')).toBe(-1)
+    expect(unfinishedCustom('⿰木#')).toBe(-1)
+    expect(unfinishedCustom('⿰木木')).toBe(-1)
+  })
+  it('keeps operator names out of it', () => {
+    expect(unalias('&UU+5368;')).toBe('&UU+5368;')
+    expect(unalias('LR木&RU')).toBe('⿰木&RU')
+    expect(unalias('#(SU)')).toBe('#(SU)')
+    expect(unalias('LR#(SH')).toBe('⿰#(SH')
+    expect(unalias('UD{5}LR')).toBe('⿱{5}⿰')
+  })
+  it('is one token alone, and can be taken apart', () => {
+    expect(tokens('&CDP-8964;')).toEqual(['&CDP-8964;'])
+    expect(tokens('{53}木')).toEqual(['{53}', '木'])
+    expect(tokens('#(-𠃌㇉)')).toEqual(['#(-𠃌㇉)'])
+    expect(decomposable('&CDP-8964;')).toBe(true)
+    expect(decomposable('{53}')).toBe(true)
+    expect(decomposable('？')).toBe(false)
+  })
+})
+
+describe('loose marks beside a custom component', () => {
+  it('leave it whole, with a variant identifier too', () => {
+    for (const text of ['⿹{53}一', '⿰木&CDP-8964;', '⿱丿⿹#(-𠃌㇉)一', '⿰令dhs刂']) {
+      const { tree } = parse(text)
+      expect(normalizeMarks(tree)).toEqual(tree)
+      expect(write(normalizeMarks(tree))).toBe(text)
+    }
+    expect(splitMarks('{53}')).toEqual({ base: '{53}', marks: '' })
+    expect(splitMarks('木ˊ')).toEqual({ base: '木', marks: 'ˊ' })
+    expect(parse('⿰亻{53}ˊ').tree).toEqual({ op: '⿰', parts: ['亻', '{53}'], marks: 'ˊ' })
   })
 })

@@ -478,7 +478,7 @@
   [data-op="⿹"] > .ids-parts > [data-index="0"] > .ids-part{place-items:start end}
   [data-op="⿺"] > .ids-parts > [data-index="0"] > .ids-part{place-items:end start}
   [data-op="⿽"] > .ids-parts > [data-index="0"] > .ids-part{place-items:end end}
-  .ids-custom{display:grid;justify-items:center;gap:1px;max-width:100%;line-height:1}
+  .ids-custom{display:grid;justify-items:center;gap:1px;max-width:100%;line-height:1;border-bottom:2px dotted color-mix(in oklab,var(--_accent) 70%,transparent)}
   .ids-custom-name{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:500 10px/1.2 var(--ids-ui-font,system-ui,sans-serif);color:var(--_muted)}
   .ids-part{display:grid;place-items:center;width:100%;height:100%;min-width:0;min-height:0;box-sizing:border-box;padding:min(2px,2cqh) min(4px,2cqw);font-size:min(var(--ids-part-size,32px),max(0px,calc(66cqh - 3px)),max(0px,calc(66cqw - 3px)));line-height:1.4;overflow:hidden;
     font-family:var(--_font);color:var(--_ink);background:var(--_surface);border:min(1px,1cqw,1cqh) solid var(--_line);border-radius:min(8px,8cqw,8cqh)}

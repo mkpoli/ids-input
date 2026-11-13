@@ -12,7 +12,7 @@
 import { insertAt } from './insertion.js'
 import { tokens, rangeToken } from './tokens.js'
 import { tick } from 'svelte'
-import { applyOperator, clear, entryBody, isDescription, isMarks, isNode, nextEmpty, normalizeMarks, parse, partAt, paths, place as placed, reorderSiblings,
+import { applyOperator, clear, entryBody, unfinishedCustom, isDescription, isMarks, isNode, nextEmpty, normalizeMarks, parse, partAt, paths, place as placed, reorderSiblings,
   replaceAt, samePath, sameTree, swapParts, unwrap, withMarks, write, writeDraft } from '../core/ids.js'
 import { namingOperator, unalias } from '../core/aliases.js'
 import { commandFor } from '../core/keys.js'
@@ -74,7 +74,8 @@ export function createEditor(options) {
 
   const typed = $derived(parse(draft, { open: true }))
   const whole = $derived(write(tree))
-  const problem = $derived(note || (!draft || !typed.problem ? '' : namingOperator(draft) ? t('ids.problem.naming')
+  // A custom component still being written (&CDP-89, {5, #(一) is not yet a part: no fault is named.
+  const problem = $derived(note || (!draft || !typed.problem || unfinishedCustom(draft) >= 0 ? '' : namingOperator(draft) ? t('ids.problem.naming')
     : t(`ids.problem.${typed.problem}`)))
   // The first slot still empty, named by its place: a sequence is whole only once there is none.
   const gap = $derived(isNode(tree) ? nextEmpty(tree) : null)
