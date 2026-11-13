@@ -274,7 +274,8 @@ common and hard-to-type part of the chosen count, with counts from 23 strokes up
   texts are in `data/licences/`. The other columns use public-domain sequences, MIT-licensed
   decomposition choices, Unicode data and explicit radical counts.
 - Format: `columns` `[part, uses, strokes, derived, first, kind, fragment, description, readonly,
-  glyph]` and one row per part, most used first; `kind` is `c` (common), `d` (hard to type) or `s`
+  glyph]`, one row per part, most used first, and `lookalikes`, the groups of common and hard parts
+  that Unicode's confusables data maps to one prototype (口囗, 土士, 未末), each most used first; `kind` is `c` (common), `d` (hard to type) or `s`
   (CJK stroke). `fragment`, `description`, `readonly` and `glyph` belong to the numbered components:
   the IDS fragment note 6 gives, where it occurs, whether the palette lists it without inserting it,
   and the PUA character BabelStone Han PUA draws for it. The 69 components note 6 leaves `？` have a
@@ -286,9 +287,9 @@ common and hard-to-type part of the chosen count, with counts from 23 strokes up
   not the 彐 those descriptions read as.
 
 The displayed Common palette places traditional, simplified and positional forms
-from `component-forms.tsv` next to one another. Each family starts where its
-first member appeared in frequency order; forms remain separate selectable
-entries. Contextual search substitutions such as 田/由/甲/申/电, 己/已/巳,
+from `component-forms.tsv`, and the `lookalikes` groups, next to one another. Each
+group starts where its first member appeared in frequency order; forms remain
+separate selectable entries. Contextual search substitutions such as 田/由/甲/申/电, 己/已/巳,
 用/甩 and 斗/鬥 remain separate. Stroke-count and first-stroke groups keep their boundaries, and Recent
 keeps selection order. The data file itself remains frequency-sorted.
 
@@ -305,6 +306,10 @@ Sources:
   `4c93ea9c1f636451729a840978f1667a53886af37ba854fdcce109721c63d43e`): stroke counts
   (`kTotalStrokes`), the one-stroke ideographs counted as strokes, and the common set (`kJoyoKanji`
   for 常用漢字; `kTGH` positions 1–3500 for the first level of the 通用规范汉字表).
+- Unicode Security Mechanisms (UTS #39) 18.0.0, `confusables.txt` (Date: 2026-08-06), Copyright
+  Unicode, Inc., Unicode License v3 (<https://www.unicode.org/Public/18.0.0/security/confusables.txt>,
+  SHA-256 `6ed3ee967c9dfdf6677d563c9985182fbc50a2efb7d6059cd57b2e2ce18f5b92`): the `lookalikes`
+  groups. The list is built for spoofing detection, so it misses pairs such as 己/已/巳.
 - Rime five-stroke dictionary, revision `1e8fff9b9494ddec23b0cbc526bcfd8171a6fd48`,
   LGPL-3.0, <https://github.com/rime/rime-stroke>. Authors: 四季的風, 雪齋, Kunki Chou and 宋天.
   The table credits CNS11643, 北大中文論壇 and 宋天's extension data.

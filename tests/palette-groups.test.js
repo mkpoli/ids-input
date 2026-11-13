@@ -35,12 +35,27 @@ it('groups shipped traditional, simplified and positional forms using the suppli
   expect(rows.find(row => row.part === '斗').group).toBeUndefined()
   expect(rows.find(row => row.part === '鬥').group).toBeUndefined()
   expect(rows.filter(row => row.kind === 't' || row.kind === 's').every(row => !row.group)).toBe(true)
-  expect(palette.every(row => !row.group)).toBe(true)
+  expect(palette.filter(row => row.group).every(row => row.kind === 'c' || row.kind === 'd')).toBe(true)
   for (const count of [3, 4, 6, 8]) {
     const selected = rows.filter(row => row.strokes === count)
     expect(adjacentGroups(selected).every(row => row.strokes === count)).toBe(true)
     expect(new Set(adjacentGroups(selected))).toEqual(new Set(selected))
   }
+})
+
+it('places Unicode look-alikes beside each other and joins them with variant families', async () => {
+  const palette = paletteRows(JSON.parse(readFileSync(new URL('../data/ids-parts.json', import.meta.url))))
+  const formsText = readFileSync(new URL('../data/component-forms.tsv', import.meta.url), 'utf8')
+  const rows = await babelStoneAdapter({ palette, formsText }).parts()
+  const ordered = adjacentGroups(rows)
+  for (const family of ['口囗', '土士', '日曰', '未末', '冂⺆', '戶户戸']) {
+    const members = [...family].map(char => rows.find(row => row.part === char))
+    expect(new Set(members.map(row => row?.group)).size).toBe(1)
+    const positions = ordered.flatMap((row, i) => row.group === members[0].group ? [i] : [])
+    expect(positions.at(-1) - positions[0] + 1).toBe(positions.length)
+  }
+  expect(paletteRows({ columns: ['part', 'kind'], parts: [['口', 'c'], ['木', 'c'], ['囗', 'd']], lookalikes: ['口囗'] }))
+    .toEqual([{ part: '口', kind: 'c', group: '口' }, { part: '木', kind: 'c' }, { part: '囗', kind: 'd', group: '口' }])
 })
 
 it('keeps the palette usable when forms are absent or cannot be fetched', async () => {

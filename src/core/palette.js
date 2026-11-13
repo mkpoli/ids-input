@@ -1,6 +1,6 @@
 // @ts-check
 import { isSequence } from './ids.js'
-/** Keep variant families adjacent, anchored at their first existing position.
+/** Keep each group of variant forms and look-alikes adjacent, anchored at its first existing position.
  * The caller supplies one visible group, so stroke counts and filters remain exact.
  * @param {import('../adapter/types.js').PalettePart[]} parts
  */
