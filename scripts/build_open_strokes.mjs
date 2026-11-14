@@ -116,10 +116,19 @@ for (const line of idsText.split('\n')) {
     return { seq: found?.[1] ?? text, regions: found?.[2] ?? '' }
   }))
 }
+/** @type {Map<string, string>} BabelStone's numbered components, each as the fragment that writes it out. */
+const fragments = new Map()
+for (const line of readFileSync(new URL('../data/ids-components.tsv', import.meta.url), 'utf8').split('\n')) {
+  if (!line || line.startsWith('#')) continue
+  const [number, , fragment] = line.split('\t')
+  if (fragment) fragments.set(number, fragment)
+}
+/** A description with its numbered components written out; one without a fragment stays, unreadable. @param {string} sequence */
+const writtenOut = sequence => sequence.replace(/\{\d+\}/g, number => fragments.get(number) ?? number)
 /** @typedef {{ leaf: string } | { op: string, parts: Tree[] }} Tree */
 /** @param {string} sequence @returns {Tree | null} */
 function parse(sequence) {
-  const chars = [...sequence]
+  const chars = [...writtenOut(sequence)]
   let at = 0
   /** @returns {Tree} */
   const node = () => {
@@ -138,15 +147,22 @@ function joined(lists) {
   return out
 }
 /**
- * The orders a description is written in, from its components' orders: null when a component has
- * none, or when `through` is given and an operator is outside it.
- * @param {Tree} tree @param {Map<string, string[]>} table @param {Set<string>} [through]
+ * The orders a description is written in, from its components' orders. A component the table does
+ * not record is read by its own description in turn. Null when a component cannot be written, or
+ * when `through` is given and an operator is outside it.
+ * @param {Tree} tree @param {Map<string, string[]>} table @param {string} region
+ * @param {Set<string>} [through] @param {string[]} [within] The components being read, so none is read inside itself.
  * @returns {string[] | null}
  */
-function ordersOf(tree, table, through) {
-  if ('leaf' in tree) return table.get(tree.leaf) ?? null
+function ordersOf(tree, table, region, through, within = []) {
+  if ('leaf' in tree) {
+    const recorded = table.get(tree.leaf)
+    if (recorded || within.includes(tree.leaf)) return recorded ?? null
+    const sequence = described(tree.leaf, region), inner = sequence ? parse(sequence) : null
+    return inner && !('leaf' in inner) ? ordersOf(inner, table, region, through, [...within, tree.leaf]) : null
+  }
   if (through && !through.has(tree.op)) return null
-  const parts = tree.parts.map(part => ordersOf(part, table, through))
+  const parts = tree.parts.map(part => ordersOf(part, table, region, through, within))
   if (parts.some(part => !part)) return null
   const [outer, inner] = /** @type {string[][]} */ (parts)
   // A walking enclosure and an open-topped one are written after what they hold.
@@ -178,7 +194,7 @@ const validation = SOURCES.map(({ source, table, region }) => {
     if (!tree || 'leaf' in tree) continue
     const tally = byOperator.get(tree.op) ?? byOperator.set(tree.op, { described: 0, written: 0, agree: 0 }).get(tree.op)
     tally.described++
-    const written = ordersOf(tree, table)
+    const written = ordersOf(tree, table, region)
     if (!written) continue
     tally.written++
     if (written.some(order => recorded.includes(order))) tally.agree++
@@ -204,7 +220,7 @@ const left = SOURCES.map(({ source, table, region }) => {
       continue
     }
     const sequence = described(char, region), tree = sequence ? parse(sequence) : null
-    const written = tree && !('leaf' in tree) ? ordersOf(tree, table, through) : null
+    const written = tree && !('leaf' in tree) ? ordersOf(tree, table, region, through) : null
     if (written) { induced.push([char, point(char), written.slice(0, WAYS).join(' '), 'ids', sequence, source]); fromIds++ } else none++
   }
   return { source, recorded: table.size, equivalent, ids: fromIds, none }
@@ -346,9 +362,10 @@ The components are joined in the order the description names them, except:
 - ⿴: the enclosure without its last stroke, then what it holds, then that stroke.
 - ⿷: the enclosure's first stroke, then what it holds, then the rest.
 
-An order is induced only through ${RELIABLE.join(' ')}, at every level of the description, and only
-when every component has a recorded order in the same source. A description BabelStone marks 〾 is
-not used. Nothing is induced from another induced row.
+An order is induced only through ${RELIABLE.join(' ')}, at every level of the description. A
+component the source does not record is read by its own description in turn, and one of
+BabelStone's numbered components by the fragment its note 6 writes it out as; \`from\` keeps the
+description as BabelStone spells it. A description BabelStone marks 〾 is not used.
 
 ### How often the rules agree with a source
 
