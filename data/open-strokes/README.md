@@ -4,7 +4,7 @@ The stroke order of Han characters, from two sources, with orders induced for th
 source lacks. Every row names where it comes from; an induced row is never mixed into a source's
 file.
 
-The format is `ids-input/open-strokes`, version 1.
+The format is `ids-input/open-strokes`, version 2.
 
 ## Files
 
@@ -12,9 +12,10 @@ The format is `ids-input/open-strokes`, version 1.
 | --- | ---: | --- |
 | `cns11643.tsv.gz` | 76,282 | Taiwan's standard order, from CNS 全字庫: `char`, `codepoint`, `orders`, `cns` (the CNS plane-codes mapped to the character). Open Government Data License 1.0. |
 | `rime-stroke.tsv.gz` | 102,582 | Rime's five-stroke dictionary: `char`, `codepoint`, `orders`. LGPL-3.0. |
-| `induced.tsv.gz` | 21,541 | Induced orders: `char`, `codepoint`, `orders`, `basis`, `from`, `source`. Each row keeps the terms of its `source`. |
+| `induced.tsv.gz` | 25,884 | Induced orders: `char`, `codepoint`, `orders`, `basis`, `from`, `source`, `ids`. Each row keeps the terms of its `source`. |
 | `manifest.json` | | Sources with checksums, licences, coverage and the tables below. |
 | `LICENSE-rime-stroke-LGPL-3.0.txt`, `LICENSE-GPL-3.0.txt`, `AUTHORS-rime-stroke.txt` | | The terms and authors of the Rime dictionary. |
+| `LICENSE-yi-bai-ids-MIT.txt` | | The terms of Yi Bai's descriptions. |
 
 The data files are gzipped UTF-8 TSV with a header row. `orders` holds one code per way of writing
 the character, separated by a space, in the source's order.
@@ -61,9 +62,10 @@ convention they follow.
 - `equivalent`: the character is a compatibility ideograph or a radical form, and `from` is the
   unified ideograph it normalizes to (NFKC). The row repeats that character's recorded orders.
   719 rows from `cns11643`, 681 from `rime-stroke`.
-- `ids`: `from` is the character's description in BabelStone IDS (the sequence its T source gives,
-  else the first), and the order joins the recorded orders of its components.
-  20,141 rows from `cns11643`, 0 from `rime-stroke`. Up to 8 ways are kept.
+- `ids`: `from` is the character's description and the order joins the recorded orders of
+  its components. The description is BabelStone's (the sequence its T source gives, else the
+  first) or, where BabelStone has none, Yi Bai's; the `ids` column names which.
+  24,481 rows from `cns11643` (4,149 of them by Yi Bai's descriptions), 3 from `rime-stroke`. Up to 8 ways are kept.
 
 The components are joined in the order the description names them, except:
 
@@ -86,19 +88,19 @@ compared with its recorded orders. "Written" counts the characters whose compone
 
 | Operator | Described | Written | Agree | | Induced |
 | --- | ---: | ---: | ---: | ---: | --- |
-| ⿰ | 49,027 | 47,228 | 42,958 | 91.0% | yes |
-| ⿱ | 16,869 | 16,234 | 13,853 | 85.3% | yes |
-| ⿺ | 2,788 | 2,730 | 2,347 | 86.0% | yes |
-| ⿸ | 2,466 | 2,396 | 2,201 | 91.9% | yes |
-| ⿳ | 1,397 | 1,231 | 936 | 76.0% | yes |
-| ⿵ | 738 | 711 | 626 | 88.0% | yes |
-| ⿲ | 509 | 472 | 399 | 84.5% | yes |
-| ⿹ | 330 | 219 | 81 | 37.0% | no |
-| ⿻ | 285 | 223 | 120 | 53.8% | no |
-| ⿴ | 256 | 253 | 224 | 88.5% | yes |
-| ⿷ | 143 | 137 | 109 | 79.6% | yes |
-| ⿶ | 48 | 46 | 37 | 80.4% | yes |
-| ⿽ | 15 | 11 | 2 | 18.2% | no |
+| ⿰ | 49,032 | 47,421 | 43,089 | 90.9% | yes |
+| ⿱ | 16,869 | 16,366 | 13,942 | 85.2% | yes |
+| ⿺ | 2,788 | 2,745 | 2,354 | 85.8% | yes |
+| ⿸ | 2,466 | 2,405 | 2,207 | 91.8% | yes |
+| ⿳ | 1,397 | 1,275 | 969 | 76.0% | yes |
+| ⿵ | 738 | 714 | 628 | 88.0% | yes |
+| ⿲ | 509 | 475 | 401 | 84.4% | yes |
+| ⿹ | 330 | 222 | 82 | 36.9% | no |
+| ⿻ | 285 | 228 | 123 | 53.9% | no |
+| ⿴ | 256 | 254 | 224 | 88.2% | yes |
+| ⿷ | 143 | 139 | 111 | 79.9% | yes |
+| ⿶ | 48 | 47 | 38 | 80.9% | yes |
+| ⿽ | 15 | 12 | 2 | 16.7% | no |
 | ㇯ | 5 | 4 | 0 | 0.0% | no |
 | ⿾ | 3 | 3 | 1 | 33.3% | no |
 | ⿿ | 3 | 3 | 1 | 33.3% | no |
@@ -108,17 +110,17 @@ compared with its recorded orders. "Written" counts the characters whose compone
 
 | Operator | Described | Written | Agree | | Induced |
 | --- | ---: | ---: | ---: | ---: | --- |
-| ⿰ | 63,278 | 62,882 | 61,695 | 98.1% | yes |
-| ⿱ | 21,770 | 21,521 | 20,351 | 94.6% | yes |
-| ⿺ | 3,572 | 3,536 | 3,426 | 96.9% | yes |
-| ⿸ | 3,022 | 2,986 | 2,921 | 97.8% | yes |
-| ⿳ | 1,793 | 1,717 | 1,525 | 88.8% | yes |
-| ⿵ | 941 | 935 | 888 | 95.0% | yes |
-| ⿲ | 697 | 680 | 657 | 96.6% | yes |
-| ⿹ | 438 | 421 | 242 | 57.5% | no |
-| ⿻ | 370 | 330 | 195 | 59.1% | no |
-| ⿴ | 321 | 319 | 299 | 93.7% | yes |
-| ⿷ | 188 | 185 | 156 | 84.3% | yes |
+| ⿰ | 66,176 | 65,778 | 64,461 | 98.0% | yes |
+| ⿱ | 22,769 | 22,519 | 21,254 | 94.4% | yes |
+| ⿺ | 3,729 | 3,693 | 3,578 | 96.9% | yes |
+| ⿸ | 3,110 | 3,074 | 3,006 | 97.8% | yes |
+| ⿳ | 1,810 | 1,734 | 1,537 | 88.6% | yes |
+| ⿵ | 974 | 968 | 920 | 95.0% | yes |
+| ⿲ | 710 | 692 | 667 | 96.4% | yes |
+| ⿹ | 470 | 451 | 269 | 59.6% | no |
+| ⿻ | 378 | 336 | 198 | 58.9% | no |
+| ⿴ | 354 | 352 | 314 | 89.2% | yes |
+| ⿷ | 189 | 186 | 156 | 83.9% | yes |
 | ⿶ | 54 | 53 | 49 | 92.5% | yes |
 | ⿽ | 15 | 13 | 2 | 15.4% | no |
 | ㇯ | 9 | 6 | 0 | 0.0% | no |
@@ -127,18 +129,18 @@ compared with its recorded orders. "Written" counts the characters whose compone
 | ⿿ | 3 | 3 | 2 | 66.7% | no |
 
 An induced row is a prediction, not a record. Over the operators induced through, the rules agree
-with CNS on 89.2% of the characters CNS records. The rows induced from CNS cannot be checked against the
-Rime file: Rime records 20,141 of those characters and 9,959 agree, since Rime's
+with CNS on 89.0% of the characters CNS records. The rows induced from CNS cannot be checked against the
+Rime file: Rime records 24,478 of those characters and 12,006 agree, since Rime's
 additions do not all follow CNS order.
 
 ## Coverage
 
 | Source | Recorded | By equivalence | From IDS | Without an order |
 | --- | ---: | ---: | ---: | ---: |
-| `cns11643` | 76,282 | 719 | 20,141 | 6,210 |
-| `rime-stroke` | 102,582 | 681 | 0 | 89 |
+| `cns11643` | 76,282 | 719 | 24,481 | 1,870 |
+| `rime-stroke` | 102,582 | 681 | 3 | 86 |
 
-"Without an order" counts the Han characters the workshop's composer draws or BabelStone IDS
+"Without an order" counts the Han characters the workshop's composer draws or either IDS source
 describes that end with no row from that source.
 
 ## Sources and terms
@@ -156,6 +158,9 @@ describes that end with no row from that source.
   character, in code point order.
 - BabelStone IDS, `IDS.TXT`, Andrew West (魏安), <https://www.babelstone.co.uk/CJK/IDS.TXT>, public
   domain: the descriptions induced rows are written from.
+
+- Yi Bai IDS, level 1, <https://github.com/yi-bai/ids>, MIT, Copyright (c) 2021 Yi Bai: the
+  descriptions used where BabelStone has none. The licence text is beside this file.
 
 ## Rebuild
 

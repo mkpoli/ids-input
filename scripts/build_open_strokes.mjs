@@ -116,6 +116,15 @@ for (const line of idsText.split('\n')) {
     return { seq: found?.[1] ?? text, regions: found?.[2] ?? '' }
   }))
 }
+// Yi Bai's descriptions stand in where BabelStone has none. They carry no source regions.
+/** @type {Map<string, string>} */
+const second = new Map()
+const secondText = gunzipSync(readFileSync(new URL('../data/yi-bai-ids.tsv.gz', import.meta.url))).toString()
+for (const line of secondText.split('\n')) {
+  if (!line || line.startsWith('#')) continue
+  const [char, sequences] = line.split('\t')
+  if (sequences && [...char].length === 1) second.set(char, sequences.split(' ')[0])
+}
 /** @type {Map<string, string>} BabelStone's numbered components, each as the fragment that writes it out. */
 const fragments = new Map()
 for (const line of readFileSync(new URL('../data/ids-components.tsv', import.meta.url), 'utf8').split('\n')) {
@@ -134,7 +143,8 @@ function parse(sequence) {
   const node = () => {
     const char = chars[at++]
     // 〾 marks a description as a variation of the form, not the form itself: nothing is induced from it.
-    if (char === undefined || char === '{' || char === '？' || char === '〾') throw Error('unreadable')
+    // A bracket opens an operator modifier of Yi Bai's notation, which the rules do not read.
+    if (char === undefined || char === '{' || char === '[' || char === '？' || char === '〾') throw Error('unreadable')
     if (!ARITY[char]) return { leaf: char }
     return { op: char, parts: Array.from({ length: ARITY[char] }, node) }
   }
@@ -173,8 +183,10 @@ function ordersOf(tree, table, region, through, within = []) {
   if (tree.op === '⿷') return [...new Set(outer.flatMap(frame => inner.map(held => frame[0] + held + frame.slice(1))))].slice(0, 64)
   return joined(/** @type {string[][]} */ (parts))
 }
-/** The description a style reads a character by: the one its region gives, else the first. @param {string} char @param {string} region */
-const described = (char, region) => { const list = ids.get(char); return list ? (list.find(entry => entry.regions.includes(region)) ?? list[0]).seq : null }
+/** The description a style reads a character by: BabelStone's for its region, else its first, else Yi Bai's. @param {string} char @param {string} region */
+const described = (char, region) => { const list = ids.get(char); return list ? (list.find(entry => entry.regions.includes(region)) ?? list[0]).seq : second.get(char) ?? null }
+/** The source of the description `described` gives. @param {string} char */
+const describedBy = char => ids.has(char) ? 'babelstone-ids' : 'yi-bai-ids'
 
 // Both tables follow Taiwan's standard forms, so a character is read by its T-source description.
 const SOURCES = [
@@ -204,7 +216,7 @@ const validation = SOURCES.map(({ source, table, region }) => {
 
 const repertoire = JSON.parse(gunzipSync(readFileSync(new URL('../data/han-parts.json.gz', import.meta.url)))).keys
 // BabelStone IDS also describes Tangut; only Han characters are counted and induced.
-const candidates = [...new Set([...repertoire, ...ids.keys()])].filter(char => characterScript(char) === 'han').sort(byCodePoint)
+const candidates = [...new Set([...repertoire, ...ids.keys(), ...second.keys()])].filter(char => characterScript(char) === 'han').sort(byCodePoint)
 const through = new Set(RELIABLE)
 /** @type {string[][]} */
 const induced = []
@@ -215,13 +227,13 @@ const left = SOURCES.map(({ source, table, region }) => {
     // A compatibility ideograph or a Kangxi radical is the unified ideograph it normalizes to.
     const unified = char.normalize('NFKC')
     if (unified !== char && [...unified].length === 1 && table.has(unified)) {
-      induced.push([char, point(char), table.get(unified).join(' '), 'equivalent', unified, source])
+      induced.push([char, point(char), table.get(unified).join(' '), 'equivalent', unified, source, ''])
       equivalent++
       continue
     }
     const sequence = described(char, region), tree = sequence ? parse(sequence) : null
     const written = tree && !('leaf' in tree) ? ordersOf(tree, table, region, through) : null
-    if (written) { induced.push([char, point(char), written.slice(0, WAYS).join(' '), 'ids', sequence, source]); fromIds++ } else none++
+    if (written) { induced.push([char, point(char), written.slice(0, WAYS).join(' '), 'ids', sequence, source, describedBy(char)]); fromIds++ } else none++
   }
   return { source, recorded: table.size, equivalent, ids: fromIds, none }
 })
@@ -253,14 +265,17 @@ const files = [
     [...cns.keys()].sort(byCodePoint).map(char => [char, point(char), cns.get(char).join(' '), cnsCodes.get(char).join(' ')])),
   write('rime-stroke.tsv.gz', ['char', 'codepoint', 'orders'],
     [...rime.keys()].sort(byCodePoint).map(char => [char, point(char), rime.get(char).join(' ')])),
-  write('induced.tsv.gz', ['char', 'codepoint', 'orders', 'basis', 'from', 'source'], induced),
+  write('induced.tsv.gz', ['char', 'codepoint', 'orders', 'basis', 'from', 'source', 'ids'], induced),
 ]
 // The LGPL asks that its text, and the GPL's it builds on, travel with the data.
 const LICENCES = { 'rime-stroke-LGPL-3.0.txt': 'LICENSE-rime-stroke-LGPL-3.0.txt', 'GPL-3.0.txt': 'LICENSE-GPL-3.0.txt', 'rime-stroke-AUTHORS.txt': 'AUTHORS-rime-stroke.txt' }
+// Yi Bai's MIT terms travel with the descriptions quoted from that dataset.
+const SECOND_LICENCE = 'LICENSE-yi-bai-ids-MIT.txt'
+copyFileSync(new URL('../data/licences/yi-bai-ids-MIT.txt', import.meta.url), new URL(SECOND_LICENCE, OUT))
 for (const [from, to] of Object.entries(LICENCES)) copyFileSync(new URL(`../data/licences/${from}`, import.meta.url), new URL(to, OUT))
 const manifest = {
   format: 'ids-input/open-strokes',
-  version: 1,
+  version: 2,
   strokes: { 横: { cns11643: '1', 'rime-stroke': 'h' }, 豎: { cns11643: '2', 'rime-stroke': 's' }, 撇: { cns11643: '3', 'rime-stroke': 'p' }, 點: { cns11643: '4', 'rime-stroke': 'n' }, 折: { cns11643: '5', 'rime-stroke': 'z' } },
   sources: [
     {
@@ -280,12 +295,17 @@ const manifest = {
       authors: 'Andrew West (魏安)', url: 'https://www.babelstone.co.uk/CJK/IDS.TXT', version: idsText.split('\n')[0].replace(/^# /, ''),
       licence: { name: 'Public domain' },
     },
+    {
+      key: 'yi-bai-ids', name: 'Yi Bai IDS, level 1: the descriptions used where BabelStone has none',
+      authors: 'Yi Bai', url: 'https://github.com/yi-bai/ids', version: secondText.split('\n')[0].replace(/^# /, ''),
+      licence: { spdx: 'MIT', url: 'https://opensource.org/license/mit', texts: [SECOND_LICENCE] },
+    },
   ],
   agreement: { ...agreement, inducedAgainstRime: { rows: heldOut.length, agree: heldOutAgree } },
   induction: { operators: RELIABLE, ways: WAYS, validation },
   coverage: left,
   files,
-  texts: ['README.md', ...Object.values(LICENCES)],
+  texts: ['README.md', ...Object.values(LICENCES), SECOND_LICENCE],
 }
 const n = value => value.toLocaleString('en')
 const file = name => files.find(entry => entry.name === name)
@@ -300,7 +320,7 @@ The stroke order of Han characters, from two sources, with orders induced for th
 source lacks. Every row names where it comes from; an induced row is never mixed into a source's
 file.
 
-The format is \`ids-input/open-strokes\`, version 1.
+The format is \`ids-input/open-strokes\`, version 2.
 
 ## Files
 
@@ -308,9 +328,10 @@ The format is \`ids-input/open-strokes\`, version 1.
 | --- | ---: | --- |
 | \`cns11643.tsv.gz\` | ${n(file('cns11643.tsv.gz').rows)} | Taiwan's standard order, from CNS 全字庫: \`char\`, \`codepoint\`, \`orders\`, \`cns\` (the CNS plane-codes mapped to the character). Open Government Data License 1.0. |
 | \`rime-stroke.tsv.gz\` | ${n(file('rime-stroke.tsv.gz').rows)} | Rime's five-stroke dictionary: \`char\`, \`codepoint\`, \`orders\`. LGPL-3.0. |
-| \`induced.tsv.gz\` | ${n(file('induced.tsv.gz').rows)} | Induced orders: \`char\`, \`codepoint\`, \`orders\`, \`basis\`, \`from\`, \`source\`. Each row keeps the terms of its \`source\`. |
+| \`induced.tsv.gz\` | ${n(file('induced.tsv.gz').rows)} | Induced orders: \`char\`, \`codepoint\`, \`orders\`, \`basis\`, \`from\`, \`source\`, \`ids\`. Each row keeps the terms of its \`source\`. |
 | \`manifest.json\` | | Sources with checksums, licences, coverage and the tables below. |
 | \`LICENSE-rime-stroke-LGPL-3.0.txt\`, \`LICENSE-GPL-3.0.txt\`, \`AUTHORS-rime-stroke.txt\` | | The terms and authors of the Rime dictionary. |
+| \`LICENSE-yi-bai-ids-MIT.txt\` | | The terms of Yi Bai's descriptions. |
 
 The data files are gzipped UTF-8 TSV with a header row. \`orders\` holds one code per way of writing
 the character, separated by a space, in the source's order.
@@ -352,9 +373,10 @@ convention they follow.
 - \`equivalent\`: the character is a compatibility ideograph or a radical form, and \`from\` is the
   unified ideograph it normalizes to (NFKC). The row repeats that character's recorded orders.
   ${n(cover('cns11643').equivalent)} rows from \`cns11643\`, ${n(cover('rime-stroke').equivalent)} from \`rime-stroke\`.
-- \`ids\`: \`from\` is the character's description in BabelStone IDS (the sequence its T source gives,
-  else the first), and the order joins the recorded orders of its components.
-  ${n(cover('cns11643').ids)} rows from \`cns11643\`, ${n(cover('rime-stroke').ids)} from \`rime-stroke\`. Up to ${WAYS} ways are kept.
+- \`ids\`: \`from\` is the character's description and the order joins the recorded orders of
+  its components. The description is BabelStone's (the sequence its T source gives, else the
+  first) or, where BabelStone has none, Yi Bai's; the \`ids\` column names which.
+  ${n(cover('cns11643').ids)} rows from \`cns11643\` (${n(induced.filter(row => row[5] === 'cns11643' && row[6] === 'yi-bai-ids').length)} of them by Yi Bai's descriptions), ${n(cover('rime-stroke').ids)} from \`rime-stroke\`. Up to ${WAYS} ways are kept.
 
 The components are joined in the order the description names them, except:
 
@@ -392,7 +414,7 @@ additions do not all follow CNS order.
 | --- | ---: | ---: | ---: | ---: |
 ${left.map(row => `| \`${row.source}\` | ${n(row.recorded)} | ${n(row.equivalent)} | ${n(row.ids)} | ${n(row.none)} |`).join('\n')}
 
-"Without an order" counts the Han characters the workshop's composer draws or BabelStone IDS
+"Without an order" counts the Han characters the workshop's composer draws or either IDS source
 describes that end with no row from that source.
 
 ## Sources and terms
@@ -410,6 +432,9 @@ describes that end with no row from that source.
   character, in code point order.
 - BabelStone IDS, \`IDS.TXT\`, Andrew West (魏安), <https://www.babelstone.co.uk/CJK/IDS.TXT>, public
   domain: the descriptions induced rows are written from.
+
+- Yi Bai IDS, level 1, <https://github.com/yi-bai/ids>, MIT, Copyright (c) 2021 Yi Bai: the
+  descriptions used where BabelStone has none. The licence text is beside this file.
 
 ## Rebuild
 
