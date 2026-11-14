@@ -17,12 +17,13 @@ const modules = await Promise.all((await readdir(directory)).filter(name => /\.(
   path: resolve(directory, name),
   contents: await readFile(resolve(directory, name)),
 })))
-const runtime = new Miniflare(convertV4MiniflareOptions({ workers: [{
+/** The Worker over the built site, which answers 404 for the path `withheld`. @param {string | null} [withheld] */
+const runtimeOver = (withheld = null) => new Miniflare(convertV4MiniflareOptions({ workers: [{
   name: 'og', modules, modulesRoot: directory, compatibilityDate: '2026-10-30',
   serviceBindings: { ASSETS: async request => {
     const path = decodeURIComponent(new URL(request.url).pathname)
     const file = resolve(dist, '.' + (path === '/' ? '/index.html' : path))
-    if (!file.startsWith(dist)) return new Response(null, { status: 404 })
+    if (!file.startsWith(dist) || path === withheld) return new Response(null, { status: 404 })
     try {
       return new Response(await readFile(file), { headers: { 'content-type': ({
         '.html': 'text/html', '.svg': 'image/svg+xml', '.js': 'application/javascript',
@@ -30,6 +31,7 @@ const runtime = new Miniflare(convertV4MiniflareOptions({ workers: [{
     } catch { return new Response(null, { status: 404 }) }
   } },
 }] }))
+const runtime = runtimeOver()
 try {
   const page = await runtime.dispatchFetch('https://ids.mkpo.li/%E2%BF%B0%E9%87%92%E5%93%A5')
   assert.equal(page.status, 200)
@@ -88,6 +90,18 @@ try {
   assert.equal(flatImage.status, 200)
   assert.equal(flatImage.headers.get('x-og-card'), 'document')
   assert.notEqual(Buffer.compare(docPng, Buffer.from(await flatImage.arrayBuffer())), 0, 'the layer transform changes the document card')
+
+  // A numbered component draws with its Sans cut, so a deployment without the cuts draws another card.
+  const numbered = `https://ids.mkpo.li/og/${encodeURIComponent('⿰\u{F2A9}口')}.png`
+  const cutImage = await runtime.dispatchFetch(numbered)
+  assert.equal(cutImage.status, 200)
+  const cutPng = Buffer.from(await cutImage.arrayBuffer())
+  const bare = runtimeOver('/og/data/numbered-sans-outlines.json.gz')
+  try {
+    const bareImage = await bare.dispatchFetch(numbered)
+    assert.equal(bareImage.status, 200)
+    assert.notEqual(Buffer.compare(cutPng, Buffer.from(await bareImage.arrayBuffer())), 0, 'a numbered component is drawn with its Sans cut')
+  } finally { await bare.dispose() }
 
   // A component form fills a leaf that the bundled-only source would draw as one part; the card
   // must still find a scoped document rather than fall back to the sequence.

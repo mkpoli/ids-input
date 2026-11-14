@@ -37,9 +37,9 @@ const read = async (env, path) => {
  * @param {any} env
  */
 const loadFor = env => {
-  const SERVED = /^sources\/([a-z-]+)\/outlines\.json\.gz$|^unicode\/outlines\/([0-9a-f]+\.json\.gz)$/
-  /** The deployment's name for a file the engine names. @param {string} path */
-  const served = path => path.replace(SERVED, (_, script, shard) => script ? `${script}-outlines.json.gz` : `unicode-outlines/${shard}`)
+  const SERVED = /^sources\/([a-z-]+)\/outlines\.json\.gz$|^unicode\/outlines\/([0-9a-f]+\.json\.gz)$|^numbered-sans-outlines\.json\.gz$/
+  /** The deployment's name for a file the engine names; the numbered components' Sans cuts keep theirs. @param {string} path */
+  const served = path => path.replace(SERVED, (name, script, shard) => script ? `${script}-outlines.json.gz` : shard ? `unicode-outlines/${shard}` : name)
   /** @type {Record<string, string>} */
   const loaders = {}
   for (const path of Object.keys(dataUrls)) {
