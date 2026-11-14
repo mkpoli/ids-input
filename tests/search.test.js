@@ -459,6 +459,11 @@ describe('Ashide component families', () => {
     expect(kana.search('ユ').hits.map(hit => hit.char)).toEqual(['丁', '乙', '丙', '甲'])
     expect(kana.search('⿱ユ口').hits.map(hit => hit.char)).toEqual(['乙', '甲'])
   })
+
+  it('ranks by the shape where the query matched, and a whole description first', () => {
+    const kana = createSearch(new Map(Object.entries({ 甲: ['⿸卄丶'], 乙: ['⿱卄⿸サ丶'], 丙: ['⿰氵⿱共⿸サ丶'], 丁: ['⿰サ⿸卄丶'] })))
+    expect(kana.search('⿸サ丶').hits.map(hit => hit.char)).toEqual(['甲', '乙', '丙', '丁'])
+  })
 })
 
 

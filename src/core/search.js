@@ -37,8 +37,9 @@ const tier = char => { const cp = /** @type {number} */ (char.codePointAt(0)); r
 export const OPEN_DEPTH = 6
 /** The most terms a query takes. */
 export const TERMS = 8
-/** What each lookalike standing for a written shape adds to a hit's score: after every hit holding the shape. */
-const LOOKALIKE = 1_000_000
+/** What a whole-description match takes off a hit's score, and what each written shape matched only
+ * through a lookalike adds: exact matches first, then hits holding the shape as written. */
+const EXACT = 1_000_000_000, LOOKALIKE = 1_000_000
 
 /** zi.tools' two wildcard expressions for looking up components.
  * @param {string} text @returns {{ kind: 'parts' | 'containing', char: string } | null} */
@@ -855,10 +856,12 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
     const rarest = [...groups.values()].sort((a, b) =>
       a.reduce((n, id) => n + (by.of.get(id)?.length ?? 0), 0) - b.reduce((n, id) => n + (by.of.get(id)?.length ?? 0), 0))[0]
     if (!rarest) return { hits: [], total: 0 }
-    // A written kana or Hangul shape that some description holds as written finds those first; its
-    // lookalikes are the fallback.
-    const shapes = terms.flatMap(term => term.leaves.flatMap(leaf => typeof leaf === 'string' ? [] : [keyOf.get(fold(leaf.shape))]))
-      .filter(id => id !== undefined)
+    // A kana or Hangul shape finds the descriptions written with it first; its lookalikes are the
+    // fallback. Only shapes some description holds are counted.
+    const shapes = terms.map(term => term.leaves.flatMap(leaf => typeof leaf === 'string' ? [] : [keyOf.get(fold(leaf.shape))])
+      .filter(id => id !== undefined))
+    /** Whether a leaf of `t` is the shape with key `id`. @param {Tree} t @param {number} id @returns {boolean} */
+    const bears = (t, id) => typeof t === 'string' ? keyOf.get(fold(t)) === id : t.parts.some(part => bears(part, id))
     const first = new Set(rarest.flatMap(id => [...(by.of.get(id) ?? [])]))
     /** @type {{ char: string, tree: Tree, paths: number[][], score: number }[]} */
     const found = []
@@ -866,21 +869,23 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
       const char = by.chars[c], holds = /** @type {Int32Array} */ (held.get(char))
       if (required.some(needs => !allocate(needs, id => countIn(holds, id)))) continue
       // Every structure term placed in one of the character's descriptions; the closest wins.
-      /** @type {{ tree: Tree, paths: number[][], score: number } | null} */
+      /** @type {{ tree: Tree, paths: number[][], score: number, lookalikes: number } | null} */
       let best = null
       for (const tree of treesOf(char)) {
         /** @param {Tree} t @returns {number} */
         const count = t => typeof t === 'string' ? 1 : t.parts.reduce((n, p) => n + count(p), 0)
-        let root = tree, score = 0, ok = true
+        let root = tree, score = 0, lookalikes = 0, ok = true
         /** @type {number[][]} */
         const paths = []
-        for (const term of terms) {
+        for (const [i, term] of terms.entries()) {
           if (term.kind !== 'structure') continue
           const found = find(term.tree, root, 0)
           if (!found) { ok = false; break }
           root = found.tree
           paths.push(found.path)
           score += found.depth * 4 + found.opened * 2
+          const matched = /** @type {Tree} */ (partAt(root, found.path))
+          lookalikes += shapes[i].filter(id => !bears(matched, id)).length
         }
         if (!ok) continue
         // Every components term held by this one description, not by several together. A component
@@ -890,6 +895,7 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
           const holds = holdingsIn(tree, char, new Set([char]))
           if (terms.some((term, i) => term.kind === 'components'
             && (!allocate(requested[i], id => holds.get(id) ?? 0) || consistent[i]?.(tree, char) === false))) continue
+          terms.forEach((term, i) => { if (term.kind === 'components') lookalikes += shapes[i].filter(id => !holds.get(id)).length })
         }
         // Match top-level components with the same allocation used for counts. An ambiguous
         // alias cannot consume a component needed by a more specific request.
@@ -907,13 +913,12 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
           score += (assigned ?? []).filter(id => id === -1).length
         })
         score = score * 10 + count(tree)
-        if (best === null || score < best.score) best = { tree: root, paths, score }
+        if (best === null || lookalikes < best.lookalikes || lookalikes === best.lookalikes && score < best.score) best = { tree: root, paths, score, lookalikes }
       }
       if (!best) continue
       // The whole description matched exactly comes first; a description with more parts, later.
       const exact = terms.length === 1 && terms[0].kind === 'structure' && best.paths[0]?.length === 0 && !EMPTY_MARKS.some(mark => terms[0].text.includes(mark)) && !terms[0].text.includes(UNKNOWN)
-      const lookalikes = shapes.filter(id => !countIn(holds, id)).length
-      found.push({ char, tree: best.tree, paths: best.paths, score: lookalikes * LOOKALIKE + (exact ? -1000 : 0) + best.score + tier(char) * 15 })
+      found.push({ char, tree: best.tree, paths: best.paths, score: (exact ? -EXACT : 0) + best.lookalikes * LOOKALIKE + best.score + tier(char) * 15 })
     }
     found.sort((a, b) => a.score - b.score || tier(a.char) - tier(b.char) || /** @type {number} */ (a.char.codePointAt(0)) - /** @type {number} */ (b.char.codePointAt(0)))
     // Only the hits handed back are written out, with their spans.
