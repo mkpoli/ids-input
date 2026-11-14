@@ -13,6 +13,7 @@ it('reads the committed file', () => {
 it('names the field a row is refused for', () => {
   expect(entryProblem(row)).toBe(null)
   expect(entryProblem({ ...row, char: '王玉' })).toBe('char')
+  expect(entryProblem({ ...row, char: '#' })).toBe('char')
   expect(entryProblem({ ...row, source: 'wubi' })).toBe('source')
   expect(entryProblem({ ...row, orders: 'hs' })).toBe('orders')
   expect(entryProblem({ ...row, source: 'rime-stroke', orders: 'hs zp' })).toBe(null)

@@ -19,7 +19,8 @@ export const ENTRY_COLUMNS = /** @type {const} */ (['char', 'source', 'orders', 
  * @returns {'char' | 'source' | 'orders' | 'basis' | 'by' | 'date' | null}
  */
 export function entryProblem(entry) {
-  if ([...(entry.char ?? '')].length !== 1 || /\s/.test(entry.char ?? '')) return 'char'
+  // `#` opens a comment line of the file, so a row cannot begin with it.
+  if ([...(entry.char ?? '')].length !== 1 || /[\s#]/.test(entry.char ?? '')) return 'char'
   if (!ENTRY_SYMBOLS[entry.source ?? '']) return 'source'
   if (!ENTRY_SYMBOLS[entry.source ?? ''].test(entry.orders ?? '')) return 'orders'
   // A tab or a line break would split the row.

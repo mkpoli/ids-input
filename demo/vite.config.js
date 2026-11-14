@@ -112,11 +112,17 @@ const ENTERED = fileURLToPath(new URL('../data/stroke-orders-entered.tsv', impor
 function strokeEntries() {
   return {
     name: 'stroke-entries',
+    // The page reads the file through the address below, so a save does not reload the page that made it.
+    handleHotUpdate({ file }) { if (file === ENTERED) return [] },
     configureServer(server) {
       server.middlewares.use('/api/stroke-entries', (request, response) => {
         const answer = (status, body) => { response.statusCode = status; response.setHeader('Content-Type', 'text/tab-separated-values; charset=utf-8'); response.end(body) }
         if (request.method === 'GET') return answer(200, readFileSync(ENTERED, 'utf8'))
         if (request.method !== 'POST' && request.method !== 'DELETE') return answer(405, '')
+        // Only this server's own page writes the file: a page elsewhere is refused by its origin, and a
+        // JSON body cannot be sent across origins without a preflight this server does not answer.
+        const origin = request.headers.origin
+        if (origin && new URL(origin).host !== request.headers.host || !/^application\/json\b/.test(request.headers['content-type'] ?? '')) return answer(403, '')
         let body = ''
         request.on('data', chunk => { body += chunk })
         request.on('end', () => {

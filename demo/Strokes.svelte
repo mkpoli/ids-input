@@ -3,7 +3,7 @@
   // components that keep the most characters from being written; a row saved here is a row of
   // `data/stroke-orders-entered.tsv`. A dev server writes the file itself; a published page keeps
   // the rows in the browser and hands them over as text.
-  import { onMount } from 'svelte'
+  import { onMount, untrack } from 'svelte'
   import PageHeader from './ui/PageHeader.svelte'
   import Segmented from './ui/controls/Segmented.svelte'
   import TextField from './ui/controls/TextField.svelte'
@@ -12,7 +12,7 @@
   import { LOCALES, appMessages } from './lib/locales.js'
   import { load, save } from './lib/storage.js'
   import { STROKE_KEYS } from '../src/core/stroke-order.js'
-  import { entryLine, entryProblem, parseEntries } from '../src/core/stroke-entry.js'
+  import { entryLine, entryProblem, parseEntries, withEntry } from '../src/core/stroke-entry.js'
   import { unpack } from '@han-compose/composer'
   import wantedText from '../data/open-strokes/wanted.tsv?raw'
   import enteredText from '../data/stroke-orders-entered.tsv?raw'
@@ -106,12 +106,16 @@
   $effect(() => save('strokes.by', by))
   /** @type {ReturnType<typeof entryProblem>} */
   let problem = $state(null)
-  // Choosing a component shows what is entered for it, or an empty form.
+  // Choosing a component shows what is entered for it, or an empty form. Only the choice resets the
+  // form: rows arriving or leaving meanwhile do not touch what is being typed.
   $effect(() => {
-    const entry = entryOf(current, source)
-    orders = entry?.orders ?? ''
-    basis = entry?.basis ?? ''
-    problem = null
+    const char = current, from = source
+    untrack(() => {
+      const entry = entryOf(char, from)
+      orders = entry?.orders ?? ''
+      basis = entry?.basis ?? ''
+      problem = null
+    })
   })
   /** The strokes of a code, as the keys show them. @param {string} written */
   const strokes = written => [...written].map(digit => digit === ' ' ? ' ' : KEYS[Number(digit) - 1]?.stroke ?? '?').join('')
@@ -143,8 +147,9 @@
     if (problem) return
     failed = ''
     try {
-      if (writable) await send('POST', entry)
-      else inBrowser = [...inBrowser.filter(row => row.char !== entry.char || row.source !== entry.source), entry]
+      const others = inBrowser.filter(row => row.char !== entry.char || row.source !== entry.source)
+      // A row saved to the file leaves no older copy in the browser standing in front of it.
+      if (writable) { await send('POST', entry); inBrowser = others } else inBrowser = [...others, entry]
       skip()
     } catch (error) { failed = String(error) }
   }
@@ -161,7 +166,9 @@
   async function copy() {
     try { await navigator.clipboard.writeText(`${pending}\n`); copied = true; setTimeout(() => { copied = false }, 1600) } catch { /* The download says the same. */ }
   }
-  const download = $derived(`data:text/tab-separated-values;charset=utf-8,${encodeURIComponent(`${pending}\n`)}`)
+  // The download is the whole file with the browser's rows in it, each in place of the row it
+  // changes, so it replaces the repository's file without entering a character twice.
+  const download = $derived(`data:text/tab-separated-values;charset=utf-8,${encodeURIComponent(inBrowser.reduce(withEntry, enteredText))}`)
 </script>
 
 <div class="page" bind:this={root}>
@@ -179,7 +186,8 @@
         {#each queue as entry (entry.char)}
           {@const done = Boolean(entryOf(entry.char, source))}
           <li>
-            <button type="button" class="wanted" class:done aria-current={entry.char === current ? 'true' : undefined} onclick={() => choose(entry.char)}>
+            <button type="button" class="wanted" class:done aria-current={entry.char === current ? 'true' : undefined}
+              aria-label={done ? `${entry.char}, ${t('strokes.entered')}` : `${entry.char}, ${t('strokes.blocks')} ${entry.blocks}`} onclick={() => choose(entry.char)}>
               <span class="char" lang="ja">{entry.char}</span>
               <span class="n">{done ? '✓' : entry.blocks}</span>
             </button>
@@ -210,14 +218,14 @@
           </dl>
 
           <form class="form" onsubmit={event => { event.preventDefault(); saveEntry() }}>
-            <div class="keys" role="group" aria-label={t('strokes.order')}>
+            <div class="keys" role="group" aria-label={t('strokes.keys')}>
               {#each KEYS as key (key.digit)}
                 <button type="button" class="ui-button key" title={`${t(key.name)} (${key.digit})`} aria-label={`${t(key.name)} (${key.digit})`}
                   onclick={() => { orders += key.digit }}><span class="stroke">{key.stroke}</span><span class="n">{key.digit}</span></button>
               {/each}
               <button type="button" class="ui-button" title={t('strokes.way')} aria-label={t('strokes.way')} disabled={!orders || orders.endsWith(' ')} onclick={() => { orders += ' ' }}>+</button>
               <button type="button" class="ui-button" title={t('parts.order.backspace')} aria-label={t('parts.order.backspace')} disabled={!orders} onclick={() => { orders = orders.slice(0, -1) }}>←</button>
-              <output class="written" aria-label={t('strokes.order')}>{strokes(orders)}</output>
+              <span class="written" aria-hidden="true">{strokes(orders)}</span>
             </div>
             <TextField label={t('strokes.order')} bind:value={orders} mono placeholder="12345" autocomplete="off" spellcheck={false}
               error={problem === 'orders' ? t('strokes.error.orders') : problem === 'char' ? t('strokes.error.char') : undefined} />
@@ -257,7 +265,7 @@
                     <td class="basis">{row.basis}</td>
                     <td>{row.by}</td>
                     <td><span class="tag" data-where={row.where}>{t(`strokes.where.${row.where}`)}</span></td>
-                    <td>{#if row.where === 'browser' || writable}<button type="button" class="ui-button" data-variant="quiet" data-size="xs" onclick={() => remove(row)}>{t('strokes.remove')}</button>{/if}</td>
+                    <td>{#if row.where === 'browser' || writable}<button type="button" class="ui-button" data-variant="quiet" data-size="xs" aria-label={`${t('strokes.remove')} ${row.char}`} onclick={() => remove(row)}>{t('strokes.remove')}</button>{/if}</td>
                   </tr>
                 {/each}
               </tbody>
@@ -307,7 +315,7 @@
   .keys{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
   .key{display:inline-flex;align-items:center;gap:6px;min-width:56px;justify-content:center}
   .stroke{font-size:22px;line-height:1}
-  .keys output{min-width:0;flex:1 1 120px;padding-inline:8px}
+  .keys .written{min-width:0;flex:1 1 120px;padding-inline:8px}
   .actions{display:flex;align-items:center;gap:8px}
   .where{margin-left:auto;font-size:12px;color:var(--ui-color-ink-muted)}
 
