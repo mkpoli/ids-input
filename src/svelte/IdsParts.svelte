@@ -216,18 +216,27 @@
     const text = point !== null && point <= 0x10ffff ? String.fromCodePoint(point) : term
     return matchScriptParts(picked, text, Boolean(code))
   })
-  // The characters of the chosen count and filter that begin with the strokes typed, fewest strokes first.
-  const hanMatches = $derived.by(() => {
+  // One pass over the characters of the chosen count and filter: those that begin with the strokes
+  // typed, fewest strokes first, and the strokes some character goes on with.
+  const hanStroke = $derived.by(() => {
     const found = characterOrders
-    if (!typed || !found) return typed ? [] : hanPicked
+    if (!found) return null
     /** @type {{ key: string, strokes: number }[]} */
     const hits = []
+    /** @type {Set<string>} */
+    const next = new Set()
     for (const key of hanPicked) {
-      const strokes = strokesFrom(found.get(key), typed)
-      if (strokes !== null) hits.push({ key, strokes })
+      let strokes = null
+      for (const code of found.get(key) ?? []) {
+        if (!code.startsWith(typed)) continue
+        if (strokes === null || code.length < strokes) strokes = code.length
+        if (code.length > typed.length) next.add(code[typed.length])
+      }
+      if (typed && strokes !== null) hits.push({ key, strokes })
     }
-    return hits.sort((a, b) => a.strokes - b.strokes).map(hit => hit.key)
+    return { keys: hits.sort((a, b) => a.strokes - b.strokes).map(hit => hit.key), next }
   })
+  const hanMatches = $derived.by(() => typed ? hanStroke?.keys ?? [] : hanPicked)
   const hanPages = $derived(Math.max(1, Math.ceil(hanMatches.length / PAGE_SIZE)))
   const hanShown = $derived(hanMatches.slice(hanPage * PAGE_SIZE, (hanPage + 1) * PAGE_SIZE)
     .map(part => ({ part, kind: /** @type {const} */ ('extra'), strokes: hanStrokes.get(part) })))
@@ -381,11 +390,18 @@
   // The All characters view reads every character's order instead, a larger table of its own.
   /** @type {Map<string, string[]> | null} */
   let characterOrders = $state.raw(null)
+  // Each table fails on its own, so one view's failure is not shown over the other's results.
+  let characterOrdersFailed = $state(false)
   function readOrders() {
-    if (characters ? characterOrders : orders) return
-    ordersFailed = false
-    if (characters) loadCharacterStrokeOrders().then(found => { characterOrders = found }, () => { ordersFailed = true })
-    else loadStrokeOrders().then(found => { orders = found }, () => { ordersFailed = true })
+    if (characters) {
+      if (characterOrders) return
+      characterOrdersFailed = false
+      loadCharacterStrokeOrders().then(found => { characterOrders = found }, () => { characterOrdersFailed = true })
+    } else {
+      if (orders) return
+      ordersFailed = false
+      loadStrokeOrders().then(found => { orders = found }, () => { ordersFailed = true })
+    }
   }
   // Strokes typed before the palette and the orders arrived keep the start some part is written
   // with, checked once when both are there.
@@ -423,7 +439,7 @@
   const strokeHits = $derived(searching && orders ? findByStrokes(strokeParts, orders, typed) : [])
   // Until the palette and the orders are both read, every key types.
   const strokeNext = $derived(tab !== 'components' ? null
-    : characters ? characterOrders && hanKeys ? nextStrokes(hanPicked.map(part => ({ part })), characterOrders, typed) : null
+    : characters ? hanKeys && hanStroke ? hanStroke.next : null
     : orders && parts ? nextStrokes(strokeParts, orders, typed) : null)
   /** Keep the last strokes typed in view. @param {HTMLElement} node */
   const showEnd = node => { $effect(() => { node.scrollLeft = typed ? node.scrollWidth : 0 }) }
@@ -1071,7 +1087,7 @@
     {:else if tab === 'components' && characters}
       {#if !hanKeys && !hanFailed}<p class="parts-note" role="status">{t('parts.loading')}</p>{/if}
       {#if hanFailed}<p class="parts-note" role="status">{t('parts.characters.unavailable')} <button type="button" onclick={retryHan}>{t('parts.script.retry')}</button></p>{/if}
-      {#if typed && ordersFailed}<p class="parts-note" role="status">{t('parts.order.unavailable')} <button type="button" onclick={readOrders}>{t('parts.script.retry')}</button></p>
+      {#if typed && characterOrdersFailed}<p class="parts-note" role="status">{t('parts.order.unavailable')} <button type="button" onclick={readOrders}>{t('parts.script.retry')}</button></p>
       {:else if typed && !characterOrders}<p class="parts-note" role="status">{t('parts.loading')}</p>{/if}
       {#if hanMatches.length}
         {#if hanPages > 1}
