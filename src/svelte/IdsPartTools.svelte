@@ -1,102 +1,34 @@
 <script>
   // The chosen part of `editor`: a field to type it (Enter puts what it holds and moves on to the next
-  // empty slot), buttons to clear it or take its level away, and the alternatives in its place: the
-  // components that can stand for it, the descriptions it splits into, the characters it merges to,
-  // the recursive combinations of splitting and merging, and the forms the IRG unifies with it (its
-  // UCV entries), each under its own heading. A problem or
-  // the next slot to fill shows beneath; the alternatives float over the page, so choosing a part does
-  // not move what is around it.
-  import { untrack } from 'svelte'
-  import { isNode, variantOf, write } from '../core/ids.js'
-  import { recursiveAlternatives } from '../core/recursive-alternatives.js'
+  // empty slot), buttons to clear it or take its level away, and the alternatives in its place
+  // (IdsAlternatives). A problem or the next slot to fill shows beneath; the alternatives float over
+  // the page, so choosing a part does not move what is around it. A part chosen by selecting its text
+  // in the field shows its alternatives beside the field, and the list here waits to be asked for.
+  import { isNode } from '../core/ids.js'
   import { shortcut } from './shortcut.js'
   import { watchFallback } from './fallback-font.js'
-  import { loadUcvIndex, loadUcvOutlines } from './ucv.js'
-
-  /** @typedef {{ text: string, tree: import('../core/ids.js').Part, operation: 'expand' | 'merge' | 'both' }} Option */
+  import { createUnifiable } from './unifiable.svelte.js'
+  import IdsAlternatives, { hasAlternatives } from './IdsAlternatives.svelte'
 
   /** @type {{ editor: import('./editor.svelte.js').Editor, keyHints?: boolean, slot?: HTMLInputElement | null, status?: boolean, variations?: boolean, variationsHref?: ((entry: string) => string) | null }} */
   let { editor, keyHints = true, slot = $bindable(null), status = true, variations = false, variationsHref = null } = $props()
   const t = $derived(editor.t)
-  const uid = $props.id()
   const picked = $derived(editor.picked)
   function apply() { if (editor.enter()) queueMicrotask(() => { slot?.focus(); slot?.select() }) }
   const part = $derived(typeof picked === 'string' ? picked : '')
   const written = $derived(isNode(picked) ? editor.sequenceAt(editor.chosen ?? []) : '')
-  const merges = $derived(editor.merges)
   const at = $derived(editor.chosen ? editor.chosen.join('.') : '')
   const identity = $derived(`${at}\u0000${part}\u0000${written}`)
-  /** @type {Option[]} */
-  let recursive = $state([])
-  let truncated = $state(false), loading = $state(false), failed = $state(false)
-  let resultKey = ''
-  let moreKey = $state(''), moreLevel = $state(0)
-  const level = $derived(moreKey === identity ? moreLevel : 0)
-  const additional = $derived(recursive.filter(({ text }) => !editor.splits.includes(text) && !merges.includes(text) && !editor.swaps.some(swap => swap.char === text)))
-  /** The recursive alternatives by the operations that made them. @type {Record<'expand' | 'merge' | 'both', Option[]>} */
-  const extra = $derived.by(() => {
-    /** @type {Record<'expand' | 'merge' | 'both', Option[]>} */
-    const out = { expand: [], merge: [], both: [] }
-    for (const option of additional) out[option.operation].push(option)
-    return out
-  })
-  // With `variations`, the other forms of the chosen component's UCV entries, for each entry that
-  // has one to put in its place: a character or a description. The list is read once a component is
-  // chosen, the drawings once an entry is shown; a form with no text shows only as its drawing.
-  let ucv = $state.raw(/** @type {import('../core/ucv.js').UcvIndex | null} */ (null))
-  let ucvOutlines = $state.raw(/** @type {Record<string, string> | null} */ (null))
-  $effect(() => { if (variations && part && !ucv) loadUcvIndex().then(index => { ucv = index }, () => {}) })
-  const offered = $derived.by(() => {
-    if (!ucv || !part) return []
-    // A variant identifier after the component names one of its forms; the entries are the component's.
-    const base = variantOf(part).base
-    return ucv.formsOf(base).filter(entry => entry.kind === 'unifiable')
-      .map(entry => ({ id: entry.id, forms: entry.forms.filter(form => form.text !== base) }))
-      .filter(entry => entry.forms.some(form => form.text))
-  })
-  $effect(() => { if (offered.length && !ucvOutlines) loadUcvOutlines().then(outlines => { ucvOutlines = outlines }, () => {}) })
-  const unified = $derived(offered.map(entry => ({ id: entry.id, forms: entry.forms.filter(form => form.text || ucvOutlines?.[form.glyph]) })))
-  const replaceable = $derived((Boolean(part) && (editor.swaps.length > 0 || editor.splits.length > 0 || unified.length > 0)) || merges.length > 0 || additional.length > 0 || truncated || failed)
+  const search = $derived(editor.alternatives)
+  // The search runs while the list is closed, so the tools know whether to offer it again.
+  $effect(() => { search.load() })
+  const unifiable = createUnifiable(() => variations ? part : '')
+  const replaceable = $derived(hasAlternatives(editor, unifiable.entries.length))
   const label = $derived(t('ids.swaps.label', { part: part || written }))
 
-  $effect(() => {
-    const selected = picked, adapter = editor.adapter, key = identity, count = level
-    if (resultKey !== key) { resultKey = key; recursive = []; truncated = false; failed = false }
-    if (!editor.chosen || !selected) { loading = false; return }
-    loading = true
-    const controller = new AbortController()
-    ;(async () => {
-      try {
-        const scale = 2 ** count, seen = new Set(untrack(() => recursive.map(option => option.text)))
-        let cut = false, lost = false
-        for await (const result of recursiveAlternatives(selected, adapter, {
-          signal: controller.signal, maxResults: 128 * scale, maxStates: 512 * scale,
-          maxDepth: 4 + 2 * count, maxWork: 8192 * scale, maxLookups: 64 * scale,
-        })) {
-          if (controller.signal.aborted || identity !== key) return
-          if (result.type === 'alternative') {
-            const text = write(result.tree)
-            if (!seen.has(text)) { seen.add(text); recursive = [...recursive, { text, tree: result.tree, operation: result.operation }] }
-          } else { cut = result.reasons.some(reason => reason !== 'lookup'); lost = result.reasons.includes('lookup') }
-        }
-        truncated = cut; failed = lost
-      } catch { if (!controller.signal.aborted) failed = true }
-      finally {
-        if (!controller.signal.aborted) {
-          loading = false
-          // The button goes when the list is complete; keep the reader's place at the list's close.
-          if (!truncated && moreButton && moreButton === document.activeElement) {
-            /** @type {HTMLElement | null | undefined} */ (panel?.querySelector('.ids-swaps-close'))?.focus({ preventScroll: true })
-          }
-        }
-      }
-    })()
-    return () => controller.abort()
-  })
   /** @type {HTMLElement | null} */ let root = $state(null)
   $effect(() => { if (root) return watchFallback(root) })
   /** @type {HTMLElement | null} */ let panel = $state(null)
-  /** @type {HTMLButtonElement | null} */ let moreButton = $state(null)
   /** @type {HTMLButtonElement | null} */ let reopenButton = $state(null)
   let open = $state(false)
   let placed = $state(false)
@@ -104,11 +36,15 @@
   let top = $state(0), left = $state(0), maxHeight = $state(420)
   /** The part whose list the reader closed, so it stays closed until another part is chosen. */
   let shut = $state(/** @type {string | null} */ (null))
+  /** The part whose list was left to the field's selection. */
+  let ceded = $state(/** @type {string | null} */ (null))
 
   $effect(() => {
     const key = identity
     if (!replaceable) { open = false; shut = null; return }
     if (shut === key) return
+    // A part chosen in the field shows its alternatives there; the list here opens when asked for.
+    if (editor.chosenInField && ceded !== key) { ceded = key; open = false; shut = key; return }
     shut = null
     open = true
   })
@@ -253,92 +189,15 @@
     <button type="button" class="ids-scrim" aria-hidden="true" tabindex="-1" onclick={hide}></button>
   {/if}
   {#if open && replaceable}
-    <div class="ids-swaps" class:ids-sheet={sheet} class:ready={placed} bind:this={panel} role="group" aria-label={label} aria-busy={loading}
+    <div class="ids-swaps" class:ids-sheet={sheet} class:ready={placed} bind:this={panel} role="group" aria-label={label} aria-busy={search.loading}
       style:top={sheet ? undefined : `${top}px`} style:left={sheet ? undefined : `${left}px`} style:max-height="{maxHeight}px">
       <div class="ids-swaps-head">
         <span class="ids-title" title={label}>{label}</span>
         <button type="button" class="ids-swaps-close" aria-label={t('ids.swaps.close')} title={t('ids.swaps.close')} onclick={hide}>×</button>
       </div>
-      <div class="ids-options">
-        {#if editor.swaps.length}
-          <div class="ids-option-group" role="group" aria-labelledby={`${uid}-replace`}>
-            <span class="ids-option-label" id={`${uid}-replace`}>{t('ids.alternatives.replace')}</span>
-            <div class="ids-option-items">
-              {#each editor.swaps as item (item.char)}
-                <button type="button" class="ids-swap" disabled={editor.disabled} title={item.count ? `${picked} → ${item.char} · ${item.count}` : `${picked} → ${item.char}`}
-                  draggable="true" ondragstart={event => event.dataTransfer?.setData('text/plain', item.char)} onclick={() => editor.take(item.char)}>{item.char}</button>
-              {/each}
-            </div>
-          </div>
-        {/if}
-        {#if unified.length}
-          <div class="ids-option-group" role="group" aria-labelledby={`${uid}-unified`}>
-            <span class="ids-option-label" id={`${uid}-unified`}>{t('ids.alternatives.unifiable')}</span>
-            {#each unified as entry (entry.id)}
-              <div class="ids-option-items ids-unified" data-ucv={entry.id}>
-                {#if variationsHref}<a class="ids-unified-entry" href={variationsHref(entry.id)} target="_blank" rel="noreferrer">UCV {entry.id}</a>
-                {:else}<span class="ids-unified-entry">UCV {entry.id}</span>{/if}
-                {#each entry.forms as form, place (place)}
-                  {@const outline = ucvOutlines?.[form.glyph]}
-                  {#if form.text}
-                    <button type="button" class="ids-swap ids-unified-form" data-form={form.glyph} disabled={editor.disabled} title={`${part} → ${form.text}`} aria-label={`${part} → ${form.text}`}
-                      draggable="true" ondragstart={event => event.dataTransfer?.setData('text/plain', /** @type {string} */ (form.text))} onclick={() => editor.take(/** @type {string} */ (form.text))}>
-                      {#if outline}<svg viewBox="0 0 200 200" aria-hidden="true"><path d={outline} /></svg>{:else}{form.text}{/if}
-                    </button>
-                  {:else if outline}
-                    <span class="ids-unified-form" data-form={form.glyph} role="img" title={t('ids.ucv.form', { name: form.glyph })} aria-label={t('ids.ucv.form', { name: form.glyph })}>
-                      <svg viewBox="0 0 200 200" aria-hidden="true"><path d={outline} /></svg>
-                    </span>
-                  {/if}
-                {/each}
-              </div>
-            {/each}
-          </div>
-        {/if}
-        {#if merges.length || extra.merge.length}
-          <div class="ids-option-group" role="group" aria-labelledby={`${uid}-merge`}>
-            <span class="ids-option-label" id={`${uid}-merge`}>{t('ids.alternatives.merge')}</span>
-            <div class="ids-option-items">
-              {#each merges as char (char)}
-                <button type="button" class="ids-swap ids-merge" disabled={editor.disabled} title={t('ids.merge', { part: written, char })}
-                  aria-label={t('ids.merge', { part: written, char })} onclick={() => editor.merge(char)}>{char}</button>
-              {/each}
-              {#each extra.merge as option (option.text)}
-                <button type="button" class="ids-swap ids-merge" disabled={editor.disabled} title={t('ids.use')} onclick={() => editor.put(option.tree, editor.chosen)}>{option.text}</button>
-              {/each}
-            </div>
-          </div>
-        {/if}
-        {#if editor.splits.length || extra.expand.length}
-          <div class="ids-option-group" role="group" aria-labelledby={`${uid}-split`}>
-            <span class="ids-option-label" id={`${uid}-split`}>{t('ids.alternatives.split')}</span>
-            <div class="ids-option-items">
-              {#each editor.splits as sequence (sequence)}
-                <button type="button" class="ids-swap ids-split" disabled={editor.disabled} title={t('ids.split', { part })}
-                  onclick={() => editor.take(sequence)}>{sequence}</button>
-              {/each}
-              {#each extra.expand as option (option.text)}
-                <button type="button" class="ids-swap ids-split" disabled={editor.disabled} title={t('ids.use')} onclick={() => editor.put(option.tree, editor.chosen)}>{option.text}</button>
-              {/each}
-            </div>
-          </div>
-        {/if}
-        {#if extra.both.length}
-          <div class="ids-option-group" role="group" aria-labelledby={`${uid}-both`}>
-            <span class="ids-option-label" id={`${uid}-both`}>{t('ids.alternatives.both')}</span>
-            <div class="ids-option-items">
-              {#each extra.both as option (option.text)}
-                <button type="button" class="ids-swap ids-split" disabled={editor.disabled} title={t('ids.use')} onclick={() => editor.put(option.tree, editor.chosen)}>{option.text}</button>
-              {/each}
-            </div>
-          </div>
-        {/if}
-      </div>
-      {#if truncated}
-        <button type="button" class="ids-more" bind:this={moreButton} aria-disabled={loading}
-          onclick={() => { if (!loading) { moreKey = identity; moreLevel = level + 1 } }}>{t('ids.alternatives.more')}</button>
-      {/if}
-      <span class="ids-status" role="status">{loading && level > 0 ? t('ids.from.searching') : failed ? t('ids.from.searchFailed') : ''}</span>
+      <IdsAlternatives {editor} {variations} {variationsHref} onspent={() => {
+        /** @type {HTMLElement | null | undefined} */ (panel?.querySelector('.ids-swaps-close'))?.focus({ preventScroll: true })
+      }} />
     </div>
   {/if}
 </div>
@@ -377,31 +236,11 @@
   .ids-swaps-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
   .ids-swaps-close{flex:none;display:grid;place-items:center;width:24px;height:24px;padding:0;border:0;border-radius:6px;background:none;color:var(--_muted);font-size:16px;line-height:1}
   .ids-swaps-close:hover{background:var(--_surface-subtle);color:var(--_ink)}
-  .ids-options{display:flex;flex-direction:column;gap:8px}
-  .ids-option-group{display:flex;flex-direction:column;gap:4px;min-width:0}
-  .ids-option-label{font-size:11px;font-weight:500;letter-spacing:.02em;color:var(--_muted)}
-  .ids-option-items{display:flex;flex-wrap:wrap;gap:6px}
-  .ids-unified{align-items:center}
-  .ids-unified-entry{flex:none;font-size:11px;line-height:1;padding:3px 6px;border:1px solid var(--_line);border-radius:5px;color:var(--_muted);white-space:nowrap;text-decoration:none;font-variant-numeric:tabular-nums}
-  a.ids-unified-entry:hover{border-color:var(--_accent);color:var(--_accent)}
-  .ids-unified-form{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:40px;height:36px}
-  span.ids-unified-form{padding:3px}
-  span.ids-unified-form{border:1px dashed var(--_line);border-radius:8px}
-  .ids-unified-form svg{width:28px;height:28px;fill:currentColor}
-  .ids-swap{min-width:40px;padding:2px 8px;font-size:22px;line-height:1.25;font-family:var(--_font)}
-  .ids-split{max-width:100%;overflow-wrap:anywhere;text-align:left;font-size:16px;color:var(--_muted)}
-  .ids-merge{font-weight:500}
-  .ids-more{align-self:flex-start;padding:4px 8px;font-size:12px}
-  .ids-status{font-size:11px;color:var(--_muted)}
-  .ids-status:empty{display:none}
-  .ids-swap:not(:disabled):hover{border-color:var(--_accent)}
   .ids-problem,.ids-pending{margin:0;font-size:12px;line-height:1.45}
   .ids-problem{color:var(--_fault)}
   .ids-pending{color:var(--_muted)}
   @media (pointer: coarse){
     .ids-swaps-close{width:44px;height:44px;font-size:20px}
-    .ids-swap{min-height:44px;padding:4px 10px}
-    .ids-more{min-height:44px;padding:8px 12px;font-size:14px}
     .ids-tools > button{min-height:44px}
   }
 </style>
