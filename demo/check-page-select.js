@@ -10,7 +10,7 @@ try {
     const page = await browser.newPage({ viewport: { width: 1100, height: 700 }, deviceScaleFactor: 2, colorScheme: scheme })
     const errors = []
     page.on('pageerror', error => errors.push(error.message))
-    for (const id of ['sources', 'unencoded', 'ucv', 'normalization', 'open-data', 'compare', 'engines']) {
+    for (const id of ['sources', 'unencoded', 'component-atlas', 'ucv', 'normalization', 'open-data', 'compare', 'engines']) {
       await page.goto(`${base}/${id}.html?lang=ja`, { waitUntil: 'domcontentloaded' })
       const trigger = page.locator('h1 button[aria-haspopup="menu"]')
       await trigger.click()
