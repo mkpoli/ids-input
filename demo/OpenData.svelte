@@ -17,7 +17,9 @@
 
   /** @param {number} bytes */
   const size = bytes => bytes < 1024 ? `${bytes} B` : `${Math.round(bytes / 1024)} KB`
-  const rime = strokes.coverage.find(row => row.source === 'rime-stroke'), cns = strokes.coverage.find(row => row.source === 'cns11643')
+  const rime = strokes.coverage.find(row => row.source === 'rime-stroke'), cns = strokes.coverage.find(row => row.source === 'cns11643'), kanjivg = strokes.coverage.find(row => row.source === 'kanjivg')
+  /** @param {'ids' | 'equivalent'} key */
+  const total = key => strokes.coverage.reduce((sum, row) => sum + row[key], 0)
 </script>
 
 <svelte:head>
@@ -98,13 +100,14 @@
       <a href="https://ids.mkpo.li/open-data">https://ids.mkpo.li/open-data</a></p>
 
     <h2 id="strokes">Stroke orders</h2>
-    <p class="lead">The stroke order of Han characters from CNS 全字庫 and Rime's five-stroke
-      dictionary, with orders induced for the characters CNS lacks and marked so.</p>
+    <p class="lead">The stroke order of Han characters from CNS 全字庫, Rime's five-stroke dictionary
+      and KanjiVG, with orders induced for the characters a source lacks and marked so.</p>
     <ul class="stats">
       <li><b>{cns?.recorded.toLocaleString('en')}</b><span>CNS, recorded</span></li>
       <li><b>{rime?.recorded.toLocaleString('en')}</b><span>Rime, recorded</span></li>
-      <li><b>{cns?.ids.toLocaleString('en')}</b><span>induced from IDS</span></li>
-      <li><b>{((rime?.equivalent ?? 0) + (cns?.equivalent ?? 0)).toLocaleString('en')}</b><span>by equivalence</span></li>
+      <li><b>{kanjivg?.recorded.toLocaleString('en')}</b><span>KanjiVG, recorded</span></li>
+      <li><b>{total('ids').toLocaleString('en')}</b><span>induced from IDS</span></li>
+      <li><b>{total('equivalent').toLocaleString('en')}</b><span>by equivalence</span></li>
     </ul>
     <ul class="files stroke-files">
       {#each [...strokes.files, { name: 'manifest.json', bytes: 0 }, ...strokes.texts.map(name => ({ name, bytes: 0 }))] as file (file.name)}
