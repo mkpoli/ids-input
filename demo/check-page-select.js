@@ -37,6 +37,21 @@ try {
     assert.deepEqual(errors, [])
     await page.close()
   }
+  const phone = await browser.newPage({ viewport: { width: 375, height: 700 } })
+  for (const id of ['sources', 'compare', 'open-data', 'normalization']) {
+    await phone.goto(`${base}/${id}.html?lang=ja`, { waitUntil: 'domcontentloaded' })
+    await phone.locator('h1 button').click()
+    await phone.waitForTimeout(200)
+    const { right, scroll, heading } = await phone.evaluate(() => ({
+      right: document.querySelector('[role="menu"]')?.getBoundingClientRect().right ?? 0,
+      scroll: document.documentElement.scrollWidth,
+      heading: document.querySelector('h1')?.querySelectorAll('[role="menu"]').length,
+    }))
+    assert.ok(right <= 375, `${id}: the menu stays inside a phone's width (right edge ${right})`)
+    assert.equal(scroll, 375, `${id}: the page does not scroll sideways`)
+    assert.equal(heading, 0, `${id}: the menu sits outside the heading`)
+  }
+  await phone.close()
   console.log('page select: ok')
 } finally {
   await browser.close()

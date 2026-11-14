@@ -17,7 +17,7 @@
   const gallery = $derived(`https://moji.mkpo.li/${GALLERY.includes(locale) ? `${locale}/` : ''}`)
   /** @type {import('./LinkSelect.svelte').Link[]} */
   const links = $derived([
-    ...SITES.map(site => ({ href: site.id === 'ids' ? href : site.href, label: site.name, logo: site.logo, current: site.id === 'ids' })),
+    ...SITES.map(site => ({ href: site.id === 'ids' ? href : site.href, label: site.name, logo: site.logo, current: site.id === 'ids' ? 'true' : undefined })),
     { separator: true },
     { href: gallery, label: more, out: true },
   ])
