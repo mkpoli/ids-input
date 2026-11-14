@@ -52,7 +52,8 @@
     // A variant identifier after the component names one of its forms; the entries are the component's.
     const base = variantOf(part).base
     // A form no code point names is written with its identifier where the adapter draws such forms.
-    const named = Boolean(editor.adapter.formed)
+    // A component that is the whole text takes none: only a description carries an identifier.
+    const named = Boolean(editor.adapter.formed) && (editor.chosen?.length ?? 0) > 0
     return ucv.formsOf(base).filter(entry => entry.kind === 'unifiable')
       .map(entry => ({ id: entry.id, forms: entry.forms.map((form, at) => {
         const id = form.text || !named || form.undrawn ? null : ucvIdentifier(entry.id, at + 1, entry.forms.length)

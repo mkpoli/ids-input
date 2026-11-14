@@ -129,3 +129,35 @@ it('forms one component alone, which is no description', () => {
   expect(formedText('壬', ucv)).toBeNull()
   expect(formedText('ab12', ucv)).toBeNull()
 })
+
+import { drawnForm } from '../src/core/forms.js'
+import { drawnText, plainText } from '../src/core/preview.js'
+
+it('names forms of the unifiable list only', () => {
+  expect(ucvFormOf(ucv, '閒q3252')).toBeNull()
+  expect(formedText('⿰亻閒q3252', ucv)).toBeNull()
+})
+
+it('draws an identifier that names another character as that character', () => {
+  expect(drawnForm(ucv, '壬q0013')).toBe('王')
+  expect(formedText('⿰氵壬q0013', ucv)).toBe('⿰氵王')
+  expect(drawnForm(ucv, '壬q0012')).toBe('&GW-u58ec-t;')
+  // A form that is a description cannot stand for one component of the drawing.
+  expect(drawnForm(ucv, '烕q008a2')).toBeNull()
+})
+
+it('offers no variant identifier where the caller says a component cannot carry one', () => {
+  expect(componentForms('壬', { ucv, variants: false }).map(form => form.write)).toEqual(['壬', '王', '𡈼'])
+})
+
+it('reads a text as a composer draws it when no form is known', async () => {
+  expect(plainText('⿰氵壬q0012')).toBe('⿰氵壬')
+  expect(plainText('壬q0012')).toBe('壬')
+  expect(plainText('⿰氵壬')).toBe('⿰氵壬')
+  expect(plainText('ab')).toBe('ab')
+  expect(await drawnText('⿰氵壬q0012', async () => '⿰氵&GW-u58ec-t;')).toBe('⿰氵&GW-u58ec-t;')
+  expect(await drawnText('⿰氵壬T', async () => null)).toBe('⿰氵壬')
+  expect(await drawnText('⿰氵壬q0012', async () => { throw new Error('unread') })).toBe('⿰氵壬')
+  expect(await drawnText('⿰氵壬q0012', undefined)).toBe('⿰氵壬')
+  expect(await drawnText('⿰氵壬', async () => { throw new Error('never asked') })).toBe('⿰氵壬')
+})

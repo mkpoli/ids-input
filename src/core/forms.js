@@ -49,7 +49,8 @@ export function ucvFormOf(ucv, part) {
   const read = variant ? variantIdentifier(variant) : null
   if (!read || read.kind !== 'ucv' || read.sign !== 'q' || read.other) return null
   const char = variationBase(base)
-  const entry = char === null ? undefined : ucv.formsOf(char).find(found => found.id === read.entry)
+  // The identifier names forms of the unifiable list only.
+  const entry = char === null ? undefined : ucv.formsOf(char).find(found => found.id === read.entry && found.kind === 'unifiable')
   const form = entry?.forms[read.form - 1]
   return entry && form ? { entry, form, place: read.form } : null
 }
@@ -98,10 +99,24 @@ export const writtenForm = (forms, part) => {
 }
 
 /**
+ * What a composer draws for a component whose variant identifier names an entry form: the form's
+ * glyph reference where no text writes it and a source draws it, the form itself where it is one
+ * character or variation sequence, else null (a description, or a form nothing draws).
+ * @param {import('./ucv.js').UcvIndex} ucv @param {string} part
+ * @returns {string | null}
+ */
+export function drawnForm(ucv, part) {
+  const found = ucvFormOf(ucv, part)
+  if (!found || found.form.undrawn) return null
+  if (!found.form.text) return glyphReference(found.form.glyph)
+  return variationBase(found.form.text) !== null ? found.form.text : null
+}
+
+/**
  * A description as a composer draws its forms: each component whose variant identifier names an
- * entry form no text writes is written as that form's glyph reference, and every other identifier
- * is dropped, since one glyph is drawn for each. `formed` says whether any component was written
- * as a reference, where the drawing is no longer that of the characters alone.
+ * entry form is written as what draws that form (`drawnForm`), and every other identifier is
+ * dropped, since one glyph is drawn for each. `formed` says whether any component was written
+ * as its form, where the drawing is no longer that of the characters alone.
  * @param {import('./ids.js').Part} tree @param {import('./ucv.js').UcvIndex | null} ucv
  * @returns {{ tree: import('./ids.js').Part, formed: boolean }}
  */
@@ -113,10 +128,10 @@ export function formedTree(tree, ucv) {
     if (part === null) return null
     const { base, variant } = variantOf(part)
     if (!variant) return part
-    const found = ucv ? ucvFormOf(ucv, part) : null
-    if (!found || found.form.text || found.form.undrawn) return base
+    const drawn = ucv ? drawnForm(ucv, part) : null
+    if (!drawn) return base
     formed = true
-    return glyphReference(found.form.glyph) + base.slice(variationOf(base).length)
+    return drawn + base.slice(variationOf(base).length)
   }
   return { tree: walk(tree), formed }
 }

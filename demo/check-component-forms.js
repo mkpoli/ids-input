@@ -73,6 +73,15 @@ try {
     await page.locator('.ids-menu .ids-menu-form[data-form="壬"]').click()
     assert.equal(await field.inputValue(), '⿰氵壬', 'the plain character is written again')
 
+    // A component that is the whole text is offered no variant identifier: only a description carries one.
+    await page.goto(`${url}/?lang=en&ids=${encodeURIComponent('壬')}`, { waitUntil: 'domcontentloaded' })
+    await field.waitFor()
+    const alone = page.locator('.ids-tree .ids-forms-toggle')
+    await alone.waitFor()
+    await alone.click()
+    assert.deepEqual(await menuForms(), ['壬', '王', '𡈼'])
+    await page.keyboard.press('Escape')
+
     // A non-unifiable entry is headed as such: 閒 and 間.
     await page.goto(`${url}/?lang=en&ids=${encodeURIComponent('⿰亻閒')}`, { waitUntil: 'domcontentloaded' })
     await field.waitFor()

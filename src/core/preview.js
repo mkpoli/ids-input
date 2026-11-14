@@ -1,5 +1,6 @@
 // @ts-nocheck: geometry over plain arrays, as in a drawing.
-import { entryDescription, isDescription as isWhole, parse, withoutVariants, write } from './ids.js'
+import { entryDescription, isDescription as isWhole, parse, variantOf, withoutVariants, write } from './ids.js'
+import { variationBase } from './variation.js'
 
 // What the editor's preview shows around a drawing: its badge, and the boxes where nothing is drawn
 // yet (a fast layout before the engine's has loaded). The drawing itself — its file, its parts by
@@ -94,10 +95,8 @@ export function roughLayout(tree, box = [0, 0, 1, 1], flip = [false, false], cut
  * @param {(patch: { step?: string, url?: string, drawn?: object, sketch?: object[] }) => void} update
  */
 export function runPreview(text, { preview, drawing, formed, signal }, update) {
-  // A zi.tools entry draws its description; its notes are not part of the text asked for.
-  // A variant identifier says which form of a component is meant; one glyph is drawn for each.
   const read = /[.0-9A-Za-z]/.test(text) ? parse(text, { open: true }) : null
-  const plain = read && !read.problem && read.tree !== null ? write(withoutVariants(read.tree)) : entryDescription(text)
+  const plain = plainText(text)
   /** @param {string} asked @param {Function | undefined} drawing */
   const run = (asked, drawing) => {
     const whole = isWhole(asked)
@@ -124,6 +123,33 @@ export function runPreview(text, { preview, drawing, formed, signal }, update) {
     if (shaped) run(shaped, undefined)
     else run(plain, drawing)
   })
+}
+
+/**
+ * A text as a composer reads it when no form of it is known: a zi.tools entry is its description,
+ * without its notes, and every variant identifier is dropped, since one glyph is drawn for each
+ * component. One component with an identifier (壬q0012, which is no description) is its component.
+ * @param {string} text
+ */
+export function plainText(text) {
+  if (!/[.0-9A-Za-z]/.test(text)) return entryDescription(text)
+  const read = parse(text, { open: true })
+  if (!read.problem && read.tree !== null && read.tree !== undefined) return write(withoutVariants(read.tree))
+  const alone = variantOf(text)
+  return alone.variant && variationBase(alone.base) !== null ? alone.base : entryDescription(text)
+}
+
+/**
+ * A text as a composer is to draw it: `formed`'s answer where it names forms (see `runPreview`),
+ * else `plainText`. For a drawing asked for outside `runPreview`: a tab's icon, a layer's part.
+ * @param {string} text
+ * @param {((text: string, options?: { signal?: AbortSignal }) => Promise<string | null>) | undefined} formed
+ * @param {{ signal?: AbortSignal }} [options]
+ */
+export async function drawnText(text, formed, options) {
+  if (!/[.0-9A-Za-z]/.test(text)) return text
+  const shaped = formed ? await formed(text, options).then(answer => answer, () => null) : null
+  return shaped ?? plainText(text)
 }
 
 /**

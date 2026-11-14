@@ -17,7 +17,7 @@
   import { composerPreview as composerAt } from '@han-compose/composer'
   import { variationSequences } from '@han-compose/composer/variants'
   import engineOutlines from 'ids-engine-outlines'
-  import { EMPTY_MARKS, OPERATORS, characterStrokes, componentQuery, isJurchen, isShuishu, parse, substituteSequences, unalias } from '../src/core/index.js'
+  import { EMPTY_MARKS, OPERATORS, characterStrokes, componentQuery, drawnText, isJurchen, isShuishu, parse, substituteSequences, unalias } from '../src/core/index.js'
   import { loadStrokeRecords } from '../src/svelte/strokes.js'
   import { createDocumentSession, layerAtPath, sessionRecord, toSequence } from '../src/document/index.js'
   import { documentFile, readDocumentFile } from './lib/documents.js'
@@ -129,7 +129,13 @@
   let { embed = false } = $props()
   const params = new URLSearchParams(location.search)
   /** A preview over the export at `base`, read from wherever this build holds it. @param {Parameters<typeof composerAt>[0]} options */
-  const composerPreview = options => composerAt({ ...options, base: readFrom(options.base) })
+  const composerPreview = options => {
+    const draw = composerAt({ ...options, base: readFrom(options.base) })
+    // The engine reads no variant identifier: a form one names is written as what draws it first,
+    // for the tabs' icons and the layers as for the preview.
+    return /** @type {typeof draw} */ (Object.assign(async (/** @type {string} */ sequence, /** @type {any} */ asking) =>
+      draw(await drawnText(sequence, babel.formed, asking), asking), { warm: draw.warm }))
+  }
   // What a share names: this page, or the published site for the desktop app, whose own address
   // opens nothing outside it.
   const shareFrom = DESKTOP ? new URL(SITE) : location
