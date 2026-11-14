@@ -4,23 +4,28 @@
   "strokes": {
     "横": {
       "cns11643": "1",
-      "rime-stroke": "h"
+      "rime-stroke": "h",
+      "kanjivg": "1"
     },
     "豎": {
       "cns11643": "2",
-      "rime-stroke": "s"
+      "rime-stroke": "s",
+      "kanjivg": "2"
     },
     "撇": {
       "cns11643": "3",
-      "rime-stroke": "p"
+      "rime-stroke": "p",
+      "kanjivg": "3"
     },
     "點": {
       "cns11643": "4",
-      "rime-stroke": "n"
+      "rime-stroke": "n",
+      "kanjivg": "4"
     },
     "折": {
       "cns11643": "5",
-      "rime-stroke": "z"
+      "rime-stroke": "z",
+      "kanjivg": "5"
     }
   },
   "sources": [
@@ -62,6 +67,22 @@
         ]
       },
       "changes": "Reduced to the Han characters with a complete five-class code, one row per character, in code point order."
+    },
+    {
+      "key": "kanjivg",
+      "name": "KanjiVG, the stroke types of its kanji files",
+      "authors": "Ulrich Apel and contributors",
+      "url": "https://kanjivg.tagaini.net",
+      "repository": "https://github.com/KanjiVG/kanjivg",
+      "revision": "610091ce618cf757ed1357a8954cd65283e015d6",
+      "licence": {
+        "spdx": "CC-BY-SA-3.0",
+        "url": "https://creativecommons.org/licenses/by-sa/3.0/",
+        "texts": [
+          "LICENSE-kanjivg-CC-BY-SA-3.0.txt"
+        ]
+      },
+      "changes": "Reduced to each kanji's stroke types in writing order, with a five-class code added by this project."
     },
     {
       "key": "babelstone-ids",
@@ -1297,6 +1318,81 @@
             "agree": 6
           }
         ]
+      },
+      {
+        "source": "kanjivg",
+        "rules": [
+          {
+            "operator": "⿵",
+            "enclosure": "門",
+            "place": "outer-first",
+            "support": 40,
+            "agree": 37
+          },
+          {
+            "operator": "⿷",
+            "enclosure": "匚",
+            "place": "after-1",
+            "support": 12,
+            "agree": 12
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "尸",
+            "place": "outer-first",
+            "support": 27,
+            "agree": 25
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "厂",
+            "place": "outer-first",
+            "support": 20,
+            "agree": 19
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "虍",
+            "place": "outer-first",
+            "support": 9,
+            "agree": 9
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "戸",
+            "place": "outer-first",
+            "support": 6,
+            "agree": 6
+          },
+          {
+            "operator": "⿹",
+            "enclosure": "勹",
+            "place": "outer-first",
+            "support": 12,
+            "agree": 12
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "瓦",
+            "place": "outer-first",
+            "support": 7,
+            "agree": 7
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "廴",
+            "place": "inner-first",
+            "support": 5,
+            "agree": 5
+          },
+          {
+            "operator": "⿻",
+            "enclosure": "一",
+            "place": "outer-first",
+            "support": 9,
+            "agree": 9
+          }
+        ]
       }
     ],
     "validation": [
@@ -1547,6 +1643,102 @@
             "induced": "never"
           }
         ]
+      },
+      {
+        "source": "kanjivg",
+        "operators": [
+          {
+            "operator": "⿰",
+            "described": 3991,
+            "written": 3173,
+            "agree": 2927,
+            "induced": "always"
+          },
+          {
+            "operator": "⿱",
+            "described": 1636,
+            "written": 1196,
+            "agree": 1039,
+            "induced": "always"
+          },
+          {
+            "operator": "⿸",
+            "described": 243,
+            "written": 195,
+            "agree": 183,
+            "induced": "always"
+          },
+          {
+            "operator": "⿺",
+            "described": 179,
+            "written": 154,
+            "agree": 103,
+            "induced": "always"
+          },
+          {
+            "operator": "⿻",
+            "described": 101,
+            "written": 2,
+            "agree": 2,
+            "induced": "learned"
+          },
+          {
+            "operator": "⿵",
+            "described": 81,
+            "written": 60,
+            "agree": 49,
+            "induced": "always"
+          },
+          {
+            "operator": "⿳",
+            "described": 77,
+            "written": 36,
+            "agree": 29,
+            "induced": "always"
+          },
+          {
+            "operator": "⿹",
+            "described": 42,
+            "written": 4,
+            "agree": 4,
+            "induced": "learned"
+          },
+          {
+            "operator": "⿲",
+            "described": 37,
+            "written": 31,
+            "agree": 26,
+            "induced": "always"
+          },
+          {
+            "operator": "⿴",
+            "described": 36,
+            "written": 34,
+            "agree": 29,
+            "induced": "always"
+          },
+          {
+            "operator": "⿷",
+            "described": 16,
+            "written": 12,
+            "agree": 12,
+            "induced": "always"
+          },
+          {
+            "operator": "⿽",
+            "described": 5,
+            "written": 0,
+            "agree": 0,
+            "induced": "never"
+          },
+          {
+            "operator": "⿶",
+            "described": 5,
+            "written": 2,
+            "agree": 1,
+            "induced": "always"
+          }
+        ]
       }
     ]
   },
@@ -1578,6 +1770,20 @@
         "operator": 0,
         "component": 0
       }
+    },
+    {
+      "source": "kanjivg",
+      "recorded": 6728,
+      "entered": 0,
+      "equivalent": 754,
+      "ids": 70265,
+      "none": 25605,
+      "reasons": {
+        "undescribed": 531,
+        "unreadable": 1019,
+        "operator": 2316,
+        "component": 21739
+      }
     }
   ],
   "files": [
@@ -1603,8 +1809,19 @@
       "bytes": 1165017
     },
     {
+      "name": "kanjivg.tsv.gz",
+      "rows": 6728,
+      "columns": [
+        "char",
+        "codepoint",
+        "orders",
+        "strokes"
+      ],
+      "bytes": 106027
+    },
+    {
       "name": "induced.tsv.gz",
-      "rows": 26070,
+      "rows": 97089,
       "columns": [
         "char",
         "codepoint",
@@ -1614,7 +1831,7 @@
         "source",
         "ids"
       ],
-      "bytes": 415621
+      "bytes": 1477922
     },
     {
       "name": "entered.tsv",
@@ -1632,7 +1849,7 @@
     },
     {
       "name": "wanted.tsv",
-      "rows": 83,
+      "rows": 622,
       "columns": [
         "char",
         "codepoint",
@@ -1641,7 +1858,7 @@
         "alone",
         "examples"
       ],
-      "bytes": 3283
+      "bytes": 25484
     }
   ],
   "texts": [
@@ -1649,6 +1866,7 @@
     "LICENSE-rime-stroke-LGPL-3.0.txt",
     "LICENSE-GPL-3.0.txt",
     "AUTHORS-rime-stroke.txt",
+    "LICENSE-kanjivg-CC-BY-SA-3.0.txt",
     "LICENSE-yi-bai-ids-MIT.txt"
   ]
 }

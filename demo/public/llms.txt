@@ -22,6 +22,7 @@ Each file keeps its source's terms; this release is not CC0.
 - [manifest.json](https://ids.mkpo.li/data/open-strokes/manifest.json): the files, sources, licences, coverage and how often induction agrees with the sources.
 - [cns11643.tsv.gz](https://ids.mkpo.li/data/open-strokes/cns11643.tsv.gz): Taiwan's standard stroke order, from CNS 全字庫 (Open Government Data License 1.0).
 - [rime-stroke.tsv.gz](https://ids.mkpo.li/data/open-strokes/rime-stroke.tsv.gz): Rime's five-stroke dictionary, CNS order through Extension D and its authors' data beyond (LGPL-3.0).
+- [kanjivg.tsv.gz](https://ids.mkpo.li/data/open-strokes/kanjivg.tsv.gz): Japanese stroke order with each stroke's type, from KanjiVG (CC BY-SA 3.0).
 - [induced.tsv.gz](https://ids.mkpo.li/data/open-strokes/induced.tsv.gz): orders written from an equivalent character or from IDS components, for characters a source lacks.
 - [entered.tsv](https://ids.mkpo.li/data/open-strokes/entered.tsv): orders entered by hand, each with its basis.
 - [wanted.tsv](https://ids.mkpo.li/data/open-strokes/wanted.tsv): the components without an order that keep the most characters from being written.

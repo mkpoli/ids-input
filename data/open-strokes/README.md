@@ -1,6 +1,6 @@
 # Open stroke orders
 
-The stroke order of Han characters, from two sources, with orders induced for the characters a
+The stroke order of Han characters, from three sources, with orders induced for the characters a
 source lacks. Every row names where it comes from; an induced row is never mixed into a source's
 file.
 
@@ -12,11 +12,13 @@ The format is `ids-input/open-strokes`, version 2.
 | --- | ---: | --- |
 | `cns11643.tsv.gz` | 76,282 | Taiwan's standard order, from CNS 全字庫: `char`, `codepoint`, `orders`, `cns` (the CNS plane-codes mapped to the character). Open Government Data License 1.0. |
 | `rime-stroke.tsv.gz` | 102,582 | Rime's five-stroke dictionary: `char`, `codepoint`, `orders`. LGPL-3.0. |
-| `induced.tsv.gz` | 26,070 | Induced orders: `char`, `codepoint`, `orders`, `basis`, `from`, `source`, `ids`. Each row keeps the terms of its `source`. |
+| `kanjivg.tsv.gz` | 6,728 | Japanese order, from KanjiVG: `char`, `codepoint`, `orders`, `strokes` (KanjiVG's type of each stroke, as it writes them). CC BY-SA 3.0. |
+| `induced.tsv.gz` | 97,089 | Induced orders: `char`, `codepoint`, `orders`, `basis`, `from`, `source`, `ids`. Each row keeps the terms of its `source`. |
 | `entered.tsv` | 1 | Orders entered by hand: `char`, `codepoint`, `orders`, `basis`, `by`, `source`, `date`. CC0 1.0. |
-| `wanted.tsv` | 83 | Components without an order that keep characters from being written: `char`, `codepoint`, `source`, `blocks`, `alone`, `examples`. CC0 1.0. |
+| `wanted.tsv` | 622 | Components without an order that keep characters from being written: `char`, `codepoint`, `source`, `blocks`, `alone`, `examples`. CC0 1.0. |
 | `manifest.json` | | Sources with checksums, licences, coverage and the tables below. |
 | `LICENSE-rime-stroke-LGPL-3.0.txt`, `LICENSE-GPL-3.0.txt`, `AUTHORS-rime-stroke.txt` | | The terms and authors of the Rime dictionary. |
+| `LICENSE-kanjivg-CC-BY-SA-3.0.txt` | | The terms of KanjiVG. |
 | `LICENSE-yi-bai-ids-MIT.txt` | | The terms of Yi Bai's descriptions. |
 
 The data files are UTF-8 TSV with a header row, gzipped where the name ends in `.gz`. `orders` holds one code per way of writing
@@ -27,15 +29,21 @@ the character, separated by a space, in the source's order.
 A code is one symbol per stroke in writing order, in the five classes. Each file keeps its source's
 symbols.
 
-| Class | `cns11643` | `rime-stroke` |
-| --- | --- | --- |
-| 横 horizontal | `1` | `h` |
-| 豎 vertical | `2` | `s` |
-| 撇 left-falling | `3` | `p` |
-| 點 dot | `4` | `n` |
-| 折 turning | `5` | `z` |
+| Class | `cns11643` | `rime-stroke` | `kanjivg` |
+| --- | --- | --- | --- |
+| 横 horizontal | `1` | `h` | `1` |
+| 豎 vertical | `2` | `s` | `2` |
+| 撇 left-falling | `3` | `p` | `3` |
+| 點 dot | `4` | `n` | `4` |
+| 折 turning | `5` | `z` | `5` |
 
-Neither source gives stroke paths, and neither gives mainland, Japanese or Korean standard order.
+KanjiVG names each stroke's type with a CJK stroke character (㇐, ㇑a, ㇔/㇏), and `strokes` keeps
+those as written. Its `orders` code is this project's reading of them, not KanjiVG's: each type
+takes the class `data/ids-parts.json` gives its stroke character (a rising ㇀ is 横, a hooked ㇚
+is 豎, a falling ㇏ is 點), the first where KanjiVG offers two. CNS classes some of the same strokes
+otherwise, so a code from one source is not comparable stroke for stroke with another's.
+
+No source here gives stroke paths, or mainland or Korean standard order.
 
 ## The two sources are not two styles
 
@@ -63,11 +71,11 @@ convention they follow.
 
 - `equivalent`: the character is a compatibility ideograph or a radical form, and `from` is the
   unified ideograph it normalizes to (NFKC). The row repeats that character's recorded orders.
-  719 rows from `cns11643`, 681 from `rime-stroke`.
+  719 rows from `cns11643`, 681 from `rime-stroke`, 754 from `kanjivg`.
 - `ids`: `from` is the character's description and the order joins the recorded orders of
-  its components. The description is BabelStone's (the sequence its T source gives, else the
-  first) or, where BabelStone has none, Yi Bai's; the `ids` column names which.
-  24,667 rows from `cns11643` (4,187 of them by Yi Bai's descriptions), 3 from `rime-stroke`. Up to 8 ways are kept.
+  its components. The description is BabelStone's (the sequence its T source gives, or its J
+  source for `kanjivg`, else the first) or, where BabelStone has none, Yi Bai's; the `ids` column names which.
+  24,667 rows from `cns11643` (4,187 of them by Yi Bai's descriptions), 3 from `rime-stroke`, 70,265 from `kanjivg`. Up to 8 ways are kept.
 
 The components of ⿰ ⿱ ⿲ ⿳ are joined in the order the description names them. In the other
 operators the first component encloses, crosses or carries the second, and the second is written at
@@ -82,7 +90,7 @@ a place among the first's strokes:
 
 The place is learned per enclosure from the characters the source records: an enclosure with at
 least 5 such characters takes the place that writes the most of them as recorded, if that is
-90% or more. `cns11643` teaches 56 places and `rime-stroke` 106; `manifest.json` lists them
+90% or more. `cns11643` teaches 56 places, `rime-stroke` 106 and `kanjivg` 10; `manifest.json` lists them
 under `induction.learned`. An enclosure without a learned place takes its operator's usual one:
 `inner-first` for ⿶ and for ⿺ with 辶 or 廴, `before-last` for ⿴, `after-1` for ⿷, `outer-first` otherwise.
 
@@ -147,6 +155,24 @@ learned, or never.
 | ⿼ | 3 | 0 | 0 |  | never |
 | ⿿ | 3 | 0 | 0 |  | never |
 
+`kanjivg`:
+
+| Operator | Described | Written | Agree | | Induced |
+| --- | ---: | ---: | ---: | ---: | --- |
+| ⿰ | 3,991 | 3,173 | 2,927 | 92.2% | always |
+| ⿱ | 1,636 | 1,196 | 1,039 | 86.9% | always |
+| ⿸ | 243 | 195 | 183 | 93.8% | always |
+| ⿺ | 179 | 154 | 103 | 66.9% | always |
+| ⿻ | 101 | 2 | 2 | 100.0% | learned |
+| ⿵ | 81 | 60 | 49 | 81.7% | always |
+| ⿳ | 77 | 36 | 29 | 80.6% | always |
+| ⿹ | 42 | 4 | 4 | 100.0% | learned |
+| ⿲ | 37 | 31 | 26 | 83.9% | always |
+| ⿴ | 36 | 34 | 29 | 85.3% | always |
+| ⿷ | 16 | 12 | 12 | 100.0% | always |
+| ⿽ | 5 | 0 | 0 |  | never |
+| ⿶ | 5 | 2 | 1 | 50.0% | always |
+
 An induced row is a prediction, not a record. Over everything they write, the rules agree with CNS
 on 89.7% of the characters CNS records. The rows induced from CNS cannot be checked against the
 Rime file: Rime records 24,664 of those characters and 12,148 agree, since Rime's
@@ -169,6 +195,7 @@ To add an order, append a row to `data/stroke-orders-entered.tsv` in the reposit
 | --- | ---: | ---: | ---: | ---: | ---: |
 | `cns11643` | 76,282 | 1 | 719 | 24,667 | 1,684 |
 | `rime-stroke` | 102,582 | 0 | 681 | 3 | 86 |
+| `kanjivg` | 6,728 | 0 | 754 | 70,265 | 25,605 |
 
 "Without an order" counts the Han characters the workshop's composer draws or either IDS source
 describes that end with no row from that source. Why, for each:
@@ -177,6 +204,7 @@ describes that end with no row from that source. Why, for each:
 | --- | ---: | ---: | ---: | ---: |
 | `cns11643` | 164 | 316 | 680 | 524 |
 | `rime-stroke` | 86 | 0 | 0 | 0 |
+| `kanjivg` | 531 | 1,019 | 2,316 | 21,739 |
 
 An unreadable description is a single component, carries 〾 or an operator modifier, or names a
 numbered component BabelStone gives no fragment for.
@@ -194,6 +222,11 @@ numbered component BabelStone gives no fragment for.
   LGPL-3.0; the licence texts are beside this file. `rime-stroke.tsv.gz` is a modified form of the
   dictionary: reduced to the Han characters with a complete five-class code, one row per
   character, in code point order.
+- KanjiVG, <https://kanjivg.tagaini.net>, revision `610091ce618cf757ed1357a8954cd65283e015d6` of
+  <https://github.com/KanjiVG/kanjivg>, Copyright (C) 2009/2010/2011 Ulrich Apel, CC BY-SA 3.0,
+  <https://creativecommons.org/licenses/by-sa/3.0/>; the licence note is beside this file.
+  `kanjivg.tsv.gz` and the rows induced from it are adapted from KanjiVG and carry the same
+  licence: the kanji files reduced to their stroke types, with this project's five-class code.
 - BabelStone IDS, `IDS.TXT`, Andrew West (魏安), <https://www.babelstone.co.uk/CJK/IDS.TXT>, public
   domain: the descriptions induced rows are written from.
 
