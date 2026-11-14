@@ -36,11 +36,13 @@ CC0 1.0). Faces are pinned by SHA-256 and fetched into ~/.cache/ids-input/fonts 
 from __future__ import annotations
 
 import argparse
+import base64
 import gzip
 import hashlib
 import io
 import itertools
 import json
+import math
 import re
 import sys
 import tarfile
@@ -100,8 +102,8 @@ MATCH = 0.55
 MARGIN = 0.04
 #: A host is read only if it splits into at most this many outlines.
 MOST_PIECES = 10
-#: How many hosts are tried for each component.
-MOST_HOSTS = 12
+#: How many hosts are tried for each component: enough for a library of its places.
+MOST_HOSTS = 40
 #: What is left stands as the component when it matches the GlyphWiki glyph this well...
 REFERENCE = 0.35
 #: ...or when another host leaves something this like it...
@@ -254,7 +256,7 @@ def recipes(component: dict, table: dict[str, list[str]]) -> list[dict]:
             others.remove(text)
             if not all(encoded(leaf) for leaf in others):
                 continue
-            if len(tree) == 3 and text in tree[1:]:
+            if text in tree[1:]:
                 add(host, others, tree[0], tree.index(text) - 1)
             else:
                 add(host, others)
@@ -408,7 +410,8 @@ def cut(faces: list[Face], recipe: dict) -> dict | None:
         matches.append(best); margins.append(best - second)
     rest = np.logical_or.reduce([masks[i] for i in left])
     return {"recipe": recipe, "match": round(min(matches), 3), "margin": round(min(margins), 3), "face": face.name,
-            "print": print_of(rest), "pieces": [pieces[i] for i in sorted(left)]}
+            "print": print_of(rest), "pieces": [pieces[i] for i in sorted(left)],
+            "lifted": [pieces[i] for i in range(len(pieces)) if i not in left], "first": face is faces[0]}
 
 
 # ------------------------------------------------------------------ the forms
@@ -444,6 +447,77 @@ def form_of(pieces: list[pathops.Path]) -> list:
         piece.draw(recording)
         recording.replay(Cu2QuPen(pen, 0.5))
     return [pen.result]
+
+
+#: han-compose's places: an operand of a row or column by its letter, of anything else by its
+#: operator and index (`compose.slot`).
+SLOTS = {"⿰": "LR", "⿱": "TB", "⿲": "LCR", "⿳": "TMB"}
+#: The export's outline quantum: points are stored as int16 in quarter units (`web_export.QUANT`).
+QUANT = 4
+
+
+def slot(op: str, index: int) -> str:
+    return SLOTS[op][index] if op in SLOTS else f"{op}{index}"
+
+
+def bounds(pieces: list[pathops.Path]) -> list[float]:
+    return [round(v, 2) for v in (min(p.bounds[0] for p in pieces), min(p.bounds[1] for p in pieces),
+                                  max(p.bounds[2] for p in pieces), max(p.bounds[3] for p in pieces))]
+
+
+def ink(pieces: list[pathops.Path]) -> float:
+    """Outline length, as the composer measures ink."""
+    total = 0.0
+    for piece in pieces:
+        for ring in donor.rings_of(piece):
+            ring = np.asarray(ring)
+            total += float(np.hypot(*np.diff(ring, axis=0).T).sum())
+    return total
+
+
+def part_of(pieces: list[pathops.Path]) -> list:
+    """Outlines as an export part record's `p`: per contour its commands, its points in int16
+    quarter units, and their move to the heavy weight (none: a cut has one weight)."""
+    out = []
+    for ops, points in form_of(pieces)[0]:
+        light = np.round(np.asarray(points) * QUANT).astype("<i2")
+        out.append([ops, base64.b64encode(light.tobytes()).decode(), base64.b64encode(np.zeros_like(light).tobytes()).decode()])
+    return out
+
+
+def entry_of(got: dict, rank: int) -> dict:
+    """A host cut as an export host entry (`web_export.entry_record`): the host, where the component
+    stands in it, what stands beside it, and the piece with its box, the host's frame and the gap."""
+    recipe, kept, lifted = got["recipe"], got["pieces"], got["lifted"]
+    b, other = bounds(kept), bounds(lifted)
+    op, side = recipe["op"], recipe["side"]
+    gap = 0.0
+    if op == "⿰":
+        gap = other[0] - b[2] if side == 0 else b[0] - other[2]
+    elif op == "⿱":
+        gap = b[1] - other[3] if side == 0 else other[1] - b[3]
+    return {"r": rank, "h": recipe["host"], "i": side, "op": op, "ok": recipe["parts"], "si": round(ink(lifted), 1),
+            "d": 0, "v": int(got["first"]), "j": 0,
+            "c": {"b": b, "fr": bounds(kept + lifted), "wh": 1, "g": round(gap, 2), "p": part_of(kept)}}
+
+
+def record_of(kept: list[pathops.Path], entries: dict[str, list[dict]]) -> dict:
+    """What the layout reads of the component (`web_export.key_record`): its ink, outline count and
+    shape features (`compose_layout.shape`: box, ink, proportions, ink on an 8 × 8 grid), its usual
+    box in each place across its hosts (`u`: mean, spread, count) and those places (`P`)."""
+    b = bounds(kept)
+    length = ink(kept)
+    grid = print_of(np.logical_or.reduce([mask(piece) for piece in kept]), grid=8).ravel()
+    shape = [1.0, *(np.asarray(b) / 1000), math.log(max(length, 1)) / 10,
+             math.log(max(b[2] - b[0], 1) / max(b[3] - b[1], 1)), *grid]
+    usual = {}
+    for place, rows in entries.items():
+        boxes = np.asarray([row["c"]["b"] for row in rows], dtype=float)
+        mean = boxes.mean(axis=0)
+        spread = np.sqrt(np.maximum((boxes ** 2).mean(axis=0) - mean ** 2, 0))
+        usual[place] = [[round(v, 2) for v in mean], [round(v, 2) for v in spread], len(rows)]
+    return {"ink": round(length, 1), "o": sum(len(donor.rings_of(piece)) for piece in kept),
+            "f": [round(float(v), 4) for v in shape], "u": usual, "P": sorted(entries)}
 
 
 def glyphwiki_prints() -> dict[str, np.ndarray]:
@@ -498,7 +572,17 @@ def settle(job: tuple[dict, list[dict], np.ndarray | None]) -> tuple[str, dict]:
                 best = (score, got, agree, check)
         if best:
             _, got, agree, check = best
-            out[style] = {"g": form_of(got["pieces"]), "from": got["recipe"]["host"],
+            # The library: every host whose cut confirms the kept one, filed under the place its
+            # operator gives the component, best match first.
+            entries: dict[str, list[dict]] = {}
+            for other in sorted(cuts, key=lambda row: -row["match"]):
+                op = other["recipe"]["op"]
+                if op is None or op == "㇯" or (other is not got and like(other["print"], got["print"]) < AGREE):
+                    continue
+                place = slot(op, other["recipe"]["side"])
+                entries.setdefault(place, []).append(entry_of(other, len(entries.get(place, []))))
+            out[style] = {"g": form_of(got["pieces"]), "record": record_of(got["pieces"], entries), "hosts": entries,
+                          "from": got["recipe"]["host"],
                           "recipe": f"{got['recipe']['op'] or ''} {' '.join(got['recipe']['parts'])}".strip(), "face": got["face"],
                           "match": got["match"], "margin": got["margin"], "agree": agree,
                           **({"reference": round(check, 3)} if check is not None else {}),
@@ -521,9 +605,12 @@ def main(argv=None) -> int:
     open_faces()  # fetches any missing face once, before the workers read them
     with ProcessPoolExecutor(args.workers, initializer=open_faces) as pool:
         results = dict(pool.map(settle, jobs, chunksize=8))
-    styles = {style: {text: entry[style] for text, entry in sorted(results.items()) if "g" in entry[style]} for style in ("sans", "serif")}
+    styles = {style: {text: {k: v for k, v in entry[style].items() if k != "hosts"}
+                      for text, entry in sorted(results.items()) if "g" in entry[style]} for style in ("sans", "serif")}
+    hosts = {style: {text: entry[style]["hosts"] for text, entry in sorted(results.items()) if entry[style].get("hosts")}
+             for style in ("sans", "serif")}
     body = {
-        "format": "han-compose/custom-forms", "version": 1,
+        "format": "han-compose/custom-forms", "version": 2,
         "builder": "ids-input scripts/build_custom_cuts.py",
         "sources": {style: [{"name": face.name, "version": face.version, "sha256": face.pin["sha256"], "licence": face.pin["licence"]}
                             for face in faces] for style, faces in FACES.items()},
@@ -533,6 +620,7 @@ def main(argv=None) -> int:
             "references": "GlyphWiki glyphs of CHISE entities (ids-input data/custom-outlines.json.gz); user-edited, a check only",
         },
         "forms": styles,
+        "hosts": hosts,
     }
     OUT.write_bytes(gzip.compress(json.dumps(body, ensure_ascii=False, separators=(",", ":")).encode("utf-8"), mtime=0))
     for style in ("sans", "serif"):
@@ -540,7 +628,8 @@ def main(argv=None) -> int:
         for row in components:
             kinds.setdefault(row["kind"], [0, 0])[0] += 1
             kinds[row["kind"]][1] += row["text"] in styles[style]
-        print(style, " ".join(f"{kind} {done}/{total}" for kind, (total, done) in kinds.items()))
+        cuts = sum(len(rows) for places in hosts[style].values() for rows in places.values())
+        print(style, " ".join(f"{kind} {done}/{total}" for kind, (total, done) in kinds.items()), f"library {cuts} host cuts")
     print(OUT, f"{OUT.stat().st_size // 1024} KB")
     return 0
 
