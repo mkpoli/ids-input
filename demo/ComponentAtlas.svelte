@@ -140,7 +140,7 @@
       </div>
       <label class="least">
         <span>{t('atlas.minUses')}</span>
-        <input class="ui-input" type="number" min="0" step="10" value={least} oninput={event => from(() => { least = Math.max(0, Math.floor(Number(event.currentTarget.value)) || 0) })} />
+        <input class="ui-input" type="number" min="0" step="10" value={least} oninput={event => { const field = event.currentTarget; from(() => { least = Math.max(0, Math.floor(Number(field.value)) || 0) }); if (field.value !== '' && field.value !== String(least)) field.value = String(least) }} />
       </label>
       <span class="download"><Menu label={t('appendix.download')} icon="download" items={downloads} align="end" keyHints={false} compact /></span>
     </div>
