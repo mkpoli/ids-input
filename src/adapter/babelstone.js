@@ -240,6 +240,7 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  *   folds?: string | URL, foldsText?: string, characters?: string | URL, charactersText?: string,
  *   chains?: string | URL,
  *   custom?: string | URL | import('../core/custom-components.js').CustomComponentsData,
+ *   customOutlines?: string | URL | import('./types.js').CustomOutlinesData,
  *   characterInfo?: string | URL | import('./character-info.js').CharacterInfoData,
  *   layers?: string | URL, layersText?: string,
 
@@ -251,7 +252,7 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  *   worker?: (() => Worker) | null }} options
  * @returns {IdsAdapter & { table: () => Promise<Map<string, Sequence[]>> }}
  */
-export function babelStoneAdapter({ ids, zitools, chise, project, components, componentsText, overwrite, overwriteText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, chains, custom, characterInfo, layers, layersText, smallSeal, sketches, shuishu, jurchen, table: given, palette: givenPalette, fetch: get = download,
+export function babelStoneAdapter({ ids, zitools, chise, project, components, componentsText, overwrite, overwriteText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, chains, custom, customOutlines, characterInfo, layers, layersText, smallSeal, sketches, shuishu, jurchen, table: given, palette: givenPalette, fetch: get = download,
 
   worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./search-worker.js', import.meta.url), { type: 'module' }) } = {}) {
   /** @type {Promise<Map<string, Sequence[]>> | null} */
@@ -347,6 +348,12 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
   const readCustom = () => customComponents ??= (async () => createCustomComponents(
     typeof custom === 'string' || custom instanceof URL ? JSON.parse(await readText(await load(custom))) : /** @type {import('../core/custom-components.js').CustomComponentsData} */ (custom)))()
     .catch(error => { customComponents = null; throw error })
+  /** @type {Promise<import('./types.js').CustomOutlinesData | null> | null} */
+  let outlines = null
+  /** The outlines some components are shown by, loaded once; a card reads without them. */
+  const readOutlines = () => outlines ??= (async () => !customOutlines ? null
+    : typeof customOutlines === 'string' || customOutlines instanceof URL ? JSON.parse(await readText(await load(customOutlines))) : customOutlines)()
+    .catch(() => { outlines = null; return null })
   /** @type {Promise<import('./seal-data.js').SmallSealData | null> | null} */
   let seal = null
   const readSeal = () => seal ??= (async () => {
@@ -736,6 +743,18 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
       async customComponents(/** @type {import('./types.js').Options} */ { signal } = {}) {
         signal?.throwIfAborted()
         return (await readCustom()).components
+      },
+      async customPart(/** @type {string} */ text, /** @type {import('./types.js').Options} */ { signal } = {}) {
+        signal?.throwIfAborted()
+        const part = (await readCustom()).describe(text)
+        if (!part) return null
+        const read = await readOutlines()
+        signal?.throwIfAborted()
+        for (const name of [text, ...part.names.map(name => name.text)]) {
+          const from = read?.names[name], d = from === undefined ? undefined : read?.outlines[from]
+          if (from !== undefined && d) return { ...part, outline: { d, from, source: read?.source.title ?? '' } }
+        }
+        return part
       },
       async drawable(/** @type {string} */ sequence, /** @type {import('./types.js').Options} */ { signal } = {}) {
         signal?.throwIfAborted()

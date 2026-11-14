@@ -1551,7 +1551,7 @@
       </section>
     </div>
   </main>
-  <IdsCharacterInfo root={work} {adapter} {messages} {locale} disabled={editor.disabled} onpick={(part, path) => editor.take(part, path)} />
+  <IdsCharacterInfo root={work} {adapter} {messages} {locale} disabled={editor.disabled} onpick={(part, path) => editor.take(part, path)} customHref={id => `/unencoded?q=${id}`} />
 
 </div>
 

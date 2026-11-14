@@ -442,6 +442,7 @@
   "appendix.status.any": "모두",
   "appendix.status.confirmed": "확인됨",
   "appendix.status.candidate": "후보",
+  "appendix.status.editorial": "편집자 판단",
   "appendix.status.none": "등가 없음",
   "appendix.relation.candidate": "후보의 원형",
   "appendix.relation.arrangement": "다른 배치의 원형",
