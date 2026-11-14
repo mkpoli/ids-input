@@ -442,6 +442,7 @@
   "appendix.status.any": "不限",
   "appendix.status.confirmed": "已确认",
   "appendix.status.candidate": "候选",
+  "appendix.status.editorial": "编者认定",
   "appendix.status.none": "无等价",
   "appendix.relation.candidate": "候选来源",
   "appendix.relation.arrangement": "排法来源",

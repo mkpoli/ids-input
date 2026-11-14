@@ -442,6 +442,7 @@
   "appendix.status.any": "指定なし",
   "appendix.status.confirmed": "確認済み",
   "appendix.status.candidate": "候補",
+  "appendix.status.editorial": "編者による",
   "appendix.status.none": "等価なし",
   "appendix.relation.candidate": "候補の元",
   "appendix.relation.arrangement": "別配置の元",

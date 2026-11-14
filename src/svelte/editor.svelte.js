@@ -12,8 +12,8 @@
 import { insertAt } from './insertion.js'
 import { tokens, rangeToken } from './tokens.js'
 import { tick } from 'svelte'
-import { applyOperator, arity, clear, entryBody, unfinishedCustom, isDescription, isMarks, isNode, nextEmpty, normalizeMarks, parse, partAt, paths, place as placed, reorderSiblings,
-  replaceAt, samePath, sameTree, swapParts, unwrap, withMarks, write, writeDraft } from '../core/ids.js'
+import { applyOperator, arity, clear, entryBody, unfinishedCustom, isCustom, isDescription, isMarks, isNode, nextEmpty, normalizeMarks, parse, partAt, paths, place as placed, reorderSiblings,
+  replaceAt, samePath, sameTree, swapParts, unwrap, variantOf, withMarks, write, writeDraft } from '../core/ids.js'
 import { namingOperator, unalias } from '../core/aliases.js'
 import { commandFor } from '../core/keys.js'
 import { createHistory } from '../core/history.js'
@@ -373,6 +373,10 @@ export function createEditor(options) {
         return apply(withMarks(tree, marks), chosen, t('ids.do.put', { part: marks }))
       }
     }
+    // A component with its zi.tools variant identifier (𢎘z) is one part where it stands inside a
+    // description; alone it would read as two, so it is placed as written.
+    const varied = variantOf(written)
+    if (at?.length && tree !== null && varied.variant && (isCustom(varied.base) || [...varied.base].length === 1)) return put(written, at)
     const found = parse(unalias(written), { open: true })
     if (found.problem) { note = t(`ids.problem.${found.problem}`); return false }
     if (found.tree === null) return false

@@ -62,6 +62,9 @@
   const code = $derived(!char ? '' : customChar ? char : codePoint(char))
   const identity = $derived(customChar ? null : componentIdentity(char))
   /** @type {number | null} */ let uses = $state(null)
+  // Whether the card stands on a part inside a description: only there can a spelling that carries
+  // a variant identifier (𢎘z) take the part's place.
+  let inside = $state(false)
   // The stroke count and first stroke the card adds to the code point; the table loads on first use.
   let strokeRecords = $state.raw(/** @type {Map<string, import('./strokes.js').StrokeRecord> | null} */ (null))
   $effect(() => {
@@ -286,6 +289,7 @@
     close(); anchor = element; char = value
     const count = element.dataset.partUses
     uses = count !== undefined && Number.isFinite(Number(count)) ? Number(count) : null
+    inside = Boolean(element.getAttribute('data-path'))
     savedTitle = element.getAttribute('title'); savedDetails = element.getAttribute('aria-details')
     element.removeAttribute('title')
     const id = ++generation
@@ -569,8 +573,8 @@
             <p class="label">{t('info.custom.names')}</p>
             <div class="spellings">
               {#each custom.names as name (name.text)}
-                <button type="button" class="relation spelling" disabled={disabled || !onpick} aria-label={`${t('info.insert', { part: name.text })}${name.source ? ` · ${t(`info.custom.source.${name.source}`)}` : ''}`} onclick={() => pick(name.text)}>
-                  <span class="spelled" lang="ja">{name.text}</span>{#if name.source}<span class="label">{t(`info.custom.source.${name.source}`)}</span>{/if}
+                <button type="button" class="relation spelling" disabled={disabled || !onpick || (name.editorial && !inside)} aria-label={`${t('info.insert', { part: name.text })}${name.source ? ` · ${t(`info.custom.source.${name.source}`)}` : ''}${name.editorial ? ` · ${t('info.custom.editorial')}` : ''}`} onclick={() => pick(name.text)}>
+                  <span class="spelled" lang="ja">{name.text}</span>{#if name.source}<span class="label">{t(`info.custom.source.${name.source}`)}{#if name.editorial}{' · '}{t('info.custom.editorial')}{/if}</span>{/if}
                 </button>
               {/each}
               {#each subtractions as written (written)}
