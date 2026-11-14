@@ -219,6 +219,10 @@ def tables() -> dict[str, dict[str, list[str]]]:
     return out
 
 
+def write(tree) -> str:
+    return tree if isinstance(tree, str) else tree[0] + "".join(write(part) for part in tree[1:])
+
+
 def leaves(tree) -> list[str]:
     return [tree] if isinstance(tree, str) else [leaf for part in tree[1:] for leaf in leaves(part)]
 
@@ -233,11 +237,11 @@ def recipes(component: dict, table: dict[str, list[str]]) -> list[dict]:
     operator puts the other; then the subtraction the dictionary records."""
     text, found, seen = component["text"], [], set()
 
-    def add(host: str, parts: list[str], op: str | None = None, side: int = 0) -> None:
+    def add(host: str, parts: list[str], op: str | None = None, side: int = 0, siblings: list[str] | None = None) -> None:
         key = (host, tuple(sorted(parts)))
         if key not in seen and 0 < len(parts) <= MOST_PARTS:
             seen.add(key)
-            found.append({"host": host, "parts": parts, "op": op, "side": side})
+            found.append({"host": host, "parts": parts, "op": op, "side": side, "siblings": siblings or parts})
 
     subtraction = parse(component.get("subtraction") or "")
     removed = []
@@ -257,7 +261,8 @@ def recipes(component: dict, table: dict[str, list[str]]) -> list[dict]:
             if not all(encoded(leaf) for leaf in others):
                 continue
             if text in tree[1:]:
-                add(host, others, tree[0], tree.index(text) - 1)
+                side = tree.index(text) - 1
+                add(host, others, tree[0], side, [write(part) for i, part in enumerate(tree[1:]) if i != side])
             else:
                 add(host, others)
     return found[:MOST_HOSTS]
@@ -275,6 +280,33 @@ class Face:
         self.glyphs = self.font.getGlyphSet(location={"wght": 400}) if "fvar" in self.font else self.font.getGlyphSet()
         self.scale = 1000 / self.font["head"].unitsPerEm
         self.cache: dict[str, list[pathops.Path] | None] = {}
+        self.contours: dict[str, list[tuple[pathops.Path, float]]] = {}
+
+    def raw(self, char: str) -> list[tuple[pathops.Path, float]]:
+        """The glyph's own contours, before overlaps are merged, each with the length of its points'
+        polygon: what the composer counts as outlines and measures as ink (`Contour.length`)."""
+        if char not in self.contours:
+            name = self.cmap.get(ord(char[0])) if char else None
+            found = []
+            if name is not None:
+                recording = RecordingPen()
+                self.glyphs[name].draw(recording)
+                current, points = [], []
+                for op, args in recording.value:
+                    current.append((op, args))
+                    points += [(x * self.scale, y * self.scale) for x, y in args]
+                    if op in ("closePath", "endPath"):
+                        path = pathops.Path()
+                        pen = path.getPen()
+                        from fontTools.pens.transformPen import TransformPen
+                        replay = TransformPen(pen, (self.scale, 0, 0, self.scale, 0, 0))
+                        for o, a in current:
+                            getattr(replay, o)(*a)
+                        ring = np.asarray(points + points[:1], dtype=float) if points else np.zeros((0, 2))
+                        found.append((path, float(np.hypot(*np.diff(ring, axis=0).T).sum()) if len(ring) > 1 else 0.0))
+                        current, points = [], []
+            self.contours[char] = found
+        return self.contours[char]
 
     def pieces(self, char: str) -> list[pathops.Path] | None:
         if char not in self.cache:
@@ -411,7 +443,8 @@ def cut(faces: list[Face], recipe: dict) -> dict | None:
     rest = np.logical_or.reduce([masks[i] for i in left])
     return {"recipe": recipe, "match": round(min(matches), 3), "margin": round(min(margins), 3), "face": face.name,
             "print": print_of(rest), "pieces": [pieces[i] for i in sorted(left)],
-            "lifted": [pieces[i] for i in range(len(pieces)) if i not in left], "first": face is faces[0]}
+            "lifted": [pieces[i] for i in range(len(pieces)) if i not in left], "first": face is faces[0],
+            "host_face": face, "faces": faces}
 
 
 # ------------------------------------------------------------------ the forms
@@ -461,18 +494,29 @@ def slot(op: str, index: int) -> str:
 
 
 def bounds(pieces: list[pathops.Path]) -> list[float]:
-    return [round(v, 2) for v in (min(p.bounds[0] for p in pieces), min(p.bounds[1] for p in pieces),
-                                  max(p.bounds[2] for p in pieces), max(p.bounds[3] for p in pieces))]
+    """The box of the outlines' points, as the composer boxes a part (`Part.box`)."""
+    points = np.asarray([xy for _, flat in form_of(pieces)[0] for xy in zip(flat[0::2], flat[1::2])])
+    return [round(float(v), 2) for v in (*points.min(axis=0), *points.max(axis=0))]
 
 
-def ink(pieces: list[pathops.Path]) -> float:
-    """Outline length, as the composer measures ink."""
-    total = 0.0
-    for piece in pieces:
-        for ring in donor.rings_of(piece):
-            ring = np.asarray(ring)
-            total += float(np.hypot(*np.diff(ring, axis=0).T).sum())
-    return total
+def own(face: Face, char: str, kept: list[pathops.Path] | None = None) -> list[tuple[pathops.Path, float]]:
+    """A glyph's own contours, or those of them that lie in `kept`."""
+    contours = face.raw(char)
+    if kept is None:
+        return contours
+    union = pathops.Path()
+    for piece in kept:
+        union = pathops.op(union, piece, pathops.PathOp.UNION) if len(list(union.contours)) else piece
+    out = []
+    for path, length in contours:
+        area = abs(path.area)
+        if area and abs(pathops.op(path, union, pathops.PathOp.INTERSECTION).area) >= 0.5 * area:
+            out.append((path, length))
+    return out
+
+
+def ink_of(contours: list[tuple[pathops.Path, float]]) -> float:
+    return sum(length for _, length in contours)
 
 
 def part_of(pieces: list[pathops.Path]) -> list:
@@ -483,6 +527,11 @@ def part_of(pieces: list[pathops.Path]) -> list:
         light = np.round(np.asarray(points) * QUANT).astype("<i2")
         out.append([ops, base64.b64encode(light.tobytes()).decode(), base64.b64encode(np.zeros_like(light).tobytes()).decode()])
     return out
+
+
+#: The operators the layout learns, whose operands' boxes make a component's usual boxes
+#: (`compose_layout.OPS`).
+LEARNED = set("⿰⿱⿸⿺⿵⿹⿶⿴⿷")
 
 
 def entry_of(got: dict, rank: int) -> dict:
@@ -496,17 +545,22 @@ def entry_of(got: dict, rank: int) -> dict:
         gap = other[0] - b[2] if side == 0 else b[0] - other[2]
     elif op == "⿱":
         gap = b[1] - other[3] if side == 0 else other[1] - b[3]
-    return {"r": rank, "h": recipe["host"], "i": side, "op": op, "ok": recipe["parts"], "si": round(ink(lifted), 1),
+    face = got["host_face"]
+    # The siblings' ink is their own glyphs', as the export's index measures it.
+    sibling_ink = sum(ink_of(own(next((f for f in [face, *got["faces"]] if f.raw(leaf)), face), leaf))
+                      for name in recipe["siblings"] for leaf in leaves(parse(name) or name))
+    return {"r": rank, "h": recipe["host"], "i": side, "op": op, "ok": recipe["siblings"], "si": round(sibling_ink, 1),
             "d": 0, "v": int(got["first"]), "j": 0,
             "c": {"b": b, "fr": bounds(kept + lifted), "wh": 1, "g": round(gap, 2), "p": part_of(kept)}}
 
 
-def record_of(kept: list[pathops.Path], entries: dict[str, list[dict]]) -> dict:
+def record_of(kept: list[pathops.Path], entries: dict[str, list[dict]], face: Face, host: str) -> dict:
     """What the layout reads of the component (`web_export.key_record`): its ink, outline count and
     shape features (`compose_layout.shape`: box, ink, proportions, ink on an 8 × 8 grid), its usual
     box in each place across its hosts (`u`: mean, spread, count) and those places (`P`)."""
     b = bounds(kept)
-    length = ink(kept)
+    contours = own(face, host, kept)
+    length = ink_of(contours)
     grid = print_of(np.logical_or.reduce([mask(piece) for piece in kept]), grid=8).ravel()
     shape = [1.0, *(np.asarray(b) / 1000), math.log(max(length, 1)) / 10,
              math.log(max(b[2] - b[0], 1) / max(b[3] - b[1], 1)), *grid]
@@ -516,7 +570,7 @@ def record_of(kept: list[pathops.Path], entries: dict[str, list[dict]]) -> dict:
         mean = boxes.mean(axis=0)
         spread = np.sqrt(np.maximum((boxes ** 2).mean(axis=0) - mean ** 2, 0))
         usual[place] = [[round(v, 2) for v in mean], [round(v, 2) for v in spread], len(rows)]
-    return {"ink": round(length, 1), "o": sum(len(donor.rings_of(piece)) for piece in kept),
+    return {"ink": round(length, 1), "o": len(contours),
             "f": [round(float(v), 4) for v in shape], "u": usual, "P": sorted(entries)}
 
 
@@ -577,11 +631,13 @@ def settle(job: tuple[dict, list[dict], np.ndarray | None]) -> tuple[str, dict]:
             entries: dict[str, list[dict]] = {}
             for other in sorted(cuts, key=lambda row: -row["match"]):
                 op = other["recipe"]["op"]
-                if op is None or op == "㇯" or (other is not got and like(other["print"], got["print"]) < AGREE):
+                if op not in LEARNED or (other is not got and like(other["print"], got["print"]) < AGREE):
                     continue
                 place = slot(op, other["recipe"]["side"])
+                if any(row["h"] == other["recipe"]["host"] for row in entries.get(place, [])):
+                    continue
                 entries.setdefault(place, []).append(entry_of(other, len(entries.get(place, []))))
-            out[style] = {"g": form_of(got["pieces"]), "record": record_of(got["pieces"], entries), "hosts": entries,
+            out[style] = {"g": form_of(got["pieces"]), "record": record_of(got["pieces"], entries, got["host_face"], got["recipe"]["host"]), "hosts": entries,
                           "from": got["recipe"]["host"],
                           "recipe": f"{got['recipe']['op'] or ''} {' '.join(got['recipe']['parts'])}".strip(), "face": got["face"],
                           "match": got["match"], "margin": got["margin"], "agree": agree,
