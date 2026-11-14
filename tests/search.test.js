@@ -283,7 +283,7 @@ describe('visual substitutes in IDS queries', () => {
   })
 
   it('keeps the entered term, leaves other Hangul alone, and checks structure arity', () => {
-    expect(parseQuery('⿱스口').terms[0]).toMatchObject({ text: '⿱스口', tree: { op: '⿱', parts: ['亼', '口'] } })
+    expect(parseQuery('⿱스口').terms[0]).toMatchObject({ text: '⿱스口', tree: { op: '⿱', parts: [{ shape: '스', anyOf: ['亼'] }, '口'] } })
     expect(parseQuery('수').terms[0]).toMatchObject({ text: '수', leaves: ['수'] })
     expect(result('⿱스口木').problem).toBe('extra')
   })
@@ -307,7 +307,7 @@ it('preserves attached variation selectors when mapping a visual substitute', ()
         const query = wrap(alias + selector)
         expect(index.search(query)).toEqual(index.search(wrap(written)))
         expect(index.search(query).hits.map(hit => hit.char)).toEqual(['甲'])
-        expect(parseQuery(query).terms[0].leaves[0]).toBe(written)
+        expect(parseQuery(query).terms[0].leaves[0]).toEqual({ shape: alias + selector, anyOf: [written] })
       }
     }
   }
@@ -340,8 +340,8 @@ it('accepts Hangul and kana lookalikes without rewriting the result descriptions
     expect(index.search(parts)).toEqual(index.search(canonicalParts))
     expect(index.search(parts).hits.map(hit => hit.char)).toContain(expected)
   }
-  expect(parseQuery('ノ').terms[0].leaves).toEqual([{ anyOf: ['丿', '㇢', '亅'] }])
-  expect(parseQuery('ㅁㅁ').terms[0].leaves).toEqual(['口', '口'])
+  expect(parseQuery('ノ').terms[0].leaves).toEqual([{ shape: 'ノ', anyOf: ['丿', '㇢', '亅'] }])
+  expect(parseQuery('ㅁㅁ').terms[0].leaves).toEqual([{ shape: 'ㅁ', anyOf: ['口'] }, { shape: 'ㅁ', anyOf: ['口'] }])
   // A complete syllable stays a syllable, and ambiguous kana are not guessed.
   expect(parseQuery('미ガパ').terms[0].leaves).toEqual(['미', 'ガ', 'パ'])
   for (const query of ['ガ', 'カ\u3099', 'ｶﾞ', 'カ゛', 'ハ゜', 'ハ\u309A', 'ﾊﾟ']) {
@@ -356,7 +356,7 @@ it('finds 𭛝 from the katakana ヱ through its component 𠀄', () => {
   const index = createSearch(new Map([['𭛝', ['⿰彳𠀄']]]))
   expect(index.search('⿰彳ヱ')).toEqual(index.search('⿰彳𠀄'))
   expect(index.search('⿰彳ヱ').hits.map(hit => hit.char)).toEqual(['𭛝'])
-  expect(parseQuery('ヱ').terms[0].leaves).toEqual(['𠀄'])
+  expect(parseQuery('ヱ').terms[0].leaves).toEqual([{ shape: 'ヱ', anyOf: ['𠀄'] }])
 })
 
 
@@ -451,7 +451,13 @@ describe('Ashide component families', () => {
   it('leaves literal kana with voicing marks out of the ambiguous alias path', () => {
     const kana = createSearch(new Map([['甲', ['⿰カ口']], ['乙', ['⿰力口']]]))
     expect(kana.search('カ゛').hits.map(hit => hit.char)).toEqual(['甲'])
-    expect(kana.search('カ').hits.map(hit => hit.char)).toEqual(['乙'])
+    expect(kana.search('カ').hits.map(hit => hit.char)).toEqual(['甲', '乙'])
+  })
+
+  it('finds a kana written as itself before its lookalikes', () => {
+    const kana = createSearch(new Map(Object.entries({ 甲: ['⿱亠口'], 乙: ['⿱ユ口'], 丙: ['⿰丄木'], 丁: ['⿰ユ木'] })))
+    expect(kana.search('ユ').hits.map(hit => hit.char)).toEqual(['丁', '乙', '丙', '甲'])
+    expect(kana.search('⿱ユ口').hits.map(hit => hit.char)).toEqual(['乙', '甲'])
   })
 })
 

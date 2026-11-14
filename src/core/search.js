@@ -37,6 +37,8 @@ const tier = char => { const cp = /** @type {number} */ (char.codePointAt(0)); r
 export const OPEN_DEPTH = 6
 /** The most terms a query takes. */
 export const TERMS = 8
+/** What each lookalike standing for a written shape adds to a hit's score: after every hit holding the shape. */
+const LOOKALIKE = 1_000_000
 
 /** zi.tools' two wildcard expressions for looking up components.
  * @param {string} text @returns {{ kind: 'parts' | 'containing', char: string } | null} */
@@ -247,7 +249,7 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
   /** @param {string} c */
   const fold = c => forms.get(c) ?? forms.get([...c][0]) ?? c
   /** @param {QueryLeaf} leaf */
-  const choices = leaf => [...new Set((typeof leaf === 'string' ? [leaf] : leaf.anyOf).map(fold))]
+  const choices = leaf => [...new Set((typeof leaf === 'string' ? [leaf] : [leaf.shape, ...leaf.anyOf]).map(fold))]
   /** @type {Map<string, Tree[]>} */
   const trees = new Map()
   /** @param {string} char @returns {Tree[]} */
@@ -776,7 +778,8 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
    * @param {string} part @param {number} limit @returns {{ hits: Hit[], total: number }} */
   function containingPart(part, limit) {
     const firstLeaf = parseQuery(part).terms[0]?.leaves[0]
-    const excludeSelf = !firstLeaf || choices(firstLeaf).includes(fold(part))
+    // A part never contains itself, though a kana may contain a lookalike of its own shape.
+    const excludeSelf = !firstLeaf || (typeof firstLeaf === 'string' ? [firstLeaf] : firstLeaf.anyOf).map(fold).includes(fold(part))
     /** @type {Map<string, string[]>} */
     const aliases = new Map()
     for (const [char, descriptions] of table) for (const text of descriptions) {
@@ -852,6 +855,10 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
     const rarest = [...groups.values()].sort((a, b) =>
       a.reduce((n, id) => n + (by.of.get(id)?.length ?? 0), 0) - b.reduce((n, id) => n + (by.of.get(id)?.length ?? 0), 0))[0]
     if (!rarest) return { hits: [], total: 0 }
+    // A written kana or Hangul shape that some description holds as written finds those first; its
+    // lookalikes are the fallback.
+    const shapes = terms.flatMap(term => term.leaves.flatMap(leaf => typeof leaf === 'string' ? [] : [keyOf.get(fold(leaf.shape))]))
+      .filter(id => id !== undefined)
     const first = new Set(rarest.flatMap(id => [...(by.of.get(id) ?? [])]))
     /** @type {{ char: string, tree: Tree, paths: number[][], score: number }[]} */
     const found = []
@@ -905,7 +912,8 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
       if (!best) continue
       // The whole description matched exactly comes first; a description with more parts, later.
       const exact = terms.length === 1 && terms[0].kind === 'structure' && best.paths[0]?.length === 0 && !EMPTY_MARKS.some(mark => terms[0].text.includes(mark)) && !terms[0].text.includes(UNKNOWN)
-      found.push({ char, tree: best.tree, paths: best.paths, score: (exact ? -1000 : 0) + best.score + tier(char) * 15 })
+      const lookalikes = shapes.filter(id => !countIn(holds, id)).length
+      found.push({ char, tree: best.tree, paths: best.paths, score: lookalikes * LOOKALIKE + (exact ? -1000 : 0) + best.score + tier(char) * 15 })
     }
     found.sort((a, b) => a.score - b.score || tier(a.char) - tier(b.char) || /** @type {number} */ (a.char.codePointAt(0)) - /** @type {number} */ (b.char.codePointAt(0)))
     // Only the hits handed back are written out, with their spans.
