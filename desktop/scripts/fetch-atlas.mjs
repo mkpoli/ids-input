@@ -8,8 +8,12 @@ import { dirname, join } from 'node:path'
 import { COMPOSER_BASE } from '../../demo/lib/composer.js'
 
 const OUT = join(import.meta.dirname, '..', 'atlas')
-const WORKERS = 16, TRIES = 5
-const SHARDS = Array.from({ length: 4096 }, (_, i) => i.toString(16).padStart(3, '0'))
+const WORKERS = 32, TRIES = 5
+// A shard is named by the first hex digits of its keys' hash: four for a record shard, which sits in
+// a folder of the first two, and three for a host-list shard.
+const hex = (count, digits) => Array.from({ length: count }, (_, i) => i.toString(16).padStart(digits, '0'))
+const RECORDS = hex(65536, 4).map(shard => `g/${shard.slice(0, 2)}/${shard}.json`)
+const HOSTS = hex(4096, 3).map(shard => `p/${shard}.json`)
 
 /** @param {string} name @returns {Promise<Uint8Array | null>} null where the export has no such shard */
 async function get(name) {
@@ -40,9 +44,10 @@ const manifest = JSON.parse(new TextDecoder().decode(manifestBytes))
 
 const names = [
   manifest.files.layout.path,
+  manifest.files.identity.path,
   ...manifest.files.licences,
-  ...SHARDS.map(shard => `g/${shard}.json`),
-  ...SHARDS.map(shard => `p/${shard}.json`),
+  ...RECORDS,
+  ...HOSTS,
 ]
 const missing = names.filter(name => !existsSync(join(OUT, name)) && !existsSync(join(OUT, `${name}.absent`)))
 console.log(`${COMPOSER_BASE}\n${names.length} files, ${missing.length} to fetch`)
@@ -58,7 +63,7 @@ await Promise.all(Array.from({ length: WORKERS }, async () => {
     // answers 404 for it as the site does.
     if (bytes) writeFileSync(path, bytes)
     else { writeFileSync(`${path}.absent`, ''); absent++ }
-    if (++done % 500 === 0) console.log(`${done}/${missing.length}`)
+    if (++done % 4000 === 0) console.log(`${done}/${missing.length}`)
   }
 }))
 // The manifest goes last, so an interrupted run is never taken for a complete one.

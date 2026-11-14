@@ -1338,8 +1338,8 @@ The Components tab offers the list as **All characters**, beside the curated com
 stroke-count groups, paged at 120, searchable by character or `U+` code point and filterable by
 stroke count: single counts up to 22, then one 23+ group.
 
-Rebuild with `node scripts/build_han_parts.mjs [Unihan.zip] [stroke.dict.yaml]`. It reads all 4,096
-record shards from the export, the bundled outline index and palette outlines, and the pinned Unihan
+Rebuild with `node scripts/build_han_parts.mjs [Unihan.zip] [stroke.dict.yaml]`. It reads every
+record shard of the export, the bundled outline index and palette outlines, and the pinned Unihan
 archive (`https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip`, SHA-256
 `4c93ea9c1f636451729a840978f1667a53886af37ba854fdcce109721c63d43e`) and the Rime five-stroke
 dictionary (`https://raw.githubusercontent.com/rime/rime-stroke/1e8fff9b9494ddec23b0cbc526bcfd8171a6fd48/stroke.dict.yaml`,
@@ -1387,7 +1387,7 @@ status, the provenance indexes and the characters that attest it. Written by
 
 `bun scripts/audit_render_coverage.mjs CACHE_DIR OUTPUT_JSON [sans|serif|fangsong|klee]` renders every
 accepted non-private Unicode scalar through the actual preview worker. It preloads the selected
-export's record shards four at a time, caches bytes and missing-shard responses, and leaves later
+export's record shards sixteen at a time, caches bytes and missing-shard responses, and leaves later
 shard requests to the worker's loader. It stops on transport errors instead of treating them as
 glyph gaps. Run it under the project's batch resource limits. A warm cache avoids repeating the
 download.

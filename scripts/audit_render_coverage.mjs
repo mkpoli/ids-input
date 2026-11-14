@@ -37,7 +37,7 @@ globalThis.fetch = async input => {
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         const response = await network(url, { signal: AbortSignal.timeout(30000) })
-        if (response.status === 404 && /\/[gp]\/[a-f0-9]{3}\.json$/.test(url)) {
+        if (response.status === 404 && /\/(g\/[a-f0-9]{2}\/[a-f0-9]{4}|p\/[a-f0-9]{3})\.json$/.test(url)) {
           await writeFile(`${path}.404`, '')
           fetched.set(url.slice(base.length), null)
           return new Response(null, { status: 404 })
@@ -53,15 +53,17 @@ globalThis.fetch = async input => {
   fetched.set(url.slice(base.length), digest(bytes))
   return new Response(bytes)
 }
-// Preload the finite record shard space with four requests in flight. The worker uses the cache.
-const queue = Array.from({ length: 4096 }, (_, i) => `g/${i.toString(16).padStart(3, '0')}.json`)
+// Preload the finite record shard space with sixteen requests in flight. The worker uses the cache.
+// A record shard is named by four hex digits of its keys' hash, in a folder of the first two.
+const SHARDS = 65536
+const queue = Array.from({ length: SHARDS }, (_, i) => i.toString(16).padStart(4, '0')).map(shard => `g/${shard.slice(0, 2)}/${shard}.json`)
 let downloaded = 0
-await Promise.all(Array.from({ length: 4 }, async () => {
+await Promise.all(Array.from({ length: 16 }, async () => {
   for (;;) {
     const name = queue.pop()
     if (!name) return
     await fetch(base + name)
-    if (++downloaded % 512 === 0) console.log(`${style}: cached ${downloaded}/4096 record shards`)
+    if (++downloaded % 8192 === 0) console.log(`${style}: cached ${downloaded}/${SHARDS} record shards`)
   }
 }))
 let messages = []
@@ -111,13 +113,22 @@ const root = new URL('../', import.meta.url)
 // on what decides a drawing, or every report reads as older than the tree it was rendered from.
 const inputFiles = await coverageSources(root)
 const implementationHashes = Object.fromEntries(await Promise.all(inputFiles.sort().map(async name => [name, digest(await readFile(new URL(name, root)))])))
+// An export holds tens of thousands of shards: the report names how many were read and one hash
+// over them all (of each `name hash` line in order, an absent shard's hash written `-`), and lists
+// the hash of every other file.
+const isShard = name => /^[gp]\//.test(name)
+const sources = [...fetched].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0)
+const read = sources.filter(([name]) => isShard(name))
+const shards = { read: read.filter(([, hash]) => hash).length, absent: read.filter(([, hash]) => !hash).length,
+  sha256: digest(read.map(([name, hash]) => `${name} ${hash ?? '-'}\n`).join('')) }
 const report = {
   unicode: UNICODE_VERSION, style, base, implementationHashes,
   scope: 'Every accepted non-private scalar rendered separately through the preview worker. Does not test variation sequences, arbitrary IDS layouts, or visual fidelity.',
   accepted: accepted.length, drawn: drawn.length, missing: missing.length, invalid: invalid.length,
   privateUseExcluded: privateCount, missingRanges: ranges(missing), invalidRanges: ranges(invalid), blocks,
   localHashes: Object.fromEntries([...local].sort(([a], [b]) => a.localeCompare(b))),
-  sourceHashes: Object.fromEntries([...fetched].sort(([a], [b]) => a.localeCompare(b))),
+  sourceHashes: Object.fromEntries(sources.filter(([name]) => !isShard(name))),
+  shards,
 }
 await writeFile(output, JSON.stringify(report, null, 2) + '\n')
 console.log(JSON.stringify({ style, accepted: report.accepted, drawn: report.drawn, missing: report.missing, invalid: report.invalid }))
