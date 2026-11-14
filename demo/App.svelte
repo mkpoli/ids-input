@@ -399,7 +399,8 @@
   let locale = $state(LOCALES.find(([code]) => code === wanted)?.[0]
     ?? (traditional.test(wanted) ? 'zh-Hant' : undefined)
     ?? LOCALES.find(([code]) => wanted.startsWith(code.split('-')[0]))?.[0] ?? 'en')
-  $effect(() => save('locale', locale))
+  // A host's `?lang=` stays with the frame; the site keeps the reader's own language.
+  $effect(() => { if (!embed) save('locale', locale) })
   $effect(() => { document.documentElement.lang = locale })
   const messages = $derived(LOCALES.find(([code]) => code === locale)?.[2])
   const t = $derived(translator({ ...appMessages('en'), ...messages, ...appMessages(locale) }, locale))
@@ -518,8 +519,9 @@
 
   // The tabs of the workspace: one description each, the open ones and the active one kept for the
   // next visit. A tab's tree and history wait in `states` while another tab is shown.
-  const stored = embed ? [] : readTabs(), linkedDocument = documentFrom(location)
-  const linked = linkedDocument ? toSequence(linkedDocument.root) : sequenceFrom(location)
+  // Embedded, only `?ids=` opens a sequence: the page's own path is no sequence, and there are no tabs to restore.
+  const stored = embed ? [] : readTabs(), linkedDocument = embed ? null : documentFrom(location)
+  const linked = embed ? params.get('ids') ?? '' : linkedDocument ? toSequence(linkedDocument.root) : sequenceFrom(location)
   // Bring the old single-document autosave into the first tab on upgrade.
   if (!stored.length && !embed) {
     const previous = load('current', '')
@@ -573,6 +575,7 @@
   const canAdjust = $derived(Boolean((drawing || scopes) && !drawing?.cut))
   /** Start direct editing from a double-click on the drawing. @param {MouseEvent} event */
   function startAdjust(event) {
+    if (embed) return
     if (adjusting || !canAdjust) return
     // Only the drawing box starts it; the toolbar and the caption keep their own double-click.
     if (!(event.target instanceof Element) || !event.target.closest('.ids-preview-large')) return
@@ -772,9 +775,6 @@
     const heard = event => {
       if (event.source !== window.parent || event.data?.type !== 'ids-input:open' || typeof event.data.sequence !== 'string') return
       editor.reset(event.data.sequence)
-      const tab = current()
-      if (tab) keepTabSession(tab)
-      syncAddress()
     }
     window.addEventListener('message', heard)
     return () => window.removeEventListener('message', heard)
@@ -897,6 +897,12 @@
   /** A sequence opened in the active tab when it is empty, in the tab already showing it, else in a new tab. @param {string} sequence */
   function openSequence(sequence) {
     const text = sequence
+    // Embedded, there is one description: what a search hit or a replacement opens takes its place.
+    if (embed) {
+      toast = null
+      editor.reset(text)
+      return
+    }
     const open = tabs.find(tab => sameSequence(tab.sequence, text))
     if (open) {
       if (!EMPTY_MARKS.includes(text)) recents = remember(text, open.document)
@@ -1272,7 +1278,7 @@
 
   let replacementOpen = $state(false), aboutOpen = $state(false), sponsorOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false), pointsOpen = $state(false), layerOpen = $state(false), closeAllOpen = $state(false)
   // A problem report: the menus open it, and `?report=1` opens it on arrival.
-  let reportOpen = $state(params.get('report') === '1')
+  let reportOpen = $state(!embed && params.get('report') === '1')
   const endpoint = reportEndpoint(location)
   // The deep link opens the dialog once: the address drops it, so a reload lands in the workshop.
   if (reportOpen) {

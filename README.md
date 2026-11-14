@@ -1390,8 +1390,9 @@ it, and a refused or timed-out one keeps the text and offers another try.
 ### Embedding the workshop
 
 `/editor.html` is the workshop as one editor for another page's frame. It has no tabs, no site
-menus, no sharing, layers or export, and keeps nothing between visits. `?ids=` opens a sequence and
-`?lang=` picks the language. Each change is posted to the host page; a host can replace the sequence:
+menus, no sharing, layers or export, and keeps no tabs, history or language of its own. `?ids=` opens
+a sequence and `?lang=` picks the language. A search hit or a replacement takes the place of the
+sequence. Each change is posted to the host page; a host can replace the sequence:
 
 ```js
 addEventListener('message', ({ data }) => {
