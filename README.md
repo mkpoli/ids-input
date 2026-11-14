@@ -209,6 +209,7 @@ drawing pad; it asks the adapter for the palette and takes its glyph shapes from
 `--ids-font`. The Components panel shows the most used parts first, then every Han
 component of one stroke count, including compound IDS, grouped by first stroke. Palette text can be selected and copied;
 its stroke keys (横 豎 撇 點 折) list the parts written with the strokes typed, in writing order, fewest strokes first, and switch off the keys no part goes on with.
+In the All characters view the same keys search every Han character, by the orders of `data/open-strokes/rime-stroke.tsv.gz`, and combine with a stroke count.
 compound cells show their sequence and expose the stroke count on hover. `adapter.icon` supplies their outlines;
 without it, the cells use a font-based layout. Icon rendering must accept concurrent
 requests independently of the main preview. The components take colours from CSS custom properties with light and dark defaults
