@@ -5,6 +5,8 @@
   // sequence, the character it encodes, its code points, export). File and Edit menus lead the toolbar;
   // the toolbar holds undo, redo, examples, sharing, the language, settings and sources; the tab
   // strip's + opens a blank tab and its chevron opens the templates and examples as starting points.
+  // Embedded (`editor.html`), it is one description inside a host page: no tabs, no site chrome,
+  // nothing kept between visits, and each change posted to the host instead of written into the address.
   import SiteSelect from './ui/SiteSelect.svelte'
   import { onMount, tick, untrack } from 'svelte'
   import { watchFallback } from '../src/svelte/fallback-font.js'
@@ -121,6 +123,8 @@
     return () => window.removeEventListener('storage', onStorage)
   })
 
+  /** @type {{ embed?: boolean }} */
+  let { embed = false } = $props()
   const params = new URLSearchParams(location.search)
   /** A preview over the export at `base`, read from wherever this build holds it. @param {Parameters<typeof composerAt>[0]} options */
   const composerPreview = options => composerAt({ ...options, base: readFrom(options.base) })
@@ -514,10 +518,10 @@
 
   // The tabs of the workspace: one description each, the open ones and the active one kept for the
   // next visit. A tab's tree and history wait in `states` while another tab is shown.
-  const stored = readTabs(), linkedDocument = documentFrom(location)
+  const stored = embed ? [] : readTabs(), linkedDocument = documentFrom(location)
   const linked = linkedDocument ? toSequence(linkedDocument.root) : sequenceFrom(location)
   // Bring the old single-document autosave into the first tab on upgrade.
-  if (!stored.length) {
+  if (!stored.length && !embed) {
     const previous = load('current', '')
     if (typeof previous === 'string' && previous) stored.push(makeTab(previous))
   }
@@ -528,7 +532,7 @@
   // the one kept active stays.
   const linkedRecord = linkedDocument ? sessionRecord(createDocumentSession(linkedDocument)) : undefined
   const fromLink = linked && !linkedTab ? makeTab(linked, linked, linkedRecord) : undefined
-  const opening = stored.length ? [...stored, ...(fromLink ? [fromLink] : [])] : [fromLink ?? makeTab(linked || EXAMPLES[0].sequence)]
+  const opening = stored.length ? [...stored, ...(fromLink ? [fromLink] : [])] : [fromLink ?? makeTab(linked || (embed ? '' : EXAMPLES[0].sequence))]
   const initial = fromLink ?? (keptTab && linked && keptTab.sequence === linked ? keptTab : linkedTab) ?? keptTab ?? opening[0]
   let tabs = $state(opening)
   let activeId = $state(initial.id)
@@ -538,7 +542,7 @@
   let closedGroups = $state.raw([])
   // Sequences opened in this browser, newest first, for File -> Recent.
   let recents = $state(readRecent())
-  if (linked) recents = remember(linked, linkedRecord)
+  if (linked && !embed) recents = remember(linked, linkedRecord)
   const activeTab = $derived(/** @type {import('./lib/tabs.js').Tab} */ (tabs.find(tab => tab.id === activeId) ?? tabs[0]))
   /** @type {Map<string, ReturnType<typeof editor.snapshot>>} */
   const states = new Map()
@@ -574,8 +578,9 @@
     if (!(event.target instanceof Element) || !event.target.closest('.ids-preview-large')) return
     adjusting = true
   }
-  // The address starts on the tab shown, as it does after every change.
-  history.replaceState(null, '', linkTo(editor.draft, location, addressDocument(sessionFor(initial).document)))
+  // The address starts on the tab shown, as it does after every change; a host page hears of it.
+  if (embed) syncAddress()
+  else history.replaceState(null, '', linkTo(editor.draft, location, addressDocument(sessionFor(initial).document)))
   // Each change stays in its tab and is written into the address, so the link opens it; the tabs
   // and the active one are kept at the same time, a keystroke at a time.
   $effect(() => editor.listen(text => {
@@ -750,11 +755,30 @@
   }
   function undoAction() { if (!travelLayer(true)) editor.undo() }
   function redoAction() { if (!travelLayer(false)) editor.redo() }
-  /** Keep the address on the active tab, including transforms when they carry state. */
+  /** Keep the address on the active tab, including transforms when they carry state. Embedded, the
+   *  host page hears of the sequence instead: `{ type: 'ids-input:sequence', sequence, whole }`. */
   function syncAddress() {
+    if (embed) {
+      if (window.parent !== window) window.parent.postMessage({ type: 'ids-input:sequence', sequence: editor.draft, whole: editor.tree === null ? '' : editor.whole }, '*')
+      return
+    }
     const tab = current()
     history.replaceState(null, '', linkTo(editor.draft, location, tab ? addressDocument(sessionFor(tab).document) : null))
   }
+  // A host page replaces the sequence with `{ type: 'ids-input:open', sequence }`.
+  onMount(() => {
+    if (!embed) return
+    /** @param {MessageEvent} event */
+    const heard = event => {
+      if (event.source !== window.parent || event.data?.type !== 'ids-input:open' || typeof event.data.sequence !== 'string') return
+      editor.reset(event.data.sequence)
+      const tab = current()
+      if (tab) keepTabSession(tab)
+      syncAddress()
+    }
+    window.addEventListener('message', heard)
+    return () => window.removeEventListener('message', heard)
+  })
   /** The active tab's document to share, or null when its sequence says it all. */
   function currentDocument() {
     const tab = current()
@@ -822,7 +846,7 @@
     syncAddress()
   }
   /** Keep the open tabs and the chosen one for the next visit. */
-  function store() { writeTabs(tabs, activeId) }
+  function store() { if (!embed) writeTabs(tabs, activeId) }
   /** Keep the active tab's tree and history before another is shown. */
   function flush() {
     const tab = current()
@@ -1122,6 +1146,7 @@
   let dropping = $state(false)
   /** @param {DragEvent} event */
   function dropDocument(event) {
+    if (embed) return
     const files = event.dataTransfer?.files
     dropping = false
     if (!files?.length) return
@@ -1130,7 +1155,7 @@
   }
   /** @param {DragEvent} event */
   function dragFiles(event) {
-    if (!event.dataTransfer?.types.includes('Files')) return
+    if (embed || !event.dataTransfer?.types.includes('Files')) return
     event.preventDefault()
     event.dataTransfer.dropEffect = 'copy'
     dropping = true
@@ -1282,7 +1307,7 @@
     if (target.closest('dialog, [role="dialog"]')) return
     const command = (event.ctrlKey || event.metaKey) && !event.altKey
     const mod = command && !event.shiftKey
-    if (mod && event.key === ',') { event.preventDefault(); prefsOpen = true; return }
+    if (mod && event.key === ',' && !embed) { event.preventDefault(); prefsOpen = true; return }
     // The browser may keep Ctrl+Shift+T for its own closed tabs; where it does not, this reopens one.
     if (command && event.shiftKey && event.key.toLowerCase() === 't' && closedGroups.length
       && !target.closest('[role="menu"], [role="menubar"]')) {
@@ -1360,19 +1385,22 @@
   style:--chrome-height="{chromeHeight}px" style:--phone-tabs-height="{tabsHeight}px">
   <div class="chrome" bind:offsetHeight={chromeHeight}>
     <header class="bar">
+      {#if !embed}
       <SiteSelect title={t('app.title')} label={t('app.sitesLabel')} more={t('app.sitesMore')} {locale} href="/" compact />
       <span class="wide-only"><MenuBar label={t('app.menu')} menus={[{ label: t('app.file.label'), items: fileItems }, { label: t('app.edit.label'), items: editItems }]} {keyHints} /></span>
+      {/if}
       <nav class="tools" aria-label={t('app.toolbar')}>
         <div class="group">
           <button type="button" class="ui-button key-hint" disabled={!canUndo} title={undoTitle} aria-label={undoTitle} aria-keyshortcuts="Control+Z Meta+Z" onclick={undoAction}>
             <Icon name="undo" />{#if keyHints}<KeyHint combos={['mod+z']} />{/if}</button>
           <button type="button" class="ui-button key-hint" disabled={!canRedo} title={redoTitle} aria-label={redoTitle} aria-keyshortcuts="Control+Shift+Z Control+Y Meta+Shift+Z Meta+Y" onclick={redoAction}>
             <Icon name="redo" />{#if keyHints}<KeyHint combos={['mod+shift+z', 'mod+y']} />{/if}</button>
-          <span class="wide-only"><Menu label={t('app.history.label')} icon="history" text={false} items={historyItems} {keyHints} /></span>
+          {#if !embed}<span class="wide-only"><Menu label={t('app.history.label')} icon="history" text={false} items={historyItems} {keyHints} /></span>{/if}
         </div>
-        <span class="wide-only"><Menu label={t('app.examples.label')} icon="book" items={exampleItems} {keyHints} wide view={exampleView} /></span>
+        {#if !embed}<span class="wide-only"><Menu label={t('app.examples.label')} icon="book" items={exampleItems} {keyHints} wide view={exampleView} /></span>{/if}
       {@render fontSwitch(400)}
       </nav>
+      {#if !embed}
       <button type="button" class="sponsor" title={t('app.sponsor.label')} aria-label={t('app.sponsor.label')} aria-haspopup="dialog" aria-expanded={sponsorOpen} onclick={() => sponsorOpen = true}>
         <span class="sponsor-face" aria-hidden="true">
           <img src="/sponsor-face.webp" alt="" width="24" height="24" decoding="async" />
@@ -1389,12 +1417,15 @@
         <button type="button" class="ui-button" title={t('app.about.title')} aria-label={t('app.about.title')} onclick={() => aboutOpen = true}><Icon name="info" /></button>
       </div>
       <button type="button" class="ui-button more phone-only" title={t('app.menu')} aria-label={t('app.menu')} aria-haspopup="dialog" aria-expanded={moreOpen} onclick={() => moreOpen = true}><Icon name="menu" /></button>
+      {/if}
     </header>
+    {#if !embed}
     <div class="tabs-slot">
       <TabStrip bind:this={tabStrip} {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={() => addTab()} onduplicate={duplicateTab}
         oncloseothers={closeOthers} oncloseleft={closeLeft} oncloseright={closeRight} oncloseall={askCloseAll}
         onreopen={reopenClosed} canreopen={closedGroups.length > 0} onmove={moveTab} oncommit={store} {starter} />
     </div>
+    {/if}
   </div>
 
   <main class="workspace" bind:this={work}>
@@ -1528,22 +1559,28 @@
             {/key}
           {/if}
           <div class="adjust">
+            {#if !embed}
             <button type="button" class="adjust-toggle" disabled={editor.tree === null}
               onclick={() => { const tab = current(); if (tab) { keepTabSession(tab); layerOpen = true } }}>{t('app.layers.label')}</button>
+            {/if}
             <button type="button" class="adjust-toggle" bind:this={largeButton} aria-haspopup="dialog" aria-controls="large-preview" aria-expanded={large} disabled={editor.tree === null}
               onclick={() => { large = true }}><Icon name="search" size={15} />{t('app.preview.large')}</button>
+            {#if !embed}
             <button type="button" class="adjust-toggle" aria-pressed={adjusting} disabled={!canAdjust}
               title={drawing?.cut ? t('ids.adjust.unavailable') : undefined}
               onclick={() => { adjusting = !adjusting }}>{t(adjusting ? 'ids.adjust.done' : 'ids.adjust.title')}</button>
             <button type="button" class="adjust-toggle adjust-report" onclick={() => { reportOpen = true }}><Icon name="mail" size={15} />{t('app.report.title')}</button>
+            {/if}
             {#if adjusting}
               <button type="button" disabled={!editor.chosen} onclick={resetChosen}>{t('ids.adjust.reset')}</button>
               <span class="adjust-hint">{t('ids.adjust.hint')}</span>
             {/if}
           </div>
         </div>
+        {#if !embed}
         <PartFills session={currentSession()} version={documentTick} chosen={editor.chosen} disabled={!scopes} {t}
           onchoose={path => editor.choose(path, { toggle: false })} onchange={layerChanged} />
+        {/if}
         <dialog id="large-preview" class="large-dialog" bind:this={largeDialog} aria-label={t('app.preview.large')}
           oncancel={() => { large = false }} onclose={() => { large = false; tick().then(() => { if (largeButton && !largeButton.disabled) largeButton.focus(); else largeButton?.closest('.adjust')?.querySelector('button:not(:disabled)')?.focus() }) }}
           onclick={event => {
@@ -1571,9 +1608,11 @@
               document={currentSession()?.document} session={currentSession()} version={documentTick} editable={false} />
           {/if}
         </dialog>
+        {#if !embed}
         <div class="details">
           <div class="block"><ExportPanel bind:this={exportPanel} {drawing} {scopes} {slots} {emoji} {cut} {cutLeaf} incomplete={exportIncomplete} document={currentSession()?.document} sequence={editor.whole} {t} onnote={note} /></div>
         </div>
+        {/if}
       </section>
     </div>
   </main>
