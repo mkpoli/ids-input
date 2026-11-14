@@ -40,10 +40,8 @@ function leaves(value) {
 
 const uses = new Map()
 const subjectsOf = new Map()
-const subjectRows = new Map()
 for (const row of corpus.descriptions.rows) {
   const subject = row[D.subject]
-  if (!subjectRows.has(subject)) subjectRows.set(subject, row)
   const source = row[D.resolved] ?? row[D.text]
   for (const cid of leaves(source)) {
     if (cid === subject) continue
