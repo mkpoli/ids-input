@@ -74,7 +74,8 @@
    * @param {import('../core/forms.js').ComponentForm} form @param {Path} path */
   function chooseForm(form, path) {
     const part = partAt(editor.tree, path)
-    if (typeof part !== 'string') return
+    // The form already written is left as it is, with no step to undo.
+    if (typeof part !== 'string' || variationOf(part) === form.write) return
     if ((form.kind === 'plain' || form.kind === 'sequence') && editor.vary(form.write, path)) return
     editor.take([...form.write].length === 1 || variationBase(form.write) !== null ? withVariation(part, form.write) : form.write, path)
   }
@@ -548,7 +549,7 @@
     .ids-part,.ids-part.chosen,.ids-part.over,.ids-part.swap{border-width:0;padding:0}
   }
 
-  .ids-menu{position:fixed;z-index:50;display:flex;flex-direction:column;gap:2px;width:max-content;max-width:270px;padding:6px;
+  .ids-menu{position:fixed;z-index:50;display:flex;flex-direction:column;gap:2px;width:max-content;max-width:270px;max-height:calc(100dvh - 16px);overflow-y:auto;padding:6px;
     border:1px solid var(--_line);border-radius:10px;background:var(--_surface);box-shadow:0 10px 30px rgb(0 0 0 / .18)}
   .ids-menu-title{margin:2px 6px 4px;font-size:11px;color:var(--_muted)}
   .ids-menu-ops{display:grid;grid-template-columns:repeat(6,32px);gap:2px}

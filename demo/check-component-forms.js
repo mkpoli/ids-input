@@ -38,6 +38,14 @@ try {
     assert.equal(await page.locator('.ids-menu .ids-menu-form[data-form="王"]').getAttribute('title'), 'U+738B · UCV 1')
     await page.waitForFunction(() => [...document.querySelectorAll('.ids-menu-form svg path')].filter(path => path.getAttribute('d')).length === 3, null, { timeout: 180000 })
     await shot('forms-open')
+    // The form already written changes nothing and leaves no step to undo.
+    // The undo button names the step it would take back.
+    const undo = () => page.locator('button[aria-label^="Undo"], button[title^="Undo"]').first().evaluate(button => `${button.getAttribute('aria-label')}|${button.getAttribute('title')}|${/** @type {HTMLButtonElement} */ (button).disabled}`)
+    const before = await undo()
+    await page.locator('.ids-menu .ids-menu-form[data-form="壬"]').click()
+    assert.equal(await field.inputValue(), '⿰氵壬')
+    assert.equal(await undo(), before, 'choosing the written form records nothing')
+    await toggle.click()
     await page.locator('.ids-menu .ids-menu-form[data-form="王"]').click()
     assert.equal(await field.inputValue(), '⿰氵王', 'the sibling takes the component\'s place')
     assert.equal(await page.locator('.ids-menu').count(), 0, 'choosing closes the list')
