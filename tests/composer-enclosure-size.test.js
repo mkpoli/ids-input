@@ -10,7 +10,7 @@ const int16 = values => Buffer.from(Int16Array.from(values).buffer).toString('ba
 const boxGlyph = boxes => ({ v: 1,
   b: [Math.min(...boxes.map(b => b[0])), Math.min(...boxes.map(b => b[1])), Math.max(...boxes.map(b => b[2])), Math.max(...boxes.map(b => b[3]))],
   p: boxes.map(([x0, y0, x1, y1]) => ['MLLL', int16([x0, y0, x1, y0, x1, y1, x0, y1].map(v => v * 4)), int16(Array(8).fill(0))]) })
-const character = (key, boxes, { s, ink } = {}) => ({ k: key, G: boxGlyph(boxes), ink: ink ?? boxes.reduce((sum, [x0, y0, x1, y1]) => sum + 2 * (x1 - x0 + y1 - y0), 0),
+const character = (key, boxes, { s, ink } = {}) => ({ G: boxGlyph(boxes), ink: ink ?? boxes.reduce((sum, [x0, y0, x1, y1]) => sum + 2 * (x1 - x0 + y1 - y0), 0),
   nl: boxes.length, o: boxes.length, ...(s ? { s } : {}) })
 
 // 冂 as a frame of three bars, and 㸚 as a coarse 2 × 2 grid whose top row is drawn small: the

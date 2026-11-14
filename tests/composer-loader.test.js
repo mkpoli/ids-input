@@ -9,7 +9,7 @@ import { fromUrl } from '@han-compose/composer'
 const hex = text => createHash('sha256').update(text).digest('hex')
 const shard = (folder, text) => folder === 'g' ? `g/${hex(text).slice(0, 2)}/${hex(text).slice(0, 4)}.json` : `p/${hex(text).slice(0, 3)}.json`
 const half = n => Buffer.alloc(2 * n).toString('base64')
-const manifest = format => Buffer.from(JSON.stringify({ format, files: { layout: { path: 'layout.json' }, identity: { path: 'identity.json' } }, constants: {} }))
+const manifest = format => Buffer.from(JSON.stringify({ format, files: { layout: { path: 'layout.json' }, identity: { path: 'identity.json' } }, constants: { BINARY: ['⿰'], TERNARY: [], UNARY: [] } }))
 const files = {
   'manifest.json': manifest(7),
   'layout.json': Buffer.from(JSON.stringify({ ops: ['⿰'], defaults: {}, features: {}, seeds: [[{ shape: [23, 8], data: half(23 * 8) }, Buffer.alloc(32).toString('base64')]] })),
@@ -62,12 +62,17 @@ describe('the composer loader', () => {
     await source.ready()
     expect(source.manifest.format).toBe(7)
     expect(asked).toEqual(['manifest.json'])
-    expect(source.store().identity('⿰木木')).toBeUndefined()
+    // Until the table is read a single character's record answers, and a sequence asks for the table.
+    const store = source.store()
+    expect(store.identity('林')).toBeUndefined()
+    expect(store.identity('⿰木木')).toBeNull()
+    expect([...store.missing]).toEqual(['identity.json'])
     await source.load(source.modelFiles())
     expect(source.layout.ops).toEqual(['⿰'])
     expect(source.store().identity('⿰木木')).toEqual({ e: '林' })
     expect(source.store().identity('林')).toEqual({ s: '⿰木木' })
-    expect(source.store().identity('木')).toBeNull()
+    // The table holds every key with a sequence or a character: one it lacks has neither.
+    expect(source.store().identity('木')).toEqual({})
   })
 
   it('refuses an export of any other format', async () => {

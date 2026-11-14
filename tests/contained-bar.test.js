@@ -10,7 +10,7 @@ import { files, shards } from './fixtures/composer-export.js'
 const int16 = values => Buffer.from(Int16Array.from(values).buffer).toString('base64')
 const outline = ([x0, y0, x1, y1]) => ['MLLL', int16([x0, y0, x1, y0, x1, y1, x0, y1].map(value => value * 4)), int16(Array(8).fill(0))]
 const glyph = (box, outlines) => ({ v: 1, b: box, p: outlines })
-const record = (key, box, outlines) => ({ k: key, G: glyph(box, outlines), ink: 8573, nl: outlines.length, o: outlines.length })
+const record = (key, box, outlines) => ({ G: glyph(box, outlines), ink: 8573, nl: outlines.length, o: outlines.length })
 
 /** 丑 as the fonts draw it: the middle bar reaches past the right vertical (to 950 here). */
 const CHOU = [

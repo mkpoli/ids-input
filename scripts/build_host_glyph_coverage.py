@@ -27,15 +27,18 @@ cache = Path(sys.argv[1])
 hashes = {}
 points = set()
 # A record shard is named by four hex digits of its keys' hash, in a folder of the first two, and
-# holds its records by key. The report names how many shards were read and one hash over them all
-# (of each `name hash` line in order).
+# holds its records by key. The report names how many shards were read, how many the export does not
+# hold, and one hash over them all (of each `name hash` line in order, an absent shard's hash
+# written `-`), as the audit's own report does for the shards it read.
 shards = hashlib.sha256()
-read = 0
+read = absent = 0
 for name in ['manifest.json'] + [f'g/{i >> 8:02x}/{i:04x}.json' for i in range(65536)]:
     path = cache / hashlib.sha256((base + name).encode()).hexdigest()
     if not path.exists():
         # audit_render_coverage.mjs marks an absent shard with `<hash>.404`.
         if Path(f'{path}.404').exists():
+            shards.update(f'{name} -\n'.encode())
+            absent += 1
             continue
         raise SystemExit(f'missing cache entry for {name}; run the audit first')
     raw = path.read_bytes()
@@ -61,7 +64,7 @@ report = {
     'count': len(points),
     'ranges': ranges,
     'sha256': hashes,
-    'shards': {'read': read, 'sha256': shards.hexdigest()},
+    'shards': {'read': read, 'absent': absent, 'sha256': shards.hexdigest()},
 }
 out = ROOT / ('data/host-glyph-coverage.json' if style == 'sans' else f'data/host-glyph-coverage-{style}.json')
 out.write_text(json.dumps(report, separators=(',', ':')) + '\n')

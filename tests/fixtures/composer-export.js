@@ -40,7 +40,7 @@ const glyph = boxes => {
   const b = [Math.min(...boxes.map(x => x[0])), Math.min(...boxes.map(x => x[1])), Math.max(...boxes.map(x => x[2])), Math.max(...boxes.map(x => x[3]))]
   return { v: 1, b, p: boxes.map(([x0, y0, x1, y1]) => ['MLLL', int16([x0, y0, x1, y0, x1, y1, x0, y1].map(v => v * 4)), int16(Array(8).fill(0))]) }
 }
-const character = (key, boxes) => ({ k: key, G: glyph(boxes), ink: boxes.reduce((s, [x0, y0, x1, y1]) => s + 2 * (x1 - x0 + y1 - y0), 0), nl: boxes.length, o: boxes.length })
+const character = (key, boxes) => ({ G: glyph(boxes), ink: boxes.reduce((s, [x0, y0, x1, y1]) => s + 2 * (x1 - x0 + y1 - y0), 0), nl: boxes.length, o: boxes.length })
 export const ops = ['⿰', '⿱', '⿸', '⿺', '⿵', '⿹', '⿶', '⿴', '⿷']
 export const layout = { ops, defaults: Object.fromEntries(['L', 'R', 'T', 'B', ...ops.slice(2).flatMap(op => [`${op}0`, `${op}1`])].map(p => [p, [0, 0, 1000, 1000]])),
   features: {}, seeds: [[{ shape: [ops.length + 2 * 81, 8], data: Buffer.alloc(2 * (ops.length + 162) * 8).toString('base64') }, Buffer.alloc(32).toString('base64')]] }
@@ -53,7 +53,7 @@ const records = {
   永: character('永', [[100, 0, 900, 800]]),
   // 冂 as the pinned Sans export draws it: sixteen contours whose bar, sides and foot close as a
   // frame, which a cell split would tear apart.
-  冂: { k: '冂', G: { v: 1, b: [41.13,-82.14,957.51,841.58],
+  冂: { G: { v: 1, b: [41.13,-82.14,957.51,841.58],
     p: [
       ['MLLL', int16([176,3280,2124,3280,2124,2972,176,2972]), int16([0,0,0,0,0,0,0,0])],
       ['MLLL', int16([2408,2712,3852,2712,3852,2312,2408,2312]), int16([0,0,0,0,0,0,0,0])],

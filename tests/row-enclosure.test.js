@@ -13,7 +13,7 @@ const glyphOf = boxes => ({
   b: [Math.min(...boxes.map(b => b[0])), Math.min(...boxes.map(b => b[1])), Math.max(...boxes.map(b => b[2])), Math.max(...boxes.map(b => b[3]))],
   p: boxes.map(b => box(...b)),
 })
-const character = (key, boxes) => ({ k: key, G: glyphOf(boxes), ink: boxes.reduce((s, [x0, y0, x1, y1]) => s + 2 * (x1 - x0 + y1 - y0), 0), nl: boxes.length, o: boxes.length })
+const character = (key, boxes) => ({ G: glyphOf(boxes), ink: boxes.reduce((s, [x0, y0, x1, y1]) => s + 2 * (x1 - x0 + y1 - y0), 0), nl: boxes.length, o: boxes.length })
 
 // A 冂 frame, the two dots of ⺀ and the two strokes of 刂, each as its own glyph.
 const FRAME = [[100, 700, 900, 800], [100, 0, 180, 800], [820, 0, 900, 800]]
