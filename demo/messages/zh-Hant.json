@@ -468,6 +468,10 @@
   "normalization.scope.families": "部件面板",
   "normalization.scope.chains": "解析",
   "normalization.scope.operators": "輸入框",
+  "normalization.mode.rewrite": "改寫",
+  "normalization.mode.match": "比對",
+  "normalization.hint.rewrite": "輸入替換為右側。",
+  "normalization.hint.match": "輸入保持原樣，按相同處理。",
   "ucv.title": "部件認同規則（UCV）",
   "ucv.source": "來源"
 }

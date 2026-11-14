@@ -471,6 +471,10 @@
   "normalization.scope.families": "Palette",
   "normalization.scope.chains": "Parser",
   "normalization.scope.operators": "Field",
+  "normalization.mode.rewrite": "Rewritten",
+  "normalization.mode.match": "Matched",
+  "normalization.hint.rewrite": "The typed text is replaced by the right side.",
+  "normalization.hint.match": "The typed text stays as written and is treated as the same.",
   "ucv.title": "Component variations (UCV)",
   "ucv.source": "Source"
 }

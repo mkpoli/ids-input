@@ -1,6 +1,6 @@
 <script>
   // What the workshop reads as the same thing written another way, each table from the code or the
-  // data that applies it: structures (the Templates count), kana and Hangul shapes (the search),
+  // data that applies it, grouped by whether the input is rewritten or kept as written: structures (the Templates count), kana and Hangul shapes (the search),
   // component forms and stroke families (the palette and the search), stroke chains and operator
   // names (the parser).
   import SiteSelect from './ui/SiteSelect.svelte'
@@ -61,8 +61,10 @@
   /** @type {Rule[]} */
   const operators = Object.entries(ALIASES).map(([name, op]) => ({ from: [name], to: [op] }))
 
-  const SECTIONS = /** @type {const} */ ([
-    ['structure', structures], ['kana', kana], ['hangul', hangul], ['forms', forms], ['families', families], ['chains', chains], ['operators', operators],
+  // A rewrite replaces what is typed; a match keeps it as written and treats it as the same.
+  const GROUPS = /** @type {const} */ ([
+    ['rewrite', [['chains', chains], ['operators', operators]]],
+    ['match', [['structure', structures], ['kana', kana], ['hangul', hangul], ['forms', forms], ['families', families]]],
   ])
   let query = $state(params.get('q') ?? '')
   const needle = $derived(query.trim().toLowerCase())
@@ -99,18 +101,26 @@
         <span class="ui-visually-hidden">{t('normalization.search')}</span>
         <input type="search" bind:value={query} placeholder={t('normalization.search')} autocomplete="off" spellcheck="false" />
       </label>
-      <ul>
-        {#each SECTIONS as [id, rules] (id)}
-          <li><a href={`#${id}`}>{t(`normalization.${id}`)}</a><span class="n">{found(rules).length}</span></li>
-        {/each}
-      </ul>
+      {#each GROUPS as [mode, sections] (mode)}
+        <div class="group">
+          <a class="mode" href={`#${mode}`} title={t(`normalization.hint.${mode}`)}><span aria-hidden="true">{mode === 'rewrite' ? '→' : '≈'}</span> {t(`normalization.mode.${mode}`)}</a>
+          <ul>
+            {#each sections as [id, rules] (id)}
+              <li><a href={`#${id}`}>{t(`normalization.${id}`)}</a><span class="n">{found(rules).length}</span></li>
+            {/each}
+          </ul>
+        </div>
+      {/each}
     </nav>
 
     <main>
-      {#each SECTIONS as [id, rules] (id)}
+      {#each GROUPS as [mode, sections] (mode)}
+      <section id={mode} class="mode-group" aria-labelledby={`${mode}-title`}>
+      <h2 id={`${mode}-title`} title={t(`normalization.hint.${mode}`)}><span class="sign" aria-hidden="true">{mode === 'rewrite' ? '→' : '≈'}</span>{t(`normalization.mode.${mode}`)}</h2>
+      {#each sections as [id, rules] (id)}
         {@const shown = found(rules)}
         <section {id} aria-labelledby={`${id}-title`}>
-          <h2 id={`${id}-title`}>{t(`normalization.${id}`)} <span class="scope">{t(`normalization.scope.${id}`)}</span></h2>
+          <h3 id={`${id}-title`}>{t(`normalization.${id}`)} <span class="scope">{t(`normalization.scope.${id}`)}</span></h3>
           {#if id === 'structure'}
             <label class="try">
               <span class="ui-visually-hidden">{t('normalization.try')}</span>
@@ -137,13 +147,15 @@
               {#each shown as rule (rule.from.join(' ') + rule.to.join(' '))}
                 <div class="rule" lang="ja" title={rule.note}>
                   <span class="from">{rule.from.join(id === 'structure' ? '  ' : ' ')}</span>
-                  <span class="arrow" aria-hidden="true">→</span>
+                  <span class="arrow" aria-hidden="true">{mode === 'rewrite' ? '→' : '≈'}</span>
                   <span class="to">{rule.to.join(' ')}</span>
                 </div>
               {/each}
             </div>
           {/if}
         </section>
+      {/each}
+      </section>
       {/each}
     </main>
   </div>
@@ -159,6 +171,9 @@
   .back:hover{color:var(--ids-ink)}
   .body{display:grid;grid-template-columns:220px minmax(0,1fr);gap:28px;width:100%;max-width:1180px;margin:0 auto;padding:24px max(18px,env(safe-area-inset-right)) 64px max(18px,env(safe-area-inset-left))}
   .toc{position:sticky;top:16px;align-self:start;display:flex;flex-direction:column;gap:12px}
+  .group{display:flex;flex-direction:column;gap:2px}
+  .mode{padding:5px 8px 3px;font-size:11.5px;font-weight:600;color:var(--ids-muted);text-decoration:none}
+  .toc a.mode:hover{background:none;color:var(--ids-ink)}
   .toc ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
   .toc li{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
   .toc a{flex:1;padding:5px 8px;border-radius:6px;color:var(--ids-ink-soft);text-decoration:none;font-size:13px}
@@ -166,7 +181,10 @@
   .n{font-size:11px;color:var(--ids-muted);font-variant-numeric:tabular-nums}
   .search input,.try input{width:100%;box-sizing:border-box;padding:7px 10px;border:1px solid var(--ids-control-border);border-radius:7px;background:var(--ids-surface);color:inherit;font:inherit}
   section{scroll-margin-top:16px;margin:0 0 30px}
-  h2{display:flex;align-items:baseline;gap:8px;font-size:14px;margin:0 0 10px}
+  .mode-group{margin:0 0 40px}
+  h2{display:flex;align-items:baseline;gap:8px;font-size:16px;margin:0 0 16px;padding-bottom:8px;border-bottom:1px solid var(--ids-line)}
+  .sign{color:var(--ids-muted);font-weight:400}
+  h3{display:flex;align-items:baseline;gap:8px;font-size:14px;margin:0 0 10px}
   .scope{padding:0 6px;border:1px solid var(--ids-line);border-radius:4px;font-size:10px;font-weight:500;line-height:1.7;color:var(--ids-muted)}
   .cite{font-size:11.5px;color:var(--ids-muted);margin:0 0 8px}
   .cite a{color:var(--ids-accent);text-decoration:none}
@@ -185,6 +203,7 @@
     .body{grid-template-columns:minmax(0,1fr);gap:16px}
     .toc{position:static}
     .toc ul{flex-direction:row;flex-wrap:wrap;gap:4px 10px}
+    .group{gap:0}
     .grid.wide{grid-template-columns:minmax(0,1fr)}
   }
 </style>

@@ -468,6 +468,10 @@
   "normalization.scope.families": "Bảng bộ phận",
   "normalization.scope.chains": "Bộ phân tích",
   "normalization.scope.operators": "Ô nhập",
+  "normalization.mode.rewrite": "Viết lại",
+  "normalization.mode.match": "Đối chiếu",
+  "normalization.hint.rewrite": "Nội dung gõ vào được thay bằng vế phải.",
+  "normalization.hint.match": "Nội dung gõ vào giữ nguyên và được xem là như nhau.",
   "ucv.title": "Biến thể bộ phận (UCV)",
   "ucv.source": "Nguồn"
 }

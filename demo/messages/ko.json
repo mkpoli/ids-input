@@ -468,6 +468,10 @@
   "normalization.scope.families": "팔레트",
   "normalization.scope.chains": "구문 분석",
   "normalization.scope.operators": "입력란",
+  "normalization.mode.rewrite": "치환",
+  "normalization.mode.match": "대응",
+  "normalization.hint.rewrite": "입력한 글자가 오른쪽으로 바뀝니다.",
+  "normalization.hint.match": "입력한 글자는 그대로 두고 같은 것으로 다룹니다.",
   "ucv.title": "부품 통합 기준(UCV)",
   "ucv.source": "출처"
 }
