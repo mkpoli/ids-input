@@ -354,9 +354,10 @@
   const iconsAt = (at, style) => {
     const key = `${at}\0${style}`
     if (!iconDrawings.has(key)) {
-      const draw = order.after(drawerAt(at, style))
-      iconDrawings.set(key, createIconDrawings(async sequence =>
-        (style === 'sans' && exportUrl(at) === preparedBase && !hasEmoji(sequence) ? await preparedFor(sequence) : null) ?? draw(sequence)))
+      // A prepared drawing needs no export: it is answered ahead of the composed icons' queue.
+      const composed = createIconDrawings(order.after(drawerAt(at, style)))
+      iconDrawings.set(key, async sequence =>
+        (style === 'sans' && exportUrl(at) === preparedBase && !hasEmoji(sequence) ? await preparedFor(sequence) : null) ?? composed(sequence))
     }
     return /** @type {ReturnType<typeof createIconDrawings>} */ (iconDrawings.get(key))
   }

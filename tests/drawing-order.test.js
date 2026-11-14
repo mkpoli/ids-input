@@ -46,7 +46,6 @@ test('a drawing aborted while it waits never starts', async () => {
   const answer = draw('⿰木口', { signal: controller.signal })
   controller.abort()
   order.hold(false)
-  expect(answer).rejects.toThrow()
-  await settle()
+  await expect(answer).rejects.toThrow()
   expect(calls).toBe(0)
 })
