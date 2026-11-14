@@ -1,13 +1,11 @@
 <script>
   // What the workshop reads as the same thing written another way, each table from the code or the
-  // data that applies it, grouped by whether the input is rewritten or kept as written: structures (the Templates count), kana and Hangul shapes (the search),
-  // component forms and stroke families (the palette and the search), stroke chains and operator
-  // names (the parser).
-  import SiteSelect from './ui/SiteSelect.svelte'
-  import ThemeSwitch from './ui/ThemeSwitch.svelte'
+  // data that applies it, grouped by whether the input is rewritten or kept as written: structures
+  // (the Templates count), kana and Hangul shapes (the search), component forms and stroke families
+  // (the palette and the search), stroke chains and operator names (the parser).
+  import PageHeader from './ui/PageHeader.svelte'
   import { translator } from '../src/svelte/index.js'
   import { LOCALES, appMessages } from './lib/locales.js'
-  import { applyTheme, storedTheme } from './lib/theme.js'
   import { load, save } from './lib/storage.js'
   import { ALIASES, equivalences, parse, structureSkeleton } from '../src/core/index.js'
   import { STROKE_CHAINS } from '@han-compose/composer/tree'
@@ -24,9 +22,6 @@
   $effect(() => { document.documentElement.lang = locale })
   const messages = $derived(LOCALES.find(([code]) => code === locale)?.[2])
   const t = $derived(translator({ ...appMessages('en'), ...messages, ...appMessages(locale) }, locale))
-  let theme = $state(storedTheme())
-  /** @param {import('./lib/theme.js').Theme} next */
-  const setTheme = next => { theme = next; applyTheme(next) }
 
   /** A rule: what is written, and what it is read as. @typedef {{ from: string[], to: string[], note?: string }} Rule */
   /** @param {string} hex */
@@ -79,27 +74,13 @@
 </script>
 
 <div class="page">
-  <header class="bar">
-    <SiteSelect title={t('app.title')} label={t('app.sitesLabel')} more={t('app.sitesMore')} {locale} href={`./?lang=${locale}`} />
-    <span class="slash" aria-hidden="true">/</span>
-    <h1>{t('normalization.title')}</h1>
-    <div class="end">
-      <label class="lang">
-        <span class="ui-visually-hidden">{t('sources.language')}</span>
-        <select bind:value={locale}>
-          {#each LOCALES as [code, name] (code)}<option value={code}>{name}</option>{/each}
-        </select>
-      </label>
-      <ThemeSwitch {theme} label={t('app.prefs.theme')} labels={{ system: t('app.theme.system'), light: t('app.theme.light'), dark: t('app.theme.dark') }} onchange={setTheme} />
-      <a class="back" href={`./?lang=${locale}`}>{t('sources.back')}</a>
-    </div>
-  </header>
+  <PageHeader title={t('normalization.title')} {t} bind:locale />
 
   <div class="body">
     <nav class="toc" aria-label={t('normalization.title')}>
       <label class="search">
         <span class="ui-visually-hidden">{t('normalization.search')}</span>
-        <input type="search" bind:value={query} placeholder={t('normalization.search')} autocomplete="off" spellcheck="false" />
+        <input class="ui-input" type="search" bind:value={query} placeholder={t('normalization.search')} autocomplete="off" spellcheck="false" />
       </label>
       {#each GROUPS as [mode, sections] (mode)}
         <div class="group">
@@ -124,7 +105,7 @@
           {#if id === 'structure'}
             <label class="try">
               <span class="ui-visually-hidden">{t('normalization.try')}</span>
-              <input bind:value={tried} lang="ja" autocomplete="off" spellcheck="false" placeholder={t('normalization.try')} />
+              <input class="ui-input" bind:value={tried} lang="ja" autocomplete="off" spellcheck="false" placeholder={t('normalization.try')} />
               <output lang="ja">{skeleton(tried) || '—'}</output>
             </label>
           {/if}
@@ -163,42 +144,36 @@
 
 <style>
   .page{display:flex;flex-direction:column;min-height:100dvh}
-  .bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px max(18px,env(safe-area-inset-right)) 10px max(18px,env(safe-area-inset-left));border-bottom:1px solid var(--ids-line)}
-  h1{font-size:15px;font-weight:600;margin:0}
-  .slash{color:var(--ids-muted)}
-  .end{display:flex;align-items:center;gap:10px;margin-inline-start:auto}
-  .back{font-size:12px;color:var(--ids-muted);text-decoration:none}
-  .back:hover{color:var(--ids-ink)}
   .body{display:grid;grid-template-columns:220px minmax(0,1fr);gap:28px;width:100%;max-width:1180px;margin:0 auto;padding:24px max(18px,env(safe-area-inset-right)) 64px max(18px,env(safe-area-inset-left))}
-  .toc{position:sticky;top:16px;align-self:start;display:flex;flex-direction:column;gap:12px}
+  .toc{position:sticky;top:74px;align-self:start;display:flex;flex-direction:column;gap:12px}
   .group{display:flex;flex-direction:column;gap:2px}
-  .toc a.mode{padding:5px 8px 3px;font-size:11.5px;font-weight:600;color:var(--ids-muted)}
-  .toc a.mode:hover{background:none;color:var(--ids-ink)}
   .toc ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
   .toc li{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
-  .toc a{flex:1;padding:5px 8px;border-radius:6px;color:var(--ids-ink-soft);text-decoration:none;font-size:13px}
-  .toc a:hover{background:var(--ids-surface-subtle);color:var(--ids-ink)}
-  .n{font-size:11px;color:var(--ids-muted);font-variant-numeric:tabular-nums}
-  .search input,.try input{width:100%;box-sizing:border-box;padding:7px 10px;border:1px solid var(--ids-control-border);border-radius:7px;background:var(--ids-surface);color:inherit;font:inherit}
-  section{scroll-margin-top:16px;margin:0 0 30px}
+  .toc a{flex:1;padding:5px 8px;border-radius:var(--ui-radius-sm);color:var(--ui-color-ink-soft);text-decoration:none;font-size:13px}
+  .toc a:hover{background:var(--ui-color-surface-sunken);color:var(--ui-color-ink)}
+  .toc a.mode{padding:5px 8px 3px;font-size:11.5px;font-weight:600;color:var(--ui-color-ink-muted)}
+  .toc a.mode:hover{background:none;color:var(--ui-color-ink)}
+  .n{font-size:11px;color:var(--ui-color-ink-muted);font-variant-numeric:tabular-nums}
+  .search input,.try input{width:100%}
+  section{scroll-margin-top:74px;margin:0 0 30px}
   .mode-group{margin:0 0 40px}
-  h2{display:flex;align-items:baseline;gap:8px;font-size:16px;margin:0 0 16px;padding-bottom:8px;border-bottom:1px solid var(--ids-line)}
-  .sign{color:var(--ids-muted);font-weight:400}
+  h2{display:flex;align-items:baseline;gap:8px;font-size:16px;margin:0 0 16px;padding-bottom:8px;border-bottom:1px solid var(--ui-color-border)}
+  .sign{color:var(--ui-color-ink-muted);font-weight:400}
   h3{display:flex;align-items:baseline;gap:8px;font-size:14px;margin:0 0 10px}
-  .scope{padding:0 6px;border:1px solid var(--ids-line);border-radius:4px;font-size:10px;font-weight:500;line-height:1.7;color:var(--ids-muted)}
-  .cite{font-size:11.5px;color:var(--ids-muted);margin:0 0 8px}
-  .cite a{color:var(--ids-accent);text-decoration:none}
+  .scope{padding:0 6px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-xs);font-size:10px;font-weight:500;line-height:1.7;color:var(--ui-color-ink-muted)}
+  .cite{font-size:11.5px;color:var(--ui-color-ink-muted);margin:0 0 8px}
+  .cite a{color:var(--ui-color-accent);text-decoration:none}
   .cite a:hover{text-decoration:underline}
   .try{display:flex;align-items:center;gap:10px;margin:0 0 10px}
   .try input{max-width:260px;font-family:var(--ids-font);font-size:16px}
-  .try output{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;color:var(--ids-ink-soft);overflow-wrap:anywhere}
+  .try output{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;color:var(--ui-color-ink-soft);overflow-wrap:anywhere}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
   .grid.wide{grid-template-columns:repeat(auto-fill,minmax(420px,1fr))}
-  .rule{display:flex;align-items:baseline;gap:6px;min-width:0;padding:5px 8px;border:1px solid var(--ids-line);border-radius:6px;background:var(--ids-surface);font-family:var(--ids-font),var(--ids-glyph-fallback);font-size:15px}
-  .from{font-weight:600;color:var(--ids-ink);overflow-wrap:anywhere;white-space:pre-wrap}
-  .arrow{color:var(--ids-muted)}
-  .to{color:var(--ids-ink-soft);overflow-wrap:anywhere}
-  .empty{color:var(--ids-muted);font-size:12.5px;margin:0}
+  .rule{display:flex;align-items:baseline;gap:6px;min-width:0;padding:5px 8px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-sm);background:var(--ui-color-surface);font-family:var(--ids-font),var(--ids-glyph-fallback);font-size:15px}
+  .from{font-weight:600;color:var(--ui-color-ink);overflow-wrap:anywhere;white-space:pre-wrap}
+  .arrow{color:var(--ui-color-ink-muted)}
+  .to{color:var(--ui-color-ink-soft);overflow-wrap:anywhere}
+  .empty{color:var(--ui-color-ink-muted);font-size:12.5px;margin:0}
   @media (max-width:760px) {
     .body{grid-template-columns:minmax(0,1fr);gap:16px}
     .toc{position:static}

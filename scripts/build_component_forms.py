@@ -6,7 +6,7 @@
 
 Run with uv; arguments are Noto Sans CJK and Noto Serif CJK Regular TTC paths.
 """
-import hashlib, json, sys
+import hashlib, json, math, sys
 import pathops
 from pathlib import Path
 from fontTools.ttLib import TTFont
@@ -53,6 +53,52 @@ def group(cs):
     pen = Contours()
     for c in cs: replayRecording(c, Cu2QuPen(pen, 0.5))
     return pen.result
+
+def pieces(cs, ch):
+    """A glyph's untouching pieces: its contours merged where they overlap, each outer outline with
+    the counters inside it."""
+    shape = pathops.Path()
+    for c in cs(ch): replayRecording(c, shape.getPen())
+    shape.simplify()
+    loops = []
+    for contour in shape.contours:
+        loop = pathops.Path(); contour.draw(loop.getPen())
+        if abs(loop.area) >= 1: loops.append(loop)  # a sliver left by simplifying is no piece
+    def inside(small, large):
+        return abs(pathops.op(small, large, pathops.PathOp.INTERSECTION).area) >= 0.98 * abs(small.area)
+    depth = [sum(inside(a, b) for j, b in enumerate(loops) if j != i) for i, a in enumerate(loops)]
+    found = []
+    for i, loop in enumerate(loops):
+        if depth[i] % 2: continue
+        piece = loop
+        for j, other in enumerate(loops):
+            if depth[j] == depth[i] + 1 and inside(other, loop):
+                piece = pathops.op(piece, other, pathops.PathOp.DIFFERENCE)
+        found.append(piece)
+    return found
+
+def proportion(path):
+    x0, y0, x1, y1 = path.bounds
+    return math.log(max(x1 - x0, 1) / max(y1 - y0, 1))
+
+def chain_from(cs, host, strokes):
+    """A stroke chain lifted out of a character that writes it beside other strokes, along outlines
+    the font draws. Each stroke in `strokes` has to stand apart in the host as one piece shaped like
+    the stroke drawn alone (its box's proportions, nearest by a clear margin); what is left is the
+    chain. A host whose strokes touch the chain is refused, not cut along a seam the font lacks."""
+    found = pieces(cs, host)
+    for stroke in strokes:
+        alone = pathops.Path()
+        for c in cs(stroke): replayRecording(c, alone.getPen())
+        ranked = sorted(found, key=lambda piece: abs(proportion(piece) - proportion(alone)))
+        gap = abs(proportion(ranked[0]) - proportion(alone))
+        assert gap < 0.7 and (len(ranked) == 1 or abs(proportion(ranked[1]) - proportion(alone)) > gap + 1), \
+            f'{stroke} is not a piece of its own in {host}'
+        found.remove(ranked[0])
+    assert len(found) == 1, f'{host} less {strokes} is {len(found)} pieces, not one chain'
+    pen = RecordingPen()
+    found[0].draw(pen)
+    return [group([pen.value])]
 
 def seal_dot_top(cs, style):
     """Compose the manuscript's joined ⺊冖 from each face's 上 and 冖.
@@ -430,6 +476,9 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
         for dots_seq in ['⿰冫⿱丿丶','⿰冫⿾冫']:
             forms['⿳田'+dots_seq+bottom]=[group(cs(ch))]
     forms['⿳艹田⿵冂山'] = wan_shan(cs, style)
+    # zi.tools stroke chains. 马 is written 𠃍, ㇉ and 一, and its 一 stands apart in both faces, so
+    # the frame of 马 is the rest of the glyph.
+    forms['#(-𠃍㇉)'] = chain_from(cs, '马', '一')
     forms['⿱田⿵冂山'] = globals()['WAN_WITHOUT_CAO']
     forms['⿱龷由'] = [group(huang_body(cs))]
     # The top of the KRM vulgar 處 (K07097330): ⺊'s dot as a bar, the stem centred on the cover

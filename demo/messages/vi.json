@@ -473,5 +473,11 @@
   "normalization.hint.rewrite": "Nội dung gõ vào được thay bằng vế phải.",
   "normalization.hint.match": "Nội dung gõ vào giữ nguyên và được xem là như nhau.",
   "ucv.title": "Biến thể bộ phận (UCV)",
-  "ucv.source": "Nguồn"
+  "ucv.source": "Nguồn",
+  "appendix.notations": "Ký pháp",
+  "appendix.notation.babelstone": "Số của một bộ phận chưa có mã. Chú thích 6 của tệp cho biết mỗi số xuất hiện ở đâu.",
+  "appendix.notation.chise": "Một glyph trong bản thể luận ký tự CHISE, gọi theo tên ở đó. Tiền tố cho biết bộ ký tự nguồn.",
+  "appendix.notation.zi-tools": "Các nét theo thứ tự viết, nét sau bắt đầu ở chỗ nét trước kết thúc. Dấu trừ là nét viết ngược, chữ z cuối là nét khép kín.",
+  "appendix.notation.form": "Số riêng của bảng này cho một dạng, dù nguồn gọi nó là gì. Nó đọc được như một bộ phận trong mọi mô tả.",
+  "appendix.download": "Tải xuống"
 }

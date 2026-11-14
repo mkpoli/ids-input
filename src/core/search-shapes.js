@@ -39,7 +39,9 @@ const SHAPES = {
 /** Query runs accept named targets such as 〇 without changing the renderer's component grammar. */
 export const SHAPE_COMPONENTS = new Set(Object.values(SHAPES).flat())
 
-/** @typedef {{ anyOf: string[] }} Shape A query-only choice of components. */
+/** A written shape and the components it may stand for. Search matches the shape itself first and
+ * its lookalikes after; the description keeps the shape as written.
+ * @typedef {{ shape: string, anyOf: string[] }} Shape */
 
 /** @param {string} token @param {string | undefined} next @returns {string | Shape} */
 export function searchShape(token, next) {
@@ -48,8 +50,7 @@ export function searchShape(token, next) {
   const lookup = /^[\uFF66-\uFF9D\uFFA0-\uFFDC]$/u.test(base) ? base.normalize('NFKC') : base
   const choices = SHAPES[lookup]
   if (!choices) return token
-  const anyOf = choices.map(component => component + token.slice(base.length))
-  return anyOf.length === 1 ? anyOf[0] : { anyOf }
+  return { shape: token, anyOf: choices.map(component => component + token.slice(base.length)) }
 }
 
 

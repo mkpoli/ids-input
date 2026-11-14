@@ -209,6 +209,7 @@ drawing pad; it asks the adapter for the palette and takes its glyph shapes from
 `--ids-font`. The Components panel shows the most used parts first, then every Han
 component of one stroke count, including compound IDS, grouped by first stroke. Palette text can be selected and copied;
 its stroke keys (横 豎 撇 點 折) list the parts written with the strokes typed, in writing order, fewest strokes first, and switch off the keys no part goes on with.
+In the All characters view the same keys search every Han character, by the orders of `data/open-strokes/rime-stroke.tsv.gz`, and combine with a stroke count.
 compound cells show their sequence and expose the stroke count on hover. `adapter.icon` supplies their outlines;
 without it, the cells use a font-based layout. Icon rendering must accept concurrent
 requests independently of the main preview. The components take colours from CSS custom properties with light and dark defaults
@@ -588,7 +589,9 @@ two). `preview` draws a sequence that may hold empty slots (`⬚`); its options 
 Error named `TooLargeError` for a sequence larger than it draws, `UnavailableError` when its data
 cannot be read at all, and any other Error when it cannot draw. `IdsPreview` shows placeholders in the layout's boxes until a drawing arrives, a badge
 (Preview, Approximate, Final, Could not compose, Too large), and the adapter's `drawing` in place of
-the preview when there is one. While the data is unavailable, the placeholders stand with no badge.
+the preview when there is one. While the data is unavailable, the placeholders stand with no badge. It binds
+`step`, where the drawing stands: `idle`, `loading`, `composed`, `final`, `failed`, `capped` or
+`unavailable`.
 
 `IdsPreview` takes a tab `document` and `session` for direct layer editing, and binds `scopes` for
 export. Drag a part, or the selected layer's outline, to move it; drag an edge to scale one axis,

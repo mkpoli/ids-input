@@ -16,10 +16,6 @@
     }
   ],
   "observability": { "enabled": true },
-  // The queue the report action dispatches its answer to; `wrangler.queue.jsonc` declares it.
-  "queues": {
-    "consumers": [{ "queue": "ids-reports-answers", "max_batch_size": 10, "max_batch_timeout": 1 }]
-  },
   "kv_namespaces": [
     {
       "binding": "REPORTS",

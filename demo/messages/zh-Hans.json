@@ -473,5 +473,11 @@
   "normalization.hint.rewrite": "输入替换为右侧内容。",
   "normalization.hint.match": "输入保持原样，视为相同。",
   "ucv.title": "部件认同规则（UCV）",
-  "ucv.source": "来源"
+  "ucv.source": "来源",
+  "appendix.notations": "记法",
+  "appendix.notation.babelstone": "给没有码位的部件编的号。文件的注6列出每个编号出现在哪些字里。",
+  "appendix.notation.chise": "CHISE字符本体里的一个字形，用它在那里的名称表示。前缀是所出的字符集。",
+  "appendix.notation.zi-tools": "按笔顺排列的笔画，每一笔从上一笔的终点起笔。减号表示倒着写，末尾的z表示首尾相接。",
+  "appendix.notation.form": "不管各来源怎么称呼，本表给一个字形的编号。在任何描述序列里都可以当部件读。",
+  "appendix.download": "下载"
 }

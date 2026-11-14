@@ -1,10 +1,10 @@
 # Open stroke orders
 
-The stroke order of Han characters, from two sources, with orders induced for the characters a
+The stroke order of Han characters, from three sources, with orders induced for the characters a
 source lacks. Every row names where it comes from; an induced row is never mixed into a source's
 file.
 
-The format is `ids-input/open-strokes`, version 1.
+The format is `ids-input/open-strokes`, version 2.
 
 ## Files
 
@@ -12,11 +12,16 @@ The format is `ids-input/open-strokes`, version 1.
 | --- | ---: | --- |
 | `cns11643.tsv.gz` | 76,282 | Taiwan's standard order, from CNS 全字庫: `char`, `codepoint`, `orders`, `cns` (the CNS plane-codes mapped to the character). Open Government Data License 1.0. |
 | `rime-stroke.tsv.gz` | 102,582 | Rime's five-stroke dictionary: `char`, `codepoint`, `orders`. LGPL-3.0. |
-| `induced.tsv.gz` | 20,715 | Induced orders: `char`, `codepoint`, `orders`, `basis`, `from`, `source`. Each row keeps the terms of its `source`. |
+| `kanjivg.tsv.gz` | 6,728 | Japanese order, from KanjiVG: `char`, `codepoint`, `orders`, `strokes` (KanjiVG's type of each stroke, as it writes them). CC BY-SA 3.0. |
+| `induced.tsv.gz` | 97,114 | Induced orders: `char`, `codepoint`, `orders`, `basis`, `from`, `source`, `ids`. Each row keeps the terms of its `source`. |
+| `entered.tsv` | 1 | Orders entered by hand: `char`, `codepoint`, `orders`, `basis`, `by`, `source`, `date`. CC0 1.0. |
+| `wanted.tsv` | 620 | Components without an order that keep characters from being written: `char`, `codepoint`, `source`, `blocks`, `alone`, `examples`. CC0 1.0. |
 | `manifest.json` | | Sources with checksums, licences, coverage and the tables below. |
 | `LICENSE-rime-stroke-LGPL-3.0.txt`, `LICENSE-GPL-3.0.txt`, `AUTHORS-rime-stroke.txt` | | The terms and authors of the Rime dictionary. |
+| `LICENSE-kanjivg-CC-BY-SA-3.0.txt` | | The terms of KanjiVG. |
+| `LICENSE-yi-bai-ids-MIT.txt` | | The terms of Yi Bai's descriptions. |
 
-The data files are gzipped UTF-8 TSV with a header row. `orders` holds one code per way of writing
+The data files are UTF-8 TSV with a header row, gzipped where the name ends in `.gz`. `orders` holds one code per way of writing
 the character, separated by a space, in the source's order.
 
 ## Strokes
@@ -24,15 +29,25 @@ the character, separated by a space, in the source's order.
 A code is one symbol per stroke in writing order, in the five classes. Each file keeps its source's
 symbols.
 
-| Class | `cns11643` | `rime-stroke` |
-| --- | --- | --- |
-| 横 horizontal | `1` | `h` |
-| 豎 vertical | `2` | `s` |
-| 撇 left-falling | `3` | `p` |
-| 點 dot | `4` | `n` |
-| 折 turning | `5` | `z` |
+| Class | `cns11643` | `rime-stroke` | `kanjivg` |
+| --- | --- | --- | --- |
+| 横 horizontal | `1` | `h` | `1` |
+| 豎 vertical | `2` | `s` | `2` |
+| 撇 left-falling | `3` | `p` | `3` |
+| 點 dot | `4` | `n` | `4` |
+| 折 turning | `5` | `z` | `5` |
 
-Neither source gives stroke paths, and neither gives mainland, Japanese or Korean standard order.
+KanjiVG names each stroke's type with a CJK stroke character (㇐, ㇑a, ㇔/㇏), and `strokes` keeps
+those as written. Its `orders` code is this project's reading of them, not KanjiVG's: each type
+takes the class `data/ids-parts.json` gives its stroke character (a rising ㇀ is 横, a hooked ㇚
+is 豎, a falling ㇏ is 點), the first where KanjiVG offers two. CNS classes some of the same strokes
+otherwise, so a code from one source is not comparable stroke for stroke with another's.
+
+KanjiVG writes 辶 with four strokes and the ⻌ of the jōyō kanji with three. BabelStone's J-source
+descriptions name 辶 throughout, so a row induced from `kanjivg` through it carries the four-stroke
+form, also where a jōyō-style ⻌ would be written.
+
+No source here gives stroke paths, or mainland or Korean standard order.
 
 ## The two sources are not two styles
 
@@ -60,85 +75,146 @@ convention they follow.
 
 - `equivalent`: the character is a compatibility ideograph or a radical form, and `from` is the
   unified ideograph it normalizes to (NFKC). The row repeats that character's recorded orders.
-  719 rows from `cns11643`, 681 from `rime-stroke`.
-- `ids`: `from` is the character's description in BabelStone IDS (the sequence its T source gives,
-  else the first), and the order joins the recorded orders of its components.
-  19,315 rows from `cns11643`, 0 from `rime-stroke`. Up to 8 ways are kept.
+  719 rows from `cns11643`, 681 from `rime-stroke`, 754 from `kanjivg`.
+- `ids`: `from` is the character's description and the order joins the recorded orders of
+  its components. The description is BabelStone's (the sequence its T source gives, or its J
+  source for `kanjivg`, else the first) or, where BabelStone has none, Yi Bai's. The `ids` column names the dataset of the
+  character's description, then that of any component read by its own description.
+  24,692 rows from `cns11643` (4,388 of them through one of Yi Bai's descriptions), 3 from `rime-stroke`, 70,265 from `kanjivg`. Up to 8 ways are kept.
 
-The components are joined in the order the description names them, except:
+The components of ⿰ ⿱ ⿲ ⿳ are joined in the order the description names them. In the other
+operators the first component encloses, crosses or carries the second, and the second is written at
+a place among the first's strokes:
 
-- ⿺ with 辶 or 廴 as the enclosure, and ⿶: what is held is written first.
-- ⿴: the enclosure without its last stroke, then what it holds, then that stroke.
-- ⿷: the enclosure's first stroke, then what it holds, then the rest.
+| Place | The held part is written |
+| --- | --- |
+| `outer-first` | after the whole enclosure |
+| `inner-first` | before the enclosure |
+| `after-1`, `after-2`, `after-3` | after the enclosure's first one, two or three strokes |
+| `before-last`, `before-last-2` | before the enclosure's last one or two strokes |
 
-An order is induced only through ⿰ ⿱ ⿲ ⿳ ⿴ ⿵ ⿶ ⿷ ⿸ ⿺, at every level of the description, and only
-when every component has a recorded order in the same source. A description BabelStone marks 〾 is
-not used. Nothing is induced from another induced row.
+The place is learned per enclosure from the characters the source records: an enclosure with at
+least 5 such characters takes the place that writes the most of them as recorded, if that is
+90% or more. `cns11643` teaches 62 places, `rime-stroke` 107 and `kanjivg` 12; `manifest.json` lists them
+under `induction.learned`. An enclosure without a learned place takes its operator's usual one:
+`inner-first` for ⿶ and for ⿺ with 辶 or 廴 in any of their encoded forms (辶 廴 辵 ⻌ ⻍ ⻎), `before-last` for ⿴, `after-1` for ⿷, `outer-first` otherwise.
+
+⿹ and ⿻ have no usual place that holds, so they are induced through only for the enclosures with a
+learned one. In `cns11643`: ⿹气 outer-first (58 of 62), ⿹戈 after-1 (31 of 34), ⿹弓 outer-first (6 of 6), ⿻一 outer-first (13 of 14), ⿻大 after-1 (13 of 14), ⿻十 outer-first (5 of 5).
+
+⿰ ⿱ ⿲ ⿳ ⿴ ⿵ ⿶ ⿷ ⿸ ⿺ are induced through at every level of the description. A component the source
+does not record is read by its own description in turn, and one of BabelStone's numbered components
+by the fragment its note 6 writes it out as; `from` keeps the description as its dataset spells
+it. A description BabelStone marks 〾 is not used.
 
 ### How often the rules agree with a source
 
 Each recorded character with a description was written by the same rules from the same source and
-compared with its recorded orders. "Written" counts the characters whose components all have orders;
-"Agree" those where one written order is a recorded one. Rows are the description's outer operator.
+compared with its recorded orders, with the places learned from the other half of the characters
+(split by code point parity), so none scores a place it taught. Only the enclosures the induced
+rows are written through are scored; one too rare to be learned in a half is scored at its
+operator's usual place, and not at all under ⿹ and ⿻. "Written" counts the characters the
+rules write; "Agree" those where one written order is a recorded one. Rows are the description's
+outer operator; "Induced" says whether it is induced through always, only where a place was
+learned, or never.
 
 `cns11643`:
 
 | Operator | Described | Written | Agree | | Induced |
 | --- | ---: | ---: | ---: | ---: | --- |
-| ⿰ | 48,669 | 46,401 | 42,326 | 91.2% | yes |
-| ⿱ | 16,600 | 15,544 | 13,325 | 85.7% | yes |
-| ⿺ | 2,765 | 2,689 | 2,317 | 86.2% | yes |
-| ⿸ | 2,436 | 2,336 | 2,154 | 92.2% | yes |
-| ⿳ | 1,270 | 956 | 729 | 76.3% | yes |
-| ⿵ | 736 | 694 | 612 | 88.2% | yes |
-| ⿲ | 504 | 452 | 387 | 85.6% | yes |
-| ⿹ | 318 | 206 | 80 | 38.8% | no |
-| ⿻ | 265 | 210 | 113 | 53.8% | no |
-| ⿴ | 254 | 248 | 220 | 88.7% | yes |
-| ⿷ | 143 | 137 | 109 | 79.6% | yes |
-| ⿶ | 47 | 45 | 37 | 82.2% | yes |
-| ⿽ | 15 | 10 | 2 | 20.0% | no |
-| ㇯ | 5 | 4 | 0 | 0.0% | no |
-| ⿾ | 3 | 3 | 1 | 33.3% | no |
-| ⿿ | 3 | 3 | 1 | 33.3% | no |
-| ⿼ | 2 | 2 | 1 | 50.0% | no |
+| ⿰ | 49,032 | 46,876 | 42,823 | 91.4% | always |
+| ⿱ | 16,869 | 15,883 | 13,681 | 86.1% | always |
+| ⿺ | 2,788 | 2,708 | 2,342 | 86.5% | always |
+| ⿸ | 2,466 | 2,352 | 2,183 | 92.8% | always |
+| ⿳ | 1,397 | 1,185 | 916 | 77.3% | always |
+| ⿵ | 738 | 700 | 640 | 91.4% | always |
+| ⿲ | 509 | 462 | 395 | 85.5% | always |
+| ⿹ | 330 | 83 | 76 | 91.6% | learned |
+| ⿻ | 285 | 12 | 10 | 83.3% | learned |
+| ⿴ | 256 | 254 | 224 | 88.2% | always |
+| ⿷ | 143 | 136 | 110 | 80.9% | always |
+| ⿶ | 48 | 45 | 36 | 80.0% | always |
+| ⿽ | 15 | 0 | 0 |  | never |
+| ㇯ | 5 | 0 | 0 |  | never |
+| ⿾ | 3 | 0 | 0 |  | never |
+| ⿿ | 3 | 0 | 0 |  | never |
+| ⿼ | 2 | 0 | 0 |  | never |
 
 `rime-stroke`:
 
 | Operator | Described | Written | Agree | | Induced |
 | --- | ---: | ---: | ---: | ---: | --- |
-| ⿰ | 62,767 | 62,553 | 61,424 | 98.2% | yes |
-| ⿱ | 21,407 | 21,235 | 20,118 | 94.7% | yes |
-| ⿺ | 3,537 | 3,517 | 3,410 | 97.0% | yes |
-| ⿸ | 2,981 | 2,967 | 2,910 | 98.1% | yes |
-| ⿳ | 1,644 | 1,598 | 1,418 | 88.7% | yes |
-| ⿵ | 938 | 933 | 886 | 95.0% | yes |
-| ⿲ | 687 | 674 | 652 | 96.7% | yes |
-| ⿹ | 425 | 409 | 241 | 58.9% | no |
-| ⿻ | 343 | 310 | 184 | 59.4% | no |
-| ⿴ | 318 | 317 | 298 | 94.0% | yes |
-| ⿷ | 188 | 185 | 156 | 84.3% | yes |
-| ⿶ | 53 | 53 | 49 | 92.5% | yes |
-| ⿽ | 15 | 13 | 2 | 15.4% | no |
-| ㇯ | 9 | 6 | 0 | 0.0% | no |
-| ⿾ | 4 | 4 | 2 | 50.0% | no |
-| ⿼ | 3 | 3 | 2 | 66.7% | no |
-| ⿿ | 3 | 3 | 2 | 66.7% | no |
+| ⿰ | 66,176 | 65,101 | 64,106 | 98.5% | always |
+| ⿱ | 22,769 | 21,991 | 20,953 | 95.3% | always |
+| ⿺ | 3,729 | 3,643 | 3,574 | 98.1% | always |
+| ⿸ | 3,110 | 3,006 | 2,968 | 98.7% | always |
+| ⿳ | 1,810 | 1,635 | 1,472 | 90.0% | always |
+| ⿵ | 974 | 952 | 934 | 98.1% | always |
+| ⿲ | 710 | 677 | 657 | 97.0% | always |
+| ⿹ | 470 | 338 | 333 | 98.5% | learned |
+| ⿻ | 378 | 17 | 15 | 88.2% | learned |
+| ⿴ | 354 | 352 | 331 | 94.0% | always |
+| ⿷ | 189 | 180 | 155 | 86.1% | always |
+| ⿶ | 54 | 51 | 47 | 92.2% | always |
+| ⿽ | 15 | 0 | 0 |  | never |
+| ㇯ | 9 | 0 | 0 |  | never |
+| ⿾ | 4 | 0 | 0 |  | never |
+| ⿼ | 3 | 0 | 0 |  | never |
+| ⿿ | 3 | 0 | 0 |  | never |
 
-An induced row is a prediction, not a record. Over the operators induced through, the rules agree
-with CNS on 89.5% of the characters CNS records. The rows induced from CNS cannot be checked against the
-Rime file: Rime records 19,315 of those characters and 9,560 agree, since Rime's
+`kanjivg`:
+
+| Operator | Described | Written | Agree | | Induced |
+| --- | ---: | ---: | ---: | ---: | --- |
+| ⿰ | 3,991 | 3,173 | 2,927 | 92.2% | always |
+| ⿱ | 1,636 | 1,196 | 1,039 | 86.9% | always |
+| ⿸ | 243 | 195 | 183 | 93.8% | always |
+| ⿺ | 179 | 154 | 103 | 66.9% | always |
+| ⿻ | 101 | 2 | 2 | 100.0% | learned |
+| ⿵ | 81 | 60 | 49 | 81.7% | always |
+| ⿳ | 77 | 36 | 29 | 80.6% | always |
+| ⿹ | 42 | 4 | 4 | 100.0% | learned |
+| ⿲ | 37 | 31 | 26 | 83.9% | always |
+| ⿴ | 36 | 34 | 29 | 85.3% | always |
+| ⿷ | 16 | 12 | 12 | 100.0% | always |
+| ⿽ | 5 | 0 | 0 |  | never |
+| ⿶ | 5 | 2 | 1 | 50.0% | always |
+
+An induced row is a prediction, not a record. Over everything they write, the rules agree with CNS
+on 89.7% of the characters CNS records. The rows induced from CNS cannot be checked against the
+Rime file: Rime records 24,689 of those characters and 12,148 agree, since Rime's
 additions do not all follow CNS order.
+
+## Entered orders
+
+`entered.tsv` holds orders entered by hand for characters and components a source does not
+record, in that source's symbols. `basis` gives the citation or the reasoning behind each, `by`
+who entered it. An entered order is this project's reading and never enters a source's file; it
+writes its own character and lets the characters it is a component of be induced.
+
+`wanted.tsv` lists, per source, the components that keep characters from being written:
+`blocks` counts those characters and `alone` the ones it is the only obstacle to, most first.
+To add an order, append a row to `data/stroke-orders-entered.tsv` in the repository and rebuild.
 
 ## Coverage
 
-| Source | Recorded | By equivalence | From IDS | Without an order |
-| --- | ---: | ---: | ---: | ---: |
-| `cns11643` | 76,282 | 719 | 19,315 | 7,036 |
-| `rime-stroke` | 102,582 | 681 | 0 | 89 |
+| Source | Recorded | Entered | By equivalence | From IDS | Without an order |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `cns11643` | 76,282 | 1 | 719 | 24,692 | 1,659 |
+| `rime-stroke` | 102,582 | 0 | 681 | 3 | 86 |
+| `kanjivg` | 6,728 | 0 | 754 | 70,265 | 25,605 |
 
-"Without an order" counts the Han characters the workshop's composer draws or BabelStone IDS
-describes that end with no row from that source.
+"Without an order" counts the Han characters the workshop's composer draws or either IDS source
+describes that end with no row from that source. Why, for each:
+
+| Source | No description | Unreadable description | Operator not induced through | Component without an order |
+| --- | ---: | ---: | ---: | ---: |
+| `cns11643` | 164 | 316 | 657 | 522 |
+| `rime-stroke` | 86 | 0 | 0 | 0 |
+| `kanjivg` | 531 | 1,019 | 2,316 | 21,739 |
+
+An unreadable description is a single component, carries 〾 or an operator modifier, or names a
+numbered component BabelStone gives no fragment for.
 
 ## Sources and terms
 
@@ -153,8 +229,16 @@ describes that end with no row from that source.
   LGPL-3.0; the licence texts are beside this file. `rime-stroke.tsv.gz` is a modified form of the
   dictionary: reduced to the Han characters with a complete five-class code, one row per
   character, in code point order.
+- KanjiVG, <https://kanjivg.tagaini.net>, revision `610091ce618cf757ed1357a8954cd65283e015d6` of
+  <https://github.com/KanjiVG/kanjivg>, Copyright (C) 2009/2010/2011 Ulrich Apel, CC BY-SA 3.0,
+  <https://creativecommons.org/licenses/by-sa/3.0/>; the licence note is beside this file.
+  `kanjivg.tsv.gz` and the rows induced from it are adapted from KanjiVG and carry the same
+  licence: the kanji files reduced to their stroke types, with this project's five-class code.
 - BabelStone IDS, `IDS.TXT`, Andrew West (魏安), <https://www.babelstone.co.uk/CJK/IDS.TXT>, public
   domain: the descriptions induced rows are written from.
+
+- Yi Bai IDS, level 1, <https://github.com/yi-bai/ids>, MIT, Copyright (c) 2021 Yi Bai: the
+  descriptions used where BabelStone has none. The licence text is beside this file.
 
 ## Rebuild
 

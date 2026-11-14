@@ -19,6 +19,12 @@ descriptions of shared characters settle it (973, 373 confirmed by two or more c
 [custom IDS notation](../docs/custom-components.md). Every row is derived by this project; no
 source states it. Rebuild with `bun scripts/build_custom_components.mjs`.
 
+`custom-forms.json`, `custom-forms.tsv` and `custom-forms.csv` are the same forms flat, one row
+each: `id`, `entity`, `char`, the name each source gives (`babelstone`, `chise`, `zi_tools`) or the
+`expression` of an unnamed form, BabelStone's `description`, `status`, `uses`, `used_in`,
+`equivalents` (in the TSV and CSV as `notation:text:status:count`, joined by ` | `) and `of`. The
+appendix at <https://ids.mkpo.li/unencoded> offers them for download. Written by the same build.
+
 `custom-ids.tsv` is the ledger of form identifiers the file carries (`X-00053`, written `&X-00053;`
 in a description): identifier, a name the form is known by, the date, and `first`, `merged into …`
 or `withdrawn`. It is append-only and the build reads it before it writes it, so a number once
@@ -1294,9 +1300,16 @@ from `ids-parts.json`.
 ## `open-strokes/`
 
 The open stroke-order release served at <https://ids.mkpo.li/open-data#strokes>: Taiwan's standard order
-from CNS 全字庫, Rime's five-stroke dictionary, and orders induced by equivalence or from
-BabelStone IDS for characters a source lacks. Its own `README.md` gives the fields, rules, licences
+from CNS 全字庫, Rime's five-stroke dictionary, Japanese order from KanjiVG, and orders induced by equivalence or from
+BabelStone's and Yi Bai's IDS for characters a source lacks. Its own `README.md` gives the fields, rules, licences
 and how often the rules agree with the sources. Built by `scripts/build_open_strokes.mjs`.
+
+## `stroke-orders-entered.tsv`
+
+Stroke orders entered by hand for characters and components the sources of `open-strokes/` do not
+record: `char`, `source`, `orders`, `basis`, `by`, `date`, tab-separated, one row per character and
+source. The build refuses a row without a basis and publishes the rows as `open-strokes/entered.tsv`;
+`open-strokes/wanted.tsv` ranks the components worth entering next.
 
 ## `han-parts.json.gz`
 

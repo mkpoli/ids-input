@@ -476,5 +476,11 @@
   "normalization.hint.rewrite": "The typed text is replaced by the right side.",
   "normalization.hint.match": "The typed text stays as written and is treated as the same.",
   "ucv.title": "Component variations (UCV)",
-  "ucv.source": "Source"
+  "ucv.source": "Source",
+  "appendix.notations": "Notations",
+  "appendix.notation.babelstone": "A numbered part with no code point. Note 6 of the file says where each occurs.",
+  "appendix.notation.chise": "A glyph of the CHISE character ontology, by its name there. The prefix names the set it comes from.",
+  "appendix.notation.zi-tools": "Strokes in writing order, each starting where the last ended. A minus writes a stroke backwards and a final z closes the line.",
+  "appendix.notation.form": "This table’s own number for one form, whatever the sources call it. It reads as a part in any description.",
+  "appendix.download": "Download"
 }
