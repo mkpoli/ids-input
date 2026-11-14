@@ -198,6 +198,11 @@ remains in the field. Resolution is bounded to eight opened components and 128 c
 and non-unifiable component variations from `data/ucv.json`, each form drawn from
 `data/ucv-forms.json.gz`; the workshop shows it as its `/ucv` page.
 
+With `variations`, the menu of a component's forms in `IdsTree` also lists the other characters and
+descriptions of the IRG component variation entries the component is a form of (王 and 𡈼 for 壬 in
+UCV #1, 間 for 閒 in NUCV #325), each under its entry; choosing one writes it in the component's
+place. `componentForms(part, { sequences, ucv })` in the core gives that list.
+
 With `variations`, `IdsPartTools` also offers the forms the IRG unifies with the chosen component
 (its UCV entries, read from `data/ucv.json` when a component is first chosen); `variationsHref(entry)`
 gives each entry number a link.

@@ -1489,7 +1489,7 @@
           </div>
           {#if view === 'shape'}
             <div class="tree-stage" data-character-info-avoid role="tabpanel" id="shape-panel" aria-labelledby="shape-tab">
-              <div class="tree-box"><IdsTree {editor} {keyHints} /></div>
+              <div class="tree-box"><IdsTree {editor} {keyHints} variations /></div>
             </div>
           {:else}
             {#key activeId}
