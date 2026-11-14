@@ -1,0 +1,221 @@
+(* Bai-style (zi.tools) extended IDS: corrected grammar, ISO/IEC 14977 EBNF.
+   Checked against yi-bai/ids @ 2597437b928e8d530b7ae09cf53fe5ec7868569c (2026-10-31).
+   Base: the EBNF in （白式）IDS 延展语法导论 (2026-03-20), pp.31-33 ("I26").
+   I26 rule names are given in each comment as [I26: ...].
+   Changes against I26 are tagged CHANGE Cn; rewrites that keep the accepted
+   language unchanged and only remove ambiguity are tagged SAME-LANGUAGE.
+   Special sequences are defined in the table beside this grammar. *)
+
+(* ================= 1. Rows ================= *)
+
+(* One line of ids_lv0/1/2.txt: the character, a TAB, its primary entries,
+   and optionally a TAB and alternative entries. [I26: IDS_Definition_Row]
+   CHANGE C1: the alternative group is optional. I26 prints
+   "(TAB IDS_Alternative_Definition)" without "?", which rejects every
+   two-column row (95043 of 102034 rows in lv0); its own prose (§3.1) and the
+   README say the third column is optional. *)
+row = headword, tab, primary group, [tab, alternative group] ;
+
+(* The described character. [I26: Ideograph_Char] *)
+headword = ideograph char ;
+
+(* Default decompositions. [I26: IDS_Locale_Definition]
+   SAME-LANGUAGE: I26 lists a bare IDS_Sequence as a first alternative, which
+   entry already covers. *)
+primary group = entry, {";", entry} ;
+
+(* Less reasonable or uncommon decompositions (third column).
+   [I26: IDS_Alternative_Definition] *)
+alternative group = entry, {";", entry} ;
+
+(* One decomposition: optional uniqueness prefix, the IDS, optional
+   parenthesised variant identifiers. [I26: IDS_Locale_Sequence] *)
+entry = [uniqueness prefix], ids, [sequence variants] ;
+
+(* ================= 2. Ideographic description sequences ================= *)
+
+(* An IDS: a stroke chain or an operator with its operands. [I26: IDS_Sequence]
+   SAME-LANGUAGE: I26 has two alternatives each for the overlap and the
+   enclosure/subtraction operators (via IDS_BinaryOperator, with and without a
+   bracket); here the bracket is optional instead. *)
+ids = stroke chain
+    | unary operator, component
+    | binary operator, component, component
+    | overlap operator, [overlap modifier], component, component
+    | indexed operator, [index modifier], component, component
+    | ternary operator, component, component, component ;
+
+(* An operand. [I26: IDS_Component]
+   SAME-LANGUAGE: I26 also lists Stroke_Sequence (already an IDS) and 〢 〣
+   (already Ideographic, so already a taggable char). *)
+component = ids | taggable char, [component variant] | curve | "リ" | "コ" ;
+
+(* Operators taking one operand: mirror, rotate. [I26: IDS_UnaryOperator] *)
+unary operator = "⿾" | "⿿" ;
+
+(* Two-operand operators that take no bracket. [I26: IDS_BinaryUniqueOperator] *)
+binary operator = "⿰" | "⿱" | "⿸" | "⿹" | "⿺" | "⿽" ;
+
+(* Overlap. [I26: IDS_BinaryOverlapOperator] *)
+overlap operator = "⿻" ;
+
+(* Enclosures and subtraction, which may take an index. ㇯ (U+31EF) is
+   documented but unused in the data. [I26: IDS_BinaryAmbiguousOperator] *)
+indexed operator = "⿴" | "⿵" | "⿶" | "⿷" | "⿼" | "㇯" ;
+
+(* Three-operand operators. [I26: IDS_TrinaryOperator] *)
+ternary operator = "⿲" | "⿳" ;
+
+(* ================= 3. Overlap modifier ⿻[...] ================= *)
+
+(* Bracket after ⿻: a forward spec, optionally "|" and a reverse spec.
+   [I26: Overlap_Modifier] *)
+overlap modifier = "[", overlap spec, ["|", overlap spec], "]" ;
+
+(* Quick form (slice) or full form (crossing matrix). [I26: Overlap_Matrix] *)
+overlap spec = slice | crossing matrix ;
+
+(* Quick form a:b, counting horizontal strokes of the second operand.
+   [I26: Overlap_Horizontal_Indexing] *)
+slice = [slice bound], ":", [slice bound] ;
+
+(* One end of a slice; negative counts from the bottom. *)
+slice bound = number | negative number ;
+
+(* Full form: rows separated by commas, one per horizontal structure.
+   SAME-LANGUAGE: I26 writes Overlap_Rows | Overlap_Cell+ with doubly
+   optional empty rows; this form has one derivation per string and the same
+   language (at least one cell or at least one comma). *)
+crossing matrix = matrix cell, {matrix cell}, {",", matrix row}
+                | ",", matrix row, {",", matrix row} ;
+
+(* A possibly empty row of cells. [I26: Overlap_Row] *)
+matrix row = {matrix cell} ;
+
+(* One cell: "." or "_" contact, x or a-d crossing (a-d name the segment),
+   l or r side. [I26: Overlap_Cell, Overlap_Identity, Overlap_Crossing,
+   Overlap_Non_Crossing] *)
+matrix cell = "." | "_" | "x" | "a" | "b" | "c" | "d" | "l" | "r" ;
+
+(* ================= 4. Index modifier ⿴[n] ㇯[n] ================= *)
+
+(* Which enclosed space (⿴ ⿵ ⿶ ⿷ ⿼) or which repeated part (㇯), from 0;
+   [0] is written by omission. [I26: Index_Modifier] *)
+index modifier = "[", number, "]" ;
+
+(* ================= 5. Stroke chains #(...) ================= *)
+
+(* Strokes joined end to start, with optional closing z.
+   [I26: Stroke_Sequence] *)
+stroke chain = "#", "(", stroke part, {stroke part}, ["z"], ")" ;
+
+(* One link: optional reversal "-", a stroke, optional crossing or break.
+   [I26: Stroke_Part] *)
+stroke part = [reversal], stroke, [crossing | break] ;
+
+(* A stroke given as a character or as letters. *)
+stroke = ideograph char | stroke letter ;
+
+(* "-": the following stroke is joined start and end swapped.
+   [I26: StReversed_Indicator] *)
+reversal = "-" ;
+
+(* "x" n: this stroke crosses stroke n of the same chain, counted from 0.
+   [I26: StCrossing_Indicator] *)
+crossing = "x", number ;
+
+(* "b": forced break; normalisation must not merge this stroke with the next.
+   [I26: StBreak_Indicator] *)
+break = "b" ;
+
+(* Letter spellings of strokes. H 横, S 竖, P 撇, N 捺, D 点, T 提, J 提捺 (㇝),
+   Z 左 (only in ㇘), Wg 弯钩, Qa-Qd the four quarter arcs; "Hw" after S or P is a
+   rounded turn into the horizontal; a trailing "g" is a hook.
+   [I26: Stroke_Letter] *)
+stroke letter = ("H" | "S" | "P" | "N"), ["g"]
+              | ("S" | "P"), "Hw", ["g"]
+              | "D" | "T" | "J" | "Z"
+              | "Wg"
+              | "Q", ("a" | "b" | "c" | "d") ;
+
+(* ================= 6. Variant identifiers ================= *)
+
+(* Parenthesised list after an IDS: the glyph variants it describes.
+   [I26: Variant_Identifier_Definition] *)
+sequence variants = "(", variant id, {",", variant id}, ")" ;
+
+(* Tag directly after a component character: which variant of that component
+   is meant. [I26: the Variant_Identifier in Ideo_with_Variant_ID] *)
+component variant = variant id ;
+
+(* A source letter or a lower-case tag. [I26: Variant_Identifier]
+   SAME-LANGUAGE: the five I26 alternatives overlap: "." is both
+   Wildcard_Source and Alternate_Variants, and every UCV_Full_Position and
+   Imaginary_UCV string is also an Alternate_Variants string. The kinds are
+   told apart by the patterns of their kinds, not by syntax. *)
+variant id = source letter | style tag ;
+
+(* One IRG source letter. [I26: Unicode_Sources] *)
+source letter = "B" | "G" | "H" | "J" | "K" | "M" | "P" | "Q" | "S" | "T" | "U" | "V" ;
+
+(* Dots, digits and lower-case letters: wildcard ".", stroke-style and
+   position letters, UCV q/p/x/y codes, qq codes.
+   [I26: Wildcard_Source | UCV_Full_Position | Imaginary_UCV | Alternate_Variants] *)
+style tag = tag char, {tag char} ;
+
+(* Characters allowed in a style tag. *)
+tag char = "." | digit | lower letter ;
+
+(* ================= 7. Uniqueness prefix {...} ================= *)
+
+(* Braces naming the character whose abstract shape this entry has, so the
+   IDS maps back to one code point; "?" (and a digit) marks a source form far
+   from the other sources of the character; a trailing source letter restricts it.
+   [I26: Unique_Sequence_Separator] *)
+uniqueness prefix = "{", ["?", [digit]], taggable char, [source letter], "}" ;
+
+(* ================= 8. Characters ================= *)
+
+(* Any character that can stand alone: headwords and chain strokes.
+   [I26: Ideograph_Char]
+   SAME-LANGUAGE: I26 also lists 〢 〣, which are Ideographic. *)
+ideograph char = taggable char | curve | "リ" | "コ" ;
+
+(* Characters that may carry a component variant tag.
+   [I26: Ideograph_Char_with_Variant] *)
+taggable char = hanzi | cjk stroke | "ユ" | "ス" ;
+
+(* Ideographs and radicals. [I26: Hanzi]
+   SAME-LANGUAGE: the trailing "|" of I26 (an empty alternative) is dropped. *)
+hanzi = ? Ideographic ? | ? Radical ? ;
+
+(* CJK Strokes block.
+   CHANGE C2: U+31C0..U+31E5. I26 stops at U+31E3 and says U+31E4/U+31E5 are not
+   in the zi.tools stroke set (its comment prints "U+30E4 和 U+30E5", evidently
+   U+31E4/U+31E5). The data has row "㇥ {㇥}#(SHP)" with U+31E5 as headword and
+   inside braces. [I26: CJK_Stroke] *)
+cjk stroke = ? CJK stroke ? ;
+
+(* The four clockwise quarter arcs. [I26: Curves] *)
+curve = "◝" | "◞" | "◟" | "◜" ;
+
+(* [I26: TAB] *)
+tab = ? TAB ? ;
+
+(* ================= 9. Numbers and letters ================= *)
+
+(* Non-negative integer without leading zeros. [I26: Number] *)
+number = "0" | nonzero digit, {digit} ;
+
+(* [I26: Negative_Number] *)
+negative number = "-", nonzero digit, {digit} ;
+
+(* [I26: Positive_Numeral] *)
+nonzero digit = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+
+(* [I26: One_Digit_Number] *)
+digit = "0" | nonzero digit ;
+
+(* a-z. *)
+lower letter = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m"
+             | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" ;

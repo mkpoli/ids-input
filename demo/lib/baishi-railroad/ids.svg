@@ -1,0 +1,77 @@
+<svg class="railroad-diagram" role="img" aria-label="ids" height="258" viewBox="0 0 705 258" width="705" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<title>ids</title><text class="rule-title" x="10" y="19">ids =</text><g transform="translate(.5 28.5)">
+<g>
+<path d="M20 21v20m10 -20v20m-10 -10h20" /></g><g>
+<path d="M40 31h0.0" /><path d="M665.0 31h0.0" /><path d="M40.0 31h20" /><g class="non-terminal ">
+<path d="M60.0 31h231.5" /><path d="M413.5 31h231.5" /><rect height="22" width="122" x="291.5" y="20"></rect><a xlink:href="stroke-chain.svg"><text x="352.5" y="35">stroke chain</text><text x="352.5" y="35">stroke chain</text></a></g><path d="M645.0 31h20" /><path d="M40.0 31a10 10 0 0 1 10 10v10a10 10 0 0 0 10 10" /><g>
+<path d="M60.0 61h164.75" /><path d="M480.25 61h164.75" /><g class="non-terminal ">
+<path d="M224.75 61h0.0" /><path d="M363.75 61h0.0" /><rect height="22" width="139" x="224.75" y="50"></rect><a xlink:href="unary-operator.svg"><text x="294.25" y="65">unary operator</text><text x="294.25" y="65">unary operator</text></a></g><path d="M363.75 61h10" /><path d="M373.75 61h10" /><g class="non-terminal ">
+<path d="M383.75 61h0.0" /><path d="M480.25 61h0.0" /><rect height="22" width="96.5" x="383.75" y="50"></rect><a xlink:href="component.svg"><text x="432" y="65">component</text><text x="432" y="65">component</text></a></g></g><path d="M645.0 61a10 10 0 0 0 10 -10v-10a10 10 0 0 1 10 -10" /><path d="M40.0 31a10 10 0 0 1 10 10v40a10 10 0 0 0 10 10" /><g>
+<path d="M60.0 91h102.25" /><path d="M542.75 91h102.25" /><g class="non-terminal ">
+<path d="M162.25 91h0.0" /><path d="M309.75 91h0.0" /><rect height="22" width="147.5" x="162.25" y="80"></rect><a xlink:href="binary-operator.svg"><text x="236" y="95">binary operator</text><text x="236" y="95">binary operator</text></a></g><path d="M309.75 91h10" /><path d="M319.75 91h10" /><g class="non-terminal ">
+<path d="M329.75 91h0.0" /><path d="M426.25 91h0.0" /><rect height="22" width="96.5" x="329.75" y="80"></rect><a xlink:href="component.svg"><text x="378" y="95">component</text><text x="378" y="95">component</text></a></g><path d="M426.25 91h10" /><path d="M436.25 91h10" /><g class="non-terminal ">
+<path d="M446.25 91h0.0" /><path d="M542.75 91h0.0" /><rect height="22" width="96.5" x="446.25" y="80"></rect><a xlink:href="component.svg"><text x="494.5" y="95">component</text><text x="494.5" y="95">component</text></a></g></g><path d="M645.0 91a10 10 0 0 0 10 -10v-40a10 10 0 0 1 10 -10" /><path d="M40.0 31a10 10 0 0 1 10 10v79a10 10 0 0 0 10 10" /><g>
+<path d="M60.0 130h0.0" /><path d="M645.0 130h0.0" /><g class="non-terminal ">
+<path d="M60.0 130h0.0" /><path d="M216.0 130h0.0" /><rect height="22" width="156" x="60" y="119"></rect><a xlink:href="overlap-operator.svg"><text x="138" y="134">overlap operator</text><text x="138" y="134">overlap operator</text></a></g><path d="M216.0 130h10" /><g>
+<path d="M226.0 130h0.0" /><path d="M422.0 130h0.0" /><path d="M226.0 130a10 10 0 0 0 10 -10v0a10 10 0 0 1 10 -10" /><g>
+<path d="M246.0 110h156.0" /></g><path d="M402.0 110a10 10 0 0 1 10 10v0a10 10 0 0 0 10 10" /><path d="M226.0 130h20" /><g class="non-terminal ">
+<path d="M246.0 130h0.0" /><path d="M402.0 130h0.0" /><rect height="22" width="156" x="246" y="119"></rect><a xlink:href="overlap-modifier.svg"><text x="324" y="134">overlap modifier</text><text x="324" y="134">overlap modifier</text></a></g><path d="M402.0 130h20" /></g><path d="M422.0 130h10" /><g class="non-terminal ">
+<path d="M432.0 130h0.0" /><path d="M528.5 130h0.0" /><rect height="22" width="96.5" x="432" y="119"></rect><a xlink:href="component.svg"><text x="480.25" y="134">component</text><text x="480.25" y="134">component</text></a></g><path d="M528.5 130h10" /><path d="M538.5 130h10" /><g class="non-terminal ">
+<path d="M548.5 130h0.0" /><path d="M645.0 130h0.0" /><rect height="22" width="96.5" x="548.5" y="119"></rect><a xlink:href="component.svg"><text x="596.75" y="134">component</text><text x="596.75" y="134">component</text></a></g></g><path d="M645.0 130a10 10 0 0 0 10 -10v-79a10 10 0 0 1 10 -10" /><path d="M40.0 31a10 10 0 0 1 10 10v118a10 10 0 0 0 10 10" /><g>
+<path d="M60.0 169h8.5" /><path d="M636.5 169h8.5" /><g class="non-terminal ">
+<path d="M68.5 169h0.0" /><path d="M224.5 169h0.0" /><rect height="22" width="156" x="68.5" y="158"></rect><a xlink:href="indexed-operator.svg"><text x="146.5" y="173">indexed operator</text><text x="146.5" y="173">indexed operator</text></a></g><path d="M224.5 169h10" /><g>
+<path d="M234.5 169h0.0" /><path d="M413.5 169h0.0" /><path d="M234.5 169a10 10 0 0 0 10 -10v0a10 10 0 0 1 10 -10" /><g>
+<path d="M254.5 149h139.0" /></g><path d="M393.5 149a10 10 0 0 1 10 10v0a10 10 0 0 0 10 10" /><path d="M234.5 169h20" /><g class="non-terminal ">
+<path d="M254.5 169h0.0" /><path d="M393.5 169h0.0" /><rect height="22" width="139" x="254.5" y="158"></rect><a xlink:href="index-modifier.svg"><text x="324" y="173">index modifier</text><text x="324" y="173">index modifier</text></a></g><path d="M393.5 169h20" /></g><path d="M413.5 169h10" /><g class="non-terminal ">
+<path d="M423.5 169h0.0" /><path d="M520.0 169h0.0" /><rect height="22" width="96.5" x="423.5" y="158"></rect><a xlink:href="component.svg"><text x="471.75" y="173">component</text><text x="471.75" y="173">component</text></a></g><path d="M520.0 169h10" /><path d="M530.0 169h10" /><g class="non-terminal ">
+<path d="M540.0 169h0.0" /><path d="M636.5 169h0.0" /><rect height="22" width="96.5" x="540" y="158"></rect><a xlink:href="component.svg"><text x="588.25" y="173">component</text><text x="588.25" y="173">component</text></a></g></g><path d="M645.0 169a10 10 0 0 0 10 -10v-118a10 10 0 0 1 10 -10" /><path d="M40.0 31a10 10 0 0 1 10 10v148a10 10 0 0 0 10 10" /><g>
+<path d="M60.0 199h39.75" /><path d="M605.25 199h39.75" /><g class="non-terminal ">
+<path d="M99.75 199h0.0" /><path d="M255.75 199h0.0" /><rect height="22" width="156" x="99.75" y="188"></rect><a xlink:href="ternary-operator.svg"><text x="177.75" y="203">ternary operator</text><text x="177.75" y="203">ternary operator</text></a></g><path d="M255.75 199h10" /><path d="M265.75 199h10" /><g class="non-terminal ">
+<path d="M275.75 199h0.0" /><path d="M372.25 199h0.0" /><rect height="22" width="96.5" x="275.75" y="188"></rect><a xlink:href="component.svg"><text x="324" y="203">component</text><text x="324" y="203">component</text></a></g><path d="M372.25 199h10" /><path d="M382.25 199h10" /><g class="non-terminal ">
+<path d="M392.25 199h0.0" /><path d="M488.75 199h0.0" /><rect height="22" width="96.5" x="392.25" y="188"></rect><a xlink:href="component.svg"><text x="440.5" y="203">component</text><text x="440.5" y="203">component</text></a></g><path d="M488.75 199h10" /><path d="M498.75 199h10" /><g class="non-terminal ">
+<path d="M508.75 199h0.0" /><path d="M605.25 199h0.0" /><rect height="22" width="96.5" x="508.75" y="188"></rect><a xlink:href="component.svg"><text x="557" y="203">component</text><text x="557" y="203">component</text></a></g></g><path d="M645.0 199a10 10 0 0 0 10 -10v-148a10 10 0 0 1 10 -10" /></g><path d="M 665.0 31 h 20 m -10 -10 v 20 m 10 -20 v 20"></path></g><style>/* <![CDATA[ */
+	svg.railroad-diagram {
+		background-color:hsl(30,20%,95%);
+	}
+	svg.railroad-diagram path {
+		stroke-width:3;
+		stroke:black;
+		fill:rgba(0,0,0,0);
+	}
+	svg.railroad-diagram text {
+		font:bold 14px monospace;
+		text-anchor:middle;
+	}
+	svg.railroad-diagram text.label{
+		text-anchor:start;
+	}
+	svg.railroad-diagram text.comment{
+		font:italic 12px monospace;
+	}
+	svg.railroad-diagram rect{
+		stroke-width:3;
+		stroke:black;
+		fill:hsl(120,100%,90%);
+	}
+	svg.railroad-diagram rect.group-box {
+		stroke: gray;
+		stroke-dasharray: 10 5;
+		fill: none;
+	}
+
+svg.railroad-diagram { background: #ffffff; }
+svg.railroad-diagram text { font-family: "Noto Sans Mono CJK SC", "Noto Sans CJK SC", "DengXian", monospace; }
+svg.railroad-diagram g.non-terminal.special rect { fill: #eef3e6; stroke-dasharray: 4 3; }
+svg.railroad-diagram text.rule-title { font-size: 15px; font-weight: bold; text-anchor: start; }
+svg.railroad-diagram a text { fill: #1a4f8a; }
+@media (prefers-color-scheme: dark) {
+  svg.railroad-diagram { background: #16181c; }
+  svg.railroad-diagram path { stroke: #c8ccd2; }
+  svg.railroad-diagram rect { stroke: #c8ccd2; fill: #23272e; }
+  svg.railroad-diagram g.non-terminal.special rect { fill: #233021; }
+  svg.railroad-diagram text { fill: #e6e8eb; }
+  svg.railroad-diagram a text { fill: #8cc4ff; }
+}
+
+/* ]]> */
+</style></svg>

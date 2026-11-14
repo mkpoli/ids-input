@@ -1,0 +1,58 @@
+<svg class="railroad-diagram" role="img" aria-label="overlap modifier" height="99" viewBox="0 0 529.5 99" width="529.5" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<title>overlap modifier</title><text class="rule-title" x="10" y="19">overlap modifier =</text><g transform="translate(.5 28.5)">
+<g>
+<path d="M20 30v20m10 -20v20m-10 -10h20" /></g><path d="M40 40h10" /><g>
+<path d="M50 40h0.0" /><path d="M479.5 40h0.0" /><g class="terminal ">
+<path d="M50.0 40h0.0" /><path d="M78.5 40h0.0" /><rect height="22" rx="10" ry="10" width="28.5" x="50" y="29"></rect><text x="64.25" y="44">[</text></g><path d="M78.5 40h10" /><path d="M88.5 40h10" /><g class="non-terminal ">
+<path d="M98.5 40h0.0" /><path d="M220.5 40h0.0" /><rect height="22" width="122" x="98.5" y="29"></rect><a xlink:href="overlap-spec.svg"><text x="159.5" y="44">overlap spec</text><text x="159.5" y="44">overlap spec</text></a></g><path d="M220.5 40h10" /><g>
+<path d="M230.5 40h0.0" /><path d="M441.0 40h0.0" /><path d="M230.5 40a10 10 0 0 0 10 -10v0a10 10 0 0 1 10 -10" /><g>
+<path d="M250.5 20h170.5" /></g><path d="M421.0 20a10 10 0 0 1 10 10v0a10 10 0 0 0 10 10" /><path d="M230.5 40h20" /><g>
+<path d="M250.5 40h0.0" /><path d="M421.0 40h0.0" /><g class="terminal ">
+<path d="M250.5 40h0.0" /><path d="M279.0 40h0.0" /><rect height="22" rx="10" ry="10" width="28.5" x="250.5" y="29"></rect><text x="264.75" y="44">|</text></g><path d="M279.0 40h10" /><path d="M289.0 40h10" /><g class="non-terminal ">
+<path d="M299.0 40h0.0" /><path d="M421.0 40h0.0" /><rect height="22" width="122" x="299" y="29"></rect><a xlink:href="overlap-spec.svg"><text x="360" y="44">overlap spec</text><text x="360" y="44">overlap spec</text></a></g></g><path d="M421.0 40h20" /></g><path d="M441.0 40h10" /><g class="terminal ">
+<path d="M451.0 40h0.0" /><path d="M479.5 40h0.0" /><rect height="22" rx="10" ry="10" width="28.5" x="451" y="29"></rect><text x="465.25" y="44">]</text></g></g><path d="M479.5 40h10" /><path d="M 489.5 40 h 20 m -10 -10 v 20 m 10 -20 v 20"></path></g><style>/* <![CDATA[ */
+	svg.railroad-diagram {
+		background-color:hsl(30,20%,95%);
+	}
+	svg.railroad-diagram path {
+		stroke-width:3;
+		stroke:black;
+		fill:rgba(0,0,0,0);
+	}
+	svg.railroad-diagram text {
+		font:bold 14px monospace;
+		text-anchor:middle;
+	}
+	svg.railroad-diagram text.label{
+		text-anchor:start;
+	}
+	svg.railroad-diagram text.comment{
+		font:italic 12px monospace;
+	}
+	svg.railroad-diagram rect{
+		stroke-width:3;
+		stroke:black;
+		fill:hsl(120,100%,90%);
+	}
+	svg.railroad-diagram rect.group-box {
+		stroke: gray;
+		stroke-dasharray: 10 5;
+		fill: none;
+	}
+
+svg.railroad-diagram { background: #ffffff; }
+svg.railroad-diagram text { font-family: "Noto Sans Mono CJK SC", "Noto Sans CJK SC", "DengXian", monospace; }
+svg.railroad-diagram g.non-terminal.special rect { fill: #eef3e6; stroke-dasharray: 4 3; }
+svg.railroad-diagram text.rule-title { font-size: 15px; font-weight: bold; text-anchor: start; }
+svg.railroad-diagram a text { fill: #1a4f8a; }
+@media (prefers-color-scheme: dark) {
+  svg.railroad-diagram { background: #16181c; }
+  svg.railroad-diagram path { stroke: #c8ccd2; }
+  svg.railroad-diagram rect { stroke: #c8ccd2; fill: #23272e; }
+  svg.railroad-diagram g.non-terminal.special rect { fill: #233021; }
+  svg.railroad-diagram text { fill: #e6e8eb; }
+  svg.railroad-diagram a text { fill: #8cc4ff; }
+}
+
+/* ]]> */
+</style></svg>

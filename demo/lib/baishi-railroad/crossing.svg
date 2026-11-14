@@ -1,0 +1,52 @@
+<svg class="railroad-diagram" role="img" aria-label="crossing" height="90" viewBox="0 0 219.5 90" width="219.5" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<title>crossing</title><text class="rule-title" x="10" y="19">crossing =</text><g transform="translate(.5 28.5)">
+<g>
+<path d="M20 21v20m10 -20v20m-10 -10h20" /></g><path d="M40 31h10" /><g>
+<path d="M50 31h0.0" /><path d="M169.5 31h0.0" /><g class="terminal ">
+<path d="M50.0 31h0.0" /><path d="M78.5 31h0.0" /><rect height="22" rx="10" ry="10" width="28.5" x="50" y="20"></rect><text x="64.25" y="35">x</text></g><path d="M78.5 31h10" /><path d="M88.5 31h10" /><g class="non-terminal ">
+<path d="M98.5 31h0.0" /><path d="M169.5 31h0.0" /><rect height="22" width="71" x="98.5" y="20"></rect><a xlink:href="number.svg"><text x="134" y="35">number</text><text x="134" y="35">number</text></a></g></g><path d="M169.5 31h10" /><path d="M 179.5 31 h 20 m -10 -10 v 20 m 10 -20 v 20"></path></g><style>/* <![CDATA[ */
+	svg.railroad-diagram {
+		background-color:hsl(30,20%,95%);
+	}
+	svg.railroad-diagram path {
+		stroke-width:3;
+		stroke:black;
+		fill:rgba(0,0,0,0);
+	}
+	svg.railroad-diagram text {
+		font:bold 14px monospace;
+		text-anchor:middle;
+	}
+	svg.railroad-diagram text.label{
+		text-anchor:start;
+	}
+	svg.railroad-diagram text.comment{
+		font:italic 12px monospace;
+	}
+	svg.railroad-diagram rect{
+		stroke-width:3;
+		stroke:black;
+		fill:hsl(120,100%,90%);
+	}
+	svg.railroad-diagram rect.group-box {
+		stroke: gray;
+		stroke-dasharray: 10 5;
+		fill: none;
+	}
+
+svg.railroad-diagram { background: #ffffff; }
+svg.railroad-diagram text { font-family: "Noto Sans Mono CJK SC", "Noto Sans CJK SC", "DengXian", monospace; }
+svg.railroad-diagram g.non-terminal.special rect { fill: #eef3e6; stroke-dasharray: 4 3; }
+svg.railroad-diagram text.rule-title { font-size: 15px; font-weight: bold; text-anchor: start; }
+svg.railroad-diagram a text { fill: #1a4f8a; }
+@media (prefers-color-scheme: dark) {
+  svg.railroad-diagram { background: #16181c; }
+  svg.railroad-diagram path { stroke: #c8ccd2; }
+  svg.railroad-diagram rect { stroke: #c8ccd2; fill: #23272e; }
+  svg.railroad-diagram g.non-terminal.special rect { fill: #233021; }
+  svg.railroad-diagram text { fill: #e6e8eb; }
+  svg.railroad-diagram a text { fill: #8cc4ff; }
+}
+
+/* ]]> */
+</style></svg>

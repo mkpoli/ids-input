@@ -1,0 +1,52 @@
+<svg class="railroad-diagram" role="img" aria-label="stroke" height="120" viewBox="0 0 259 120" width="259" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<title>stroke</title><text class="rule-title" x="10" y="19">stroke =</text><g transform="translate(.5 28.5)">
+<g>
+<path d="M20 21v20m10 -20v20m-10 -10h20" /></g><g>
+<path d="M40 31h0.0" /><path d="M219.0 31h0.0" /><path d="M40.0 31h20" /><g class="non-terminal ">
+<path d="M60.0 31h0.0" /><path d="M199.0 31h0.0" /><rect height="22" width="139" x="60" y="20"></rect><a xlink:href="ideograph-char.svg"><text x="129.5" y="35">ideograph char</text><text x="129.5" y="35">ideograph char</text></a></g><path d="M199.0 31h20" /><path d="M40.0 31a10 10 0 0 1 10 10v10a10 10 0 0 0 10 10" /><g class="non-terminal ">
+<path d="M60.0 61h4.25" /><path d="M194.75 61h4.25" /><rect height="22" width="130.5" x="64.25" y="50"></rect><a xlink:href="stroke-letter.svg"><text x="129.5" y="65">stroke letter</text><text x="129.5" y="65">stroke letter</text></a></g><path d="M199.0 61a10 10 0 0 0 10 -10v-10a10 10 0 0 1 10 -10" /></g><path d="M 219.0 31 h 20 m -10 -10 v 20 m 10 -20 v 20"></path></g><style>/* <![CDATA[ */
+	svg.railroad-diagram {
+		background-color:hsl(30,20%,95%);
+	}
+	svg.railroad-diagram path {
+		stroke-width:3;
+		stroke:black;
+		fill:rgba(0,0,0,0);
+	}
+	svg.railroad-diagram text {
+		font:bold 14px monospace;
+		text-anchor:middle;
+	}
+	svg.railroad-diagram text.label{
+		text-anchor:start;
+	}
+	svg.railroad-diagram text.comment{
+		font:italic 12px monospace;
+	}
+	svg.railroad-diagram rect{
+		stroke-width:3;
+		stroke:black;
+		fill:hsl(120,100%,90%);
+	}
+	svg.railroad-diagram rect.group-box {
+		stroke: gray;
+		stroke-dasharray: 10 5;
+		fill: none;
+	}
+
+svg.railroad-diagram { background: #ffffff; }
+svg.railroad-diagram text { font-family: "Noto Sans Mono CJK SC", "Noto Sans CJK SC", "DengXian", monospace; }
+svg.railroad-diagram g.non-terminal.special rect { fill: #eef3e6; stroke-dasharray: 4 3; }
+svg.railroad-diagram text.rule-title { font-size: 15px; font-weight: bold; text-anchor: start; }
+svg.railroad-diagram a text { fill: #1a4f8a; }
+@media (prefers-color-scheme: dark) {
+  svg.railroad-diagram { background: #16181c; }
+  svg.railroad-diagram path { stroke: #c8ccd2; }
+  svg.railroad-diagram rect { stroke: #c8ccd2; fill: #23272e; }
+  svg.railroad-diagram g.non-terminal.special rect { fill: #233021; }
+  svg.railroad-diagram text { fill: #e6e8eb; }
+  svg.railroad-diagram a text { fill: #8cc4ff; }
+}
+
+/* ]]> */
+</style></svg>
