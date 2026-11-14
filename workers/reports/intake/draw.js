@@ -52,10 +52,11 @@ async function photograph(page) {
   try {
     const tab = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 })
     await tab.goto(page.href, { waitUntil: 'domcontentloaded' })
-    // The drawing waits for the composer, and then for the faces to arrive.
+    // The preview is photographed once it stops drawing, whatever it settled on: a sequence that
+    // cannot be composed is what many reports are about. Then the faces get time to arrive.
     const preview = tab.locator('#output-panel .ids-preview').first()
     await preview.waitFor({ state: 'attached', timeout: 90_000 })
-    await tab.locator('.ids-preview:is([data-step="composed"], [data-step="idle"])').first().waitFor({ state: 'attached', timeout: 90_000 })
+    await tab.locator('#output-panel .ids-preview:not([data-step="loading"], [data-step="idle"])').first().waitFor({ state: 'attached', timeout: 90_000 })
     await tab.waitForTimeout(2_000)
     return new Uint8Array(await preview.screenshot())
   } finally {
