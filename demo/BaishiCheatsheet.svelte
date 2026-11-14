@@ -12,7 +12,7 @@
   import { LOCALES, appMessages } from './lib/locales.js'
   import { load, save } from './lib/storage.js'
   import { pages } from './lib/pages.js'
-  import { GRAMMAR, LEGENDS, SECTIONS, SOURCE, UNUSED, focusOf, tokenise } from './lib/baishi-cheatsheet.js'
+  import { DRAFTS, GRAMMAR, LEGENDS, SECTIONS, SOURCE, UNUSED, focusOf, tokenise } from './lib/baishi-cheatsheet.js'
   import outlines from './lib/baishi-cheatsheet-outlines.json'
 
   const params = new URLSearchParams(location.search)
@@ -134,8 +134,12 @@
             </article>
           {/each}
           {#if section.id === 'operators'}
-            <article class="card unused" title={t('cheatsheet.hint.unused')}>
-              <div class="quote"><div class="text"><code class="seq" lang="ja">{UNUSED.join(' ')}</code><span class="note">{t('cheatsheet.unused')}</span></div></div>
+            <article class="card unused">
+              <details class="about">
+                <summary><span class="label">{t('cheatsheet.unused')}</span><Icon name="chevron" size={14} /></summary>
+                <p>{t('cheatsheet.hint.unused')}</p>
+              </details>
+              <div class="quote"><div class="text"><code class="seq" lang="ja">{UNUSED.join(' ')}</code></div></div>
             </article>
           {/if}
           {#each LEGENDS[section.id] ?? [] as legend (legend.id)}
@@ -159,7 +163,8 @@
       <h2>{t('cheatsheet.sources')}</h2>
       <ul>
         <li><span class="what">{t('cheatsheet.source.data')}</span> <a href={SOURCE.repository} target="_blank" rel="noreferrer">yi-bai/ids</a> <a href={`${SOURCE.repository}/tree/${SOURCE.commit}`} target="_blank" rel="noreferrer"><code>{SOURCE.commit.slice(0, 8)}</code></a> · {SOURCE.date} · MIT</li>
-        <li><span class="what">{t('cheatsheet.source.notation')}</span> <a href={GRAMMAR.url} target="_blank" rel="noreferrer" lang="zh-Hans">{GRAMMAR.title}</a> · {GRAMMAR.date} · {t('cheatsheet.source.notationBy')} <span class="weak">{t('cheatsheet.source.notationNote')}</span></li>
+        <li><span class="what">{t('cheatsheet.source.notation')}</span> <b class="key">{GRAMMAR.key}</b> <a href={GRAMMAR.url} target="_blank" rel="noreferrer" lang="zh-Hans">{GRAMMAR.title}</a> · {GRAMMAR.date} · {t('cheatsheet.source.notationBy')} <span class="weak">{t('cheatsheet.source.notationNote')}</span></li>
+        <li><span class="what">{t('cheatsheet.source.drafts')}</span> <b class="key">{DRAFTS.key}</b> {DRAFTS.author}, <span lang="zh-Hans">{DRAFTS.title}</span> {DRAFTS.versions} <span class="weak">{t('cheatsheet.source.draftsNote')}</span></li>
         <li><span class="what">{t('cheatsheet.source.outlines')}</span> <a href="https://github.com/notofonts/noto-cjk" target="_blank" rel="noreferrer">Noto Sans CJK JP</a> · <a href="https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project" target="_blank" rel="noreferrer">Plangothic</a> · <a href="https://github.com/mkpoli/han-compose" target="_blank" rel="noreferrer">han-compose</a> <code>{outlines.composer.commit}</code></li>
       </ul>
     </footer>
@@ -247,12 +252,10 @@
   .stroke.s2,.start.s2{stroke:var(--part-2)}
   .stroke.s3,.start.s3{stroke:var(--part-3)}
   /* Where the pen starts a stroke. */
-  .start{fill:var(--ui-color-surface-sunken);stroke-width:22}
+  .start{fill:var(--ui-color-surface-sunken);stroke-width:22;transition:opacity var(--ui-duration-fast) var(--ui-ease)}
 
-  .unused{justify-content:center;border-style:dashed;background:none}
-  .unused .text{flex-direction:row;align-items:baseline;gap:10px}
+  .unused{border-style:dashed;background:none}
   .unused .seq{color:var(--ui-color-ink-muted)}
-  .note{font-size:12px;color:var(--ui-color-ink-muted)}
   .legend dl{display:flex;flex-wrap:wrap;gap:4px 12px;margin:0}
   .legend dl div{display:flex;align-items:baseline;gap:4px}
   .legend dt{font-family:var(--ui-font-mono);font-size:14px;font-weight:700;color:var(--ui-color-ink)}
@@ -265,6 +268,7 @@
   footer code{font-family:var(--ui-font-mono);font-size:11.5px}
   .what{display:inline-block;min-inline-size:5.5em;margin-inline-end:6px;color:var(--ui-color-ink-muted)}
   .weak{color:var(--ui-color-ink-muted)}
+  .key{font-weight:var(--ui-weight-semibold);color:var(--ui-color-ink)}
   .help{display:flex;flex-direction:column;gap:10px;margin:0;padding-inline-start:18px;font-size:13px;line-height:var(--ui-leading-normal);color:var(--ui-color-ink-soft)}
 
   @media (max-width:520px) {
@@ -277,6 +281,6 @@
     .wide .seq{font-size:19px}
   }
   @media (prefers-reduced-motion:reduce) {
-    .tok,.part,.stroke,.about summary :global(svg){transition:none}
+    .tok,.part,.stroke,.start,.about summary :global(svg){transition:none}
   }
 </style>

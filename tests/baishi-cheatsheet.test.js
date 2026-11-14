@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import { chainStrokes } from '../src/core/chain-shape.js'
 import { COMPOSER_BASE } from '../demo/lib/composer.js'
 import { LOCALES, appMessages } from '../demo/lib/locales.js'
-import { LEGENDS, SECTIONS, SOURCE, entriesOf, focusOf, glyphsDrawn, tokenise } from '../demo/lib/baishi-cheatsheet.js'
+import { LEGENDS, SECTIONS, SOURCE, entriesOf, focusOf, glyphsDrawn, quotations, tokenise } from '../demo/lib/baishi-cheatsheet.js'
 
 const outlines = JSON.parse(readFileSync(new URL('../demo/lib/baishi-cheatsheet-outlines.json', import.meta.url), 'utf8'))
 const cards = SECTIONS.flatMap(section => section.cards)
@@ -47,6 +47,7 @@ describe('reading a quotation of the zi.tools notation', () => {
     expect(() => tokenise('⿰木')).toThrow()
     expect(() => tokenise('⿰木目目')).toThrow()
     expect(() => tokenise('#(木)')).toThrow()
+    for (const junk of ['⿰木)', '⿰木#', '⿰(木', '⿱a木']) expect(() => tokenise(junk)).toThrow()
   })
 })
 
@@ -88,6 +89,9 @@ describe('the prepared outlines', () => {
     expect(outlines.base).toBe(COMPOSER_BASE)
     expect(outlines.composer.style).toBe('sans')
     expect(outlines.data).toEqual({ commit: SOURCE.commit, sha256: SOURCE.sha256 })
+  })
+  it('were built from the quotations the cards make now', () => {
+    expect(outlines.quotations).toEqual(quotations())
   })
   it('hold exactly the characters the cards draw', () => {
     expect(Object.keys(outlines.glyphs).sort()).toEqual(glyphsDrawn().sort())

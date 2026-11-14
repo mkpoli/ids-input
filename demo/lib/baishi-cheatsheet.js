@@ -9,7 +9,8 @@
 // A glyph is drawn in the form the font has (Noto Sans CJK JP, Plangothic beyond it). A quoted entry
 // is the one of its row that describes that form: its (J) entry or, where the row has none, its default.
 // Where a row gives another source an entry of its own, the outline was compared with the quoted
-// entry by eye.
+// entry by eye. A variant the font does not draw alone is shown where the data names it: 子t in 孩,
+// 凵y in 世, whose own entries carry those tags.
 import { chainStrokes } from '../../src/core/chain-shape.js'
 
 /** The data every sequence is quoted from. */
@@ -23,7 +24,9 @@ export const SOURCE = {
   },
 }
 /** The document the notation is read from. */
-export const GRAMMAR = { title: '（白式）IDS 延展语法导论', date: '2026-03-20', url: 'https://nightfurysl2001.github.io/bai-ids/' }
+export const GRAMMAR = { key: 'I26', title: '（白式）IDS 延展语法导论', date: '2026-03-20', url: 'https://nightfurysl2001.github.io/bai-ids/' }
+/** The earlier drafts that read an overlap bracket mark by mark: PDF exports with no address of their own, dated from their metadata. */
+export const DRAFTS = { key: 'D2–D3', author: 'Losketch', title: 'IDS说明文档', versions: '2.0 beta (2024-04-13), 3.0 beta (2024-06-04)' }
 
 /**
  * A character's outline and the contours of each coloured part of it, by slot; `rest` the contours
@@ -70,7 +73,7 @@ export const SECTIONS = [
     operator('⿻', '中', '⿻丨口.', 46, [[2], [0, 1]]),
     operator('⿼', '𢎛', '⿼弓.丶.', 36712, [[0], [1]]),
     operator('⿽', '斗', '⿽十.⺀', 6040, [[0, 1], [2, 3]]),
-    operator('⿾', '𱤻', '⿾止.(m)', 94401, [[0]]),
+    operator('⿾', '𫸪', '⿰弓.⿾弓.', 76246, [[0], [1]]),
     operator('⿿', '𠄔', '⿿予', 27873, [[0]]),
   ] },
   { id: 'katakana', cards: [
@@ -113,7 +116,7 @@ export const SECTIONS = [
     { id: 'chain', label: 'chain', hint: 'chain', strokes: true, quotes: [{ char: '己', text: '#(𠃍-一乚)(.)', row: 4082, glyphs: [{ char: '己', parts: [[1], [0], [2]] }], chain: true, focus: [[0, 2], [6, 7]] }] },
     { id: 'chain-reverse', label: 'reverse', hint: 'reverse', strokes: true, quotes: [{ char: '人', text: '#(-丿乀)(.)', row: 187, glyphs: [{ char: '人', parts: [[0], [1]] }], chain: true, focus: ['-'] }] },
     { id: 'chain-cross', label: 'cross', hint: 'cross', strokes: true, indices: true, quotes: [{ char: '又', text: '#(-乀x1㇇)(.)', row: 1481, glyphs: [{ char: '又', parts: [[0], [1, 2]] }], chain: true, focus: ['x1'] }] },
-    { id: 'chain-break', label: 'break', hint: 'break', strokes: true, quotes: [{ char: '凵', text: '#(丨b一-丨)(y)', row: 1014, glyphs: [{ char: '凵', parts: [[1], [0], [2]] }], chain: true, focus: ['b'] }] },
+    { id: 'chain-break', label: 'break', hint: 'break', strokes: true, quotes: [{ char: '凵', text: '#(丨b一-丨)(y)', row: 1014, glyphs: [{ char: '世', parts: [[4], [2], [5]], rest: [0, 1, 3] }], chain: true, focus: ['b'] }] },
     { id: 'chain-closed', label: 'closed', hint: 'closed', strokes: true, quotes: [{ char: '口', text: '#(-丨𠃍-一z)(.)', row: 1508, glyphs: [{ char: '口' }], chain: true, focus: ['z'] }] },
     { id: 'chain-curves', label: 'curves', hint: 'curves', strokes: true, quotes: [{ char: '〇', text: '#(◟◜◝◞z)', row: 102011, glyphs: [{ char: '〇' }], chain: true, focus: ['◟◜◝◞'] }] },
     { id: 'chain-letters', label: 'letters', hint: 'letters', strokes: true, quotes: [{ char: '乙', text: '#(HPHwg)', row: 90, glyphs: [{ char: '乙', parts: [[0], [1]] }], chain: true, focus: ['HPHwg'] }] },
@@ -232,6 +235,8 @@ export function tokenise(text, { strokes = false } = {}) {
       for (let n = 0; n < arity; n++) sequence()
       return
     }
+    // A component is a character of its own: no ASCII, which only writes tags, brackets and lists.
+    if (/^[\0-\x7f]$/.test(char)) throw new Error(`${text}: ${char} is no component`)
     const of = leaf++
     push(char, 'part', of)
     if (UNTAGGED.includes(char)) return
@@ -272,6 +277,9 @@ export function focusOf(quote) {
     return /** @type {[number, number]} */ ([start, start + piece.length])
   })
 }
+
+/** Every quotation as the build looks it up: its file, the line of its row and its text. @returns {[string, number, string][]} */
+export const quotations = () => SECTIONS.flatMap(section => section.cards.flatMap(card => card.quotes.map(quote => /** @type {[string, number, string]} */ ([quote.file ?? 'ids_lv0.txt', quote.row, quote.text]))))
 
 /** Every character whose outline a card draws. @returns {string[]} */
 export const glyphsDrawn = () => [...new Set(SECTIONS.flatMap(section => section.cards.flatMap(card => card.quotes.flatMap(quote => (quote.glyphs ?? []).flatMap(glyph => glyph ? [glyph.char] : [])))))]
