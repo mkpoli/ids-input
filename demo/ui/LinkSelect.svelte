@@ -1,5 +1,5 @@
 <script module>
-  /** @typedef {{ href: string, label: string, current?: 'page' | 'true', logo?: string, out?: boolean } | { separator: true }} Link */
+  /** @typedef {{ href: string, label: string, current?: 'page' | 'true', logo?: string, icon?: string, out?: boolean } | { separator: true }} Link */
 </script>
 
 <script>
@@ -80,7 +80,7 @@
         {:else}
           <a class="ui-menu-item item" class:out={link.out} role="menuitem" tabindex="-1" href={link.href}
             aria-current={link.current} onclick={() => hide(!!link.current)}>
-            {#if link.logo}<img src={link.logo} alt="" width="28" height="28" />{/if}
+            {#if link.logo}<img src={link.logo} alt="" width="28" height="28" />{:else if link.icon}<span class="glyph"><Icon name={link.icon} /></span>{/if}
             <span class="label">{link.label}</span>
             {#if link.current}<span class="tick"><Icon name="check" size={16} /></span>{/if}
             {#if link.out}<span aria-hidden="true">↗</span>{/if}
@@ -104,6 +104,8 @@
   .item{text-decoration:none;font-size:var(--ui-text-md);font-weight:400;color:var(--ui-color-ink)}
   .item img{flex:none;border-radius:6px}
   .item[aria-current]::before{display:none}
+  .glyph{display:grid;color:var(--ui-color-ink-muted)}
+  .item[aria-current] .glyph{color:var(--ui-color-accent)}
   .label{flex:1;min-width:0}
   .tick{display:grid;color:var(--ui-color-accent)}
   .out{color:var(--ui-color-ink-muted);font-size:var(--ui-text-sm)}
