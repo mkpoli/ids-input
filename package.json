@@ -81,6 +81,7 @@
     "build:subtrees": "node scripts/build_subtree_parts.mjs",
     "build:slot-hints": "bun scripts/build_slot_hints.mjs && bun scripts/build_slot_hints_appendix.mjs",
     "build:custom-components": "bun scripts/build_custom_components.mjs",
+    "build:component-atlas": "bun scripts/build_component_atlas.mjs",
     "build:demo": "vite build demo",
     "dev:desktop-page": "VITE_DESKTOP=1 vite demo",
     "build:desktop-page": "VITE_DESKTOP=1 vite build demo",

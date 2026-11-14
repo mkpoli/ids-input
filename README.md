@@ -965,6 +965,7 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   a whole, because 102,894 of its 211,319 descriptions are CHISE's (`data/COPYING-chise-ids.txt`,
   source record `data/chise-sources.json`); the other 108,425 are public-domain BabelStone rows and
   each row says which it is. Code stays MIT.
+- `data/component-atlas.json.gz`: GPL-2.0-or-later, counted from `data/ids-corpus.json.gz`.
 - `data/seal-sources.txt.gz`: Unicode SealSources, Unicode-3.0
   (`data/COPYING-seal-sources.txt`).
 - `fonts/IDSSeal*`, with the engine's `small-seal` outlines in its package: derived Kaiyuan glyphs under

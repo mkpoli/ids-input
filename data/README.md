@@ -1383,6 +1383,15 @@ The alignments in `ids-corpus.json.gz`, as one small table for the components pa
 status, the provenance indexes and the characters that attest it. Written by
 `scripts/build_ids_corpus.mjs`; the data is **GPL-2.0-or-later** like the corpus it comes from.
 
+## `component-atlas.json.gz`
+
+Every component a description in `ids-corpus.json.gz` uses, most used first, for the page at
+`/component-atlas`: 5,280 rows, the 4,000 most used and every unencoded part after them. Each row
+has the `cid`, its character (a private-use one for a CHISE entity), `uses` (the descriptions naming
+it), `encoded`, up to 60 characters it appears in (`subjects`) and the cid's `aliases`. A part named
+through a CHISE entity that is still unresolved is not counted. Built 2026-11-04; rebuild with
+`bun run build:component-atlas`. **GPL-2.0-or-later** like the corpus it comes from.
+
 ## Preview coverage audit
 
 `bun scripts/audit_render_coverage.mjs CACHE_DIR OUTPUT_JSON [sans|serif|fangsong|klee]` renders every
