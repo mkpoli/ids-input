@@ -12,12 +12,14 @@ The format is `ids-input/open-strokes`, version 2.
 | --- | ---: | --- |
 | `cns11643.tsv.gz` | 76,282 | Taiwan's standard order, from CNS 全字庫: `char`, `codepoint`, `orders`, `cns` (the CNS plane-codes mapped to the character). Open Government Data License 1.0. |
 | `rime-stroke.tsv.gz` | 102,582 | Rime's five-stroke dictionary: `char`, `codepoint`, `orders`. LGPL-3.0. |
-| `induced.tsv.gz` | 25,981 | Induced orders: `char`, `codepoint`, `orders`, `basis`, `from`, `source`, `ids`. Each row keeps the terms of its `source`. |
+| `induced.tsv.gz` | 26,070 | Induced orders: `char`, `codepoint`, `orders`, `basis`, `from`, `source`, `ids`. Each row keeps the terms of its `source`. |
+| `entered.tsv` | 1 | Orders entered by hand: `char`, `codepoint`, `orders`, `basis`, `by`, `source`, `date`. CC0 1.0. |
+| `wanted.tsv` | 83 | Components without an order that keep characters from being written: `char`, `codepoint`, `source`, `blocks`, `alone`, `examples`. CC0 1.0. |
 | `manifest.json` | | Sources with checksums, licences, coverage and the tables below. |
 | `LICENSE-rime-stroke-LGPL-3.0.txt`, `LICENSE-GPL-3.0.txt`, `AUTHORS-rime-stroke.txt` | | The terms and authors of the Rime dictionary. |
 | `LICENSE-yi-bai-ids-MIT.txt` | | The terms of Yi Bai's descriptions. |
 
-The data files are gzipped UTF-8 TSV with a header row. `orders` holds one code per way of writing
+The data files are UTF-8 TSV with a header row, gzipped where the name ends in `.gz`. `orders` holds one code per way of writing
 the character, separated by a space, in the source's order.
 
 ## Strokes
@@ -65,7 +67,7 @@ convention they follow.
 - `ids`: `from` is the character's description and the order joins the recorded orders of
   its components. The description is BabelStone's (the sequence its T source gives, else the
   first) or, where BabelStone has none, Yi Bai's; the `ids` column names which.
-  24,578 rows from `cns11643` (4,178 of them by Yi Bai's descriptions), 3 from `rime-stroke`. Up to 8 ways are kept.
+  24,667 rows from `cns11643` (4,187 of them by Yi Bai's descriptions), 3 from `rime-stroke`. Up to 8 ways are kept.
 
 The components of ⿰ ⿱ ⿲ ⿳ are joined in the order the description names them. In the other
 operators the first component encloses, crosses or carries the second, and the second is written at
@@ -147,18 +149,37 @@ learned, or never.
 
 An induced row is a prediction, not a record. Over everything they write, the rules agree with CNS
 on 89.7% of the characters CNS records. The rows induced from CNS cannot be checked against the
-Rime file: Rime records 24,575 of those characters and 12,091 agree, since Rime's
+Rime file: Rime records 24,664 of those characters and 12,148 agree, since Rime's
 additions do not all follow CNS order.
+
+## Entered orders
+
+`entered.tsv` holds orders entered by hand for characters and components a source does not
+record, in that source's symbols. `basis` gives the citation or the reasoning behind each, `by`
+who entered it. An entered order is this project's reading and never enters a source's file; it
+writes its own character and lets the characters it is a component of be induced.
+
+`wanted.tsv` lists, per source, the components that keep characters from being written:
+`blocks` counts those characters and `alone` the ones it is the only obstacle to, most first.
+To add an order, append a row to `data/stroke-orders-entered.tsv` in the repository and rebuild.
 
 ## Coverage
 
-| Source | Recorded | By equivalence | From IDS | Without an order |
-| --- | ---: | ---: | ---: | ---: |
-| `cns11643` | 76,282 | 719 | 24,578 | 1,773 |
-| `rime-stroke` | 102,582 | 681 | 3 | 86 |
+| Source | Recorded | Entered | By equivalence | From IDS | Without an order |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `cns11643` | 76,282 | 1 | 719 | 24,667 | 1,684 |
+| `rime-stroke` | 102,582 | 0 | 681 | 3 | 86 |
 
 "Without an order" counts the Han characters the workshop's composer draws or either IDS source
-describes that end with no row from that source.
+describes that end with no row from that source. Why, for each:
+
+| Source | No description | Unreadable description | Operator not induced through | Component without an order |
+| --- | ---: | ---: | ---: | ---: |
+| `cns11643` | 164 | 316 | 680 | 524 |
+| `rime-stroke` | 86 | 0 | 0 | 0 |
+
+An unreadable description is a single component, carries 〾 or an operator modifier, or names a
+numbered component BabelStone gives no fragment for.
 
 ## Sources and terms
 

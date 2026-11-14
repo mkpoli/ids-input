@@ -9,6 +9,8 @@ const manifest = JSON.parse(readFileSync(at('manifest.json'), 'utf8'))
 const readme = readFileSync(at('README.md'), 'utf8')
 const table = name => gunzipSync(readFileSync(at(name))).toString().replace(/\n$/, '').split('\n').map(line => line.split('\t'))
 const rime = table('rime-stroke.tsv.gz'), cns = table('cns11643.tsv.gz'), induced = table('induced.tsv.gz')
+const plain = name => readFileSync(at(name), 'utf8').replace(/\n$/, '').split('\n').map(line => line.split('\t'))
+const entered = plain('entered.tsv'), wanted = plain('wanted.tsv')
 const orders = rows => new Map(rows.slice(1).map(row => [row[0], row[2].split(' ')]))
 const digits = code => [...code].map(letter => ({ h: '1', s: '2', p: '3', n: '4', z: '5' })[letter]).join('')
 const point = char => `U+${char.codePointAt(0).toString(16).toUpperCase().padStart(4, '0')}`
@@ -32,7 +34,7 @@ describe('the open stroke-order release', () => {
   })
 
   it('lists each file with its rows, columns and size', () => {
-    for (const [file, rows] of [['rime-stroke.tsv.gz', rime], ['cns11643.tsv.gz', cns], ['induced.tsv.gz', induced]]) {
+    for (const [file, rows] of [['rime-stroke.tsv.gz', rime], ['cns11643.tsv.gz', cns], ['induced.tsv.gz', induced], ['entered.tsv', entered], ['wanted.tsv', wanted]]) {
       const entry = manifest.files.find(entry => entry.name === file)
       expect(rows[0]).toEqual(entry.columns)
       expect(rows.length - 1).toBe(entry.rows)
@@ -106,6 +108,27 @@ describe('the open stroke-order release', () => {
       // Scored on characters the places were not learned from, the rules agree with the source on most of what they write.
       expect(operators.reduce((sum, row) => sum + row.agree, 0) / operators.reduce((sum, row) => sum + row.written, 0)).toBeGreaterThan(0.85)
     }
+  })
+
+  it('keeps entered orders apart and says what is still wanted', () => {
+    const tables = { 'rime-stroke': orders(rime), cns11643: orders(cns) }
+    const symbols = { cns11643: /^[1-5]+( [1-5]+)*$/, 'rime-stroke': /^[hspnz]+( [hspnz]+)*$/ }
+    for (const [char, , written, basis, by, source, date] of entered.slice(1)) {
+      expect(written).toMatch(symbols[source])
+      expect(basis && by).toBeTruthy()
+      expect(date).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+      // An entered order is never a second opinion on a recorded one.
+      expect(tables[source].has(char)).toBe(false)
+    }
+    for (const row of manifest.coverage) {
+      expect(row.entered).toBe(entered.slice(1).filter(entry => entry[5] === row.source).length)
+      expect(Object.values(row.reasons).reduce((sum, count) => sum + count, 0)).toBe(row.none)
+      const rows = wanted.slice(1).filter(entry => entry[2] === row.source)
+      // Every wanted component has no order from the source, and the list is ranked.
+      expect(rows.every(entry => !tables[row.source].has(entry[0]) && Number(entry[4]) <= Number(entry[3]))).toBe(true)
+      expect(rows.every((entry, index) => !index || Number(rows[index - 1][4]) >= Number(entry[4]))).toBe(true)
+    }
+    expect(readme).toContain('data/stroke-orders-entered.tsv')
   })
 
   it('learns where each enclosure is written from enough characters', () => {

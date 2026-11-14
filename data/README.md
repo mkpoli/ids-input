@@ -1304,6 +1304,13 @@ from CNS 全字庫, Rime's five-stroke dictionary, and orders induced by equival
 BabelStone IDS for characters a source lacks. Its own `README.md` gives the fields, rules, licences
 and how often the rules agree with the sources. Built by `scripts/build_open_strokes.mjs`.
 
+## `stroke-orders-entered.tsv`
+
+Stroke orders entered by hand for characters and components the sources of `open-strokes/` do not
+record: `char`, `source`, `orders`, `basis`, `by`, `date`, tab-separated, one row per character and
+source. The build refuses a row without a basis and publishes the rows as `open-strokes/entered.tsv`;
+`open-strokes/wanted.tsv` ranks the components worth entering next.
+
 ## `han-parts.json.gz`
 
 Every Han-script character the composer can draw: 103,352 keys in code-point order, with the

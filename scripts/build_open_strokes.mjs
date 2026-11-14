@@ -4,6 +4,8 @@
 //   cns11643.tsv.gz     Taiwan's standard order, as CNS 全字庫 records it (Open Government Data License 1.0)
 //   rime-stroke.tsv.gz  Rime's five-stroke dictionary: the CNS table with the orders its authors
 //                       added, through Extension J (LGPL-3.0)
+//   entered.tsv         orders entered by hand in `data/stroke-orders-entered.tsv`, each with its basis
+//   wanted.tsv          the components whose order would let the most characters be written
 //   induced.tsv.gz      characters a source lacks, written from a character the source has:
 //                       the unified ideograph a compatibility form or radical is equivalent to, or
 //                       the components of its ideographic description sequence
@@ -273,15 +275,63 @@ const validation = SOURCES.map(({ source, table, region }) => {
   return { source, operators: [...byOperator].sort((a, b) => b[1].described - a[1].described).map(([operator, tally]) => ({ operator, ...tally, induced: RELIABLE.includes(operator) ? 'always' : taught.has(operator) ? 'learned' : 'never' })) }
 })
 
+// --- Orders entered by hand ----------------------------------------------------------------------
+
+const SYMBOLS = { cns11643: /^[1-5]+( [1-5]+)*$/, 'rime-stroke': /^[hspnz]+( [hspnz]+)*$/ }
+/** @type {string[][]} */
+const enteredRows = []
+for (const [index, line] of readFileSync(new URL('../data/stroke-orders-entered.tsv', import.meta.url), 'utf8').split('\n').entries()) {
+  if (!line || line.startsWith('#')) continue
+  const [char, source, orders, basis, by, date] = line.split('\t')
+  const at = `data/stroke-orders-entered.tsv:${index + 1}`
+  // A component can be a CJK stroke or a letter a description borrows, so any one character is taken.
+  if ([...(char ?? '')].length !== 1) throw Error(`${at}: one character per row`)
+  if (!SYMBOLS[source]?.test(orders ?? '')) throw Error(`${at}: orders must be written in the symbols of cns11643 or rime-stroke`)
+  if (!basis || !by || !/^\d{4}-\d{2}-\d{2}$/.test(date ?? '')) throw Error(`${at}: a basis, who entered it and the date are required`)
+  if (enteredRows.some(row => row[0] === char && row[5] === source)) throw Error(`${at}: ${char} is entered twice for ${source}`)
+  enteredRows.push([char, point(char), orders, basis, by, source, date])
+}
+enteredRows.sort((a, b) => a[5].localeCompare(b[5]) || byCodePoint(a[0], b[0]))
+
 const repertoire = JSON.parse(gunzipSync(readFileSync(new URL('../data/han-parts.json.gz', import.meta.url)))).keys
 // BabelStone IDS also describes Tangut; only Han characters are counted and induced.
 const candidates = [...new Set([...repertoire, ...ids.keys(), ...second.keys()])].filter(char => characterScript(char) === 'han').sort(byCodePoint)
+/** The marker of a description that stops at an operator not induced through. */
+const OPERATOR = '\0'
+/**
+ * What keeps a description from being written: the components without an order, read down to the
+ * smallest, or OPERATOR. Follows `ordersOf`.
+ * @param {Tree} tree @param {Map<string, string[]>} table @param {string} region @param {Map<string, string>} places
+ * @param {string[]} [within] @returns {Set<string>}
+ */
+function blockersOf(tree, table, region, places, within = []) {
+  if ('leaf' in tree) {
+    if (table.has(tree.leaf)) return new Set()
+    const sequence = within.includes(tree.leaf) ? null : described(tree.leaf, region), inner = sequence ? parse(sequence) : null
+    if (!inner || 'leaf' in inner) return new Set([tree.leaf])
+    const below = blockersOf(inner, table, region, places, [...within, tree.leaf])
+    // A component whose own description cannot be induced through is wanted itself.
+    return below.has(OPERATOR) ? new Set([tree.leaf]) : below
+  }
+  const place = ENCLOSING.has(tree.op) && 'leaf' in tree.parts[0] ? places.get(tree.op + tree.parts[0].leaf) : undefined
+  if (!place && !RELIABLE.includes(tree.op)) return new Set([OPERATOR])
+  return new Set(tree.parts.flatMap(part => [...blockersOf(part, table, region, places, within)]))
+}
 /** @type {string[][]} */
 const induced = []
+/** @type {string[][]} */
+const wanted = []
 const left = SOURCES.map(({ source, table, region }) => {
+  // An entered order stands beside the source's: it writes its character and the characters it is a component of.
+  const entered = new Map(enteredRows.filter(row => row[5] === source).map(row => [row[0], row[2].split(' ')]))
+  const known = new Map([...table, ...[...entered].filter(([char]) => !table.has(char))])
+  const places = learned.get(source).places
   let equivalent = 0, fromIds = 0, none = 0
+  const reasons = { undescribed: 0, unreadable: 0, operator: 0, component: 0 }
+  /** @type {Map<string, { blocks: string[], alone: number }>} */
+  const blocking = new Map()
   for (const char of candidates) {
-    if (table.has(char)) continue
+    if (known.has(char)) continue
     // A compatibility ideograph or a Kangxi radical is the unified ideograph it normalizes to.
     const unified = char.normalize('NFKC')
     if (unified !== char && [...unified].length === 1 && table.has(unified)) {
@@ -290,10 +340,24 @@ const left = SOURCES.map(({ source, table, region }) => {
       continue
     }
     const sequence = described(char, region), tree = sequence ? parse(sequence) : null
-    const written = tree && !('leaf' in tree) ? ordersOf(tree, table, region, learned.get(source).places) : null
-    if (written) { induced.push([char, point(char), written.slice(0, WAYS).join(' '), 'ids', sequence, source, describedBy(char)]); fromIds++ } else none++
+    const written = tree && !('leaf' in tree) ? ordersOf(tree, known, region, places) : null
+    if (written) { induced.push([char, point(char), written.slice(0, WAYS).join(' '), 'ids', sequence, source, describedBy(char)]); fromIds++; continue }
+    none++
+    if (!sequence) { reasons.undescribed++; continue }
+    if (!tree || 'leaf' in tree) { reasons.unreadable++; continue }
+    const blockers = blockersOf(tree, known, region, places)
+    if (blockers.has(OPERATOR) || !blockers.size) { reasons.operator++; continue }
+    reasons.component++
+    for (const component of blockers) {
+      const entry = blocking.get(component) ?? blocking.set(component, { blocks: [], alone: 0 }).get(component)
+      entry.blocks.push(char)
+      if (blockers.size === 1) entry.alone++
+    }
   }
-  return { source, recorded: table.size, equivalent, ids: fromIds, none }
+  for (const [component, entry] of [...blocking].sort((a, b) => b[1].alone - a[1].alone || b[1].blocks.length - a[1].blocks.length || byCodePoint(a[0], b[0]))) {
+    wanted.push([component, point(component), source, String(entry.blocks.length), String(entry.alone), entry.blocks.slice(0, 8).join('')])
+  }
+  return { source, recorded: table.size, entered: entered.size, equivalent, ids: fromIds, none, reasons }
 })
 // The two sources on the characters both record, and the orders induced from CNS against what Rime
 // records for the same characters: rows neither the rules nor the CNS table had seen.
@@ -312,10 +376,10 @@ const heldOutAgree = heldOut.filter(row => rime.get(row[0]).some(code => row[2].
 // --- The files -----------------------------------------------------------------------------------
 
 mkdirSync(OUT, { recursive: true })
-/** @param {string} name @param {string[]} columns @param {string[][]} rows */
+/** A table, gzipped when its name says so. @param {string} name @param {string[]} columns @param {string[][]} rows */
 function write(name, columns, rows) {
   const body = [columns.join('\t'), ...rows.map(row => row.join('\t'))].join('\n') + '\n'
-  writeFileSync(new URL(name, OUT), gzipSync(body, { level: 9, mtime: 0 }))
+  writeFileSync(new URL(name, OUT), name.endsWith('.gz') ? gzipSync(body, { level: 9, mtime: 0 }) : body)
   return { name, rows: rows.length, columns, bytes: statSync(new URL(name, OUT)).size }
 }
 const files = [
@@ -324,6 +388,8 @@ const files = [
   write('rime-stroke.tsv.gz', ['char', 'codepoint', 'orders'],
     [...rime.keys()].sort(byCodePoint).map(char => [char, point(char), rime.get(char).join(' ')])),
   write('induced.tsv.gz', ['char', 'codepoint', 'orders', 'basis', 'from', 'source', 'ids'], induced),
+  write('entered.tsv', ['char', 'codepoint', 'orders', 'basis', 'by', 'source', 'date'], enteredRows),
+  write('wanted.tsv', ['char', 'codepoint', 'source', 'blocks', 'alone', 'examples'], wanted),
 ]
 // The LGPL asks that its text, and the GPL's it builds on, travel with the data.
 const LICENCES = { 'rime-stroke-LGPL-3.0.txt': 'LICENSE-rime-stroke-LGPL-3.0.txt', 'GPL-3.0.txt': 'LICENSE-GPL-3.0.txt', 'rime-stroke-AUTHORS.txt': 'AUTHORS-rime-stroke.txt' }
@@ -392,11 +458,13 @@ The format is \`ids-input/open-strokes\`, version 2.
 | \`cns11643.tsv.gz\` | ${n(file('cns11643.tsv.gz').rows)} | Taiwan's standard order, from CNS 全字庫: \`char\`, \`codepoint\`, \`orders\`, \`cns\` (the CNS plane-codes mapped to the character). Open Government Data License 1.0. |
 | \`rime-stroke.tsv.gz\` | ${n(file('rime-stroke.tsv.gz').rows)} | Rime's five-stroke dictionary: \`char\`, \`codepoint\`, \`orders\`. LGPL-3.0. |
 | \`induced.tsv.gz\` | ${n(file('induced.tsv.gz').rows)} | Induced orders: \`char\`, \`codepoint\`, \`orders\`, \`basis\`, \`from\`, \`source\`, \`ids\`. Each row keeps the terms of its \`source\`. |
+| \`entered.tsv\` | ${n(file('entered.tsv').rows)} | Orders entered by hand: \`char\`, \`codepoint\`, \`orders\`, \`basis\`, \`by\`, \`source\`, \`date\`. CC0 1.0. |
+| \`wanted.tsv\` | ${n(file('wanted.tsv').rows)} | Components without an order that keep characters from being written: \`char\`, \`codepoint\`, \`source\`, \`blocks\`, \`alone\`, \`examples\`. CC0 1.0. |
 | \`manifest.json\` | | Sources with checksums, licences, coverage and the tables below. |
 | \`LICENSE-rime-stroke-LGPL-3.0.txt\`, \`LICENSE-GPL-3.0.txt\`, \`AUTHORS-rime-stroke.txt\` | | The terms and authors of the Rime dictionary. |
 | \`LICENSE-yi-bai-ids-MIT.txt\` | | The terms of Yi Bai's descriptions. |
 
-The data files are gzipped UTF-8 TSV with a header row. \`orders\` holds one code per way of writing
+The data files are UTF-8 TSV with a header row, gzipped where the name ends in \`.gz\`. \`orders\` holds one code per way of writing
 the character, separated by a space, in the source's order.
 
 ## Strokes
@@ -488,14 +556,32 @@ on ${keptRate}% of the characters CNS records. The rows induced from CNS cannot 
 Rime file: Rime records ${n(heldOut.length)} of those characters and ${n(heldOutAgree)} agree, since Rime's
 additions do not all follow CNS order.
 
+## Entered orders
+
+\`entered.tsv\` holds orders entered by hand for characters and components a source does not
+record, in that source's symbols. \`basis\` gives the citation or the reasoning behind each, \`by\`
+who entered it. An entered order is this project's reading and never enters a source's file; it
+writes its own character and lets the characters it is a component of be induced.
+
+\`wanted.tsv\` lists, per source, the components that keep characters from being written:
+\`blocks\` counts those characters and \`alone\` the ones it is the only obstacle to, most first.
+To add an order, append a row to \`data/stroke-orders-entered.tsv\` in the repository and rebuild.
+
 ## Coverage
 
-| Source | Recorded | By equivalence | From IDS | Without an order |
-| --- | ---: | ---: | ---: | ---: |
-${left.map(row => `| \`${row.source}\` | ${n(row.recorded)} | ${n(row.equivalent)} | ${n(row.ids)} | ${n(row.none)} |`).join('\n')}
+| Source | Recorded | Entered | By equivalence | From IDS | Without an order |
+| --- | ---: | ---: | ---: | ---: | ---: |
+${left.map(row => `| \`${row.source}\` | ${n(row.recorded)} | ${n(row.entered)} | ${n(row.equivalent)} | ${n(row.ids)} | ${n(row.none)} |`).join('\n')}
 
 "Without an order" counts the Han characters the workshop's composer draws or either IDS source
-describes that end with no row from that source.
+describes that end with no row from that source. Why, for each:
+
+| Source | No description | Unreadable description | Operator not induced through | Component without an order |
+| --- | ---: | ---: | ---: | ---: |
+${left.map(row => `| \`${row.source}\` | ${n(row.reasons.undescribed)} | ${n(row.reasons.unreadable)} | ${n(row.reasons.operator)} | ${n(row.reasons.component)} |`).join('\n')}
+
+An unreadable description is a single component, carries 〾 or an operator modifier, or names a
+numbered component BabelStone gives no fragment for.
 
 ## Sources and terms
 
