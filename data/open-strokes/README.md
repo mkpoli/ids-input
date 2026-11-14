@@ -12,7 +12,7 @@ The format is `ids-input/open-strokes`, version 1.
 | --- | ---: | --- |
 | `cns11643.tsv.gz` | 76,282 | Taiwan's standard order, from CNS 全字庫: `char`, `codepoint`, `orders`, `cns` (the CNS plane-codes mapped to the character). Open Government Data License 1.0. |
 | `rime-stroke.tsv.gz` | 102,582 | Rime's five-stroke dictionary: `char`, `codepoint`, `orders`. LGPL-3.0. |
-| `induced.tsv.gz` | 20,715 | Induced orders: `char`, `codepoint`, `orders`, `basis`, `from`, `source`. Each row keeps the terms of its `source`. |
+| `induced.tsv.gz` | 21,541 | Induced orders: `char`, `codepoint`, `orders`, `basis`, `from`, `source`. Each row keeps the terms of its `source`. |
 | `manifest.json` | | Sources with checksums, licences, coverage and the tables below. |
 | `LICENSE-rime-stroke-LGPL-3.0.txt`, `LICENSE-GPL-3.0.txt`, `AUTHORS-rime-stroke.txt` | | The terms and authors of the Rime dictionary. |
 
@@ -63,7 +63,7 @@ convention they follow.
   719 rows from `cns11643`, 681 from `rime-stroke`.
 - `ids`: `from` is the character's description in BabelStone IDS (the sequence its T source gives,
   else the first), and the order joins the recorded orders of its components.
-  19,315 rows from `cns11643`, 0 from `rime-stroke`. Up to 8 ways are kept.
+  20,141 rows from `cns11643`, 0 from `rime-stroke`. Up to 8 ways are kept.
 
 The components are joined in the order the description names them, except:
 
@@ -71,9 +71,10 @@ The components are joined in the order the description names them, except:
 - ⿴: the enclosure without its last stroke, then what it holds, then that stroke.
 - ⿷: the enclosure's first stroke, then what it holds, then the rest.
 
-An order is induced only through ⿰ ⿱ ⿲ ⿳ ⿴ ⿵ ⿶ ⿷ ⿸ ⿺, at every level of the description, and only
-when every component has a recorded order in the same source. A description BabelStone marks 〾 is
-not used. Nothing is induced from another induced row.
+An order is induced only through ⿰ ⿱ ⿲ ⿳ ⿴ ⿵ ⿶ ⿷ ⿸ ⿺, at every level of the description. A
+component the source does not record is read by its own description in turn, and one of
+BabelStone's numbered components by the fragment its note 6 writes it out as; `from` keeps the
+description as BabelStone spells it. A description BabelStone marks 〾 is not used.
 
 ### How often the rules agree with a source
 
@@ -85,19 +86,19 @@ compared with its recorded orders. "Written" counts the characters whose compone
 
 | Operator | Described | Written | Agree | | Induced |
 | --- | ---: | ---: | ---: | ---: | --- |
-| ⿰ | 48,669 | 46,401 | 42,326 | 91.2% | yes |
-| ⿱ | 16,600 | 15,544 | 13,325 | 85.7% | yes |
-| ⿺ | 2,765 | 2,689 | 2,317 | 86.2% | yes |
-| ⿸ | 2,436 | 2,336 | 2,154 | 92.2% | yes |
-| ⿳ | 1,270 | 956 | 729 | 76.3% | yes |
-| ⿵ | 736 | 694 | 612 | 88.2% | yes |
-| ⿲ | 504 | 452 | 387 | 85.6% | yes |
-| ⿹ | 318 | 206 | 80 | 38.8% | no |
-| ⿻ | 265 | 210 | 113 | 53.8% | no |
-| ⿴ | 254 | 248 | 220 | 88.7% | yes |
+| ⿰ | 49,027 | 47,228 | 42,958 | 91.0% | yes |
+| ⿱ | 16,869 | 16,234 | 13,853 | 85.3% | yes |
+| ⿺ | 2,788 | 2,730 | 2,347 | 86.0% | yes |
+| ⿸ | 2,466 | 2,396 | 2,201 | 91.9% | yes |
+| ⿳ | 1,397 | 1,231 | 936 | 76.0% | yes |
+| ⿵ | 738 | 711 | 626 | 88.0% | yes |
+| ⿲ | 509 | 472 | 399 | 84.5% | yes |
+| ⿹ | 330 | 219 | 81 | 37.0% | no |
+| ⿻ | 285 | 223 | 120 | 53.8% | no |
+| ⿴ | 256 | 253 | 224 | 88.5% | yes |
 | ⿷ | 143 | 137 | 109 | 79.6% | yes |
-| ⿶ | 47 | 45 | 37 | 82.2% | yes |
-| ⿽ | 15 | 10 | 2 | 20.0% | no |
+| ⿶ | 48 | 46 | 37 | 80.4% | yes |
+| ⿽ | 15 | 11 | 2 | 18.2% | no |
 | ㇯ | 5 | 4 | 0 | 0.0% | no |
 | ⿾ | 3 | 3 | 1 | 33.3% | no |
 | ⿿ | 3 | 3 | 1 | 33.3% | no |
@@ -107,18 +108,18 @@ compared with its recorded orders. "Written" counts the characters whose compone
 
 | Operator | Described | Written | Agree | | Induced |
 | --- | ---: | ---: | ---: | ---: | --- |
-| ⿰ | 62,767 | 62,553 | 61,424 | 98.2% | yes |
-| ⿱ | 21,407 | 21,235 | 20,118 | 94.7% | yes |
-| ⿺ | 3,537 | 3,517 | 3,410 | 97.0% | yes |
-| ⿸ | 2,981 | 2,967 | 2,910 | 98.1% | yes |
-| ⿳ | 1,644 | 1,598 | 1,418 | 88.7% | yes |
-| ⿵ | 938 | 933 | 886 | 95.0% | yes |
-| ⿲ | 687 | 674 | 652 | 96.7% | yes |
-| ⿹ | 425 | 409 | 241 | 58.9% | no |
-| ⿻ | 343 | 310 | 184 | 59.4% | no |
-| ⿴ | 318 | 317 | 298 | 94.0% | yes |
+| ⿰ | 63,278 | 62,882 | 61,695 | 98.1% | yes |
+| ⿱ | 21,770 | 21,521 | 20,351 | 94.6% | yes |
+| ⿺ | 3,572 | 3,536 | 3,426 | 96.9% | yes |
+| ⿸ | 3,022 | 2,986 | 2,921 | 97.8% | yes |
+| ⿳ | 1,793 | 1,717 | 1,525 | 88.8% | yes |
+| ⿵ | 941 | 935 | 888 | 95.0% | yes |
+| ⿲ | 697 | 680 | 657 | 96.6% | yes |
+| ⿹ | 438 | 421 | 242 | 57.5% | no |
+| ⿻ | 370 | 330 | 195 | 59.1% | no |
+| ⿴ | 321 | 319 | 299 | 93.7% | yes |
 | ⿷ | 188 | 185 | 156 | 84.3% | yes |
-| ⿶ | 53 | 53 | 49 | 92.5% | yes |
+| ⿶ | 54 | 53 | 49 | 92.5% | yes |
 | ⿽ | 15 | 13 | 2 | 15.4% | no |
 | ㇯ | 9 | 6 | 0 | 0.0% | no |
 | ⿾ | 4 | 4 | 2 | 50.0% | no |
@@ -126,15 +127,15 @@ compared with its recorded orders. "Written" counts the characters whose compone
 | ⿿ | 3 | 3 | 2 | 66.7% | no |
 
 An induced row is a prediction, not a record. Over the operators induced through, the rules agree
-with CNS on 89.5% of the characters CNS records. The rows induced from CNS cannot be checked against the
-Rime file: Rime records 19,315 of those characters and 9,560 agree, since Rime's
+with CNS on 89.2% of the characters CNS records. The rows induced from CNS cannot be checked against the
+Rime file: Rime records 20,141 of those characters and 9,959 agree, since Rime's
 additions do not all follow CNS order.
 
 ## Coverage
 
 | Source | Recorded | By equivalence | From IDS | Without an order |
 | --- | ---: | ---: | ---: | ---: |
-| `cns11643` | 76,282 | 719 | 19,315 | 7,036 |
+| `cns11643` | 76,282 | 719 | 20,141 | 6,210 |
 | `rime-stroke` | 102,582 | 681 | 0 | 89 |
 
 "Without an order" counts the Han characters the workshop's composer draws or BabelStone IDS

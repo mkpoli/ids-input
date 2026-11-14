@@ -110,8 +110,8 @@
       }
     ],
     "inducedAgainstRime": {
-      "rows": 19315,
-      "agree": 9560
+      "rows": 20141,
+      "agree": 9959
     }
   },
   "induction": {
@@ -134,72 +134,72 @@
         "operators": [
           {
             "operator": "⿰",
-            "described": 48669,
-            "written": 46401,
-            "agree": 42326,
+            "described": 49027,
+            "written": 47228,
+            "agree": 42958,
             "induced": true
           },
           {
             "operator": "⿱",
-            "described": 16600,
-            "written": 15544,
-            "agree": 13325,
+            "described": 16869,
+            "written": 16234,
+            "agree": 13853,
             "induced": true
           },
           {
             "operator": "⿺",
-            "described": 2765,
-            "written": 2689,
-            "agree": 2317,
+            "described": 2788,
+            "written": 2730,
+            "agree": 2347,
             "induced": true
           },
           {
             "operator": "⿸",
-            "described": 2436,
-            "written": 2336,
-            "agree": 2154,
+            "described": 2466,
+            "written": 2396,
+            "agree": 2201,
             "induced": true
           },
           {
             "operator": "⿳",
-            "described": 1270,
-            "written": 956,
-            "agree": 729,
+            "described": 1397,
+            "written": 1231,
+            "agree": 936,
             "induced": true
           },
           {
             "operator": "⿵",
-            "described": 736,
-            "written": 694,
-            "agree": 612,
+            "described": 738,
+            "written": 711,
+            "agree": 626,
             "induced": true
           },
           {
             "operator": "⿲",
-            "described": 504,
-            "written": 452,
-            "agree": 387,
+            "described": 509,
+            "written": 472,
+            "agree": 399,
             "induced": true
           },
           {
             "operator": "⿹",
-            "described": 318,
-            "written": 206,
-            "agree": 80,
+            "described": 330,
+            "written": 219,
+            "agree": 81,
             "induced": false
           },
           {
             "operator": "⿻",
-            "described": 265,
-            "written": 210,
-            "agree": 113,
+            "described": 285,
+            "written": 223,
+            "agree": 120,
             "induced": false
           },
           {
             "operator": "⿴",
-            "described": 254,
-            "written": 248,
-            "agree": 220,
+            "described": 256,
+            "written": 253,
+            "agree": 224,
             "induced": true
           },
           {
@@ -211,15 +211,15 @@
           },
           {
             "operator": "⿶",
-            "described": 47,
-            "written": 45,
+            "described": 48,
+            "written": 46,
             "agree": 37,
             "induced": true
           },
           {
             "operator": "⿽",
             "described": 15,
-            "written": 10,
+            "written": 11,
             "agree": 2,
             "induced": false
           },
@@ -258,72 +258,72 @@
         "operators": [
           {
             "operator": "⿰",
-            "described": 62767,
-            "written": 62553,
-            "agree": 61424,
+            "described": 63278,
+            "written": 62882,
+            "agree": 61695,
             "induced": true
           },
           {
             "operator": "⿱",
-            "described": 21407,
-            "written": 21235,
-            "agree": 20118,
+            "described": 21770,
+            "written": 21521,
+            "agree": 20351,
             "induced": true
           },
           {
             "operator": "⿺",
-            "described": 3537,
-            "written": 3517,
-            "agree": 3410,
+            "described": 3572,
+            "written": 3536,
+            "agree": 3426,
             "induced": true
           },
           {
             "operator": "⿸",
-            "described": 2981,
-            "written": 2967,
-            "agree": 2910,
+            "described": 3022,
+            "written": 2986,
+            "agree": 2921,
             "induced": true
           },
           {
             "operator": "⿳",
-            "described": 1644,
-            "written": 1598,
-            "agree": 1418,
+            "described": 1793,
+            "written": 1717,
+            "agree": 1525,
             "induced": true
           },
           {
             "operator": "⿵",
-            "described": 938,
-            "written": 933,
-            "agree": 886,
+            "described": 941,
+            "written": 935,
+            "agree": 888,
             "induced": true
           },
           {
             "operator": "⿲",
-            "described": 687,
-            "written": 674,
-            "agree": 652,
+            "described": 697,
+            "written": 680,
+            "agree": 657,
             "induced": true
           },
           {
             "operator": "⿹",
-            "described": 425,
-            "written": 409,
-            "agree": 241,
+            "described": 438,
+            "written": 421,
+            "agree": 242,
             "induced": false
           },
           {
             "operator": "⿻",
-            "described": 343,
-            "written": 310,
-            "agree": 184,
+            "described": 370,
+            "written": 330,
+            "agree": 195,
             "induced": false
           },
           {
             "operator": "⿴",
-            "described": 318,
-            "written": 317,
-            "agree": 298,
+            "described": 321,
+            "written": 319,
+            "agree": 299,
             "induced": true
           },
           {
@@ -335,7 +335,7 @@
           },
           {
             "operator": "⿶",
-            "described": 53,
+            "described": 54,
             "written": 53,
             "agree": 49,
             "induced": true
@@ -384,8 +384,8 @@
       "source": "cns11643",
       "recorded": 76282,
       "equivalent": 719,
-      "ids": 19315,
-      "none": 7036
+      "ids": 20141,
+      "none": 6210
     },
     {
       "source": "rime-stroke",
@@ -419,7 +419,7 @@
     },
     {
       "name": "induced.tsv.gz",
-      "rows": 20715,
+      "rows": 21541,
       "columns": [
         "char",
         "codepoint",
@@ -428,7 +428,7 @@
         "from",
         "source"
       ],
-      "bytes": 316757
+      "bytes": 330797
     }
   ],
   "texts": [

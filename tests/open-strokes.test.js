@@ -76,6 +76,8 @@ describe('the open stroke-order release', () => {
         expect(written.split(' ').length).toBeLessThanOrEqual(manifest.induction.ways)
       }
     }
+    // A numbered component is read by its fragment, and the row keeps BabelStone's spelling.
+    expect(induced.some(row => row[3] === 'ids' && /\{\d+\}/.test(row[4]))).toBe(true)
     const row = induced.find(row => row[0] === '⼀' && row[5] === 'cns11643')
     expect(row?.slice(2)).toEqual(['1', 'equivalent', '一', 'cns11643'])
   })
