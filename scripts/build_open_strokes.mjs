@@ -219,30 +219,34 @@ const usualPlace = tree => tree.op === '⿶' || tree.op === '⿺' && 'leaf' in t
   : tree.op === '⿴' ? 'before-last' : tree.op === '⿷' ? 'after-1' : 'outer-first'
 /**
  * The orders a description is written in, from its components' orders. A component the table does
- * not record is read by its own description in turn. With `learned`, an order is written only
- * through the operators induced through; without it, every operator is tried at its usual place.
- * Null when a component cannot be written.
+ * not record is read by its own description in turn. An order is written only through the
+ * operators always induced through and the enclosures with a place in `learned`. Null when a
+ * component cannot be written.
  * @param {Tree} tree @param {Map<string, string[]>} table @param {string} region
- * @param {Map<string, string> | null} learned The place of each enclosure, keyed operator then enclosure.
+ * @param {Map<string, string>} learned The place of each enclosure, keyed operator then enclosure.
  * @param {string[]} [within] The components being read, so none is read inside itself.
+ * @param {Set<string>} [read] Collects the dataset of every component description read on the way.
  * @returns {string[] | null}
  */
-function ordersOf(tree, table, region, learned, within = []) {
+function ordersOf(tree, table, region, learned, within = [], read) {
   if ('leaf' in tree) {
     const recorded = table.get(tree.leaf)
     if (recorded || within.includes(tree.leaf)) return recorded ?? null
     const sequence = described(tree.leaf, region), inner = sequence ? parse(sequence) : null
-    return inner && !('leaf' in inner) ? ordersOf(inner, table, region, learned, [...within, tree.leaf]) : null
+    if (!inner || 'leaf' in inner) return null
+    read?.add(describedBy(tree.leaf))
+    return ordersOf(inner, table, region, learned, [...within, tree.leaf], read)
   }
-  const place = ENCLOSING.has(tree.op) && 'leaf' in tree.parts[0] ? learned?.get(tree.op + tree.parts[0].leaf) : undefined
-  if (learned && !place && !RELIABLE.includes(tree.op)) return null
-  const parts = tree.parts.map(part => ordersOf(part, table, region, learned, within))
+  const place = ENCLOSING.has(tree.op) && 'leaf' in tree.parts[0] ? learned.get(tree.op + tree.parts[0].leaf) : undefined
+  if (!place && !RELIABLE.includes(tree.op)) return null
+  const parts = tree.parts.map(part => ordersOf(part, table, region, learned, within, read))
   if (parts.some(part => !part)) return null
   if (!ENCLOSING.has(tree.op)) return joined(/** @type {string[][]} */ (parts))
   const [outer, inner] = /** @type {string[][]} */ (parts), name = place ?? usualPlace(tree)
   const written = [...new Set(outer.flatMap(frame => inner.map(held => placed(name, frame, held))).filter(order => order !== null))]
   return written.length ? /** @type {string[]} */ (written.slice(0, 64)) : null
 }
+const NO_PLACES = /** @type {Map<string, string>} */ (new Map())
 /**
  * The place each enclosure is written at, learned from the recorded characters `use` admits whose
  * description has it as the first component of an enclosing operator.
@@ -255,7 +259,8 @@ function learn(table, region, use) {
     if (!use(char)) continue
     const sequence = described(char, region), tree = sequence ? parse(sequence) : null
     if (!tree || 'leaf' in tree || !ENCLOSING.has(tree.op) || !('leaf' in tree.parts[0])) continue
-    const outer = table.get(tree.parts[0].leaf), inner = ordersOf(tree.parts[1], table, region, null)
+    // The held part is read through the operators that are always induced through, at their usual places.
+    const outer = table.get(tree.parts[0].leaf), inner = ordersOf(tree.parts[1], table, region, NO_PLACES)
     if (!outer || !inner) continue
     const key = tree.op + tree.parts[0].leaf
     const tally = tallies.get(key) ?? tallies.set(key, { operator: tree.op, enclosure: tree.parts[0].leaf, usual: usualPlace(tree), support: 0, agree: {} }).get(key)
@@ -296,10 +301,15 @@ const digits = code => [...code].map(letter => LETTER[letter]).join('')
 const learned = new Map(SOURCES.map(({ source, table, region }) => [source, learn(table, region, () => true)]))
 // How often the rules write a recorded character the way its source does, by the description's
 // outer operator. Each character is written with places learned from the other half of the
-// characters, split by code point parity, so no character scores a place it taught.
+// characters, split by code point parity, so no character scores a place it taught. Only the
+// enclosures the induced rows are written through are scored: one learned in a half and not from
+// all the characters is left out, and one too rare to learn in a half is scored at its operator's
+// usual place, or not at all for ⿹ and ⿻.
 const even = char => char.codePointAt(0) % 2 === 0
 const validation = SOURCES.map(({ source, table, region }) => {
+  const shipped = learned.get(source).places
   const halves = [learn(table, region, char => !even(char)).places, learn(table, region, even).places]
+    .map(places => new Map([...places].filter(([enclosure]) => shipped.has(enclosure))))
   /** @type {Map<string, { described: number, written: number, agree: number }>} */
   const byOperator = new Map()
   for (const [char, recorded] of table) {
@@ -307,7 +317,7 @@ const validation = SOURCES.map(({ source, table, region }) => {
     if (!tree || 'leaf' in tree) continue
     const tally = byOperator.get(tree.op) ?? byOperator.set(tree.op, { described: 0, written: 0, agree: 0 }).get(tree.op)
     tally.described++
-    const written = ordersOf(tree, table, region, halves[even(char) ? 0 : 1])
+    const written = ordersOf(tree, table, region, halves[even(char) ? 0 : 1])?.slice(0, WAYS)
     if (!written) continue
     tally.written++
     if (written.some(order => recorded.includes(order))) tally.agree++
@@ -381,8 +391,10 @@ const left = SOURCES.map(({ source, table, region }) => {
       continue
     }
     const sequence = described(char, region), tree = sequence ? parse(sequence) : null
-    const written = tree && !('leaf' in tree) ? ordersOf(tree, known, region, places) : null
-    if (written) { induced.push([char, point(char), written.slice(0, WAYS).join(' '), 'ids', sequence, source, describedBy(char)]); fromIds++; continue }
+    // The datasets whose descriptions the order is read from: the character's own first, then its components'.
+    const read = new Set([describedBy(char)])
+    const written = tree && !('leaf' in tree) ? ordersOf(tree, known, region, places, [], read) : null
+    if (written) { induced.push([char, point(char), written.slice(0, WAYS).join(' '), 'ids', sequence, source, [...read].join(' ')]); fromIds++; continue }
     none++
     if (!sequence) { reasons.undescribed++; continue }
     if (!tree || 'leaf' in tree) { reasons.unreadable++; continue }
@@ -559,6 +571,10 @@ takes the class \`data/ids-parts.json\` gives its stroke character (a rising ㇀
 is 豎, a falling ㇏ is 點), the first where KanjiVG offers two. CNS classes some of the same strokes
 otherwise, so a code from one source is not comparable stroke for stroke with another's.
 
+KanjiVG writes 辶 with four strokes and the ⻌ of the jōyō kanji with three. BabelStone's J-source
+descriptions name 辶 throughout, so a row induced from \`kanjivg\` through it carries the four-stroke
+form, also where a jōyō-style ⻌ would be written.
+
 No source here gives stroke paths, or mainland or Korean standard order.
 
 ## The two sources are not two styles
@@ -585,8 +601,9 @@ convention they follow.
   ${n(cover('cns11643').equivalent)} rows from \`cns11643\`, ${n(cover('rime-stroke').equivalent)} from \`rime-stroke\`, ${n(cover('kanjivg').equivalent)} from \`kanjivg\`.
 - \`ids\`: \`from\` is the character's description and the order joins the recorded orders of
   its components. The description is BabelStone's (the sequence its T source gives, or its J
-  source for \`kanjivg\`, else the first) or, where BabelStone has none, Yi Bai's; the \`ids\` column names which.
-  ${n(cover('cns11643').ids)} rows from \`cns11643\` (${n(induced.filter(row => row[5] === 'cns11643' && row[6] === 'yi-bai-ids').length)} of them by Yi Bai's descriptions), ${n(cover('rime-stroke').ids)} from \`rime-stroke\`, ${n(cover('kanjivg').ids)} from \`kanjivg\`. Up to ${WAYS} ways are kept.
+  source for \`kanjivg\`, else the first) or, where BabelStone has none, Yi Bai's. The \`ids\` column names the dataset of the
+  character's description, then that of any component read by its own description.
+  ${n(cover('cns11643').ids)} rows from \`cns11643\` (${n(induced.filter(row => row[5] === 'cns11643' && row[6].includes('yi-bai-ids')).length)} of them through one of Yi Bai's descriptions), ${n(cover('rime-stroke').ids)} from \`rime-stroke\`, ${n(cover('kanjivg').ids)} from \`kanjivg\`. Up to ${WAYS} ways are kept.
 
 The components of ⿰ ⿱ ⿲ ⿳ are joined in the order the description names them. In the other
 operators the first component encloses, crosses or carries the second, and the second is written at
@@ -603,7 +620,7 @@ The place is learned per enclosure from the characters the source records: an en
 least ${SUPPORT} such characters takes the place that writes the most of them as recorded, if that is
 ${Math.round(AGREEMENT * 100)}% or more. \`cns11643\` teaches ${rulesOf('cns11643').length} places, \`rime-stroke\` ${rulesOf('rime-stroke').length} and \`kanjivg\` ${rulesOf('kanjivg').length}; \`manifest.json\` lists them
 under \`induction.learned\`. An enclosure without a learned place takes its operator's usual one:
-\`inner-first\` for ⿶ and for ⿺ with 辶 or 廴, \`before-last\` for ⿴, \`after-1\` for ⿷, \`outer-first\` otherwise.
+\`inner-first\` for ⿶ and for ⿺ with 辶 or 廴 in any of their encoded forms (${[...WALKING].join(' ')}), \`before-last\` for ⿴, \`after-1\` for ⿷, \`outer-first\` otherwise.
 
 ⿹ and ⿻ have no usual place that holds, so they are induced through only for the enclosures with a
 learned one. In \`cns11643\`: ${crossing('cns11643')}.
@@ -617,7 +634,9 @@ it. A description BabelStone marks 〾 is not used.
 
 Each recorded character with a description was written by the same rules from the same source and
 compared with its recorded orders, with the places learned from the other half of the characters
-(split by code point parity), so none scores a place it taught. "Written" counts the characters the
+(split by code point parity), so none scores a place it taught. Only the enclosures the induced
+rows are written through are scored; one too rare to be learned in a half is scored at its
+operator's usual place, and not at all under ⿹ and ⿻. "Written" counts the characters the
 rules write; "Agree" those where one written order is a recorded one. Rows are the description's
 outer operator; "Induced" says whether it is induced through always, only where a place was
 learned, or never.

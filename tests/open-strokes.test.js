@@ -85,7 +85,7 @@ describe('the open stroke-order release', () => {
     const tables = { 'rime-stroke': orders(rime), cns11643: orders(cns), kanjivg: orders(kanjivg) }
     for (const [char, , written, basis, from, key, ids] of induced.slice(1)) {
       // A row written from a description names the dataset the description comes from.
-      expect(ids).toBe(basis === 'ids' ? ids === 'yi-bai-ids' ? 'yi-bai-ids' : 'babelstone-ids' : '')
+      expect(ids).toMatch(basis === 'ids' ? /^(babelstone-ids|yi-bai-ids)( (babelstone-ids|yi-bai-ids))?$/ : /^$/)
       // An induced row never stands in for a character its source records.
       expect(tables[key].has(char)).toBe(false)
       expect(['equivalent', 'ids']).toContain(basis)
@@ -103,6 +103,16 @@ describe('the open stroke-order release', () => {
     const row = induced.find(row => row[0] === '⼀' && row[5] === 'cns11643')
     expect(row?.slice(2)).toEqual(['1', 'equivalent', '一', 'cns11643', ''])
     expect(induced.some(row => row[6] === 'yi-bai-ids')).toBe(true)
+    // A BabelStone description whose component is read by one of Yi Bai's names both: 𫥎 is ⿱免⺀, and ⺀ is Yi Bai's ⿱丶丶.
+    expect(induced.find(row => row[0] === '𫥎' && row[5] === 'cns11643')?.[6]).toBe('babelstone-ids yi-bai-ids')
+    // A row under ⿹ or ⿻ is written only through an enclosure with a learned place.
+    for (const { source, rules } of manifest.induction.learned) {
+      const taught = new Set(rules.map(rule => rule.operator + rule.enclosure))
+      const crossing = induced.filter(row => row[5] === source && row[3] === 'ids' && /^[⿹⿻]/u.test(row[4]))
+      expect(crossing.every(row => taught.has([...row[4]].slice(0, 2).join('')))).toBe(true)
+    }
+    // The entered ㇒ lets the characters it is a component of be written.
+    expect(induced.some(row => row[5] === 'cns11643' && row[4].includes('㇒'))).toBe(true)
     expect(manifest.texts).toContain('LICENSE-yi-bai-ids-MIT.txt')
   })
 

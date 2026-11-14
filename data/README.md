@@ -1301,7 +1301,7 @@ from `ids-parts.json`.
 
 The open stroke-order release served at <https://ids.mkpo.li/open-data#strokes>: Taiwan's standard order
 from CNS 全字庫, Rime's five-stroke dictionary, Japanese order from KanjiVG, and orders induced by equivalence or from
-BabelStone IDS for characters a source lacks. Its own `README.md` gives the fields, rules, licences
+BabelStone's and Yi Bai's IDS for characters a source lacks. Its own `README.md` gives the fields, rules, licences
 and how often the rules agree with the sources. Built by `scripts/build_open_strokes.mjs`.
 
 ## `stroke-orders-entered.tsv`
