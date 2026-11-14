@@ -1,9 +1,0 @@
-{
-  // The intake Worker's queue: GitHub hands it the answer the report action dispatches back.
-  "queue": "ids-reports-answers",
-  "max_batch_size": 10,
-  "max_batch_timeout": 1,
-  "max_concurrency": 1,
-  "max_retries": 3,
-  "dead_letter_queue": "ids-reports-answers-dead"
-}

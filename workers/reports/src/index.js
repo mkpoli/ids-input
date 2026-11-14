@@ -6,10 +6,10 @@
 //
 // The issue is filed by the workshop's own GitHub Action rather than by a personal token, so it is
 // the action that opens it and the report names the reporter; the Worker dispatches the report to
-// that Action and waits on the answer it dispatches back.
-import { duplicateComment, labelsFor } from './issue.js'
-import { GitHubError, commentOnIssue, dispatch, ensureLabels } from './github.js'
-import { MAX_BODY, checkBodySize, checkMediaType, meterBody, parseReport } from './validate.js'
+// that Action and looks on GitHub for the issue it files.
+import { duplicateComment, labelsFor, reportMarker } from './issue.js'
+import { GitHubError, commentOnIssue, dispatch, ensureLabels, findIssue } from './github.js'
+import { MAX_BODY, byteLength, checkBodySize, checkMediaType, meterBody, parseReport } from './validate.js'
 import { checkRate, dedupeKey, findDuplicate, rememberIssue } from './limit.js'
 
 const TURNSTILE_VERIFY = 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
@@ -24,8 +24,17 @@ const TURNSTILE_VERIFY = 'https://challenges.cloudflare.com/turnstile/v0/sitever
  * @property {string} [TURNSTILE_SECRET]
  */
 
-/** How long a dialog waits on the Action filing its report before it is told to try again. */
-const ANSWER_WAIT = Number(/** @type {any} */ (globalThis).ANSWER_WAIT ?? 200_000)
+/**
+ * When the Worker looks for the issue the Action files: the first look, the gap between looks, and
+ * the look after which the reporter is told to try again. A run files about ten seconds after its
+ * dispatch.
+ * @typedef {{ first: number, every: number, total: number }} Wait
+ */
+/** @type {Wait} */
+const WAIT = { first: 6_000, every: 4_000, total: 80_000 }
+/** How far back a look reaches, so a report sent again after its answer came too late finds the
+ *  issue its first run filed. */
+const LOOK_BACK = 15 * 60_000
 /** GitHub takes a dispatch payload under 64 KB; a report that carries more than half of that is
  *  turned away with a `413` rather than sent to fail at GitHub. */
 const MAX_DISPATCH = 30_000
@@ -85,75 +94,48 @@ async function passesTurnstile(env, token, ip) {
   return verdict.success === true
 }
 
-/** The answers the Action dispatched, kept until the dialog that waits for one takes it. */
-/** @param {string} id */
-const answerKey = id => `answer:${id}`
-
 /**
- * Ask the workshop's Action to file the report, and hand back the issue it answered with. The
- * dialog waits on this call, so the wait is bounded: past `ANSWER_WAIT` the reporter is told to
- * try again, and the answer is left where a retry of the same report can find it.
- * @param {Env} env @param {{ headers: Headers, form: FormData }} posted @param {Report} report
+ * Ask the workshop's Action to file the report, and hand back the issue it filed. The Action marks
+ * the issue with the report's key, and the Worker looks for that mark among the issues labelled
+ * `report`, a label only the repository's own tokens can set.
+ * @param {Env} env @param {FormData} form @param {Report} report @param {string} key @param {Wait} wait
  * @returns {Promise<{ number: number, url: string }>}
  */
-async function fileByAction(env, posted, report) {
-  const id = crypto.randomUUID()
-  // What the action reads: the fields the issue is written from, and the origin the dialog was
-  // served from. The drawing it takes for itself from the site, so no upload rides along.
+async function fileByAction(env, form, report, key, wait) {
+  // What the action reads: the fields the issue is written from. The drawing it takes for itself
+  // from the page the share link names, so the dispatch only says whether there is one to take.
   /** @type {Record<string, string>} */
   const carried = {}
-  for (const [name, value] of posted.form) if (typeof value === 'string') carried[name] = value
-  const origin = posted.headers.get('origin') ?? ''
-  if (Buffer.byteLength(JSON.stringify({ ...carried, origin }), 'utf8') > MAX_DISPATCH) {
-    throw new DispatchTooLarge()
-  }
-  await dispatch(env, { event_type: 'report', client_payload: { id, origin, report: carried } })
-  const answer = await waitForAnswer(env, id, ANSWER_WAIT)
-  if (!answer) throw new Error('the Action did not answer in time')
-  const body = JSON.parse(answer)
-  if (typeof body?.number !== 'number') {
-    throw Object.assign(new Error(`the Action answered ${body?.error ?? 'without an issue'}`), { answered: true, message: body?.message })
-  }
-  return { number: body.number, url: String(body.url ?? '') }
-}
+  for (const [name, value] of form) if (typeof value === 'string') carried[name] = value
+  if (byteLength(JSON.stringify(carried)) > MAX_DISPATCH) throw new DispatchTooLarge()
 
-/**
- * The answer the Action left for this report, or null once `ms` has gone by.
- * @param {Env} env @param {string} id @param {number} ms @returns {Promise<string | null>}
- */
-async function waitForAnswer(env, id, ms) {
-  const until = Date.now() + ms
-  for (;;) {
-    const kept = await env.REPORTS.get(answerKey(id))
-    if (kept !== null) {
-      await env.REPORTS.delete(answerKey(id))
-      return kept
-    }
-    if (Date.now() >= until) return null
-    await new Promise(done => setTimeout(done, 2_000))
-  }
-}
+  const since = new Date(Date.now() - LOOK_BACK)
+  const look = () => findIssue(env, { label: 'report', since, ending: reportMarker(key) })
+  const filed = await look()
+  if (filed) return filed
 
-/**
- * The answer an Action dispatched, put where the waiting dialog will find it.
- * @param {Env} env @param {{ id?: unknown, status?: unknown, body?: unknown }} event
- * @returns {Promise<void>}
- */
-export async function keepAnswer(env, event) {
-  const id = typeof event.id === 'string' ? event.id : ''
-  const body = typeof event.body === 'string' ? event.body : ''
-  if (!id || !body) return
-  await env.REPORTS.put(answerKey(id), body, { expirationTtl: 600 })
+  await dispatch(env, { event_type: 'report', client_payload: { key, drawing: Boolean(report.image && report.link), report: carried } })
+  const until = Date.now() + wait.total
+  for (let pause = wait.first; ; pause = wait.every) {
+    await new Promise(done => setTimeout(done, pause))
+    // One look that fails is not the run failing; the next look asks again.
+    const issue = await look().catch(error => {
+      console.error('looking for the filed issue failed', error)
+      return null
+    })
+    if (issue) return issue
+    if (Date.now() >= until) throw new Error('the Action filed no issue in time')
+  }
 }
 
 /**
  * The endpoint. Anything thrown below becomes a `502` rather than an empty 500, so a reporter
  * always gets an answer shaped like the rest of them.
- * @param {Request} request @param {Env} env @returns {Promise<Response>}
+ * @param {Request} request @param {Env} env @param {Wait} [wait] @returns {Promise<Response>}
  */
-export async function handle(request, env) {
+export async function handle(request, env, wait = WAIT) {
   try {
-    return await route(request, env)
+    return await route(request, env, wait)
   } catch (error) {
     console.error('the report endpoint threw', error)
     const origin = request.headers.get('origin')
@@ -178,8 +160,8 @@ async function commentDuplicate(env, known) {
   }
 }
 
-/** @param {Request} request @param {Env} env @returns {Promise<Response>} */
-async function route(request, env) {
+/** @param {Request} request @param {Env} env @param {Wait} wait @returns {Promise<Response>} */
+async function route(request, env, wait) {
   const origin = request.headers.get('origin')
   if (!originAllowed(origin, env.SITE_ORIGIN)) {
     return fail(403, 'forbidden_origin', 'Reports are only accepted from the workshop.', null)
@@ -229,11 +211,11 @@ async function route(request, env) {
   let issue
   try {
     await ensureLabels(env, labelsFor(report.context))
-    issue = await fileByAction(env, { headers: request.headers, form }, report)
+    issue = await fileByAction(env, form, report, key, wait)
   } catch (error) {
     if (error instanceof DispatchTooLarge) return fail(413, 'too_large', 'This report is too large to send. Leave the document out and try again.', origin)
     console.error('filing the report failed', error)
-    return fail(502, 'upstream_error', 'GitHub did not accept the report. Try again later.', origin)
+    return fail(502, 'upstream_error', 'The report could not be filed. Try again in a minute.', origin)
   }
   // The issue exists from here on. A failed write only costs the next identical report its dedupe.
   try {
@@ -248,12 +230,5 @@ export default {
   /** @param {Request} request @param {Env} env @returns {Promise<Response>} */
   fetch(request, env) {
     return handle(request, env)
-  },
-  // GitHub hands the Action's answer to the queue this Worker consumes, as a repository dispatch.
-  /** @param {{ messages: { body?: { event?: string, payload?: Record<string, unknown> } }[] }} batch @param {Env} env */
-  async queue(batch, env) {
-    for (const message of batch.messages) {
-      if (message.body?.event === 'report_answer') await keepAnswer(env, message.body.payload ?? {})
-    }
   },
 }
