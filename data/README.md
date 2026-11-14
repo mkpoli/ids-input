@@ -38,7 +38,8 @@ Yi Bai's table MIT.
 The glyph [GlyphWiki](https://glyphwiki.org/) draws for 1,162 of the 1,387 CHISE entities, each as
 one SVG path in a 200-unit square: `names` gives an entity's GlyphWiki name (`&CDP-8958;` is
 `cdp-8958`, `&U-i001+864D;` is `u864d-itaiji-001`) and `outlines` that name's path. The appendix at
-`/unencoded` shows them where nothing else draws a form. 137 entities have no name the two share
+`/unencoded` shows them where nothing else draws a form, and `/component-atlas` in place of an
+entity's private-use character. 137 entities have no name the two share
 (CNS planes, JIS supplements and others) and 88 have a name GlyphWiki draws nothing for. GlyphWiki's
 glyphs are edited by its users and may differ from the form CHISE means; fetched 2026-11-13. Rebuild
 with `bun scripts/build_custom_outlines.mjs`, which keeps each fetched glyph under `cache/`.

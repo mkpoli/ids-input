@@ -9,6 +9,7 @@
   import { LOCALES, appMessages } from './lib/locales.js'
   import { load, save } from './lib/storage.js'
   import dataUrl from '../data/component-atlas.json.gz?url'
+  import outlinesUrl from '../data/custom-outlines.json.gz?url'
 
   const params = new URLSearchParams(location.search)
   const wanted = String(params.get('lang') ?? load('locale', null) ?? navigator.language ?? '')
@@ -26,6 +27,9 @@
   /** @type {Atlas | null} */
   let atlas = $state.raw(null)
   let failed = $state(false)
+  /** GlyphWiki's glyph for a CHISE entity: the entity's GlyphWiki name, and each name's outline.
+   * @type {{ names: Record<string, string>, outlines: Record<string, string> } | null} */
+  let outlines = $state.raw(null)
   /** @type {HTMLInputElement | null} */
   let search = $state(null)
   /** A gzipped JSON file; the dev server may hand it over already decoded. @param {string} url */
@@ -40,9 +44,18 @@
   }
   onMount(() => {
     read(dataUrl).then(read => { atlas = read }, () => { failed = true })
+    // An unencoded part has only a private-use character, which no font draws; GlyphWiki's glyph
+    // stands in for it where there is one.
+    read(outlinesUrl).then(read => { outlines = read }, () => {})
     if (!query && matchMedia('(pointer: fine)').matches) search?.focus({ preventScroll: true })
   })
   const rows = $derived(atlas?.components ?? [])
+  /** GlyphWiki's glyph of an unencoded part. @param {Row} row */
+  const outlineOf = row => {
+    const from = outlines?.names[`&${row.cid.replace(/^chise:/, '')};`]
+    const d = from === undefined ? undefined : outlines?.outlines[from]
+    return from !== undefined && d ? { from, d } : null
+  }
 
   const KINDS = /** @type {const} */ (['all', 'encoded', 'unencoded'])
   /** @template {string} T @param {readonly T[]} list @param {string | null} value @returns {T} */
@@ -155,7 +168,11 @@
                 <tr>
                   <td>
                     <div class="component">
-                      <span class="form" lang="ja">{row.char}</span>
+                      {#if row.encoded}<span class="form" lang="ja">{row.char}</span>
+                      {:else}
+                        {@const outline = outlineOf(row)}
+                        {#if outline}<svg class="form" viewBox="0 0 200 200" role="img" aria-label={outline.from}><title>GlyphWiki · {outline.from}</title><path d={outline.d} fill="currentColor" /></svg>{:else}<span class="form dash">—</span>{/if}
+                      {/if}
                       <span class="cid">{row.cid}</span>
                       {#if !row.encoded}<span class="tag" title={t('atlas.help.unencoded')}>{t('atlas.kind.unencoded')}</span>{/if}
                     </div>
@@ -206,6 +223,8 @@
   tbody tr:last-child td{border-bottom:0}
   .component{display:grid;justify-items:start;gap:3px;width:150px}
   .form{font-family:var(--ids-font),var(--ids-glyph-fallback);font-size:30px;line-height:1.1;color:var(--ui-color-ink)}
+  svg.form{width:33px;height:33px}
+  .dash{color:var(--ui-color-ink-muted)}
   .cid{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;color:var(--ui-color-ink-soft);overflow-wrap:anywhere}
   .tag{padding:0 5px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-xs);font-size:10px;line-height:1.6;color:var(--ui-color-ink-muted);white-space:nowrap}
   .num{text-align:end;white-space:nowrap;color:var(--ui-color-ink-muted);font-variant-numeric:tabular-nums}

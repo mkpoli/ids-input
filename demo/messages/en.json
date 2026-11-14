@@ -498,7 +498,7 @@
   "atlas.help.cid": "A component’s identifier, apart from any character. ucs:53E3 is the code point U+53E3, which writes 口; chise:GT-K00059 is a part CHISE names that no code point covers. Two older descriptions may call the same part bsp:22 and chise:GT-K00125; both are aliases of one cid.",
   "atlas.help.usedIn": "How many descriptions name the component. A character described two ways counts twice.",
   "atlas.help.appearsIn": "The characters those descriptions describe, up to {cap} for each component.",
-  "atlas.help.unencoded": "A part with no code point, which no font draws.",
+  "atlas.help.unencoded": "A part with no code point, which no font draws. The glyph shown for it is GlyphWiki’s.",
   "atlas.help.built": "Built {date} from {descriptions} descriptions under {licence}, the licence of the CHISE rows; the BabelStone rows are public domain.",
   "atlas.help.floor": "A part named through a CHISE entity that is still unresolved is not counted, so each count is a floor."
 }
