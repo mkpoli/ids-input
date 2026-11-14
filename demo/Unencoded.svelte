@@ -12,6 +12,11 @@
   import { importPairs, parsePair, parseSide } from './lib/equivalences.js'
   import dataUrl from '../data/custom-components.json.gz?url'
   import outlinesUrl from '../data/custom-outlines.json.gz?url'
+  import formsJsonUrl from '../data/custom-forms.json?url'
+  import formsTsvUrl from '../data/custom-forms.tsv?url'
+  import formsCsvUrl from '../data/custom-forms.csv?url'
+  import ledgerUrl from '../data/custom-ids.tsv?url'
+  import Menu from './ui/Menu.svelte'
   import { componentDrawing } from '@han-compose/composer/component-forms'
   import { SvelteSet } from 'svelte/reactivity'
   import { chainPath } from '../src/core/chain-shape.js'
@@ -102,6 +107,23 @@
   /** @param {string} id */
   const show = id => from(() => { query = id; source = 'all'; status = 'any' })
   let opened = $state(/** @type {string | null} */ (null))
+  /** Save a file the site serves, under its own name. @param {string} url @param {string} name */
+  function download(url, name) {
+    const link = document.createElement('a')
+    link.href = url
+    link.download = name
+    link.click()
+  }
+  // The table as files: one row per form in three formats, the ledger of identifiers, and the
+  // whole record with the derived descriptions.
+  const downloads = [
+    { label: 'JSON', note: 'custom-forms.json', run: () => download(formsJsonUrl, 'custom-forms.json') },
+    { label: 'TSV', note: 'custom-forms.tsv', run: () => download(formsTsvUrl, 'custom-forms.tsv') },
+    { label: 'CSV', note: 'custom-forms.csv', run: () => download(formsCsvUrl, 'custom-forms.csv') },
+    { separator: true },
+    { label: 'custom-ids.tsv', run: () => download(ledgerUrl, 'custom-ids.tsv') },
+    { label: 'custom-components.json.gz', run: () => download(dataUrl, 'custom-components.json.gz') },
+  ]
   // The four ways a form is written here, each with where its notation is defined.
   const NOTATIONS = [
     { id: 'babelstone', sample: '{53}', where: 'BabelStone IDS.TXT, note 6', url: 'https://www.babelstone.co.uk/CJK/IDS.TXT' },
@@ -231,6 +253,7 @@
           <button type="button" class="ui-chip" data-interactive aria-current={status === one} aria-pressed={status === one} onclick={() => from(() => { status = one })}>{t(`appendix.status.${one}`)} <span class="n">{rows.filter(row => matches(row, terms, source, one)).length}</span></button>
         {/each}
       </div>
+      <span class="download"><Menu label={t('appendix.download')} icon="download" items={downloads} align="end" keyHints={false} compact /></span>
       <Segmented label={t('appendix.sortLabel')} value={sort} options={[{ value: 'id', label: t('appendix.sort.id') }, { value: 'uses', label: t('appendix.sort.uses') }]} onchange={value => from(() => { sort = oneOf(/** @type {const} */ (['id', 'uses']), value) })} />
     </div>
 
@@ -373,6 +396,7 @@
   .notations p{margin:2px 0 0;font-size:12.5px;line-height:1.5;color:var(--ui-color-ink-muted)}
   .controls{position:sticky;top:58px;z-index:5;display:flex;gap:10px 12px;flex-wrap:wrap;align-items:center;padding:12px;margin:0 0 8px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-xl);background:color-mix(in srgb,var(--ui-color-canvas) 92%,transparent);backdrop-filter:blur(10px)}
   .search{flex:1 1 280px;max-width:420px}
+  .download{order:9;margin-inline-start:auto}
   .search input{width:100%}
   .note-input{flex:1 1 240px}
   .import{position:relative;cursor:pointer}

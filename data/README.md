@@ -19,6 +19,12 @@ descriptions of shared characters settle it (973, 373 confirmed by two or more c
 [custom IDS notation](../docs/custom-components.md). Every row is derived by this project; no
 source states it. Rebuild with `bun scripts/build_custom_components.mjs`.
 
+`custom-forms.json`, `custom-forms.tsv` and `custom-forms.csv` are the same forms flat, one row
+each: `id`, `entity`, `char`, the name each source gives (`babelstone`, `chise`, `zi_tools`) or the
+`expression` of an unnamed form, BabelStone's `description`, `status`, `uses`, `used_in`,
+`equivalents` (in the TSV and CSV as `notation:text:status:count`, joined by ` | `) and `of`. The
+appendix at <https://ids.mkpo.li/unencoded> offers them for download. Written by the same build.
+
 `custom-ids.tsv` is the ledger of form identifiers the file carries (`X-00053`, written `&X-00053;`
 in a description): identifier, a name the form is known by, the date, and `first`, `merged into …`
 or `withdrawn`. It is append-only and the build reads it before it writes it, so a number once
