@@ -1,5 +1,6 @@
 // The compiled UCV and NUCV lists keep the source's entries, forms and example characters.
 import { expect, it } from 'bun:test'
+import { readFileSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { gunzipSync } from 'node:zlib'
 
@@ -64,4 +65,33 @@ it('keeps a count the source writes in words apart from the example characters',
 
 it('reads a group title the source quotes either way', () => {
   for (const group of data.groups) expect(group.en).toBeTruthy()
+})
+
+it('marks the forms no source draws, and gives every other textless form an outline record', () => {
+  const forms = data.entries.flatMap((/** @type {{ forms: { glyph: string, text?: string, undrawn?: boolean }[] }} */ row) => row.forms)
+  expect(new Set(forms.filter((/** @type {{ undrawn?: boolean }} */ form) => form.undrawn).map((/** @type {{ glyph: string }} */ form) => form.glyph)).size).toBe(11)
+  for (const form of forms) expect(Boolean(form.undrawn)).toBe(!outlines[form.glyph])
+  const { records } = JSON.parse(gunzipSync(readFileSync(new URL('../data/ucv-outlines.json.gz', import.meta.url))).toString('utf8'))
+  const wanted = new Set(forms.filter((/** @type {{ text?: string, undrawn?: boolean }} */ form) => !form.text && !form.undrawn).map((/** @type {{ glyph: string }} */ form) => `&GW-${form.glyph};`))
+  expect(new Set(Object.keys(records))).toEqual(wanted)
+  expect(wanted.size).toBe(632)
+  const record = records['&GW-u58ec-t;']
+  expect(record.k).toBe('&GW-u58ec-t;')
+  expect(record.o).toBe(record.G.p.length)
+  // Inside the em, top at 880: the 200-unit square scaled by five.
+  expect(record.G.b[0]).toBeGreaterThanOrEqual(0)
+  expect(record.G.b[2]).toBeLessThanOrEqual(1000)
+  expect(record.G.b[1]).toBeGreaterThanOrEqual(-120)
+  expect(record.G.b[3]).toBeLessThanOrEqual(880)
+  for (const [ops, light, delta] of record.G.p) {
+    expect(ops).toMatch(/^ML+$/)
+    expect(Buffer.from(light, 'base64').length).toBe(ops.length * 4)
+    expect(Buffer.from(delta, 'base64').every((/** @type {number} */ byte) => byte === 0)).toBe(true)
+  }
+})
+
+it('dates each batch of outlines fetched from GlyphWiki', () => {
+  expect(data.source.glyphs.fetched).toHaveLength(1)
+  expect(data.source.glyphs.fetched[0].date).toBe('2026-11-13')
+  expect(data.source.glyphs.fetched[0].names).toHaveLength(134)
 })

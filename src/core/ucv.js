@@ -7,6 +7,7 @@
  * @property {string} glyph The GlyphWiki glyph the source names for the form.
  * @property {string} [text] The form as text: a character, a description, or a character and its variation selector.
  * @property {string} [of] The character a named form belongs to, when the form itself has no text.
+ * @property {boolean} [undrawn] No source draws the form.
  */
 
 /**
