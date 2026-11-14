@@ -7,7 +7,7 @@ import { gunzipSync } from 'node:zlib'
 const at = name => new URL(`../data/open-strokes/${name}`, import.meta.url)
 const manifest = JSON.parse(readFileSync(at('manifest.json'), 'utf8'))
 const readme = readFileSync(at('README.md'), 'utf8')
-const table = name => gunzipSync(readFileSync(at(name))).toString().trimEnd().split('\n').map(line => line.split('\t'))
+const table = name => gunzipSync(readFileSync(at(name))).toString().replace(/\n$/, '').split('\n').map(line => line.split('\t'))
 const rime = table('rime-stroke.tsv.gz'), cns = table('cns11643.tsv.gz'), induced = table('induced.tsv.gz')
 const orders = rows => new Map(rows.slice(1).map(row => [row[0], row[2].split(' ')]))
 const digits = code => [...code].map(letter => ({ h: '1', s: '2', p: '3', n: '4', z: '5' })[letter]).join('')
@@ -16,8 +16,8 @@ const point = char => `U+${char.codePointAt(0).toString(16).toUpperCase().padSta
 describe('the open stroke-order release', () => {
   it('names its format, sources and their terms', () => {
     expect(manifest.format).toBe('ids-input/open-strokes')
-    expect(manifest.version).toBe(1)
-    expect(manifest.sources.map(source => source.key)).toEqual(['cns11643', 'rime-stroke', 'babelstone-ids'])
+    expect(manifest.version).toBe(2)
+    expect(manifest.sources.map(source => source.key)).toEqual(['cns11643', 'rime-stroke', 'babelstone-ids', 'yi-bai-ids'])
     for (const source of manifest.sources) {
       expect(source.url).toMatch(/^https:/)
       expect(source.licence.spdx ?? source.licence.name).toBeTruthy()
@@ -63,7 +63,9 @@ describe('the open stroke-order release', () => {
 
   it('marks every induced row with its basis and the source it is written from', () => {
     const tables = { 'rime-stroke': orders(rime), cns11643: orders(cns) }
-    for (const [char, , written, basis, from, key] of induced.slice(1)) {
+    for (const [char, , written, basis, from, key, ids] of induced.slice(1)) {
+      // A row written from a description names the dataset the description comes from.
+      expect(ids).toBe(basis === 'ids' ? ids === 'yi-bai-ids' ? 'yi-bai-ids' : 'babelstone-ids' : '')
       // An induced row never stands in for a character its source records.
       expect(tables[key].has(char)).toBe(false)
       expect(['equivalent', 'ids']).toContain(basis)
@@ -79,7 +81,9 @@ describe('the open stroke-order release', () => {
     // A numbered component is read by its fragment, and the row keeps BabelStone's spelling.
     expect(induced.some(row => row[3] === 'ids' && /\{\d+\}/.test(row[4]))).toBe(true)
     const row = induced.find(row => row[0] === '⼀' && row[5] === 'cns11643')
-    expect(row?.slice(2)).toEqual(['1', 'equivalent', '一', 'cns11643'])
+    expect(row?.slice(2)).toEqual(['1', 'equivalent', '一', 'cns11643', ''])
+    expect(induced.some(row => row[6] === 'yi-bai-ids')).toBe(true)
+    expect(manifest.texts).toContain('LICENSE-yi-bai-ids-MIT.txt')
   })
 
   it('counts its coverage and scores its rules on the recorded characters', () => {

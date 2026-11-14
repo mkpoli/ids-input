@@ -1,6 +1,6 @@
 {
   "format": "ids-input/open-strokes",
-  "version": 1,
+  "version": 2,
   "strokes": {
     "横": {
       "cns11643": "1",
@@ -72,6 +72,20 @@
       "licence": {
         "name": "Public domain"
       }
+    },
+    {
+      "key": "yi-bai-ids",
+      "name": "Yi Bai IDS, level 1: the descriptions used where BabelStone has none",
+      "authors": "Yi Bai",
+      "url": "https://github.com/yi-bai/ids",
+      "version": "Yi Bai IDS level 1, da1e9f8a09e2ec8faaf176bac99203f978282041; MIT; standard IDS, operator modifiers included.",
+      "licence": {
+        "spdx": "MIT",
+        "url": "https://opensource.org/license/mit",
+        "texts": [
+          "LICENSE-yi-bai-ids-MIT.txt"
+        ]
+      }
     }
   ],
   "agreement": {
@@ -110,8 +124,8 @@
       }
     ],
     "inducedAgainstRime": {
-      "rows": 20141,
-      "agree": 9959
+      "rows": 24478,
+      "agree": 12006
     }
   },
   "induction": {
@@ -134,92 +148,92 @@
         "operators": [
           {
             "operator": "⿰",
-            "described": 49027,
-            "written": 47228,
-            "agree": 42958,
+            "described": 49032,
+            "written": 47421,
+            "agree": 43089,
             "induced": true
           },
           {
             "operator": "⿱",
             "described": 16869,
-            "written": 16234,
-            "agree": 13853,
+            "written": 16366,
+            "agree": 13942,
             "induced": true
           },
           {
             "operator": "⿺",
             "described": 2788,
-            "written": 2730,
-            "agree": 2347,
+            "written": 2745,
+            "agree": 2354,
             "induced": true
           },
           {
             "operator": "⿸",
             "described": 2466,
-            "written": 2396,
-            "agree": 2201,
+            "written": 2405,
+            "agree": 2207,
             "induced": true
           },
           {
             "operator": "⿳",
             "described": 1397,
-            "written": 1231,
-            "agree": 936,
+            "written": 1275,
+            "agree": 969,
             "induced": true
           },
           {
             "operator": "⿵",
             "described": 738,
-            "written": 711,
-            "agree": 626,
+            "written": 714,
+            "agree": 628,
             "induced": true
           },
           {
             "operator": "⿲",
             "described": 509,
-            "written": 472,
-            "agree": 399,
+            "written": 475,
+            "agree": 401,
             "induced": true
           },
           {
             "operator": "⿹",
             "described": 330,
-            "written": 219,
-            "agree": 81,
+            "written": 222,
+            "agree": 82,
             "induced": false
           },
           {
             "operator": "⿻",
             "described": 285,
-            "written": 223,
-            "agree": 120,
+            "written": 228,
+            "agree": 123,
             "induced": false
           },
           {
             "operator": "⿴",
             "described": 256,
-            "written": 253,
+            "written": 254,
             "agree": 224,
             "induced": true
           },
           {
             "operator": "⿷",
             "described": 143,
-            "written": 137,
-            "agree": 109,
+            "written": 139,
+            "agree": 111,
             "induced": true
           },
           {
             "operator": "⿶",
             "described": 48,
-            "written": 46,
-            "agree": 37,
+            "written": 47,
+            "agree": 38,
             "induced": true
           },
           {
             "operator": "⿽",
             "described": 15,
-            "written": 11,
+            "written": 12,
             "agree": 2,
             "induced": false
           },
@@ -258,78 +272,78 @@
         "operators": [
           {
             "operator": "⿰",
-            "described": 63278,
-            "written": 62882,
-            "agree": 61695,
+            "described": 66176,
+            "written": 65778,
+            "agree": 64461,
             "induced": true
           },
           {
             "operator": "⿱",
-            "described": 21770,
-            "written": 21521,
-            "agree": 20351,
+            "described": 22769,
+            "written": 22519,
+            "agree": 21254,
             "induced": true
           },
           {
             "operator": "⿺",
-            "described": 3572,
-            "written": 3536,
-            "agree": 3426,
+            "described": 3729,
+            "written": 3693,
+            "agree": 3578,
             "induced": true
           },
           {
             "operator": "⿸",
-            "described": 3022,
-            "written": 2986,
-            "agree": 2921,
+            "described": 3110,
+            "written": 3074,
+            "agree": 3006,
             "induced": true
           },
           {
             "operator": "⿳",
-            "described": 1793,
-            "written": 1717,
-            "agree": 1525,
+            "described": 1810,
+            "written": 1734,
+            "agree": 1537,
             "induced": true
           },
           {
             "operator": "⿵",
-            "described": 941,
-            "written": 935,
-            "agree": 888,
+            "described": 974,
+            "written": 968,
+            "agree": 920,
             "induced": true
           },
           {
             "operator": "⿲",
-            "described": 697,
-            "written": 680,
-            "agree": 657,
+            "described": 710,
+            "written": 692,
+            "agree": 667,
             "induced": true
           },
           {
             "operator": "⿹",
-            "described": 438,
-            "written": 421,
-            "agree": 242,
+            "described": 470,
+            "written": 451,
+            "agree": 269,
             "induced": false
           },
           {
             "operator": "⿻",
-            "described": 370,
-            "written": 330,
-            "agree": 195,
+            "described": 378,
+            "written": 336,
+            "agree": 198,
             "induced": false
           },
           {
             "operator": "⿴",
-            "described": 321,
-            "written": 319,
-            "agree": 299,
+            "described": 354,
+            "written": 352,
+            "agree": 314,
             "induced": true
           },
           {
             "operator": "⿷",
-            "described": 188,
-            "written": 185,
+            "described": 189,
+            "written": 186,
             "agree": 156,
             "induced": true
           },
@@ -384,15 +398,15 @@
       "source": "cns11643",
       "recorded": 76282,
       "equivalent": 719,
-      "ids": 20141,
-      "none": 6210
+      "ids": 24481,
+      "none": 1870
     },
     {
       "source": "rime-stroke",
       "recorded": 102582,
       "equivalent": 681,
-      "ids": 0,
-      "none": 89
+      "ids": 3,
+      "none": 86
     }
   ],
   "files": [
@@ -419,22 +433,24 @@
     },
     {
       "name": "induced.tsv.gz",
-      "rows": 21541,
+      "rows": 25884,
       "columns": [
         "char",
         "codepoint",
         "orders",
         "basis",
         "from",
-        "source"
+        "source",
+        "ids"
       ],
-      "bytes": 330797
+      "bytes": 412104
     }
   ],
   "texts": [
     "README.md",
     "LICENSE-rime-stroke-LGPL-3.0.txt",
     "LICENSE-GPL-3.0.txt",
-    "AUTHORS-rime-stroke.txt"
+    "AUTHORS-rime-stroke.txt",
+    "LICENSE-yi-bai-ids-MIT.txt"
   ]
 }
