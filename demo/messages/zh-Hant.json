@@ -470,8 +470,8 @@
   "normalization.scope.operators": "輸入框",
   "normalization.mode.rewrite": "改寫",
   "normalization.mode.match": "比對",
-  "normalization.hint.rewrite": "輸入替換為右側。",
-  "normalization.hint.match": "輸入保持原樣，按相同處理。",
+  "normalization.hint.rewrite": "輸入替換為右側內容。",
+  "normalization.hint.match": "輸入保持原樣，視為相同。",
   "ucv.title": "部件認同規則（UCV）",
   "ucv.source": "來源"
 }

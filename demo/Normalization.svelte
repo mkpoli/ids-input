@@ -172,7 +172,7 @@
   .body{display:grid;grid-template-columns:220px minmax(0,1fr);gap:28px;width:100%;max-width:1180px;margin:0 auto;padding:24px max(18px,env(safe-area-inset-right)) 64px max(18px,env(safe-area-inset-left))}
   .toc{position:sticky;top:16px;align-self:start;display:flex;flex-direction:column;gap:12px}
   .group{display:flex;flex-direction:column;gap:2px}
-  .mode{padding:5px 8px 3px;font-size:11.5px;font-weight:600;color:var(--ids-muted);text-decoration:none}
+  .toc a.mode{padding:5px 8px 3px;font-size:11.5px;font-weight:600;color:var(--ids-muted)}
   .toc a.mode:hover{background:none;color:var(--ids-ink)}
   .toc ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
   .toc li{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
