@@ -46,6 +46,7 @@
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
   import { createIconDrawings } from './lib/icons.js'
   import { createSampleDrawings } from './lib/sample-drawings.js'
+  import { createDrawingOrder } from './lib/drawing-order.js'
   import { recognizeDrawing } from './lib/sketch-recognizer.js'
   import { COMPOSER_BASE, COMPOSER_BASES, readFrom } from './lib/composer.js'
   import { DESKTOP, SITE } from './lib/desktop.js'
@@ -324,6 +325,11 @@
     previewsWithExamples.set(key, preview)
     return preview
   }
+  // The description being edited is drawn first: the tab icons and the font switch's samples wait
+  // while it loads, so the other faces' exports and the icons' parts do not share its connection.
+  let previewStep = $state(/** @type {'idle' | 'loading' | 'composed' | 'final' | 'failed' | 'capped' | 'unavailable'} */ ('idle'))
+  const order = createDrawingOrder()
+  $effect(() => order.hold(previewStep === 'loading'))
   // Tab icons need their own drawer so their requests cannot cancel the main preview.
   /** @type {Map<string, ReturnType<typeof createIconDrawings>>} */
   const iconDrawings = new Map()
@@ -348,9 +354,10 @@
   const iconsAt = (at, style) => {
     const key = `${at}\0${style}`
     if (!iconDrawings.has(key)) {
-      const draw = drawerAt(at, style)
-      iconDrawings.set(key, createIconDrawings(async sequence =>
-        (style === 'sans' && exportUrl(at) === preparedBase && !hasEmoji(sequence) ? await preparedFor(sequence) : null) ?? draw(sequence)))
+      // A prepared drawing needs no export: it is answered ahead of the composed icons' queue.
+      const composed = createIconDrawings(order.after(drawerAt(at, style)))
+      iconDrawings.set(key, async sequence =>
+        (style === 'sans' && exportUrl(at) === preparedBase && !hasEmoji(sequence) ? await preparedFor(sequence) : null) ?? composed(sequence))
     }
     return /** @type {ReturnType<typeof createIconDrawings>} */ (iconDrawings.get(key))
   }
@@ -377,7 +384,7 @@
       sampleDrawings.delete(oldKey)
     }
     if (!sampleDrawings.has(key)) {
-      const preview = previewAt(at, separate, option.style, `switch-${option.key}`)
+      const preview = order.after(previewAt(at, separate, option.style, `switch-${option.key}`))
       sampleDrawings.set(key, createSampleDrawings((sequence, { signal }) => preview(sequence, { signal })))
     }
     return /** @type {ReturnType<typeof createSampleDrawings>} */ (sampleDrawings.get(key))
@@ -1534,7 +1541,7 @@
             {#key activeId}
               <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false}
                 document={currentSession()?.document} session={currentSession()} version={documentTick} bind:scopes bind:slots
-                editable={adjusting} onchoose={path => editor.choose(path, { toggle: false })} onedit={layerChanged} bind:drawing bind:emoji bind:cut bind:cutLeaf>
+                editable={adjusting} onchoose={path => editor.choose(path, { toggle: false })} onedit={layerChanged} bind:drawing bind:emoji bind:cut bind:cutLeaf bind:step={previewStep}>
                 {#snippet detailContent()}
                   {#if substituted}
                     <span class="encoded-character substituted-character" lang="ja" title={substituted.sequence}>
@@ -1611,7 +1618,7 @@
           </div>
           {#if large}
             <IdsPreview {adapter} tree={editor.tree} {messages} {locale} small={false} notes={false}
-              document={currentSession()?.document} session={currentSession()} version={documentTick} editable={false} />
+              document={currentSession()?.document} session={currentSession()} version={documentTick} editable={false} bind:step={previewStep} />
           {/if}
         </dialog>
         {#if !embed}

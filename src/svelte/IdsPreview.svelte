@@ -32,10 +32,10 @@
   /** @typedef {import('../document/session.js').DocumentSession} DocumentSession */
   /** @typedef {import('../document/render.js').ScopeTree} ScopeTree */
   /**
-   * @type {{ adapter: IdsAdapter, tree: Part, chosen?: Path | null, messages?: Record<string, string>, locale?: string, small?: boolean, notes?: boolean, delay?: number, detail?: string, detailContent?: import('svelte').Snippet, drawing?: Drawing | null, document?: Document | null, session?: DocumentSession | null, version?: number, scopes?: ScopeTree | null, slots?: number[][], emoji?: NonNullable<Drawing['emoji']> | null, cut?: string | null, cutLeaf?: number | null, editable?: boolean, onchoose?: ((path: number[]) => void) | null, onedit?: (() => void) | null }}
+   * @type {{ adapter: IdsAdapter, tree: Part, chosen?: Path | null, messages?: Record<string, string>, locale?: string, small?: boolean, notes?: boolean, delay?: number, detail?: string, detailContent?: import('svelte').Snippet, drawing?: Drawing | null, document?: Document | null, session?: DocumentSession | null, version?: number, scopes?: ScopeTree | null, slots?: number[][], emoji?: NonNullable<Drawing['emoji']> | null, cut?: string | null, cutLeaf?: number | null, step?: 'idle' | 'loading' | 'composed' | 'final' | 'failed' | 'capped' | 'unavailable', editable?: boolean, onchoose?: ((path: number[]) => void) | null, onedit?: (() => void) | null }}
    */
   let { adapter, tree, chosen = null, messages, locale = 'en', small = true, notes = true, delay = 150, detail = '', detailContent, drawing = $bindable(null),
-    document = null, session = null, version = 0, scopes = $bindable(null), slots = $bindable(/** @type {number[][]} */ ([])), emoji = $bindable(null), cut = $bindable(null), cutLeaf = $bindable(null), editable = false, onchoose = null, onedit = null } = $props()
+    document = null, session = null, version = 0, scopes = $bindable(null), slots = $bindable(/** @type {number[][]} */ ([])), emoji = $bindable(null), cut = $bindable(null), cutLeaf = $bindable(null), step = $bindable('idle'), editable = false, onchoose = null, onedit = null } = $props()
   const t = $derived(translator(messages, locale))
 
   const uid = $props.id()
@@ -46,7 +46,6 @@
     box: [FACE[0] + leaf.box[0] * FACE[2], FACE[1] + leaf.box[1] * FACE[3], (leaf.box[2] - leaf.box[0]) * FACE[2], (leaf.box[3] - leaf.box[1]) * FACE[3]] })))
   let sketched = $state.raw(/** @type {{ text: string, leaves: SketchLeaf[] } | null} */ (null))
   let shown = $state.raw(/** @type {{ key: number, url?: string, drawn?: Drawing } | null} */ (null))
-  let step = $state(/** @type {'idle' | 'loading' | 'composed' | 'final' | 'failed' | 'capped' | 'unavailable'} */ ('idle'))
   // No badge while there is nothing to say: no preview asked, or no data to draw from.
   const quiet = $derived(step === 'idle' || step === 'unavailable')
   let count = 0
