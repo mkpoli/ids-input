@@ -1,5 +1,5 @@
 <script>
-  import { EMPTY, isDescription, nextEmpty, parse, write } from '../core/ids.js'
+  import { EMPTY, isDescription, nextEmpty, parse, place, write } from '../core/ids.js'
   import { pyramidSequence } from '../core/pyramid.js'
   import { enclosedRepeatSequence, parseRepeatRows, repeatSequence } from '../core/repeat.js'
   import { STRUCTURE_TEMPLATES } from '../core/templates.js'
@@ -42,21 +42,27 @@
   const partSupported = part => {
     try { pyramidSequence(part, 2); return true } catch { return false }
   }
-  /** Whether a generated layout can go into the open document: any layout that reads as a draft. @param {string} sequence */
-  const readable = sequence => {
-    const draft = parse(sequence, { open: true })
-    return !draft.problem && draft.tree !== undefined
-  }
+  // Where a generated layout goes: the chosen part, else the first empty slot, else the whole
+  // description, which an undo brings back.
+  const layoutAt = $derived(editor.chosen ?? (editor.tree === null ? null : nextEmpty(editor.tree)) ?? [])
   /**
-   * Put a generated layout on the chosen part, else in the first empty slot. A whole description
-   * with neither is replaced, which an undo brings back.
-   * @param {string} sequence @param {string} label
+   * Whether a generated layout fits at `layoutAt`: the result keeps an empty slot to fill, or reads
+   * as a whole description within its length limit and pyramid allowance.
+   * @param {string} sequence
    */
+  const readable = sequence => {
+    const found = parse(sequence, { open: true })
+    if (found.problem || found.tree === undefined) return false
+    const next = place(editor.tree, layoutAt, found.tree).tree
+    if (next === null) return false
+    const text = write(next)
+    return !parse(text, { open: true }).problem && (nextEmpty(next) !== null || isDescription(text))
+  }
+  /** @param {string} sequence @param {string} label */
   function putLayout(sequence, label) {
     const found = parse(sequence, { open: true })
     if (found.problem || found.tree === undefined) return
-    const at = editor.chosen ?? (editor.tree === null ? null : nextEmpty(editor.tree)) ?? []
-    editor.put(found.tree, at, label)
+    editor.put(found.tree, layoutAt, label)
   }
 
   const pyramidTemplates = $derived(PYRAMID_SIZES.map(layers => ({ layers, shapes: pyramidDiagram(layers, { direction }) })))
