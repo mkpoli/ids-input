@@ -169,6 +169,10 @@ describe('a draft read as the editor reads it', () => {
     expect(writeDraft(tree('⿰亻'))).toBe('⿰亻')
     expect(writeDraft(tree('⿳木'))).toBe('⿳木')
     expect(writeDraft(tree('⿳⬚木'))).toBe('⿳⬚木')
+    // A variant identifier at the end of a shortened text would read as the next part.
+    expect(writeDraft({ op: '⿰', parts: ['𢎘z', null] })).toBe('⿰𢎘z⬚')
+    expect(writeDraft({ op: '⿰', parts: [{ op: '⿱', parts: ['一', '𢎘z'] }, null] })).toBe('⿰⿱一𢎘z⬚')
+    expect(writeDraft({ op: '⿰', parts: ['𢎘z', '十'] })).toBe('⿰𢎘z十')
     expect(writeDraft(tree('⿲木⬚⬚'))).toBe('⿲木')
     expect(writeDraft(tree('⿳⿳艹土⿱我弓⬚⬚'))).toBe('⿳⿳艹土⿱我弓')
     // A slot with a part after it stays written, or that part would move into the operator before it.
