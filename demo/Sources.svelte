@@ -80,7 +80,7 @@
 </script>
 
 <div class="page">
-  <PageHeader title={t('sources.title')} {t} bind:locale links={[{ href: `./unencoded.html?lang=${locale}`, label: t('appendix.title') }, { href: `./normalization.html?lang=${locale}`, label: t('normalization.title') }, { href: `./ucv.html?lang=${locale}`, label: 'UCV' }, { href: './open-data.html', label: 'Open data' }]} />
+  <PageHeader page="sources" title={t('sources.title')} {t} bind:locale />
 
   <main>
     <p class="lead">{t('sources.lead')}</p>

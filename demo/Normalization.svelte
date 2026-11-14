@@ -72,7 +72,7 @@
 </script>
 
 <div class="page">
-  <PageHeader title={t('normalization.title')} {t} bind:locale />
+  <PageHeader page="normalization" title={t('normalization.title')} {t} bind:locale />
 
   <div class="body">
     <nav class="toc" aria-label={t('normalization.title')}>
