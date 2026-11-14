@@ -13,11 +13,12 @@
   // menu (right click, the Menu key or Shift+F10) splits or swaps with any operator, clears, removes a
   // level or copies that part's sequence. An empty slot shows as ⬚. A component with other forms
   // has a button that lists them, each as the preview draws it, and the menu lists them too: the
-  // variation sequences the preview draws and, with `variations`, the other characters and
-  // descriptions of the IRG component variation entries it is a form of.
-  import { OPERATOR_GROUPS, isCustom, isNode, partAt, samePath, write } from '../core/ids.js'
+  // variation sequences the preview draws and, with `variations`, the forms of the IRG component
+  // variation entries it belongs to: another character or a description, or, where the adapter
+  // draws them (`formed`), a form no code point names, written with its variant identifier (壬q0012).
+  import { OPERATOR_GROUPS, isCustom, isNode, parse, partAt, samePath, write } from '../core/ids.js'
   import { codePoints, variationBase, variationOf, withVariation } from '../core/variation.js'
-  import { componentForms } from '../core/forms.js'
+  import { componentForms, ucvFormOf } from '../core/forms.js'
   import { loadUcvIndex } from './ucv.js'
   import IdsPartIcon from './IdsPartIcon.svelte'
   import OperatorIcon from './OperatorIcon.svelte'
@@ -56,7 +57,7 @@
     return () => cancelIdleCallback(handle)
   })
   /** What a component can be written as, its character first. None where it has no other form. @param {Part | undefined} part */
-  const formsOf = part => componentForms(part, { sequences, ucv })
+  const formsOf = part => componentForms(part, { sequences, ucv, variants: Boolean(editor.adapter.formed) })
   /** The forms under one heading each: the character and its variation sequences, then each entry's.
    * @param {import('../core/forms.js').ComponentForm[]} forms */
   function formGroups(forms) {
@@ -76,12 +77,18 @@
     const part = partAt(editor.tree, path)
     if (typeof part !== 'string') return
     if ((form.kind === 'plain' || form.kind === 'sequence') && editor.vary(form.write, path)) return
-    editor.take([...form.write].length === 1 || variationBase(form.write) !== null ? withVariation(part, form.write) : form.write, path)
+    // A component is put as it is written: the editor's own reading would take the letters of a
+    // variant identifier for typed operators.
+    if (form.kind !== 'sibling' || variationBase(form.write) !== null) { editor.put(withVariation(part, form.write), path); return }
+    const read = parse(form.write, { open: true })
+    if (!read.problem && read.tree !== null && read.tree !== undefined) editor.put(read.tree, path)
   }
   /** What a form's button says: its code points or its description, and the entry that lists it. @param {import('../core/forms.js').ComponentForm} form */
   const formTitle = form => [variationBase(form.write) !== null ? codePoints(form.write) : form.write, form.entry ? `${form.unifiable ? 'UCV' : 'NUCV'} ${form.entry}` : ''].filter(Boolean).join(' · ')
-  /** Whether the component is written with a variation selector. @param {Part} part */
-  const varied = part => typeof part === 'string' && variationBase(part) !== null && variationOf(part) !== variationBase(part)
+  /** Whether the component is written as one of its forms: with a variation selector, or with the
+   * identifier of an entry form the preview draws. @param {Part} part */
+  const varied = part => typeof part === 'string' && (variationBase(part) !== null ? variationOf(part) !== variationBase(part)
+    : Boolean(ucv && editor.adapter.formed && ucvFormOf(ucv, part)))
   /** @param {Path} path */
   const key = path => path.join('.')
 

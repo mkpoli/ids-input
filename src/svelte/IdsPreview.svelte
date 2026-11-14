@@ -62,7 +62,7 @@
     // the parts it needs, not on the export itself.
     ask?.warm?.(text)
     const controller = new AbortController(), signal = controller.signal
-    const timer = setTimeout(() => runPreview(text, { preview: ask, drawing: final, signal }, patch => {
+    const timer = setTimeout(() => runPreview(text, { preview: ask, drawing: final, formed: adapter.formed, signal }, patch => {
       if (patch.sketch) { sketched = { text, leaves: /** @type {SketchLeaf[]} */ (patch.sketch) }; return }
       shown = patch.url ? { key: ++count, url: patch.url } : patch.drawn ? { key: ++count, drawn: /** @type {Drawing} */ (patch.drawn) } : null
       step = /** @type {typeof step} */ (patch.step)

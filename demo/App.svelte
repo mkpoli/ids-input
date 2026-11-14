@@ -41,6 +41,8 @@
   import characterInfo from '../data/character-info.json.gz?url'
   import chains from '../data/zi-tools-chains.tsv.gz?url'
   import custom from '../data/custom-components.json.gz?url'
+  import variations from '../data/ucv.json?url'
+  import variationOutlines from '../data/ucv-outlines.json.gz?url'
   import characters from '../data/character-vocabulary.tsv.gz?url'
   import { LOCALES, appMessages } from './lib/locales.js'
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
@@ -139,7 +141,7 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const sealAdapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, jurchen: jurchenData, ids, layers, zitools, chise: corpus, project: projectIds, overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains, custom })
+  const sealAdapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, jurchen: jurchenData, ids, layers, zitools, chise: corpus, project: projectIds, overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains, custom, variations })
 
   const operatorSet = new Set(OPERATORS.map(([op]) => op))
   const babel = { ...sealAdapter, recognizeDrawing, parts: async () => {
@@ -183,7 +185,9 @@
   const previews = new Map()
   // The outlines the engine draws without the export, as the page serves the package's `data/`: the
   // names the package reads, and the URL Vite gives each file it bundles. See `vite.config.js`.
-  const bundles = engineOutlines
+  // The forms of the component variation lists that only an outline draws go to the engine as the
+  // host's own outlines.
+  const bundles = { ...engineOutlines, 'host/outlines.json.gz': variationOutlines }
   /** @param {string} at @param {boolean} split @param {'sans' | 'serif' | 'fangsong' | 'kaisho'} style @param {string} [owner] A view whose drawings the others must not cancel. */
   const previewAt = (at, split, style, owner = '', preferExport = false) => {
     const key = `${at}\0${split ? '1' : '0'}\0${style}\0${owner}\0${preferExport ? '1' : '0'}`

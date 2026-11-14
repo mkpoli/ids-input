@@ -71,3 +71,61 @@ it('keeps the identifier on the component when a description is read and written
   expect(/** @type {any} */ (read.tree).parts).toEqual(['氵', '壬q0012'])
   expect(write(/** @type {any} */ (read.tree))).toBe('⿰氵壬q0012')
 })
+
+import { formedTree, glyphReference } from '../src/core/forms.js'
+import { runPreview } from '../src/core/preview.js'
+
+it('writes a form only an outline draws as its glyph reference, and drops other identifiers', () => {
+  const shaped = formedTree(/** @type {any} */ (parse('⿰氵.壬q0012').tree), ucv)
+  expect(shaped.formed).toBe(true)
+  expect(write(/** @type {any} */ (shaped.tree))).toBe('⿰氵&GW-u58ec-t;')
+  expect(glyphReference('u58ec-t')).toBe('&GW-u58ec-t;')
+  const plain = formedTree(/** @type {any} */ (parse('⿰氵.壬T').tree), ucv)
+  expect(plain.formed).toBe(false)
+  expect(write(/** @type {any} */ (plain.tree))).toBe('⿰氵壬')
+})
+
+it('leaves a form no source draws, and an identifier of another entry, as the plain component', () => {
+  expect(componentForms('氵', { ucv, variants: true })).toEqual([])
+  expect(formedTree('氵q4302', ucv)).toEqual({ tree: '氵', formed: false })
+  expect(formedTree('壬q3212', ucv)).toEqual({ tree: '壬', formed: false })
+})
+
+it('asks the preview for the formed description, and for no final image of it', async () => {
+  /** @type {string[]} */
+  const asked = []
+  const steps = await new Promise(resolve => {
+    /** @type {any[]} */
+    const seen = []
+    runPreview('⿰氵壬q0012', {
+      preview: async (/** @type {string} */ text) => { asked.push(`preview ${text}`); return { d: 'M0 0' } },
+      drawing: async (/** @type {string} */ text) => { asked.push(`drawing ${text}`); return 'final.png' },
+      formed: async () => '⿰氵&GW-u58ec-t;',
+      signal: new AbortController().signal,
+    }, patch => { seen.push(patch); if (patch.step) resolve(seen) })
+  })
+  expect(asked).toEqual(['preview ⿰氵&GW-u58ec-t;'])
+  expect(steps.at(-1).step).toBe('composed')
+})
+
+it('draws the plain description, final image and all, where no identifier names a form', async () => {
+  /** @type {string[]} */
+  const asked = []
+  await new Promise(resolve => runPreview('⿰氵壬T', {
+    preview: async (/** @type {string} */ text) => { asked.push(`preview ${text}`); return { d: 'M0 0' } },
+    drawing: async (/** @type {string} */ text) => { asked.push(`drawing ${text}`); return null },
+    formed: async () => null,
+    signal: new AbortController().signal,
+  }, patch => { if (patch.step) resolve(patch) }))
+  expect(asked.sort()).toEqual(['drawing ⿰氵壬', 'preview ⿰氵壬'])
+})
+
+import { formedText } from '../src/core/forms.js'
+
+it('forms one component alone, which is no description', () => {
+  expect(formedText('壬q0012', ucv)).toBe('&GW-u58ec-t;')
+  expect(formedText('⿰氵壬q0012', ucv)).toBe('⿰氵&GW-u58ec-t;')
+  expect(formedText('壬T', ucv)).toBeNull()
+  expect(formedText('壬', ucv)).toBeNull()
+  expect(formedText('ab12', ucv)).toBeNull()
+})

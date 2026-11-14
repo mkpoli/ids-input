@@ -1,6 +1,7 @@
 // A component's variant menu in the tree lists what else it may be written as: with the component
-// variation lists, the other characters and descriptions of its UCV and NUCV entries. Run against a
-// devrun server:
+// variation lists, the other characters and descriptions of its UCV and NUCV entries, and the forms
+// no code point names, each written with its variant identifier and drawn from its outline. Run
+// against a devrun server:
 //   IDS_URL=http://localhost:5173 CHROMIUM_PATH=/path/to/chrome bun demo/check-component-forms.js
 // IDS_SHOTS names a folder to write screenshots into.
 import { chromium } from 'playwright-core'
@@ -25,23 +26,44 @@ try {
     }, null, { timeout: 180000 })
     const shot = async name => { if (shots) { await settled(); await page.screenshot({ path: join(shots, `${name}-${scheme}.png`) }) } }
 
-    // A unifiable entry: 壬 may be written as 王 or 𡈼, its siblings in UCV #1.
+    // A unifiable entry: 壬 may be written as 王 or 𡈼, its siblings in UCV #1, or as the entry's
+    // second form, which no code point names.
     await page.goto(`${url}/?lang=en&ids=${encodeURIComponent('⿰氵壬')}`, { waitUntil: 'domcontentloaded' })
     await field.waitFor()
     const toggle = page.locator('.ids-tree .ids-cell[data-index="1"] .ids-forms-toggle')
     await toggle.waitFor()
     await shot('forms-before')
     await toggle.click()
-    assert.deepEqual(await menuForms(), ['壬', '王', '𡈼'])
+    assert.deepEqual(await menuForms(), ['壬', '壬q0012', '王', '𡈼'])
     assert.deepEqual(await page.locator('.ids-menu .ids-menu-title').allInnerTexts(), ['Forms of 壬', 'UCV 1'])
+    assert.equal(await page.locator('.ids-menu .ids-menu-form[data-form="壬q0012"]').getAttribute('title'), '壬q0012 · UCV 1')
     assert.equal(await page.locator('.ids-menu .ids-menu-form[data-form="壬"]').getAttribute('aria-checked'), 'true')
     assert.equal(await page.locator('.ids-menu .ids-menu-form[data-form="王"]').getAttribute('title'), 'U+738B · UCV 1')
-    await page.waitForFunction(() => [...document.querySelectorAll('.ids-menu-form svg path')].filter(path => path.getAttribute('d')).length === 3, null, { timeout: 180000 })
+    await page.waitForFunction(() => [...document.querySelectorAll('.ids-menu-form svg path')].filter(path => path.getAttribute('d')).length === 4, null, { timeout: 180000 })
+    const drawings = await page.locator('.ids-menu .ids-menu-form svg path').evaluateAll(paths => paths.map(path => path.getAttribute('d')))
+    assert.equal(new Set(drawings).size, 4, 'each form is drawn as its own glyph')
     await shot('forms-open')
     await page.locator('.ids-menu .ids-menu-form[data-form="王"]').click()
     assert.equal(await field.inputValue(), '⿰氵王', 'the sibling takes the component\'s place')
     assert.equal(await page.locator('.ids-menu').count(), 0, 'choosing closes the list')
     await shot('forms-after')
+
+    // The form no code point names is written with its identifier and drawn from its outline.
+    await page.goto(`${url}/?lang=en&ids=${encodeURIComponent('⿰氵壬')}`, { waitUntil: 'domcontentloaded' })
+    await field.waitFor()
+    await toggle.waitFor()
+    await settled()
+    const plain = await page.locator('#output-panel .ids-preview svg path').first().getAttribute('d')
+    await toggle.click()
+    await page.locator('.ids-menu .ids-menu-form[data-form="壬q0012"]').click()
+    assert.equal(await field.inputValue(), '⿰氵壬q0012', 'the identifier is written after the component')
+    await page.waitForFunction(before => { const d = document.querySelector('#output-panel .ids-preview svg path')?.getAttribute('d'); return d && d !== before }, plain, { timeout: 180000 })
+    await page.locator('.ids-tree .ids-part .ids-form svg path[d]').waitFor({ state: 'attached', timeout: 180000 })
+    await shot('forms-variant')
+    await toggle.click()
+    assert.equal(await page.locator('.ids-menu .ids-menu-form[data-form="壬q0012"]').getAttribute('aria-checked'), 'true')
+    await page.locator('.ids-menu .ids-menu-form[data-form="壬"]').click()
+    assert.equal(await field.inputValue(), '⿰氵壬', 'the plain character is written again')
 
     // A non-unifiable entry is headed as such: 閒 and 間.
     await page.goto(`${url}/?lang=en&ids=${encodeURIComponent('⿰亻閒')}`, { waitUntil: 'domcontentloaded' })
@@ -67,7 +89,7 @@ try {
     await field.waitFor()
     await toggle.waitFor()
     await page.locator('.ids-tree .ids-part').nth(1).click({ button: 'right' })
-    assert.deepEqual(await menuForms(), ['壬', '王', '𡈼'])
+    assert.deepEqual(await menuForms(), ['壬', '壬q0012', '王', '𡈼'])
     assert.ok(await page.locator('.ids-menu .ids-menu-op').count())
     assert.deepEqual(errors, [])
     await page.close()

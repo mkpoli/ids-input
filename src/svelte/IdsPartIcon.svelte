@@ -30,7 +30,7 @@
     url = null
     if (!visible || localDrawing) return
     const controller = new AbortController()
-    runPreview(text, { preview: askDrawable(icon, adapter.drawable), drawing, signal: controller.signal }, patch => {
+    runPreview(text, { preview: askDrawable(icon, adapter.drawable), drawing, formed: adapter.formed, signal: controller.signal }, patch => {
       if (patch.url) url = patch.url
       if (patch.drawn) drawn = /** @type {import('../adapter/types.js').Drawing} */ (patch.drawn)
     })
