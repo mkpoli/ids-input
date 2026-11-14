@@ -2,7 +2,8 @@
   // The chosen part of `editor`: a field to type it (Enter puts what it holds and moves on to the next
   // empty slot), buttons to clear it or take its level away, and the alternatives in its place
   // (IdsAlternatives). A problem or the next slot to fill shows beneath; the alternatives float over
-  // the page, so choosing a part does not move what is around it.
+  // the page, so choosing a part does not move what is around it. A part chosen by selecting its text
+  // in the field shows its alternatives beside the field, and the list here waits to be asked for.
   import { isNode } from '../core/ids.js'
   import { shortcut } from './shortcut.js'
   import { watchFallback } from './fallback-font.js'
@@ -40,6 +41,7 @@
     const key = identity
     if (!replaceable) { open = false; shut = null; return }
     if (shut === key) return
+    if (editor.chosenInField) { open = false; shut = key; return }
     shut = null
     open = true
   })

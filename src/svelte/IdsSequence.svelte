@@ -7,6 +7,8 @@
   import { tokens, tint } from './tokens.js'
   import { loadFallbackText } from './fallback-font.js'
   import { sequenceScopes } from './sequence-scopes.js'
+  import { isNode, write } from '../core/ids.js'
+  import IdsAlternatives, { hasAlternatives } from './IdsAlternatives.svelte'
   /** @type {HTMLDivElement | null} */ let textRun = $state(null)
   /** @type {{left:number, right:number, inkLeft:number}[]} */ let bounds = $state([])
   // The width of the slots drawn after the text, so the field can scroll far enough to show them.
@@ -123,7 +125,73 @@
     })
   })
   function select() {
-    if (!composing && field && document.activeElement === field) editor.selectText(field.selectionStart ?? 0, field.selectionEnd ?? 0)
+    if (composing || !field || document.activeElement !== field) return
+    editor.selectText(field.selectionStart ?? 0, field.selectionEnd ?? 0)
+    // Selected text shows what can stand in its place: a component in its character card, a
+    // description in the panel under it.
+    const spanned = field.selectionStart !== field.selectionEnd && editor.chosenInField
+    const chosen = editor.chosen, part = editor.picked
+    const at = chosen?.join('.')
+    const span = spanned && typeof part === 'string' ? paint?.querySelector(`span[data-path="${at}"]`) : null
+    // From the field itself: a description is selected (its parts' cards give way to the panel), or
+    // the selection has left the component whose card it opened.
+    if (span) span.dispatchEvent(new CustomEvent('idscharacter', { bubbles: true }))
+    else if (spanned || announced) field.dispatchEvent(new CustomEvent('idscharacter', { bubbles: true, detail: { all: spanned } }))
+    announced = Boolean(span)
+    const next = spanned && isNode(part) ? `${at}\u0000${write(part)}` : ''
+    if (next !== selection) dismissed = ''
+    selection = next
+  }
+  /** Whether the selection last opened a component's card. */
+  let announced = false
+  // The description chosen by selecting its text, and the one whose panel the reader closed.
+  let selection = $state(''), dismissed = $state('')
+  /** @type {HTMLDivElement | null} */ let panel = $state(null)
+  const panelOpen = $derived(Boolean(selection) && selection !== dismissed && editor.chosenInField && isNode(editor.picked) && hasAlternatives(editor))
+  let panelTop = $state(0), panelLeft = $state(0)
+  $effect(() => { if (editor.chosenInField) editor.alternatives.load() })
+  function placePanel() {
+    if (!panel || !field) return
+    const marked = [...(paint?.querySelectorAll('span.selected') ?? [])].map(span => span.getBoundingClientRect())
+    const box = field.getBoundingClientRect(), card = panel.getBoundingClientRect(), edge = 8, gap = 4
+    const start = marked.length ? Math.max(box.left, Math.min(...marked.map(rect => rect.left))) : box.left
+    panelLeft = Math.max(edge, Math.min(start, innerWidth - card.width - edge))
+    panelTop = box.bottom + gap + card.height <= innerHeight - edge ? box.bottom + gap : Math.max(edge, box.top - gap - card.height)
+  }
+  $effect(() => {
+    if (!panelOpen || !panel) return
+    const element = panel
+    element.showPopover()
+    void editor.draft
+    placePanel()
+    const watch = new ResizeObserver(placePanel)
+    watch.observe(element)
+    addEventListener('resize', placePanel)
+    addEventListener('scroll', placePanel, true)
+    return () => {
+      watch.disconnect()
+      removeEventListener('resize', placePanel)
+      removeEventListener('scroll', placePanel, true)
+      if (element.isConnected && element.matches(':popover-open')) element.hidePopover()
+    }
+  })
+  /** Close the panel for this description, leaving the reader in the field. */
+  function dismiss() {
+    dismissed = selection
+    if (panel?.contains(document.activeElement)) field?.focus()
+  }
+  /** @param {FocusEvent} event */
+  function leaveSelection(event) {
+    const next = /** @type {Node | null} */ (event.relatedTarget)
+    if (next && (panel?.contains(next) || next === field)) return
+    selection = ''
+  }
+  /** @param {KeyboardEvent} event */
+  function escapePanel(event) {
+    if (!panelOpen || event.key !== 'Escape' || event.isComposing || event.defaultPrevented) return
+    event.preventDefault()
+    event.stopPropagation()
+    dismiss()
   }
   // Expand a partial token, a crossing range or an operator alone to its whole part before the
   // browser replaces it.
@@ -236,10 +304,21 @@
     <div class="sequence-paint" bind:this={paint} style={metrics} aria-hidden="true"><div class="sequence-viewport"><div class="sequence-run" bind:this={textRun} style:transform={`translateX(${-scroll}px)`}>{#if spans.length}{#each spans as token}<span data-character={token.text || '◌'} data-path={token.path.join('.')} class:missing={!token.text} class:custom={isCustom(token.text)} class:tinted={editor.isTinted(token.path)} class:hovered={editor.isHovered(token.path)} class:selected={editor.isSelected(token.path)} style:--tint={tint(token.path, operatorToken(token))}>{token.text || '◌'}</span>{/each}{:else}{editor.draft}{/if}{#if paintedScopes.length}<svg class="sequence-scopes" width="100%" height={scopeHeight} aria-hidden="true">{#each paintedScopes as scope}<g data-path={scope.path.join('.')}><path class="scope-lead" class:scope-tinted={scope.tinted} class:scope-hovered={scope.hovered} class:scope-selected={scope.selected} style:--tint={tint(scope.path, true)} data-path={scope.path.join('.')} d={scope.lead}/>{#each scope.segments as segment}<path class="scope-segment" class:scope-missing={segment.missing} class:scope-tinted={segment.tinted} class:scope-hovered={segment.hovered} class:scope-selected={segment.selected} style:--tint={tint(segment.path)} data-path={segment.path.join('.')} d={segment.d}/>{/each}</g>{/each}</svg>{/if}</div></div></div>
   <input bind:this={field} value={editor.draft} style:padding-right={`calc(10px + ${drawnSlots + 8}px)`} disabled={editor.disabled} lang="ja" spellcheck="false" autocomplete="off"
     aria-label={label ? undefined : t('ids.label')} {placeholder} aria-invalid={Boolean(editor.problem)}
-    onselect={select} onkeyup={select} onclick={select} onbeforeinput={beforeInput} onpaste={paste} onpointermove={hover} onpointerleave={() => editor.hover(null)} onscroll={() => scroll = field?.scrollLeft ?? 0} oninput={edit} oncompositionstart={startComposition} oncompositionend={endComposition} onblur={() => editor.settle()}
-    onkeydown={event => { if (!event.isComposing && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') { event.preventDefault(); if (event.shiftKey) editor.redo(); else editor.undo(); return } if (event.key === 'Enter' && !event.isComposing) { event.preventDefault(); onenter?.() } }} />
+    onselect={select} onkeyup={select} onclick={select} onbeforeinput={beforeInput} onpaste={paste} onpointermove={hover} onpointerleave={() => editor.hover(null)} onscroll={() => scroll = field?.scrollLeft ?? 0} oninput={edit} oncompositionstart={startComposition} oncompositionend={endComposition} onblur={() => editor.settle()} onfocusout={leaveSelection}
+    onkeydown={event => { escapePanel(event); if (event.defaultPrevented) return; if (!event.isComposing && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') { event.preventDefault(); if (event.shiftKey) editor.redo(); else editor.undo(); return } if (event.key === 'Enter' && !event.isComposing) { event.preventDefault(); onenter?.() } }} />
   </div>
 </label>
+{#if panelOpen}
+  <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+  <div class="ids-selection-panel" popover="manual" role="dialog" tabindex="-1" aria-label={t('ids.swaps.label', { part: editor.sequenceAt(editor.chosen ?? []) })}
+    bind:this={panel} style:top={`${panelTop}px`} style:left={`${panelLeft}px`} onfocusout={leaveSelection} onkeydown={escapePanel}>
+    <div class="ids-selection-head">
+      <span class="ids-selection-title">{t('ids.swaps.label', { part: editor.sequenceAt(editor.chosen ?? []) })}</span>
+      <button type="button" class="ids-selection-close" aria-label={t('ids.swaps.close')} title={t('ids.swaps.close')} onclick={dismiss}>×</button>
+    </div>
+    <IdsAlternatives {editor} onchoose={() => field?.focus()} onspent={() => panel?.querySelector('button')?.focus()} />
+  </div>
+{/if}
 
 <style>
   .ids-field{
@@ -253,6 +332,16 @@
     --_font:var(--ids-font,"IDS Numbered","IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Jurchen","IDS Operators","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif);
     display:flex;flex-direction:column;gap:4px;min-width:0;color:var(--_ink)}
   .ids-title{font-size:11px;color:var(--_muted)}
+  .ids-selection-panel{position:fixed;inset:auto;margin:0;box-sizing:border-box;display:flex;flex-direction:column;gap:6px;width:max-content;min-width:min(200px,calc(100vw - 16px));
+    max-width:min(420px,calc(100vw - 16px));max-height:min(52vh,420px);padding:10px;border:1px solid var(--ids-line,light-dark(#e1e1e8,#2e2e36));border-radius:12px;
+    background:var(--ids-surface,light-dark(#fff,#1b1b20));color:var(--ids-ink,light-dark(#1c1c22,#ececf2));
+    box-shadow:0 12px 32px -8px rgb(16 16 24 / .28),0 2px 8px rgb(16 16 24 / .12);overflow:auto;overscroll-behavior:contain}
+  .ids-selection-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .ids-selection-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:11px system-ui,var(--ids-font,sans-serif),sans-serif;color:var(--ids-muted,light-dark(#686874,#9d9daa))}
+  .ids-selection-close{flex:none;display:grid;place-items:center;width:24px;height:24px;padding:0;border:0;border-radius:6px;background:none;color:var(--ids-muted,light-dark(#686874,#9d9daa));font:16px/1 system-ui;cursor:pointer}
+  .ids-selection-close:hover{background:var(--ids-surface-subtle,light-dark(#f6f6f9,#16161a));color:var(--ids-ink,light-dark(#1c1c22,#ececf2))}
+  .ids-selection-close:focus-visible{outline:2px solid var(--ids-focus,light-dark(#2944c7,#8ea8ff));outline-offset:1px}
+  @media (pointer: coarse){ .ids-selection-close{width:44px;height:44px;font-size:20px} }
   .sequence-wrap{position:relative;min-width:0}
   .sequence-paint{position:absolute;inset:1px;padding:6px 10px;overflow:hidden;pointer-events:none;border-radius:7px;font:22px var(--_font);white-space:pre}
   .sequence-paint span.tinted{color:color-mix(in oklab,var(--_ink) 76%,var(--tint));background:color-mix(in oklab,var(--tint) 12%,transparent)}

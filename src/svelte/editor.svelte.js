@@ -63,6 +63,8 @@ export function createEditor(options) {
   let chosen = $state.raw(/** @type {Path | null} */ (null))
   /** The field's selection is the chosen node's operator alone, which an operator button replaces. */
   let lone = false
+  /** Whether the chosen part was picked by selecting its text in the field, where its alternatives then show. */
+  let inField = $state(false)
   let draft = $state(''), piece = $state(''), note = $state('')
   /** The last change, for a host to answer (an undo toast after one that throws something away). */
   let change = $state.raw(/** @type {Change | null} */ (null))
@@ -188,7 +190,7 @@ export function createEditor(options) {
     invalidateResolution()
     history.clear(); caret = null; hovered = null; note = ''; change = null; typing = false; run = false
     const read = parse(start, { open: true })
-    tree = read.tree ?? null; chosen = null; lone = false; piece = ''
+    tree = read.tree ?? null; chosen = null; lone = false; inField = false; piece = ''
     // The text stays as given, so the slots a reader wrote stay written; a pasted ＋ for an empty
     // slot is written back as ⬚.
     draft = start.replaceAll('＋', '⬚')
@@ -256,7 +258,7 @@ export function createEditor(options) {
     caret = null
     hovered = null
     history.restore(state.history)
-    tree = state.tree ?? null; chosen = state.chosen ?? null; lone = false; draft = state.draft; piece = state.piece
+    tree = state.tree ?? null; chosen = state.chosen ?? null; lone = false; inField = false; draft = state.draft; piece = state.piece
     note = ''; typing = false; run = false; change = null
     const part = chosen ? partAt(tree, chosen) : undefined
     if (typeof part === 'string') lookup.read(lookupChar(part))
@@ -418,6 +420,7 @@ export function createEditor(options) {
     selectionVersion++
     chosen = path && toggle && samePath(chosen, path) ? null : path
     lone = false
+    inField = false
     note = ''
     const part = chosen ? partAt(tree, chosen) : undefined
     piece = text(part)
@@ -540,6 +543,7 @@ export function createEditor(options) {
       caret = start === end ? start : null
       const token = rangeToken(tokens(draft), start, end)
       chosen = token?.path ?? null
+      inField = chosen !== null
       const node = chosen ? partAt(tree, chosen) : undefined
       lone = isNode(node) && token?.start === start && (end === token.tokenEnd || end === start + node.op.length)
       piece = text(chosen ? partAt(tree, chosen) : undefined)
@@ -563,6 +567,7 @@ export function createEditor(options) {
     get swaps() { return swaps },
     /** The recursive alternatives of the chosen part (see `createAlternatives`). */
     get alternatives() { return alternatives },
+    get chosenInField() { return inField },
     /** The characters the chosen node encodes, once the adapter has answered; none for a component. */
     get merges() {
       if (!isNode(picked)) return []
