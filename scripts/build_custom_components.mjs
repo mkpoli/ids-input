@@ -14,6 +14,7 @@ import { customKind, customsOf, isCustom, isNode, parse, write } from '../src/co
 import { STROKE_CHAINS } from '@han-compose/composer/tree'
 import { atoms, besides, createFrame, plainTree, solve, subtract } from './lib/custom-equivalences.mjs'
 import { assignIds, formChar, formNumber, readLedger, writeLedger } from './lib/custom-ids.mjs'
+import { formRows as tableRows } from '../demo/lib/custom-forms.js'
 
 const CHECK = process.argv.includes('--check')
 const data = name => new URL(`../data/${name}`, import.meta.url)
@@ -420,11 +421,39 @@ const document = {
   components,
   characters,
 }
+// The same table flat, one row per form, for a spreadsheet or a script: JSON, TSV and CSV.
+const flat = tableRows(/** @type {any} */ (document)).map(row => {
+  /** @param {string} source */
+  const named = source => row.names.filter(name => name.source === source).map(name => name.text).join(' ')
+  return {
+    id: row.id, entity: `&${row.id};`, char: `U+${(0xf0000 + row.number).toString(16).toUpperCase()}`,
+    babelstone: named('babelstone'), chise: named('chise'), zi_tools: named('zi-tools'), expression: named('unnamed'),
+    description: row.names.map(name => name.description ?? '').filter(Boolean).join('; '),
+    status: row.status, uses: row.uses, used_in: row.usedIn,
+    equivalents: row.equivalents.map(item => ({ in: item.in, text: item.text, status: item.status, count: item.count, ...(item.id ? { id: item.id } : {}) })),
+    of: row.of,
+  }
+})
+const COLUMNS = /** @type {const} */ (['id', 'entity', 'char', 'babelstone', 'chise', 'zi_tools', 'expression', 'description', 'status', 'uses', 'used_in', 'equivalents', 'of'])
+/** @param {typeof flat[number]} row @returns {string[]} */
+const cells = row => COLUMNS.map(column => column === 'equivalents' ? row.equivalents.map(item => `${item.in}:${item.text}:${item.status}:${item.count}`).join(' | ')
+  : column === 'of' ? row.of.map(other => `${other.relation}:${other.id}`).join(' | ') : String(row[column]))
+const NOTICE = 'Forms no code point names in BabelStone IDS, CHISE IDS and zi.tools; derived by ids-input (https://ids.mkpo.li/unencoded); GPL-2.0-or-later.'
+const flatFiles = {
+  'custom-forms.json': JSON.stringify({ format: 'ids-input/custom-forms', version: 1, licence: 'GPL-2.0-or-later', notice: NOTICE, sources: document.sources, columns: COLUMNS, rows: flat }, null, 1) + '\n',
+  'custom-forms.tsv': [`# ${NOTICE}`, COLUMNS.join('\t'), ...flat.map(row => cells(row).map(cell => cell.replace(/[\t\n]/g, ' ')).join('\t'))].join('\n') + '\n',
+  'custom-forms.csv': [COLUMNS.join(','), ...flat.map(row => cells(row).map(cell => /[",\n]/.test(cell) ? `"${cell.replaceAll('"', '""')}"` : cell).join(','))].join('\r\n') + '\r\n',
+}
+
 const bytes = gzipSync(JSON.stringify(document), { level: 9 })
 const out = data('custom-components.json.gz')
 const ledgerText = writeLedger(ledger.rows)
 if (CHECK) {
   const current = await readFile(out).catch(() => null)
-  if (!current || !gunzipSync(current).equals(gunzipSync(bytes)) || ledgerText !== await readFile(ledgerUrl, 'utf8').catch(() => '')) { console.error('data/custom-components.json.gz is stale: run bun scripts/build_custom_components.mjs'); process.exit(1) }
-} else { await writeFile(out, bytes); await writeFile(ledgerUrl, ledgerText) }
+  const flatStale = (await Promise.all(Object.entries(flatFiles).map(async ([name, text]) => text !== await readFile(data(name), 'utf8').catch(() => '')))).some(Boolean)
+  if (!current || !gunzipSync(current).equals(gunzipSync(bytes)) || flatStale || ledgerText !== await readFile(ledgerUrl, 'utf8').catch(() => '')) { console.error('data/custom-components.json.gz is stale: run bun scripts/build_custom_components.mjs'); process.exit(1) }
+} else {
+  await writeFile(out, bytes); await writeFile(ledgerUrl, ledgerText)
+  for (const [name, text] of Object.entries(flatFiles)) await writeFile(data(name), text)
+}
 console.log(JSON.stringify(document.counts), `${bytes.length} bytes`)

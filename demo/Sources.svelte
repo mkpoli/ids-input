@@ -2,16 +2,14 @@
   // The full source catalogue: every top-level source the project reads or cites, followed by the
   // records behind the starter examples. One page, filters by category and tag, and a note for each
   // source that has one. The README links here instead of keeping a second list.
-  import SiteSelect from './ui/SiteSelect.svelte'
+  import PageHeader from './ui/PageHeader.svelte'
   import { onMount } from 'svelte'
   import { translator } from '../src/svelte/index.js'
   import { LOCALES, appMessages } from './lib/locales.js'
-  import { applyTheme, storedTheme } from './lib/theme.js'
   import { load, save } from './lib/storage.js'
   import { CATALOGUE } from './lib/source-catalogue.js'
   import { CATEGORIES, FEATURES, TAGS } from './lib/sources.js'
   import { inline } from './lib/rich-text.js'
-  import ThemeSwitch from './ui/ThemeSwitch.svelte'
 
   const params = new URLSearchParams(location.search)
   const wanted = String(params.get('lang') ?? load('locale', null) ?? navigator.language ?? '')
@@ -24,9 +22,6 @@
   const messages = $derived(LOCALES.find(([code]) => code === locale)?.[2])
   const t = $derived(translator({ ...appMessages('en'), ...messages, ...appMessages(locale) }, locale))
 
-  let theme = $state(storedTheme())
-  /** @param {import('./lib/theme.js').Theme} next */
-  const setTheme = next => { theme = next; applyTheme(next) }
 
   let query = $state('')
   /** @type {'all' | import('./lib/sources.js').SourceCategory} */
@@ -85,24 +80,7 @@
 </script>
 
 <div class="page">
-  <header class="bar">
-    <SiteSelect title={t('app.title')} label={t('app.sitesLabel')} more={t('app.sitesMore')} {locale} href={`./?lang=${locale}`} />
-    <span class="slash" aria-hidden="true">/</span>
-    <h1>{t('sources.title')}</h1>
-    <div class="end">
-      <label class="lang">
-        <span class="ui-visually-hidden">{t('sources.language')}</span>
-        <select bind:value={locale}>
-          {#each LOCALES as [code, name] (code)}<option value={code}>{name}</option>{/each}
-        </select>
-      </label>
-      <a class="back" href={`./unencoded.html?lang=${locale}`}>{t('appendix.title')}</a>
-      <a class="back" href={`./ucv.html?lang=${locale}`}>UCV</a>
-      <a class="back" href="./open-data.html">Open data</a>
-      <ThemeSwitch {theme} label={t('app.prefs.theme')} labels={{ system: t('app.theme.system'), light: t('app.theme.light'), dark: t('app.theme.dark') }} onchange={setTheme} />
-      <a class="back" href={`./?lang=${locale}`}>{t('sources.back')}</a>
-    </div>
-  </header>
+  <PageHeader title={t('sources.title')} {t} bind:locale links={[{ href: `./unencoded.html?lang=${locale}`, label: t('appendix.title') }, { href: `./normalization.html?lang=${locale}`, label: t('normalization.title') }, { href: `./ucv.html?lang=${locale}`, label: 'UCV' }, { href: './open-data.html', label: 'Open data' }]} />
 
   <main>
     <p class="lead">{t('sources.lead')}</p>
@@ -192,14 +170,6 @@
 
 <style>
   .page{display:flex;flex-direction:column;min-height:100dvh}
-  .bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px max(18px,env(safe-area-inset-right)) 10px max(18px,env(safe-area-inset-left));
-    border-bottom:1px solid var(--ui-color-border);background:color-mix(in srgb,var(--ui-color-canvas) 88%,transparent);backdrop-filter:blur(10px);position:sticky;top:0;z-index:10}
-  .slash{color:var(--ui-color-border-strong)}
-  h1{margin:0;font-size:15px;font-weight:600;color:var(--ui-color-ink-muted);white-space:nowrap}
-  .end{display:flex;align-items:center;gap:10px;margin-left:auto;flex-wrap:wrap}
-  .back{font-size:13px;color:var(--ui-color-accent);text-decoration:none;padding:5px 9px;border-radius:var(--ui-radius-md)}
-  .back:hover{background:var(--ui-color-surface-hover)}
-  .lang select{font:inherit;font-size:13px;color:var(--ui-color-ink);background:var(--ui-color-surface);border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);padding:5px 8px}
 
   main{width:100%;max-width:1180px;margin:0 auto;padding:26px max(18px,env(safe-area-inset-right)) 64px max(18px,env(safe-area-inset-left))}
   .lead{margin:0 0 20px;max-width:80ch;font-size:16px;line-height:1.6;color:var(--ui-color-ink)}
