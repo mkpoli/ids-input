@@ -46,6 +46,7 @@
   "ids.draw.results": "近い部品",
   "ids.draw.undo": "一画戻す",
   "ids.empty": "空き",
+  "ids.emptyTip": "まだ埋まっていない枠です。字で表せない部品は？を入力します。",
   "ids.find.placeholder": "水・water・💧",
   "ids.from.atomic": "分解の記録なし",
   "ids.from.collapse": "{part}の部品を隠す",
