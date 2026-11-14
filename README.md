@@ -1387,6 +1387,23 @@ link is rebuilt on the published site with only the parameters that open the seq
 replaces the form with the issue it became; a report matching an open issue says so and links to
 it, and a refused or timed-out one keeps the text and offers another try.
 
+### Embedding the workshop
+
+`/editor.html` is the workshop as one editor for another page's frame. It has no tabs, no site
+menus, no sharing, layers or export, and keeps no tabs, history or language of its own. `?ids=` opens
+a sequence and `?lang=` picks the language. A search hit or a replacement takes the place of the
+sequence. Each change is posted to the host page; a host can replace the sequence:
+
+```js
+addEventListener('message', ({ data }) => {
+  if (data?.type === 'ids-input:sequence') console.log(data.sequence, data.whole)
+})
+frame.contentWindow.postMessage({ type: 'ids-input:open', sequence: '⿰木木' }, '*')
+```
+
+`sequence` is the text as written; `whole` is the complete description, or `''` while it does not
+parse.
+
 ### Desktop app
 
 `desktop/` wraps the workshop in a [Tauri](https://tauri.app/) window for Windows, macOS and Linux.
