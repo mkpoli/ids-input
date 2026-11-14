@@ -25,6 +25,12 @@ try {
     await card.locator('.extra .ids-swap').first().waitFor({ timeout: 15000 })
     assert.equal((await card.locator('.glyph').textContent())?.trim(), '木', 'the card describes the selected component')
     assert.equal(await page.locator('.ids-swaps').count(), 0, 'the structure pane keeps its list closed')
+    await page.keyboard.press('Escape')
+    await page.waitForTimeout(600)
+    assert.equal(await card.count(), 0, 'Escape keeps the card closed for the same selection')
+    await page.locator('.ids-reopen').click()
+    await page.locator('.ids-swaps').waitFor({ timeout: 5000 })
+    await field.focus()
 
     await page.keyboard.press('End')
     for (let i = 0; i < 3; i++) await page.keyboard.press('Shift+ArrowLeft')

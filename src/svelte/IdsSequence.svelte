@@ -133,17 +133,19 @@
     const chosen = editor.chosen, part = editor.picked
     const at = chosen?.join('.')
     const span = spanned && typeof part === 'string' ? paint?.querySelector(`span[data-path="${at}"]`) : null
-    // From the field itself: a description is selected (its parts' cards give way to the panel), or
-    // the selection has left the component whose card it opened.
-    if (span) span.dispatchEvent(new CustomEvent('idscharacter', { bubbles: true }))
-    else if (spanned || announced) field.dispatchEvent(new CustomEvent('idscharacter', { bubbles: true, detail: { all: spanned } }))
-    announced = Boolean(span)
+    // A component's card opens once per selection, so a card closed with Escape stays closed. From
+    // the field itself: a description is selected (its parts' cards give way to the panel), or the
+    // selection has left the component whose card it opened.
+    const component = span ? `${at}\u0000${part}` : ''
+    if (span && component !== announced) span.dispatchEvent(new CustomEvent('idscharacter', { bubbles: true }))
+    else if (!span && (spanned || announced)) field.dispatchEvent(new CustomEvent('idscharacter', { bubbles: true, detail: { all: spanned } }))
+    announced = component
     const next = spanned && isNode(part) ? `${at}\u0000${write(part)}` : ''
     if (next !== selection) dismissed = ''
     selection = next
   }
-  /** Whether the selection last opened a component's card. */
-  let announced = false
+  /** The component whose card the selection last opened. */
+  let announced = ''
   // The description chosen by selecting its text, and the one whose panel the reader closed.
   let selection = $state(''), dismissed = $state('')
   /** @type {HTMLDivElement | null} */ let panel = $state(null)

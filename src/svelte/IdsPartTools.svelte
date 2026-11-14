@@ -36,12 +36,15 @@
   let top = $state(0), left = $state(0), maxHeight = $state(420)
   /** The part whose list the reader closed, so it stays closed until another part is chosen. */
   let shut = $state(/** @type {string | null} */ (null))
+  /** The part whose list was left to the field's selection. */
+  let ceded = $state(/** @type {string | null} */ (null))
 
   $effect(() => {
     const key = identity
     if (!replaceable) { open = false; shut = null; return }
     if (shut === key) return
-    if (editor.chosenInField) { open = false; shut = key; return }
+    // A part chosen in the field shows its alternatives there; the list here opens when asked for.
+    if (editor.chosenInField && ceded !== key) { ceded = key; open = false; shut = key; return }
     shut = null
     open = true
   })
