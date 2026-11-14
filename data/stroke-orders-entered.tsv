@@ -1,7 +1,7 @@
 # Stroke orders entered by hand, for characters and components the sources do not record.
 # char<TAB>source<TAB>orders<TAB>basis<TAB>by<TAB>date
 #   source  the table the order supplements and whose symbols it is written in:
-#           cns11643 (1 横, 2 豎, 3 撇, 4 點, 5 折) or rime-stroke (h s p n z)
+#           cns11643 or kanjivg (1 横, 2 豎, 3 撇, 4 點, 5 折), or rime-stroke (h s p n z)
 #   orders  one code per way of writing it, separated by a space
 #   basis   where the order was read: a citation, or the reasoning behind an editorial reading
 # `data/open-strokes/wanted.tsv` lists the components whose order would let the most characters be written.

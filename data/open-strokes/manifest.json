@@ -145,7 +145,7 @@
       }
     ],
     "inducedAgainstRime": {
-      "rows": 24664,
+      "rows": 24689,
       "agree": 12148
     }
   },
@@ -196,15 +196,15 @@
             "operator": "⿵",
             "enclosure": "門",
             "place": "outer-first",
-            "support": 454,
-            "agree": 423
+            "support": 448,
+            "agree": 420
           },
           {
             "operator": "⿵",
             "enclosure": "𠘨",
             "place": "outer-first",
-            "support": 40,
-            "agree": 39
+            "support": 37,
+            "agree": 37
           },
           {
             "operator": "⿵",
@@ -224,8 +224,8 @@
             "operator": "⿵",
             "enclosure": "戊",
             "place": "after-2",
-            "support": 19,
-            "agree": 19
+            "support": 18,
+            "agree": 18
           },
           {
             "operator": "⿵",
@@ -236,31 +236,52 @@
           },
           {
             "operator": "⿷",
+            "enclosure": "匚",
+            "place": "after-1",
+            "support": 102,
+            "agree": 92
+          },
+          {
+            "operator": "⿷",
             "enclosure": "匸",
             "place": "after-1",
-            "support": 19,
-            "agree": 19
+            "support": 18,
+            "agree": 18
           },
           {
             "operator": "⿸",
             "enclosure": "疒",
             "place": "outer-first",
-            "support": 849,
-            "agree": 803
+            "support": 845,
+            "agree": 800
           },
           {
             "operator": "⿸",
             "enclosure": "广",
             "place": "outer-first",
-            "support": 496,
-            "agree": 469
+            "support": 490,
+            "agree": 467
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "厂",
+            "place": "outer-first",
+            "support": 242,
+            "agree": 219
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "尸",
+            "place": "outer-first",
+            "support": 217,
+            "agree": 197
           },
           {
             "operator": "⿸",
             "enclosure": "鹿",
             "place": "outer-first",
-            "support": 118,
-            "agree": 110
+            "support": 117,
+            "agree": 109
           },
           {
             "operator": "⿸",
@@ -273,8 +294,15 @@
             "operator": "⿸",
             "enclosure": "厤",
             "place": "outer-first",
-            "support": 24,
-            "agree": 23
+            "support": 23,
+            "agree": 22
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "户",
+            "place": "outer-first",
+            "support": 20,
+            "agree": 18
           },
           {
             "operator": "⿸",
@@ -285,17 +313,17 @@
           },
           {
             "operator": "⿸",
-            "enclosure": "屵",
-            "place": "outer-first",
-            "support": 13,
-            "agree": 12
-          },
-          {
-            "operator": "⿸",
             "enclosure": "厭",
             "place": "outer-first",
             "support": 13,
             "agree": 13
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "屵",
+            "place": "outer-first",
+            "support": 12,
+            "agree": 12
           },
           {
             "operator": "⿸",
@@ -334,6 +362,13 @@
           },
           {
             "operator": "⿹",
+            "enclosure": "戈",
+            "place": "after-1",
+            "support": 34,
+            "agree": 31
+          },
+          {
+            "operator": "⿹",
             "enclosure": "弓",
             "place": "outer-first",
             "support": 6,
@@ -343,15 +378,22 @@
             "operator": "⿺",
             "enclosure": "走",
             "place": "outer-first",
-            "support": 427,
-            "agree": 416
+            "support": 424,
+            "agree": 414
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "毛",
+            "place": "outer-first",
+            "support": 191,
+            "agree": 172
           },
           {
             "operator": "⿺",
             "enclosure": "鬼",
             "place": "outer-first",
-            "support": 169,
-            "agree": 161
+            "support": 167,
+            "agree": 160
           },
           {
             "operator": "⿺",
@@ -390,17 +432,17 @@
           },
           {
             "operator": "⿺",
-            "enclosure": "見",
-            "place": "outer-first",
-            "support": 34,
-            "agree": 33
-          },
-          {
-            "operator": "⿺",
             "enclosure": "是",
             "place": "outer-first",
             "support": 33,
             "agree": 32
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "見",
+            "place": "outer-first",
+            "support": 33,
+            "agree": 33
           },
           {
             "operator": "⿺",
@@ -455,8 +497,8 @@
             "operator": "⿺",
             "enclosure": "克",
             "place": "outer-first",
-            "support": 13,
-            "agree": 12
+            "support": 12,
+            "agree": 11
           },
           {
             "operator": "⿺",
@@ -607,14 +649,14 @@
             "operator": "⿵",
             "enclosure": "門",
             "place": "outer-first",
-            "support": 550,
-            "agree": 542
+            "support": 543,
+            "agree": 537
           },
           {
             "operator": "⿵",
             "enclosure": "门",
             "place": "outer-first",
-            "support": 177,
+            "support": 176,
             "agree": 176
           },
           {
@@ -628,7 +670,7 @@
             "operator": "⿵",
             "enclosure": "𠘨",
             "place": "outer-first",
-            "support": 45,
+            "support": 44,
             "agree": 44
           },
           {
@@ -642,8 +684,8 @@
             "operator": "⿵",
             "enclosure": "戊",
             "place": "after-2",
-            "support": 24,
-            "agree": 23
+            "support": 23,
+            "agree": 22
           },
           {
             "operator": "⿵",
@@ -656,8 +698,8 @@
             "operator": "⿵",
             "enclosure": "⺆",
             "place": "outer-first",
-            "support": 10,
-            "agree": 10
+            "support": 8,
+            "agree": 8
           },
           {
             "operator": "⿵",
@@ -684,22 +726,22 @@
             "operator": "⿶",
             "enclosure": "凵",
             "place": "inner-first",
-            "support": 48,
-            "agree": 46
+            "support": 46,
+            "agree": 44
           },
           {
             "operator": "⿷",
             "enclosure": "匚",
             "place": "after-1",
-            "support": 141,
+            "support": 139,
             "agree": 136
           },
           {
             "operator": "⿷",
             "enclosure": "匸",
             "place": "after-1",
-            "support": 21,
-            "agree": 20
+            "support": 20,
+            "agree": 19
           },
           {
             "operator": "⿷",
@@ -712,43 +754,43 @@
             "operator": "⿸",
             "enclosure": "疒",
             "place": "outer-first",
-            "support": 1065,
-            "agree": 1054
+            "support": 1063,
+            "agree": 1053
           },
           {
             "operator": "⿸",
             "enclosure": "广",
             "place": "outer-first",
-            "support": 632,
-            "agree": 615
+            "support": 615,
+            "agree": 608
           },
           {
             "operator": "⿸",
             "enclosure": "厂",
             "place": "outer-first",
-            "support": 336,
-            "agree": 326
+            "support": 326,
+            "agree": 320
           },
           {
             "operator": "⿸",
             "enclosure": "尸",
             "place": "outer-first",
-            "support": 311,
-            "agree": 296
+            "support": 290,
+            "agree": 283
           },
           {
             "operator": "⿸",
             "enclosure": "鹿",
             "place": "outer-first",
-            "support": 132,
-            "agree": 129
+            "support": 131,
+            "agree": 128
           },
           {
             "operator": "⿸",
             "enclosure": "虍",
             "place": "outer-first",
-            "support": 84,
-            "agree": 82
+            "support": 82,
+            "agree": 81
           },
           {
             "operator": "⿸",
@@ -761,22 +803,22 @@
             "operator": "⿸",
             "enclosure": "戶",
             "place": "outer-first",
-            "support": 67,
-            "agree": 67
+            "support": 65,
+            "agree": 65
           },
           {
             "operator": "⿸",
             "enclosure": "户",
             "place": "outer-first",
-            "support": 30,
-            "agree": 30
+            "support": 29,
+            "agree": 29
           },
           {
             "operator": "⿸",
             "enclosure": "厤",
             "place": "outer-first",
-            "support": 27,
-            "agree": 27
+            "support": 26,
+            "agree": 26
           },
           {
             "operator": "⿸",
@@ -796,8 +838,8 @@
             "operator": "⿸",
             "enclosure": "𠂆",
             "place": "outer-first",
-            "support": 17,
-            "agree": 17
+            "support": 14,
+            "agree": 14
           },
           {
             "operator": "⿸",
@@ -817,7 +859,7 @@
             "operator": "⿸",
             "enclosure": "屵",
             "place": "outer-first",
-            "support": 14,
+            "support": 13,
             "agree": 13
           },
           {
@@ -851,6 +893,13 @@
           {
             "operator": "⿸",
             "enclosure": "𠂋",
+            "place": "outer-first",
+            "support": 7,
+            "agree": 7
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "产",
             "place": "outer-first",
             "support": 7,
             "agree": 7
@@ -943,7 +992,7 @@
             "operator": "⿹",
             "enclosure": "⺄",
             "place": "outer-first",
-            "support": 38,
+            "support": 37,
             "agree": 35
           },
           {
@@ -957,8 +1006,8 @@
             "operator": "⿹",
             "enclosure": "弓",
             "place": "outer-first",
-            "support": 8,
-            "agree": 8
+            "support": 7,
+            "agree": 7
           },
           {
             "operator": "⿹",
@@ -971,36 +1020,36 @@
             "operator": "⿺",
             "enclosure": "辶",
             "place": "inner-first",
-            "support": 1131,
-            "agree": 1103
+            "support": 1110,
+            "agree": 1089
           },
           {
             "operator": "⿺",
             "enclosure": "走",
             "place": "outer-first",
-            "support": 503,
-            "agree": 499
+            "support": 500,
+            "agree": 497
           },
           {
             "operator": "⿺",
             "enclosure": "毛",
             "place": "outer-first",
-            "support": 255,
-            "agree": 254
+            "support": 254,
+            "agree": 253
           },
           {
             "operator": "⿺",
             "enclosure": "風",
             "place": "outer-first",
-            "support": 250,
-            "agree": 250
+            "support": 247,
+            "agree": 247
           },
           {
             "operator": "⿺",
             "enclosure": "鬼",
             "place": "outer-first",
-            "support": 203,
-            "agree": 201
+            "support": 201,
+            "agree": 200
           },
           {
             "operator": "⿺",
@@ -1062,7 +1111,7 @@
             "operator": "⿺",
             "enclosure": "見",
             "place": "outer-first",
-            "support": 43,
+            "support": 41,
             "agree": 41
           },
           {
@@ -1104,8 +1153,8 @@
             "operator": "⿺",
             "enclosure": "尣",
             "place": "outer-first",
-            "support": 27,
-            "agree": 27
+            "support": 26,
+            "agree": 26
           },
           {
             "operator": "⿺",
@@ -1132,15 +1181,15 @@
             "operator": "⿺",
             "enclosure": "辵",
             "place": "outer-first",
-            "support": 23,
+            "support": 22,
             "agree": 22
           },
           {
             "operator": "⿺",
             "enclosure": "克",
             "place": "outer-first",
-            "support": 22,
-            "agree": 22
+            "support": 21,
+            "agree": 21
           },
           {
             "operator": "⿺",
@@ -1179,13 +1228,6 @@
           },
           {
             "operator": "⿺",
-            "enclosure": "支",
-            "place": "outer-first",
-            "support": 13,
-            "agree": 13
-          },
-          {
-            "operator": "⿺",
             "enclosure": "免",
             "place": "outer-first",
             "support": 13,
@@ -1201,6 +1243,13 @@
           {
             "operator": "⿺",
             "enclosure": "更",
+            "place": "outer-first",
+            "support": 12,
+            "agree": 12
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "支",
             "place": "outer-first",
             "support": 12,
             "agree": 12
@@ -1326,7 +1375,7 @@
             "operator": "⿵",
             "enclosure": "門",
             "place": "outer-first",
-            "support": 40,
+            "support": 39,
             "agree": 37
           },
           {
@@ -1338,10 +1387,24 @@
           },
           {
             "operator": "⿸",
+            "enclosure": "疒",
+            "place": "outer-first",
+            "support": 70,
+            "agree": 63
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "广",
+            "place": "outer-first",
+            "support": 41,
+            "agree": 39
+          },
+          {
+            "operator": "⿸",
             "enclosure": "尸",
             "place": "outer-first",
-            "support": 27,
-            "agree": 25
+            "support": 24,
+            "agree": 23
           },
           {
             "operator": "⿸",
@@ -1402,15 +1465,15 @@
           {
             "operator": "⿰",
             "described": 49032,
-            "written": 46889,
-            "agree": 42834,
+            "written": 46876,
+            "agree": 42823,
             "induced": "always"
           },
           {
             "operator": "⿱",
             "described": 16869,
-            "written": 15886,
-            "agree": 13683,
+            "written": 15883,
+            "agree": 13681,
             "induced": "always"
           },
           {
@@ -1430,8 +1493,8 @@
           {
             "operator": "⿳",
             "described": 1397,
-            "written": 1191,
-            "agree": 922,
+            "written": 1185,
+            "agree": 916,
             "induced": "always"
           },
           {
@@ -1451,15 +1514,15 @@
           {
             "operator": "⿹",
             "described": 330,
-            "written": 110,
-            "agree": 98,
+            "written": 83,
+            "agree": 76,
             "induced": "learned"
           },
           {
             "operator": "⿻",
             "described": 285,
-            "written": 15,
-            "agree": 12,
+            "written": 12,
+            "agree": 10,
             "induced": "learned"
           },
           {
@@ -1526,22 +1589,22 @@
           {
             "operator": "⿰",
             "described": 66176,
-            "written": 65116,
-            "agree": 64134,
+            "written": 65101,
+            "agree": 64106,
             "induced": "always"
           },
           {
             "operator": "⿱",
             "described": 22769,
-            "written": 21997,
-            "agree": 20964,
+            "written": 21991,
+            "agree": 20953,
             "induced": "always"
           },
           {
             "operator": "⿺",
             "described": 3729,
-            "written": 3644,
-            "agree": 3578,
+            "written": 3643,
+            "agree": 3574,
             "induced": "always"
           },
           {
@@ -1554,8 +1617,8 @@
           {
             "operator": "⿳",
             "described": 1810,
-            "written": 1642,
-            "agree": 1479,
+            "written": 1635,
+            "agree": 1472,
             "induced": "always"
           },
           {
@@ -1569,21 +1632,21 @@
             "operator": "⿲",
             "described": 710,
             "written": 677,
-            "agree": 658,
+            "agree": 657,
             "induced": "always"
           },
           {
             "operator": "⿹",
             "described": 470,
-            "written": 341,
-            "agree": 336,
+            "written": 338,
+            "agree": 333,
             "induced": "learned"
           },
           {
             "operator": "⿻",
             "described": 378,
-            "written": 20,
-            "agree": 17,
+            "written": 17,
+            "agree": 15,
             "induced": "learned"
           },
           {
@@ -1748,13 +1811,13 @@
       "recorded": 76282,
       "entered": 1,
       "equivalent": 719,
-      "ids": 24667,
-      "none": 1684,
+      "ids": 24692,
+      "none": 1659,
       "reasons": {
         "undescribed": 164,
         "unreadable": 316,
-        "operator": 680,
-        "component": 524
+        "operator": 657,
+        "component": 522
       }
     },
     {
@@ -1821,7 +1884,7 @@
     },
     {
       "name": "induced.tsv.gz",
-      "rows": 97089,
+      "rows": 97114,
       "columns": [
         "char",
         "codepoint",
@@ -1831,7 +1894,7 @@
         "source",
         "ids"
       ],
-      "bytes": 1477922
+      "bytes": 1483005
     },
     {
       "name": "entered.tsv",
@@ -1849,7 +1912,7 @@
     },
     {
       "name": "wanted.tsv",
-      "rows": 622,
+      "rows": 620,
       "columns": [
         "char",
         "codepoint",
@@ -1858,7 +1921,7 @@
         "alone",
         "examples"
       ],
-      "bytes": 25484
+      "bytes": 25422
     }
   ],
   "texts": [
