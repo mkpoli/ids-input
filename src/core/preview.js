@@ -132,7 +132,9 @@ export function askDrawable(ask, drawable) {
     if (!drawn) return drawn
     /** @param {{ leaf?: number }} item */
     const own = item => item.leaf === undefined ? item : { ...item, leaf: place(item.leaf) }
-    return { ...drawn, ...(drawn.parts ? { parts: drawn.parts.map(own) } : {}), ...(drawn.emoji ? { emoji: drawn.emoji.map(own) } : {}) }
+    // A component drawn by a stand-in for its shape makes the drawing approximate, as an operator does.
+    const approximate = swap.approximate?.length ? [...new Set([...(drawn.approximate ?? []), ...swap.approximate])] : drawn.approximate
+    return { ...drawn, ...(approximate ? { approximate } : {}), ...(drawn.parts ? { parts: drawn.parts.map(own) } : {}), ...(drawn.emoji ? { emoji: drawn.emoji.map(own) } : {}) }
   }
   if (ask.warm) wrapped.warm = ask.warm
   return wrapped

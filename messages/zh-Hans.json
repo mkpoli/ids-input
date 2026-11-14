@@ -112,7 +112,7 @@
   "ids.pick.label": "选择部件",
   "ids.pick.parts": "部件",
   "ids.preview.approximate": "近似",
-  "ids.preview.approximateNote": "组字器不绘制这些运算符（{ops}），此为近似。",
+  "ids.preview.approximateNote": "组字器无法照原样绘制{ops}，此为近似。",
   "ids.preview.draft": "预览",
   "ids.preview.drawing": "{sequence}的字形",
   "ids.preview.failed": "无法组字",

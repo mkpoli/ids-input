@@ -70,7 +70,7 @@
  * @property {number[] | null} [stroke] The stroke widths across x and y the drawing is weighted to; placeholders take them.
  * @property {DrawingPart[]} [parts] Each drawn part, in reading order. A part may be several pieces; a cut piece is not ink.
  * @property {(string | null)[]} [transforms] One SVG transform per part in `parts`, as a view adjusted it; null where a part is unchanged. `drawingSvg` writes the parts separately when any is set.
- * @property {string[]} [approximate] Operators drawn by an approximation of their own.
+ * @property {string[]} [approximate] Operators drawn by an approximation of their own, and components drawn by a stand-in for their shape.
  * @property {{ capped: boolean }} [normalization] Whether the bounded identity lookup stopped before exhausting its evidence; proven mappings and literal fallback geometry remain available.
  * @property {boolean} [cells] Whether the parts are drawn apart, one in each cell, instead of composed.
  * @property {'sans' | 'serif'} [faceFallback] The face this drawing was borrowed from when the chosen face lacked a part.
@@ -101,7 +101,7 @@
  * @property {(options?: Options) => Promise<PalettePart[]>} [parts] The parts palette.
  * @property {(strokes: DrawingPoint[][], options?: Options) => Promise<string[]>} [recognizeDrawing] Whole characters a drawing names, closest first.
  * @property {(options?: Options) => Promise<SketchTemplate[]>} [sketchTemplates] The palette's glyph shapes for drawing search, prepared or built from the page's fonts.
- * @property {(sequence: string, options?: Options) => Promise<{ text: string, leaves: number[] }>} [drawable] A description with each component no code point names ({53}, &CDP-8BD0;, #(-𠃌㇉)) written as what draws it, and for each component of that text the place of the component it draws; a preview is asked for this text.
+ * @property {(sequence: string, options?: Options) => Promise<{ text: string, leaves: number[], approximate?: string[] }>} [drawable] A description with each component no code point names ({53}, &CDP-8BD0;, #(-𠃌㇉)) written as what draws it, and for each component of that text the place of the component it draws; a preview is asked for this text.
  * @property {(options?: Options) => Promise<import('../core/custom-components.js').CustomComponent[]>} [customComponents] The components no code point names, with what each is in the other tables' notation.
  * @property {(text: string, options?: Options) => Promise<CustomPartInfo | null>} [customPart] One such component with the other ways its form is written, and an outline of it where the host supplies one; null for a text the dictionary does not hold.
  * @property {(sequence: string, options?: Options) => Promise<Drawing | null>} [icon] A compound palette icon. Must support concurrent requests independently of the editor preview; null leaves a font-based layout.

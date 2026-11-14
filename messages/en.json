@@ -113,7 +113,7 @@
   "ids.pick.label": "Part picker",
   "ids.pick.parts": "Parts",
   "ids.preview.approximate": "Approximate",
-  "ids.preview.approximateNote": "The composer approximates these operators: {ops}.",
+  "ids.preview.approximateNote": "The composer approximates these: {ops}.",
   "ids.preview.draft": "Preview",
   "ids.preview.drawing": "Drawing of {sequence}",
   "ids.preview.failed": "Could not compose",

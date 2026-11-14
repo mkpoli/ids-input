@@ -220,6 +220,10 @@ const glyphAt = palette.columns.indexOf('glyph')
 const glyphs = new Map(palette.parts.filter(row => row[glyphAt]).map(row => [row[0], row[glyphAt]]))
 /** @type {Map<string, string | null>} */
 const draws = new Map()
+// Components drawn by the one glyph of a character they are read as a form of, or through such a
+// component: the drawing stands in for the shape.
+/** @type {Set<string>} */
+const looseDraws = new Set()
 const rowOf = new Map(components.map(row => [row.text, row]))
 /** @param {typeof components[number]} row What may draw a component, the best first. */
 const candidatesOf = row => [
@@ -239,30 +243,31 @@ function drawOf(text, open) {
   const row = rowOf.get(text)
   if (!row || open.has(text)) return null
   const inside = new Set(open).add(text)
-  let found = null
+  let found = null, loose = false
   for (const candidate of candidatesOf(row)) {
     const tree = plainTree(candidate)
     if (tree === null) continue
-    let whole = true
+    let whole = true, through = candidate === row.character?.char && candidate !== row.fragment && candidate !== glyphs.get(row.text)
     /** @param {import('../src/core/ids.js').Part} part @returns {import('../src/core/ids.js').Part} */
     const swap = part => {
       if (isNode(part)) return { op: part.op, parts: part.parts.map(swap) }
       if (part === null || !isCustom(part)) return part
       const draw = drawOf(part, inside)
       if (draw === null) { whole = false; return part }
+      if (looseDraws.has(part)) through = true
       return plainTree(draw)
     }
     const out = write(swap(tree))
-    if (whole && [...out].length <= 64) { found = out; break }
+    if (whole && [...out].length <= 64) { found = out; loose = through; break }
   }
   // An answer reached while another component was open may have passed a candidate over for that
   // reason alone, so only an answer worked out from the top is kept.
-  if (!open.size || found !== null) draws.set(text, found)
+  if (!open.size || found !== null) { draws.set(text, found); if (loose) looseDraws.add(text) }
   return found
 }
 for (const row of components) {
   const draw = drawOf(row.text, new Set())
-  if (draw !== null) Object.assign(row, { draw })
+  if (draw !== null) Object.assign(row, { draw, ...(looseDraws.has(row.text) ? { drawApproximate: true } : {}) })
 }
 const drawable = components.filter(row => 'draw' in row).length
 // Identity. A form is one thing drawn one way. Every custom component is a form, and so is every

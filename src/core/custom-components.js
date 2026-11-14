@@ -7,7 +7,7 @@ import { customsOf, isNode, leaves, parse, write } from './ids.js'
 /**
  * @typedef {{ in: string, text: string, count: number, characters: string[], status: 'verified' | 'candidate', basis: 'difference' | 'inverse' }} CustomEquivalent
  * @typedef {{ text: string, kind: import('./custom.js').CustomKind, source: string, description?: string, fragment?: string,
- *   uses: number, examples: string[], subtractions?: string[], character?: CustomCharacter, draw?: string, id?: string, char?: string, equivalents: CustomEquivalent[] }} CustomComponent
+ *   uses: number, examples: string[], subtractions?: string[], character?: CustomCharacter, draw?: string, drawApproximate?: boolean, id?: string, char?: string, equivalents: CustomEquivalent[] }} CustomComponent
  * @typedef {{ text: string, char: string, variant?: string, in: string, basis: 'editorial' }} CustomCharacter The encoded character a component is read as a form of, in the notation of `in` (𢎘z); `editorial` marks a reading no table states.
  * @typedef {{ id: string, char: string, names: string[] }} CustomForm One form under its identifier, with every name and confirmed expression it has.
  * @typedef {{ format: string, version: number, components: CustomComponent[], forms?: CustomForm[] }} CustomComponentsData
@@ -60,12 +60,20 @@ export function createCustomComponents(data) {
   }
   /** @type {Map<string, CustomForm>} */
   const formOf = new Map((data.forms ?? []).flatMap(form => [[`&${form.id};`, form], .../** @type {[string, CustomForm][]} */ (form.names.map(name => [name, form]))]))
-  /** @param {string} text @returns {{ text: string, leaves: number[] }} */
+  // What draws a component may stand in for its shape without being it: the one glyph of the
+  // character it is read as a form of.
+  /** @type {Set<string>} */
+  const loose = new Set(data.components.filter(row => row.drawApproximate).flatMap(row => [row.text, ...(row.id && formDraw.get(`&${row.id};`) === row.draw ? [`&${row.id};`] : [])]))
+  /** @param {string} text @returns {{ text: string, leaves: number[], approximate?: string[] }} */
   const swapped = text => {
     const read = /[{&#㇯]/.test(text) ? parse(text, { open: true }) : null
     if (!read || read.problem) return { text, leaves: [] }
     /** @type {number[]} */
     const from = []
+    /** @type {string[]} */
+    const approximate = []
+    /** @param {string} name */
+    const noted = name => { if (loose.has(name) && !approximate.includes(name)) approximate.push(name) }
     let place = 0
     /** @param {import('./ids.js').Part} part @returns {import('./ids.js').Part} */
     const swap = part => {
@@ -74,6 +82,7 @@ export function createCustomComponents(data) {
       if (form !== undefined && isNode(part)) {
         const drawn = drawTree(form)
         if (drawn !== undefined) {
+          noted(form)
           for (let k = leaves(drawn).length; k > 0; k--) from.push(place)
           place += leaves(part).length
           return drawn
@@ -81,12 +90,13 @@ export function createCustomComponents(data) {
       }
       if (isNode(part)) return { ...part, parts: part.parts.map(swap) }
       const drawn = part !== null && isCustom(part) ? drawTree(part) ?? part : part
+      if (part !== null && drawn !== part) noted(part)
       for (let k = leaves(drawn).length; k > 0; k--) from.push(place)
       place++
       return drawn
     }
     const tree = swap(read.tree)
-    return { text: write(tree), leaves: from }
+    return { text: write(tree), leaves: from, ...(approximate.length ? { approximate } : {}) }
   }
   /** @type {Map<string, string[]>} */
   const formSubtractions = new Map()
@@ -109,7 +119,7 @@ export function createCustomComponents(data) {
       /** @type {CustomPart['names']} */
       const names = (form?.names ?? []).filter(name => name !== text).map(name => ({ text: name, source: by.get(name)?.source ?? null }))
       const read = [row, ...(form?.names ?? []).map(name => by.get(name))].map(one => one?.character).find(Boolean)
-      if (read) names.push({ text: read.text, source: read.in, editorial: true })
+      if (read && read.text !== text && !names.some(name => name.text === read.text)) names.push({ text: read.text, source: read.in, editorial: true })
       const description = row?.description ?? form?.names.map(name => by.get(name)?.description).find(Boolean)
       // The shortest subtractions first: one part taken from a common character reads soonest.
       const subtractions = [...(id ? formSubtractions.get(id) ?? [] : [])].sort((a, b) => [...a].length - [...b].length)
@@ -148,8 +158,9 @@ export function createCustomComponents(data) {
     /**
      * The same, with where each component of the answer comes from: `leaves[i]` is the place, in
      * reading order, of the component of `text` that the answer's component `i` draws. A custom
-     * component drawn by a description gives several places the same number.
-     * @param {string} text @returns {{ text: string, leaves: number[] }}
+     * component drawn by a description gives several places the same number. `approximate` names
+     * the components drawn by something that only stands in for their shape.
+     * @param {string} text @returns {{ text: string, leaves: number[], approximate?: string[] }}
      */
     drawableLeaves: text => swapped(text),
   }

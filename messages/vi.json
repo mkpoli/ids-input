@@ -112,7 +112,7 @@
   "ids.pick.label": "Bảng chọn bộ phận",
   "ids.pick.parts": "Bộ phận",
   "ids.preview.approximate": "Gần đúng",
-  "ids.preview.approximateNote": "Các toán tử sau được vẽ gần đúng: {ops}.",
+  "ids.preview.approximateNote": "Các phần sau được vẽ gần đúng: {ops}.",
   "ids.preview.draft": "Xem trước",
   "ids.preview.drawing": "Hình của {sequence}",
   "ids.preview.failed": "Không thể ghép hình",
