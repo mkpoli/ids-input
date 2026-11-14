@@ -194,7 +194,8 @@ writes its own character and lets the characters it is a component of be induced
 
 `wanted.tsv` lists, per source, the components that keep characters from being written:
 `blocks` counts those characters and `alone` the ones it is the only obstacle to, most first.
-To add an order, append a row to `data/stroke-orders-entered.tsv` in the repository and rebuild.
+To add an order, enter it on <https://ids.mkpo.li/strokes>, or append a row to
+`data/stroke-orders-entered.tsv` in the repository, and rebuild.
 
 ## Coverage
 

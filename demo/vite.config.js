@@ -1,8 +1,9 @@
-import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync } from 'node:fs'
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
 import { extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
+import { entryProblem, parseEntries, withEntry, withoutEntry } from '../src/core/stroke-entry.js'
 
 // The recognizer's WebAssembly runtime is read from the package at serve and build time, so no
 // 12 MB binary lives in the repository.
@@ -104,6 +105,36 @@ const OPEN_DATA_TYPES = { '.json': 'application/json; charset=utf-8', '.tsv': 't
 // The stroke-order release sits beside it under data/open-strokes/, served at /data/open-strokes/.
 const OPEN_STROKES = fileURLToPath(new URL('../data/open-strokes/', import.meta.url))
 
+// The stroke-order entry page saves into `data/stroke-orders-entered.tsv` while developing: the
+// file is the store, and the build reads it. A published site has no such address, so the page
+// keeps its rows in the browser there.
+const ENTERED = fileURLToPath(new URL('../data/stroke-orders-entered.tsv', import.meta.url))
+function strokeEntries() {
+  return {
+    name: 'stroke-entries',
+    configureServer(server) {
+      server.middlewares.use('/api/stroke-entries', (request, response) => {
+        const answer = (status, body) => { response.statusCode = status; response.setHeader('Content-Type', 'text/tab-separated-values; charset=utf-8'); response.end(body) }
+        if (request.method === 'GET') return answer(200, readFileSync(ENTERED, 'utf8'))
+        if (request.method !== 'POST' && request.method !== 'DELETE') return answer(405, '')
+        let body = ''
+        request.on('data', chunk => { body += chunk })
+        request.on('end', () => {
+          try {
+            const entry = JSON.parse(body), text = readFileSync(ENTERED, 'utf8')
+            if (request.method === 'POST' && entryProblem(entry)) return answer(400, entryProblem(entry))
+            const next = request.method === 'POST' ? withEntry(text, entry) : withoutEntry(text, String(entry.char), String(entry.source))
+            // The build refuses what this would not read back.
+            parseEntries(next)
+            writeFileSync(ENTERED, next)
+            answer(200, next)
+          } catch (error) { answer(400, String(error)) }
+        })
+      })
+    },
+  }
+}
+
 function openData() {
   return {
     name: 'open-data',
@@ -150,7 +181,7 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(VERSION),
     __BUILD_COMMIT__: JSON.stringify(process.env.GITHUB_SHA || process.env.VITE_BUILD_COMMIT || 'dev'),
   },
-  plugins: [lazyFallbackFont(), svelte(), ortAssets(), engineOutlines(), openData()],
+  plugins: [lazyFallbackFont(), svelte(), ortAssets(), engineOutlines(), openData(), strokeEntries()],
   resolve: { alias: { 'onnxruntime-web/wasm': ORT_ALIAS } },
   // The drawing engine starts its Worker from `new URL('./worker.js', import.meta.url)`, which Vite
   // resolves from source; pre-bundled, that URL points nowhere.
@@ -159,7 +190,7 @@ export default defineConfig({
     // A fallback shard is fetched when a character needs it; inlined, the small ones would ride in
     // the first scripts as base64, which hardly compresses.
     assetsInlineLimit: file => file.endsWith('.woff2') ? false : undefined,
-    rollupOptions: { input: { index: `${import.meta.dirname}/index.html`, compare: `${import.meta.dirname}/compare.html`, engines: `${import.meta.dirname}/engines.html`, sources: `${import.meta.dirname}/sources.html`, embed: `${import.meta.dirname}/embed.html`, editor: `${import.meta.dirname}/editor.html`, design: `${import.meta.dirname}/design.html`, 'open-data': `${import.meta.dirname}/open-data.html`, unencoded: `${import.meta.dirname}/unencoded.html`, ucv: `${import.meta.dirname}/ucv.html`, normalization: `${import.meta.dirname}/normalization.html` } } },
+    rollupOptions: { input: { index: `${import.meta.dirname}/index.html`, compare: `${import.meta.dirname}/compare.html`, engines: `${import.meta.dirname}/engines.html`, sources: `${import.meta.dirname}/sources.html`, embed: `${import.meta.dirname}/embed.html`, editor: `${import.meta.dirname}/editor.html`, design: `${import.meta.dirname}/design.html`, 'open-data': `${import.meta.dirname}/open-data.html`, unencoded: `${import.meta.dirname}/unencoded.html`, ucv: `${import.meta.dirname}/ucv.html`, normalization: `${import.meta.dirname}/normalization.html`, strokes: `${import.meta.dirname}/strokes.html` } } },
   // The drawing engine's files, outside this checkout's root: a dependency that is a directory is
   // read where it stands, and its Worker is a `file:` module the page asks for by that path.
   server: { fs: { strict: false, allow: ['..', join(import.meta.dirname, '..', 'node_modules', '@han-compose', 'composer')] } },

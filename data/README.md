@@ -1311,6 +1311,12 @@ record: `char`, `source`, `orders`, `basis`, `by`, `date`, tab-separated, one ro
 source. The build refuses a row without a basis and publishes the rows as `open-strokes/entered.tsv`;
 `open-strokes/wanted.tsv` ranks the components worth entering next.
 
+The workshop's Stroke orders page (`demo/Strokes.svelte`, <https://ids.mkpo.li/strokes>) enters them: it
+lists the wanted components with what the other sources record for each, and its keys write the
+order. Served by `bun run dev`, it saves into this file; published, it keeps the rows in the browser
+and hands them over as text. `src/core/stroke-entry.js` holds the rules the page, the dev server and
+the build share.
+
 ## `han-parts.json.gz`
 
 Every Han-script character the composer can draw: 103,352 keys in code-point order, with the

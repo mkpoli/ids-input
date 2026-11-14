@@ -120,6 +120,8 @@
     <p class="note">Each file keeps its source's terms:
       {#each strokes.sources as source, index (source.key)}{index ? '; ' : ''}<a href={source.url}>{source.key}</a> {source.licence.spdx ?? source.licence.name}{/each}.</p>
 
+    <p class="note"><a href="/strokes">Enter a missing order</a></p>
+
     <h2>Rebuild</h2>
     <p>The files are built from this repository with <code>bun scripts/build_open_ids.mjs</code>;
       <code>--check</code> fails when a committed file differs.</p>

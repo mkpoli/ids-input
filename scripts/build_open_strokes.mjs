@@ -29,6 +29,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { gunzipSync, gzipSync } from 'node:zlib'
 import { characterScript } from '../src/core/scripts.js'
+import { parseEntries } from '../src/core/stroke-entry.js'
 
 const OUT = new URL('../data/open-strokes/', import.meta.url)
 const RIME = {
@@ -328,20 +329,9 @@ const validation = SOURCES.map(({ source, table, region }) => {
 
 // --- Orders entered by hand ----------------------------------------------------------------------
 
-const SYMBOLS = { cns11643: /^[1-5]+( [1-5]+)*$/, 'rime-stroke': /^[hspnz]+( [hspnz]+)*$/, kanjivg: /^[1-5]+( [1-5]+)*$/ }
 /** @type {string[][]} */
-const enteredRows = []
-for (const [index, line] of readFileSync(new URL('../data/stroke-orders-entered.tsv', import.meta.url), 'utf8').split('\n').entries()) {
-  if (!line || line.startsWith('#')) continue
-  const [char, source, orders, basis, by, date] = line.split('\t')
-  const at = `data/stroke-orders-entered.tsv:${index + 1}`
-  // A component can be a CJK stroke or a letter a description borrows, so any one character is taken.
-  if ([...(char ?? '')].length !== 1) throw Error(`${at}: one character per row`)
-  if (!SYMBOLS[source]?.test(orders ?? '')) throw Error(`${at}: orders must be written in the symbols of cns11643, rime-stroke or kanjivg`)
-  if (!basis || !by || !/^\d{4}-\d{2}-\d{2}$/.test(date ?? '')) throw Error(`${at}: a basis, who entered it and the date are required`)
-  if (enteredRows.some(row => row[0] === char && row[5] === source)) throw Error(`${at}: ${char} is entered twice for ${source}`)
-  enteredRows.push([char, point(char), orders, basis, by, source, date])
-}
+const enteredRows = parseEntries(readFileSync(new URL('../data/stroke-orders-entered.tsv', import.meta.url), 'utf8'))
+  .map(({ char, source, orders, basis, by, date }) => [char, point(char), orders, basis, by, source, date])
 enteredRows.sort((a, b) => a[5].localeCompare(b[5]) || byCodePoint(a[0], b[0]))
 
 const repertoire = JSON.parse(gunzipSync(readFileSync(new URL('../data/han-parts.json.gz', import.meta.url)))).keys
@@ -667,7 +657,8 @@ writes its own character and lets the characters it is a component of be induced
 
 \`wanted.tsv\` lists, per source, the components that keep characters from being written:
 \`blocks\` counts those characters and \`alone\` the ones it is the only obstacle to, most first.
-To add an order, append a row to \`data/stroke-orders-entered.tsv\` in the repository and rebuild.
+To add an order, enter it on <https://ids.mkpo.li/strokes>, or append a row to
+\`data/stroke-orders-entered.tsv\` in the repository, and rebuild.
 
 ## Coverage
 

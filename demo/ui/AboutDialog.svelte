@@ -78,6 +78,7 @@
     { path: 'component-atlas.html', label: t('app.atlas') },
     { path: 'ucv.html', label: t('ucv.title') },
     { path: 'normalization.html', label: t('normalization.title') },
+    { path: 'strokes.html', label: t('strokes.title') },
     { path: 'open-data.html', label: t('app.openData') },
     { path: 'compare.html', label: t('app.compare') },
     { path: 'engines.html', label: t('app.engines') }
