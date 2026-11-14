@@ -29,8 +29,8 @@
   import IdsPartIcon from './IdsPartIcon.svelte'
   import { isNewKorean, isSequence } from '../core/ids.js'
   import { translator } from './i18n.js'
-  import { STROKE_KEYS, findByStrokes, nextStrokes } from '../core/stroke-order.js'
-  import { loadStrokeOrders } from './strokes.js'
+  import { STROKE_KEYS, findByStrokes, nextStrokes, strokesFrom } from '../core/stroke-order.js'
+  import { loadCharacterStrokeOrders, loadStrokeOrders } from './strokes.js'
   import { download } from '@han-compose/composer/retry'
 
   /**
@@ -196,7 +196,7 @@
       .catch(() => { hanLoading = false; hanFailed = true })
   })
   function retryHan() { hanLoading = false; hanFailed = false }
-  $effect(() => { void tab; void characters; void hanCount; void filter; hanPage = 0 })
+  $effect(() => { void tab; void characters; void hanCount; void filter; void typed; hanPage = 0 })
   /** @type {Map<string, number | null>} */
   const hanStrokes = $derived(new Map((hanKeys ?? []).map((key, index) => [key, hanStrokesData?.[index] ?? null])))
   const hanCounts = $derived([...new Set([...hanStrokes.values()].filter(count => count != null))].sort((a, b) => /** @type {number} */ (a) - /** @type {number} */ (b)))
@@ -204,7 +204,7 @@
   const hanChips = $derived(hanCounts.filter(count => count < HAN_TAIL))
   const hanTail = $derived(hanCounts.some(count => count >= HAN_TAIL))
   const hanUnknown = $derived([...hanStrokes.values()].some(count => count == null))
-  const hanMatches = $derived.by(() => {
+  const hanPicked = $derived.by(() => {
     const keys = hanKeys ?? []
     const picked = hanCount === undefined ? keys
       : hanCount === 'unknown' ? keys.filter(key => hanStrokes.get(key) == null)
@@ -215,6 +215,18 @@
     const code = /^U\+([0-9a-f]{1,6})$/i.exec(term), point = code ? parseInt(code[1], 16) : null
     const text = point !== null && point <= 0x10ffff ? String.fromCodePoint(point) : term
     return matchScriptParts(picked, text, Boolean(code))
+  })
+  // The characters of the chosen count and filter that begin with the strokes typed, fewest strokes first.
+  const hanMatches = $derived.by(() => {
+    const found = characterOrders
+    if (!typed || !found) return typed ? [] : hanPicked
+    /** @type {{ key: string, strokes: number }[]} */
+    const hits = []
+    for (const key of hanPicked) {
+      const strokes = strokesFrom(found.get(key), typed)
+      if (strokes !== null) hits.push({ key, strokes })
+    }
+    return hits.sort((a, b) => a.strokes - b.strokes).map(hit => hit.key)
   })
   const hanPages = $derived(Math.max(1, Math.ceil(hanMatches.length / PAGE_SIZE)))
   const hanShown = $derived(hanMatches.slice(hanPage * PAGE_SIZE, (hanPage + 1) * PAGE_SIZE)
@@ -366,21 +378,37 @@
   /** @type {Map<string, string[]> | null} */
   let orders = $state.raw(null)
   let ordersFailed = $state(false)
+  // The All characters view reads every character's order instead, a larger table of its own.
+  /** @type {Map<string, string[]> | null} */
+  let characterOrders = $state.raw(null)
   function readOrders() {
-    if (orders) return
+    if (characters ? characterOrders : orders) return
     ordersFailed = false
-    loadStrokeOrders().then(found => { orders = found }, () => { ordersFailed = true })
+    if (characters) loadCharacterStrokeOrders().then(found => { characterOrders = found }, () => { ordersFailed = true })
+    else loadStrokeOrders().then(found => { orders = found }, () => { ordersFailed = true })
   }
   // Strokes typed before the palette and the orders arrived keep the start some part is written
   // with, checked once when both are there.
-  let settled = false
+  let settled = false, settledCharacters = false
   $effect(() => {
     const found = orders
     if (settled || !found || !parts) return
     settled = true
     untrack(() => {
+      if (characters) return
       let kept = typed
       while (kept && !findByStrokes(strokeParts, found, kept).length) kept = kept.slice(0, -1)
+      typed = kept
+    })
+  })
+  $effect(() => {
+    const found = characterOrders, keys = hanKeys
+    if (settledCharacters || !found || !keys) return
+    settledCharacters = true
+    untrack(() => {
+      if (!characters) return
+      let kept = typed
+      while (kept && !hanPicked.some(key => strokesFrom(found.get(key), kept) !== null)) kept = kept.slice(0, -1)
       typed = kept
     })
   })
@@ -394,7 +422,9 @@
   const strokeParts = $derived.by(() => filtered ?? [...countedParts, ...strokeSymbols])
   const strokeHits = $derived(searching && orders ? findByStrokes(strokeParts, orders, typed) : [])
   // Until the palette and the orders are both read, every key types.
-  const strokeNext = $derived(orders && parts && tab === 'components' && !characters ? nextStrokes(strokeParts, orders, typed) : null)
+  const strokeNext = $derived(tab !== 'components' ? null
+    : characters ? characterOrders && hanKeys ? nextStrokes(hanPicked.map(part => ({ part })), characterOrders, typed) : null
+    : orders && parts ? nextStrokes(strokeParts, orders, typed) : null)
   /** Keep the last strokes typed in view. @param {HTMLElement} node */
   const showEnd = node => { $effect(() => { node.scrollLeft = typed ? node.scrollWidth : 0 }) }
   const componentList = $derived.by(() => {
@@ -898,7 +928,7 @@
       </div>
     {/if}
   {/if}
-  {#if tab === 'components' && !characters}
+  {#if tab === 'components'}
     <div class="stroke-keys" role="group" aria-label={t('parts.order.label')}>
       {#each STROKE_KEYS as key (key.letter)}
         {@const label = t(`parts.first.${KEY_MESSAGE[key.letter]}`)}
@@ -1041,6 +1071,8 @@
     {:else if tab === 'components' && characters}
       {#if !hanKeys && !hanFailed}<p class="parts-note" role="status">{t('parts.loading')}</p>{/if}
       {#if hanFailed}<p class="parts-note" role="status">{t('parts.characters.unavailable')} <button type="button" onclick={retryHan}>{t('parts.script.retry')}</button></p>{/if}
+      {#if typed && ordersFailed}<p class="parts-note" role="status">{t('parts.order.unavailable')} <button type="button" onclick={readOrders}>{t('parts.script.retry')}</button></p>
+      {:else if typed && !characterOrders}<p class="parts-note" role="status">{t('parts.loading')}</p>{/if}
       {#if hanMatches.length}
         {#if hanPages > 1}
           <div class="script-pages" role="group" aria-label={t('parts.script.pages')}>
@@ -1052,7 +1084,7 @@
           </div>
         {/if}
         {@render grid(hanShown)}
-      {:else if hanKeys}<p class="parts-note">{t('parts.none')}</p>{/if}
+      {:else if hanKeys && (!typed || characterOrders)}<p class="parts-note">{t('parts.none')}</p>{/if}
     {:else if filtered && !searching}
       {#if filtered.length}{@render typedGrid(filtered)}{:else}<p class="parts-note">{t('parts.none')}</p>{/if}
     {:else if tab === 'components'}
