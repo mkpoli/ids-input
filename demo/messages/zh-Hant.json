@@ -286,7 +286,6 @@
   "compare.parts": "{count}個部件",
   "compare.open": "在工坊中開啟",
   "compare.try": "在zi.tools中試用",
-  "compare.back": "工坊",
   "compare.credit": "KAGE圖形由zi.tools依據GlyphWiki部件組合描述、再由KAGE繪製。",
   "compare.license": "GlyphWiki資料可自由使用；KAGE引擎為GPL-3.0。圖形為測量時的快照。",
   "compare.operators": "IDS結構符顯示為虛線框，分別表示左右、上下、三列、三段和包圍結構。",

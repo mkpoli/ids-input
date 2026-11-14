@@ -2,18 +2,14 @@
   // The open data release: what it holds, where the files are and what may be done with them. The
   // counts come from the manifest the build writes beside the files, so the page cannot claim more
   // than the dataset carries.
-  import SiteSelect from './ui/SiteSelect.svelte'
+  import PageHeader from './ui/PageHeader.svelte'
   import { appMessages } from './lib/locales.js'
-  import { applyTheme, storedTheme } from './lib/theme.js'
-  import ThemeSwitch from './ui/ThemeSwitch.svelte'
   import manifest from '../data/open-data/manifest.json'
   import strokes from '../data/open-strokes/manifest.json'
 
   const en = appMessages('en')
-
-  let theme = $state(storedTheme())
-  /** @param {import('./lib/theme.js').Theme} next */
-  const setTheme = next => { theme = next; applyTheme(next) }
+  /** @param {string} key */
+  const t = key => en[key] ?? key
 
   /** @param {number} bytes */
   const size = bytes => bytes < 1024 ? `${bytes} B` : `${Math.round(bytes / 1024)} KB`
@@ -25,18 +21,9 @@
 </svelte:head>
 
 <div class="page">
-  <header class="bar">
-    <SiteSelect title="IDS Workshop" label={en['app.sitesLabel']} more={en['app.sitesMore']} locale="en" href="/" />
-    <span class="slash" aria-hidden="true">/</span>
-    <h1>Open data</h1>
+  <PageHeader page="open-data" title="Open data" {t} home="/" links={[{ href: '/data/open-data/README.md', label: 'README' }]}>
     <span class="version">version {manifest.version}</span>
-    <div class="end">
-      <a class="back" href="/data/open-data/README.md">README</a>
-      <a class="back" href="/sources.html">Sources</a>
-      <ThemeSwitch {theme} label="Theme" labels={{ system: 'System', light: 'Light', dark: 'Dark' }} onchange={setTheme} />
-      <a class="back" href="/">Workshop</a>
-    </div>
-  </header>
+  </PageHeader>
 
   <main>
     <p class="lead">The IDS descriptions this project transcribed or read, and the kana and Hangul
@@ -125,14 +112,7 @@
 
 <style>
   .page{display:flex;flex-direction:column;min-height:100dvh}
-  .bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px max(18px,env(safe-area-inset-right)) 10px max(18px,env(safe-area-inset-left));
-    border-bottom:1px solid var(--ui-color-border);background:color-mix(in srgb,var(--ui-color-canvas) 88%,transparent);backdrop-filter:blur(10px);position:sticky;top:0;z-index:10}
-  .slash{color:var(--ui-color-border-strong)}
-  h1{margin:0;font-size:15px;font-weight:600;color:var(--ui-color-ink-muted);white-space:nowrap}
   .version{font-size:11.5px;color:var(--ui-color-ink-muted);border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-pill);padding:2px 8px;font-variant-numeric:tabular-nums}
-  .end{display:flex;align-items:center;gap:10px;margin-left:auto;flex-wrap:wrap}
-  .back{font-size:13px;color:var(--ui-color-accent);text-decoration:none;padding:5px 9px;border-radius:var(--ui-radius-md)}
-  .back:hover{background:var(--ui-color-surface-hover)}
 
   main{width:100%;max-width:1080px;margin:0 auto;padding:26px max(18px,env(safe-area-inset-right)) 64px max(18px,env(safe-area-inset-left))}
   .lead{margin:0;max-width:74ch;font-size:17px;line-height:1.55}

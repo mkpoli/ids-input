@@ -288,7 +288,6 @@
   "compare.parts": "{count} parts",
   "compare.open": "Open in the workshop",
   "compare.try": "Try on zi.tools",
-  "compare.back": "Workshop",
   "compare.credit": "KAGE drawings: zi.tools composes the description from GlyphWiki parts and KAGE renders it.",
   "compare.license": "GlyphWiki data is free to use; the KAGE engine is GPL-3.0. The drawings are a snapshot of the run.",
   "compare.operators": "Sequences are written in IDS; the boxed symbols are its operators: left-right, above-below, three across, three down and enclosures.",
