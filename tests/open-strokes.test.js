@@ -73,7 +73,7 @@ describe('the open stroke-order release', () => {
         expect(char.normalize('NFKC')).toBe(from)
         expect(written.split(' ')).toEqual(tables[key].get(from))
       } else {
-        expect([...from].some(part => manifest.induction.operators.includes(part))).toBe(true)
+        expect(/[⿰-⿿]/u.test(from)).toBe(true)
         expect(from.startsWith('〾')).toBe(false)
         expect(written.split(' ').length).toBeLessThanOrEqual(manifest.induction.ways)
       }
@@ -95,15 +95,31 @@ describe('the open stroke-order release', () => {
     }
     expect(manifest.coverage.find(row => row.source === 'rime-stroke').recorded).toBe(rime.length - 1)
     expect(manifest.coverage.find(row => row.source === 'cns11643').recorded).toBe(cns.length - 1)
-    for (const { operators } of manifest.induction.validation) {
+    for (const { source, operators } of manifest.induction.validation) {
+      const taught = new Set(manifest.induction.learned.find(entry => entry.source === source).rules.map(rule => rule.operator))
       for (const row of operators) {
         expect(row.agree).toBeLessThanOrEqual(row.written)
         expect(row.written).toBeLessThanOrEqual(row.described)
-        expect(row.induced).toBe(manifest.induction.operators.includes(row.operator))
+        expect(row.induced).toBe(manifest.induction.operators.includes(row.operator) ? 'always' : taught.has(row.operator) ? 'learned' : 'never')
+        if (row.induced === 'never') expect(row.written).toBe(0)
       }
-      // The operators induced through agree with the source on most of what it records.
-      const kept = operators.filter(row => row.induced)
-      expect(kept.reduce((sum, row) => sum + row.agree, 0) / kept.reduce((sum, row) => sum + row.written, 0)).toBeGreaterThan(0.85)
+      // Scored on characters the places were not learned from, the rules agree with the source on most of what they write.
+      expect(operators.reduce((sum, row) => sum + row.agree, 0) / operators.reduce((sum, row) => sum + row.written, 0)).toBeGreaterThan(0.85)
     }
+  })
+
+  it('learns where each enclosure is written from enough characters', () => {
+    for (const { rules } of manifest.induction.learned) {
+      expect(rules.length).toBeGreaterThan(20)
+      for (const rule of rules) {
+        expect(manifest.induction.places).toContain(rule.place)
+        expect(rule.support).toBeGreaterThanOrEqual(manifest.induction.support)
+        expect(rule.agree / rule.support).toBeGreaterThanOrEqual(manifest.induction.agreement)
+      }
+    }
+    const cns = manifest.induction.learned.find(entry => entry.source === 'cns11643').rules
+    // 廴 is written after what it carries, 气 before what it holds.
+    expect(cns.find(rule => rule.operator === '⿺' && rule.enclosure === '廴')?.place).toBe('after')
+    expect(cns.find(rule => rule.operator === '⿹' && rule.enclosure === '气')?.place).toBe('before')
   })
 })
