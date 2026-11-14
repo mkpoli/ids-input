@@ -15,7 +15,7 @@ const exportFiles = () => new Map([
   ['v1-serif-f7/manifest.json', { body: bytes('{"format":7}') }],
   ['v1-serif-f7/g/65/65c0.json', { body: new Uint8Array([0x1f, 0x8b, 8]) }],
   ['v1-serif-f7/p/65c.json', { body: new Uint8Array([0x1f, 0x8b, 8]) }],
-  ['v1-serif-f7/identity.json', { body: bytes('{"characters":"","sequences":"","e":{}}') }],
+  ['v1-serif-f7/identity.json', { body: bytes('{"characters":"","sequences":"","e":{},"plain":""}') }],
   ['v1-serif-f7/OFL.txt', { body: bytes('SIL') }],
 ])
 

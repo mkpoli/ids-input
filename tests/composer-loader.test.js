@@ -13,7 +13,7 @@ const manifest = format => Buffer.from(JSON.stringify({ format, files: { layout:
 const files = {
   'manifest.json': manifest(7),
   'layout.json': Buffer.from(JSON.stringify({ ops: ['⿰'], defaults: {}, features: {}, seeds: [[{ shape: [23, 8], data: half(23 * 8) }, Buffer.alloc(32).toString('base64')]] })),
-  'identity.json': Buffer.from(JSON.stringify({ characters: '林', sequences: '⿰木木', e: {} })),
+  'identity.json': Buffer.from(JSON.stringify({ characters: '林', sequences: '⿰木木', e: {}, plain: '木' })),
   [shard('g', '木')]: gzipSync(JSON.stringify({ 木: { ink: 3000, P: ['L'] } })),
   [shard('p', 'L\t木')]: gzipSync(JSON.stringify({ 'L\t木': [{ h: '林', r: 3, c: null }, { h: '村', r: 1, c: { k: [0, 2], b: [10, 20, 300, 800] } }] })),
 }
@@ -71,8 +71,9 @@ describe('the composer loader', () => {
     expect(source.layout.ops).toEqual(['⿰'])
     expect(source.store().identity('⿰木木')).toEqual({ e: '林' })
     expect(source.store().identity('林')).toEqual({ s: '⿰木木' })
-    // The table holds every key with a sequence or a character: one it lacks has neither.
+    // A record with neither is told apart from a key with no record, as reading the record would.
     expect(source.store().identity('木')).toEqual({})
+    expect(source.store().identity('口')).toBeNull()
   })
 
   it('refuses an export of any other format', async () => {
