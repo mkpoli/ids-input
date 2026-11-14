@@ -124,8 +124,8 @@
       }
     ],
     "inducedAgainstRime": {
-      "rows": 24575,
-      "agree": 12091
+      "rows": 24664,
+      "agree": 12148
     }
   },
   "induction": {
@@ -1554,16 +1554,30 @@
     {
       "source": "cns11643",
       "recorded": 76282,
+      "entered": 1,
       "equivalent": 719,
-      "ids": 24578,
-      "none": 1773
+      "ids": 24667,
+      "none": 1684,
+      "reasons": {
+        "undescribed": 164,
+        "unreadable": 316,
+        "operator": 680,
+        "component": 524
+      }
     },
     {
       "source": "rime-stroke",
       "recorded": 102582,
+      "entered": 0,
       "equivalent": 681,
       "ids": 3,
-      "none": 86
+      "none": 86,
+      "reasons": {
+        "undescribed": 86,
+        "unreadable": 0,
+        "operator": 0,
+        "component": 0
+      }
     }
   ],
   "files": [
@@ -1590,7 +1604,7 @@
     },
     {
       "name": "induced.tsv.gz",
-      "rows": 25981,
+      "rows": 26070,
       "columns": [
         "char",
         "codepoint",
@@ -1600,7 +1614,34 @@
         "source",
         "ids"
       ],
-      "bytes": 413860
+      "bytes": 415621
+    },
+    {
+      "name": "entered.tsv",
+      "rows": 1,
+      "columns": [
+        "char",
+        "codepoint",
+        "orders",
+        "basis",
+        "by",
+        "source",
+        "date"
+      ],
+      "bytes": 179
+    },
+    {
+      "name": "wanted.tsv",
+      "rows": 83,
+      "columns": [
+        "char",
+        "codepoint",
+        "source",
+        "blocks",
+        "alone",
+        "examples"
+      ],
+      "bytes": 3283
     }
   ],
   "texts": [
