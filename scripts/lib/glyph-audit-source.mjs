@@ -12,7 +12,7 @@ export function cachedAuditSource(base, cache, { maxDownloadBytes = 512 * 1024 *
   const hashes = new Map()
   let downloaded = 0, requested = 0
   const read = async name => {
-    if (!/^(manifest\.json|layout\.json|[gp]\/[a-f0-9]{3}\.json)$/.test(name)) throw Error(`Unexpected export path: ${name}`)
+    if (!/^(manifest\.json|layout\.json|identity\.json|g\/[a-f0-9]{2}\/[a-f0-9]{4}\.json|p\/[a-f0-9]{3}\.json)$/.test(name)) throw Error(`Unexpected export path: ${name}`)
     const path = join(directory, name)
     let bytes
     try { bytes = await readFile(path) } catch (error) {

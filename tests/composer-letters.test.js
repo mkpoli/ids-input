@@ -10,9 +10,11 @@ import { compose, createSource } from '@han-compose/composer'
 
 const folder = process.env.COMPOSER_EXPORT
 const hex = text => createHash('sha256').update(text).digest('hex')
+// A record sits in the shard named by four hex digits of its key's hash, under its key.
 const recorded = key => {
-  const shard = folder && join(folder, 'g', `${hex(key).slice(0, 3)}.json`)
-  return Boolean(shard && existsSync(shard) && JSON.parse(gunzipSync(readFileSync(shard)).toString())[hex(key)])
+  const h = hex(key)
+  const shard = folder && join(folder, 'g', h.slice(0, 2), `${h.slice(0, 4)}.json`)
+  return Boolean(shard && existsSync(shard) && JSON.parse(gunzipSync(readFileSync(shard)).toString())[key])
 }
 const letters = recorded('K') && recorded('O')
 if (!letters) console.log('composer letters skipped: set COMPOSER_EXPORT to a han-compose export that records K and O')

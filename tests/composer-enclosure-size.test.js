@@ -1,19 +1,16 @@
 // Sizing inside a frame: an operand drawn as a grid keeps its rows equal when the frame is too
 // small for the whole glyph, and a component cut from a host fills the cell it is given.
 import { describe, expect, it } from 'bun:test'
-import { createHash } from 'node:crypto'
-import { gzipSync } from 'node:zlib'
 import { compose, createSource } from '@han-compose/composer/loader'
 import { Composer } from '@han-compose/composer/compose'
 import { commands, makePart, stretchOf } from '@han-compose/composer/geometry'
-import { files, layout, ops } from './fixtures/composer-export.js'
+import { files, layout, ops, shards } from './fixtures/composer-export.js'
 
-const hex = text => createHash('sha256').update(text).digest('hex')
 const int16 = values => Buffer.from(Int16Array.from(values).buffer).toString('base64')
 const boxGlyph = boxes => ({ v: 1,
   b: [Math.min(...boxes.map(b => b[0])), Math.min(...boxes.map(b => b[1])), Math.max(...boxes.map(b => b[2])), Math.max(...boxes.map(b => b[3]))],
   p: boxes.map(([x0, y0, x1, y1]) => ['MLLL', int16([x0, y0, x1, y0, x1, y1, x0, y1].map(v => v * 4)), int16(Array(8).fill(0))]) })
-const character = (key, boxes, { s, ink } = {}) => ({ k: key, G: boxGlyph(boxes), ink: ink ?? boxes.reduce((sum, [x0, y0, x1, y1]) => sum + 2 * (x1 - x0 + y1 - y0), 0),
+const character = (key, boxes, { s, ink } = {}) => ({ G: boxGlyph(boxes), ink: ink ?? boxes.reduce((sum, [x0, y0, x1, y1]) => sum + 2 * (x1 - x0 + y1 - y0), 0),
   nl: boxes.length, o: boxes.length, ...(s ? { s } : {}) })
 
 // 冂 as a frame of three bars, and 㸚 as a coarse 2 × 2 grid whose top row is drawn small: the
@@ -29,9 +26,7 @@ const RECORDS = {
   又: character('又', [[100, 100, 900, 900]], { ink: 6262 }),
   𠆢: character('𠆢', [[100, 100, 900, 900]], { ink: 2448 }),
 }
-const SHARDS = {}
-for (const [key, record] of Object.entries(RECORDS)) (SHARDS[`g/${hex(key).slice(0, 3)}.json`] ??= {})[hex(key)] = record
-for (const name of Object.keys(SHARDS)) SHARDS[name] = gzipSync(JSON.stringify(SHARDS[name]))
+const SHARDS = shards('g', Object.entries(RECORDS))
 const constants = JSON.parse(files['manifest.json']).constants
 // A layout that gives the inner operand nearly the whole face, larger than the opening the frame
 // leaves: the frame is drawn around its region and the inner overflows it, as ⿵冂㸚 does.
@@ -39,7 +34,7 @@ const layoutWith = boxes => ({ ...layout, seeds: [[{ shape: [ops.length + 2 * 81
   Buffer.from(Float32Array.from(boxes.map(v => v / 1000)).buffer).toString('base64')]] })
 const sourceWith = drawing => createSource(async name => {
   if (name === 'layout.json') return new Uint8Array(Buffer.from(JSON.stringify(layoutWith(drawing)))).buffer
-  if (name === 'manifest.json') return new Uint8Array(Buffer.from(JSON.stringify({ format: 5, files: { layout: { path: 'layout.json' } }, constants, spelled: [] }))).buffer
+  if (name === 'manifest.json') return new Uint8Array(Buffer.from(files['manifest.json'])).buffer
   const body = SHARDS[name]
   return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
 })

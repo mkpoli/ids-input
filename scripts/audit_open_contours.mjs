@@ -12,8 +12,10 @@ const [base, listFile, suffix = ''] = process.argv.slice(2)
 if (!base || !listFile) throw Error('Usage: bun scripts/audit_open_contours.mjs EXPORT_DIR_OR_URL KEYS_FILE [SUFFIX]')
 const keys = JSON.parse(await readFile(listFile, 'utf8'))
 const shards = new Map()
+/** The shard holding a key's record. @param {string} key */
+const shardOf = key => { const h = hexOf(key); return `g/${h.slice(0, 2)}/${h.slice(0, 4)}.json` }
 for (const key of keys) {
-  const name = `g/${hexOf(key).slice(0, 3)}.json`
+  const name = shardOf(key)
   shards.set(name, (shards.get(name) ?? 0) + 1)
 }
 const cache = new Map()
@@ -55,8 +57,7 @@ const loaded = new Map()
   await Promise.all(Array.from({ length: 6 }, worker))
 }
 for (const key of keys) {
-  const file = loaded.get(`g/${hexOf(key).slice(0, 3)}.json`)
-  const rec = file?.[hexOf(key)]
+  const rec = loaded.get(shardOf(key))?.[key]
   const g = rec?.G
   if (!g?.p) continue
   for (const [ops, light, delta] of g.p) {
