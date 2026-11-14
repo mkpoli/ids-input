@@ -464,6 +464,13 @@ describe('Ashide component families', () => {
     const kana = createSearch(new Map(Object.entries({ 甲: ['⿸卄丶'], 乙: ['⿱卄⿸サ丶'], 丙: ['⿰氵⿱共⿸サ丶'], 丁: ['⿰サ⿸卄丶'] })))
     expect(kana.search('⿸サ丶').hits.map(hit => hit.char)).toEqual(['甲', '乙', '丙', '丁'])
   })
+
+  it('counts each written copy of a repeated shape once', () => {
+    const kana = createSearch(new Map(Object.entries({ 丁: ['⿲イ人口'], 乙: ['⿲イイ口'], 丙: ['⿰人口', '⿱イ木'], 甲: ['⿰イ口'] })))
+    expect(kana.search('イイ').hits.map(hit => hit.char)).toEqual(['乙', '丁'])
+    expect(kana.search('⿲イイ口').hits.map(hit => hit.char)).toEqual(['乙', '丁'])
+    expect(kana.search('⿰イ口').hits.map(hit => hit.char)).toEqual(['甲', '丙'])
+  })
 })
 
 

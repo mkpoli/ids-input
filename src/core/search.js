@@ -860,8 +860,18 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
     // fallback. Only shapes some description holds are counted.
     const shapes = terms.map(term => term.leaves.flatMap(leaf => typeof leaf === 'string' ? [] : [keyOf.get(fold(leaf.shape))])
       .filter(id => id !== undefined))
-    /** Whether a leaf of `t` is the shape with key `id`. @param {Tree} t @param {number} id @returns {boolean} */
-    const bears = (t, id) => typeof t === 'string' ? keyOf.get(fold(t)) === id : t.parts.some(part => bears(part, id))
+    /** How many leaves of `t` are the shape with key `id`. @param {Tree} t @param {number} id @returns {number} */
+    const bears = (t, id) => typeof t === 'string' ? Number(keyOf.get(fold(t)) === id) : t.parts.reduce((n, part) => n + bears(part, id), 0)
+    /** How many of `ids` are left over once each takes one of the `have` written copies of its shape.
+     * @param {number[]} ids @param {(id: number) => number} have */
+    const unwritten = (ids, have) => {
+      /** @type {Map<number, number>} */
+      const wanted = new Map()
+      for (const id of ids) wanted.set(id, (wanted.get(id) ?? 0) + 1)
+      let left = 0
+      for (const [id, n] of wanted) left += Math.max(0, n - have(id))
+      return left
+    }
     const first = new Set(rarest.flatMap(id => [...(by.of.get(id) ?? [])]))
     /** @type {{ char: string, tree: Tree, paths: number[][], score: number }[]} */
     const found = []
@@ -885,7 +895,7 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
           paths.push(found.path)
           score += found.depth * 4 + found.opened * 2
           const matched = /** @type {Tree} */ (partAt(root, found.path))
-          lookalikes += shapes[i].filter(id => !bears(matched, id)).length
+          lookalikes += unwritten(shapes[i], id => bears(matched, id))
         }
         if (!ok) continue
         // Every components term held by this one description, not by several together. A component
@@ -895,7 +905,7 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
           const holds = holdingsIn(tree, char, new Set([char]))
           if (terms.some((term, i) => term.kind === 'components'
             && (!allocate(requested[i], id => holds.get(id) ?? 0) || consistent[i]?.(tree, char) === false))) continue
-          terms.forEach((term, i) => { if (term.kind === 'components') lookalikes += shapes[i].filter(id => !holds.get(id)).length })
+          terms.forEach((term, i) => { if (term.kind === 'components') lookalikes += unwritten(shapes[i], id => holds.get(id) ?? 0) })
         }
         // Match top-level components with the same allocation used for counts. An ambiguous
         // alias cannot consume a component needed by a more specific request.
