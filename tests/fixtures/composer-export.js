@@ -11,13 +11,28 @@ import { gzipSync } from 'node:zlib'
 const engine = dirname(fileURLToPath(import.meta.resolve('@han-compose/composer/package.json')))
 export const constants = JSON.parse(readFileSync(join(engine, 'src/constants.json'), 'utf8'))
 const hex = text => createHash('sha256').update(text).digest('hex')
-/** The shard a key's record or host list is in: the first three hex digits of its SHA-256. */
-export const shardOf = (folder, text) => `${folder}/${hex(text).slice(0, 3)}.json`
-/** Format 5's shards: each entry under the full hash of its text, gzipped. */
+/** The shard a key's record or host list is in: named by the first hex digits of its SHA-256, four
+ *  for a record and three for a host list. */
+export const shardOf = (folder, text) => {
+  const h = hex(text)
+  return folder === 'g' ? `g/${h.slice(0, 2)}/${h.slice(0, 4)}.json` : `p/${h.slice(0, 3)}.json`
+}
+/** The identity table of `entries` (`[key, record]`): each character's sequence, and what each
+ *  sequence describes where that is not the character listed with it. */
+export const identityOf = entries => {
+  const written = entries.filter(([, record]) => record.s !== undefined)
+  const implied = new Map(written.map(([key, record]) => [record.s, key]))
+  const e = Object.fromEntries(entries.filter(([key, record]) => record.e !== undefined && implied.get(key) !== record.e).map(([key, record]) => [key, record.e]))
+  for (const [sequence] of implied) if (!entries.some(([key, record]) => key === sequence && record.e !== undefined)) e[sequence] = null
+  return JSON.stringify({ characters: written.map(([key]) => key).join('\n'), sequences: written.map(([, record]) => record.s).join('\n'), e })
+}
+/** The export's shards: each entry under its text (a key, or place TAB operand), gzipped. The
+ *  records' shards come with the identity table of those records. */
 export const shards = (folder, entries) => {
   const out = {}
-  for (const [text, value] of entries) ((out[shardOf(folder, text)] ??= {})[hex(text)] = value)
-  return Object.fromEntries(Object.entries(out).map(([name, file]) => [name, gzipSync(JSON.stringify(file))]))
+  for (const [text, value] of entries) ((out[shardOf(folder, text)] ??= {})[text] = value)
+  return { ...Object.fromEntries(Object.entries(out).map(([name, file]) => [name, gzipSync(JSON.stringify(file))])),
+    ...(folder === 'g' ? { 'identity.json': identityOf(entries) } : {}) }
 }
 const int16 = values => Buffer.from(Int16Array.from(values).buffer).toString('base64')
 // A glyph of boxes, each [x0, y0, x1, y1] in font units: one square contour per box.
@@ -66,7 +81,7 @@ const records = {
 }
 /** Each file of the export by its name: JSON text, or gzip bytes for a shard. */
 export const files = {
-  'manifest.json': JSON.stringify({ format: 6, files: { layout: { path: 'layout.json' } }, constants, spelled: [] }),
+  'manifest.json': JSON.stringify({ format: 7, files: { layout: { path: 'layout.json' }, identity: { path: 'identity.json' } }, constants, spelled: [] }),
   'layout.json': JSON.stringify(layout),
   ...shards('g', Object.entries(records)),
 }

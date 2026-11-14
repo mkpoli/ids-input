@@ -25,8 +25,8 @@ rewritten to list it first. `COMPOSER_BUCKET` names another bucket.
 
 ## Serving
 
-`https://<worker>/<version>/<file>` is the export's own layout: `manifest.json`, `layout.json`, `g/…`,
-`p/…`, and the licence texts. A shard is gzip bytes under a `.json` name and goes out as
+`https://<worker>/<version>/<file>` is the export's own layout: `manifest.json`, `layout.json`,
+`identity.json`, `g/…`, `p/…`, and the licence texts. A shard is gzip bytes under a `.json` name and goes out as
 `application/octet-stream`, so nothing on the way unpacks or repacks it; everything else carries the
 type its extension names. A version never changes once stored, so a file is cached for good, and one a
 version lacks stays missing for five minutes. Any site may read them: `access-control-allow-origin: *`.

@@ -3,18 +3,19 @@ import { createHash } from 'node:crypto'
 import { gzipSync } from 'node:zlib'
 import { fromUrl } from '@han-compose/composer'
 
-// A format-6 export over HTTP as a static host serves it: record and host-list shards are gzip bytes
-// under a .json name, sent as application/octet-stream, each an object from the full SHA-256 to the
-// record or list; a file the export lacks is a 404.
+// A format-7 export over HTTP as a static host serves it: record and host-list shards are gzip bytes
+// under a .json name, sent as application/octet-stream, each an object from the key (place TAB
+// operand for a host list) to the record or list; a file the export lacks is a 404.
 const hex = text => createHash('sha256').update(text).digest('hex')
-const shard = (folder, text) => `${folder}/${hex(text).slice(0, 3)}.json`
+const shard = (folder, text) => folder === 'g' ? `g/${hex(text).slice(0, 2)}/${hex(text).slice(0, 4)}.json` : `p/${hex(text).slice(0, 3)}.json`
 const half = n => Buffer.alloc(2 * n).toString('base64')
-const manifest = format => Buffer.from(JSON.stringify({ format, files: { layout: { path: 'layout.json' } }, constants: {} }))
+const manifest = format => Buffer.from(JSON.stringify({ format, files: { layout: { path: 'layout.json' }, identity: { path: 'identity.json' } }, constants: {} }))
 const files = {
-  'manifest.json': manifest(6),
+  'manifest.json': manifest(7),
   'layout.json': Buffer.from(JSON.stringify({ ops: ['⿰'], defaults: {}, features: {}, seeds: [[{ shape: [23, 8], data: half(23 * 8) }, Buffer.alloc(32).toString('base64')]] })),
-  [shard('g', '木')]: gzipSync(JSON.stringify({ [hex('木')]: { k: '木', ink: 3000, P: ['L'] } })),
-  [shard('p', 'L\t木')]: gzipSync(JSON.stringify({ [hex('L\t木')]: { place: 'L', operand: '木', hosts: [{ h: '林', r: 3, c: null }, { h: '村', r: 1, c: { k: [0, 2], b: [10, 20, 300, 800] } }] } })),
+  'identity.json': Buffer.from(JSON.stringify({ characters: '林', sequences: '⿰木木', e: {} })),
+  [shard('g', '木')]: gzipSync(JSON.stringify({ 木: { ink: 3000, P: ['L'] } })),
+  [shard('p', 'L\t木')]: gzipSync(JSON.stringify({ 'L\t木': [{ h: '林', r: 3, c: null }, { h: '村', r: 1, c: { k: [0, 2], b: [10, 20, 300, 800] } }] })),
 }
 const served = (table, asked = []) => async url => {
   const name = url.replace('/composer/v/', '')
@@ -32,7 +33,7 @@ describe('the composer loader', () => {
     await source.load(source.filesOf(['木', '口']))
     await source.load([shard('p', 'L\t木'), shard('p', 'R\t木')])
     const store = source.store()
-    expect(store.rec('木')).toEqual({ k: '木', ink: 3000, P: ['L'] })
+    expect(store.rec('木')).toEqual({ ink: 3000, P: ['L'] })
     expect(store.rec('口')).toBeNull()
     expect(store.places('木')).toEqual(['L'])
     expect(store.places('口')).toEqual([])
@@ -55,14 +56,22 @@ describe('the composer loader', () => {
     expect(uncut.k).toBeUndefined()
   })
 
-  it('reads a format-6 export', async () => {
-    const source = fromUrl('/composer/v/', { fetch: served({ ...files, 'manifest.json': manifest(6) }) })
+  it('reads a format-7 export, its layout and identity table when a drawing asks for them', async () => {
+    const asked = []
+    const source = fromUrl('/composer/v/', { fetch: served(files, asked) })
     await source.ready()
-    expect(source.manifest.format).toBe(6)
+    expect(source.manifest.format).toBe(7)
+    expect(asked).toEqual(['manifest.json'])
+    expect(source.store().identity('⿰木木')).toBeUndefined()
+    await source.load(source.modelFiles())
+    expect(source.layout.ops).toEqual(['⿰'])
+    expect(source.store().identity('⿰木木')).toEqual({ e: '林' })
+    expect(source.store().identity('林')).toEqual({ s: '⿰木木' })
+    expect(source.store().identity('木')).toBeNull()
   })
 
   it('refuses an export of any other format', async () => {
-    for (const format of [3, 4, 7]) {
+    for (const format of [3, 4, 5, 6]) {
       const source = fromUrl('/composer/v/', { fetch: served({ ...files, 'manifest.json': manifest(format) }) })
       await expect(source.ready()).rejects.toThrow(`format ${format} is not read here`)
     }
@@ -70,10 +79,16 @@ describe('the composer loader', () => {
 })
 
 describe('a missing file', () => {
-  it('reads as empty only for a shard; a missing layout fails naming it, as does a server error', async () => {
+  it('reads as empty only for a shard; a missing layout or identity table fails naming it, as does a server error', async () => {
     const answer = (status, name) => async url => url.endsWith(name) ? new Response('{"detail":"No such composer file."}', { status })
       : files[url.replace('/x/', '')] ? new Response(files[url.replace('/x/', '')]) : new Response('{"detail":"No such composer file."}', { status: 404 })
-    await expect(fromUrl('/x/', { fetch: answer(404, 'layout.json') }).ready()).rejects.toThrow('layout.json: 404')
+    for (const name of ['layout.json', 'identity.json']) {
+      const source = fromUrl('/x/', { fetch: answer(404, name) })
+      await source.ready()
+      const failure = await source.load(source.modelFiles()).catch(error => error)
+      expect(failure.message).toContain(`${name}: 404`)
+      expect(failure.unavailable).toBe(true)
+    }
     const down = fromUrl('/x/', { fetch: answer(503, shard('p', 'L\t木')) })
     await down.ready()
     await expect(down.load([shard('p', 'L\t木')])).rejects.toThrow('503')

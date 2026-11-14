@@ -17,7 +17,7 @@ const records = {
 }
 const fixture = () => {
   const input = {
-    'manifest.json': JSON.stringify({ format: 6, weighted: false, constants, spelled: [], files: { layout: { path: 'layout.json' }, hosts: { bytes: 0 } } }),
+    'manifest.json': JSON.stringify({ format: 7, weighted: false, constants, spelled: [], files: { layout: { path: 'layout.json' }, identity: { path: 'identity.json' }, hosts: { bytes: 0 } } }),
     'layout.json': JSON.stringify(layout),
     ...shards('g', Object.entries(records)),
   }
@@ -26,7 +26,7 @@ const fixture = () => {
 const readyComposer = async options => {
   const source = fixture()
   await source.ready()
-  await source.load(source.filesOf(Object.keys(records)))
+  await source.load([...source.modelFiles(), ...source.filesOf(Object.keys(records))])
   return new Composer(source.store(), options)
 }
 

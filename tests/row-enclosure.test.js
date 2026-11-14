@@ -41,12 +41,12 @@ const extra = {
   ]),
   // A donor's whole left piece and a donor's whole row, each with enough contours to be taken.
   ...shards('p', [
-    [`L\t${ENCLOSURE}`, { place: 'L', operand: ENCLOSURE, hosts: [{ h: '剪', op: '⿰', ok: ['刂'], d: 1, j: 1, v: 1, r: 0, si: 2000, fr: DONOR,
-      b: DONOR_LEFT, p: [box(100, -80, 200, 840), box(300, -80, 400, 840), box(100, 700, 400, 840)] }] }],
-    [`R\t${ROW_KEY}`, { place: 'R', operand: ROW_KEY, hosts: [{ h: '剪', op: '⿰', ok: ['⿵冂⺀'], d: 1, j: 1, v: 1, r: 0, si: 2000, fr: DONOR,
-      b: DONOR_RIGHT, p: KNIFE_CUT }] }],
-    [`R\t刂`, { place: 'R', operand: '刂', hosts: [{ h: '剪', op: '⿰', ok: ['⿵冂⺀'], d: 1, j: 1, v: 1, r: 0, si: 2000, fr: DONOR,
-      b: DONOR_RIGHT, p: KNIFE_CUT }] }],
+    [`L\t${ENCLOSURE}`, [{ h: '剪', op: '⿰', ok: ['刂'], d: 1, j: 1, v: 1, r: 0, si: 2000, fr: DONOR,
+      b: DONOR_LEFT, p: [box(100, -80, 200, 840), box(300, -80, 400, 840), box(100, 700, 400, 840)] }]],
+    [`R\t${ROW_KEY}`, [{ h: '剪', op: '⿰', ok: ['⿵冂⺀'], d: 1, j: 1, v: 1, r: 0, si: 2000, fr: DONOR,
+      b: DONOR_RIGHT, p: KNIFE_CUT }]],
+    [`R\t刂`, [{ h: '剪', op: '⿰', ok: ['⿵冂⺀'], d: 1, j: 1, v: 1, r: 0, si: 2000, fr: DONOR,
+      b: DONOR_RIGHT, p: KNIFE_CUT }]],
   ]),
 }
 

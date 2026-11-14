@@ -32,8 +32,8 @@ const sourceOf = extra => createSource(async name => {
 
 const fixture = () => sourceOf({
   ...shards('g', [['丑', record('丑', [52, -49, 950, 775], CHOU)], ['峱', record('峱', [52, -49, 990, 775], SHAN)]]),
-  ...shards('p', [['T\t丑', { hosts: [{ h: '峱', d: '⿰犭⿱丑山', op: '⿱', ok: ['丑'], r: 0, si: 1, v: 1, j: 1,
-    c: { k: [0, 1, 2, 3, 4], b: [52, -49, 990, 775], g: 0 } }] }]]),
+  ...shards('p', [['T\t丑', [{ h: '峱', d: '⿰犭⿱丑山', op: '⿱', ok: ['丑'], r: 0, si: 1, v: 1, j: 1,
+    c: { k: [0, 1, 2, 3, 4], b: [52, -49, 990, 775], g: 0 } }]]]),
 })
 
 /** The bar boxes of a 丑 piece, bottom first, and the outer edge of its right vertical. */

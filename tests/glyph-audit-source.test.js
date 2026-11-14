@@ -16,11 +16,16 @@ it('pins source hashes and reuses an on-disk export cache', async () => {
       return files[name] === undefined ? new Response(null, { status: 404 }) : new Response(files[name])
     } }
     const first = cachedAuditSource('https://fixture.invalid/', directory, options)
-    await first.create().ready()
-    expect(fetched).toBe(2)
+    const drawn = first.create()
+    await drawn.ready()
+    await drawn.load(drawn.modelFiles())
+    // The manifest, the layout and the identity table.
+    expect(fetched).toBe(3)
     expect(first.provenance().files['manifest.json']).toMatch(/^[a-f0-9]{64}$/)
     const second = cachedAuditSource('https://fixture.invalid/', directory, { fetch: () => { throw Error('must use cache') } })
-    await second.create().ready()
+    const again = second.create()
+    await again.ready()
+    await again.load(again.modelFiles())
     expect(second.provenance().downloadedBytes).toBe(0)
     expect(second.provenance().files).toEqual(first.provenance().files)
   } finally { await rm(directory, { recursive: true }) }
