@@ -316,6 +316,9 @@ def print_of(ink: np.ndarray, grid: int = donor.GRID) -> np.ndarray | None:
     if not len(rows):
         return None
     crop = ink[rows.min():rows.max() + 1, cols.min():cols.max() + 1].astype(float)
+    # A shape thinner than the grid (a bar of a few raster rows) is stretched first, so every grid row
+    # reads it whole: averaged as it is, a 9-row bar and an 8-row one fill different grid rows.
+    crop = np.repeat(np.repeat(crop, -(-grid // crop.shape[0]), axis=0), -(-grid // crop.shape[1]), axis=1)
     h, w = crop.shape
     ri = np.minimum((np.arange(h) * grid) // h, grid - 1)
     ci = np.minimum((np.arange(w) * grid) // w, grid - 1)
@@ -390,13 +393,15 @@ def cut(faces: list[Face], recipe: dict) -> dict | None:
             for chosen in itertools.combinations(sorted(left), size):
                 ink = np.logical_or.reduce([masks[i] for i in chosen])
                 rest = np.logical_or.reduce([masks[i] for i in left - set(chosen)])
-                if placed(recipe, ink, rest):
-                    scored.append((like(print_of(ink), reference), chosen))
-        if not scored:
+                if ink.any() and rest.any():
+                    scored.append((like(print_of(ink), reference), chosen, placed(recipe, ink, rest)))
+        fits = [row for row in scored if row[2]]
+        if not fits:
             return None
-        scored.sort(key=lambda row: -row[0])
-        best, chosen = scored[0]
-        second = scored[1][0] if len(scored) > 1 else 0.0
+        best, chosen, _ = max(fits, key=lambda row: row[0])
+        # The margin is over every other group, wherever it sits: a host where position leaves one
+        # candidate has not shown that the part stands out.
+        second = max((row[0] for row in scored if row[1] != chosen), default=0.0)
         if best < MATCH or best - second < MARGIN:
             return None
         left -= set(chosen)
@@ -482,7 +487,8 @@ def settle(job: tuple[dict, list[dict], np.ndarray | None]) -> tuple[str, dict]:
                 cuts.append(got)
         best = None
         for got in cuts:
-            agree = sum(1 for other in cuts if other is not got and like(got["print"], other["print"]) >= AGREE)
+            agree = len({other["recipe"]["host"] for other in cuts
+                         if other["recipe"]["host"] != got["recipe"]["host"] and like(got["print"], other["print"]) >= AGREE})
             check = like(got["print"], reference) if reference is not None else None
             single = got["match"] >= CLEAR_MATCH and got["margin"] >= CLEAR_MARGIN
             # A glyph to hold the cut against decides; hosts agreeing on a cut it rejects agree on a misreading.
@@ -512,15 +518,20 @@ def main(argv=None) -> int:
     table = tables()
     references = glyphwiki_prints()
     jobs = [(row, recipes(row, table[SOURCE_OF[row["kind"]]]), references.get(row["text"])) for row in components]
+    open_faces()  # fetches any missing face once, before the workers read them
     with ProcessPoolExecutor(args.workers, initializer=open_faces) as pool:
         results = dict(pool.map(settle, jobs, chunksize=8))
     styles = {style: {text: entry[style] for text, entry in sorted(results.items()) if "g" in entry[style]} for style in ("sans", "serif")}
-    open_faces()
     body = {
         "format": "han-compose/custom-forms", "version": 1,
         "builder": "ids-input scripts/build_custom_cuts.py",
         "sources": {style: [{"name": face.name, "version": face.version, "sha256": face.pin["sha256"], "licence": face.pin["licence"]}
                             for face in faces] for style, faces in FACES.items()},
+        "data": {
+            "descriptions": {"chise": "CHISE IDS (data/chise-sources.json in ids-input)",
+                             "zi-tools": f"Yi Bai, ids_lv1.txt, https://github.com/yi-bai/ids at {ZI['revision']} (MIT)"},
+            "references": "GlyphWiki glyphs of CHISE entities (ids-input data/custom-outlines.json.gz); user-edited, a check only",
+        },
         "forms": styles,
     }
     OUT.write_bytes(gzip.compress(json.dumps(body, ensure_ascii=False, separators=(",", ":")).encode("utf-8"), mtime=0))
