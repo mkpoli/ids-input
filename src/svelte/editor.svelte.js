@@ -22,6 +22,7 @@ import { variationBase, withVariation } from '../core/variation.js'
 import { replacementQuery, resolveReplacement } from '../core/replacement.js'
 import { replacementExpression, replacementInput, resolveReplacementExpression, unaliasReplacementInput } from '../core/replacement-expression.js'
 import { createLookup } from './lookup.svelte.js'
+import { createAlternatives } from './alternatives.svelte.js'
 import { translator } from './i18n.js'
 
 /**
@@ -95,6 +96,7 @@ export function createEditor(options) {
     return entry?.status === 'ready' ? entry.sequences.map(s => s.text).filter(sequence => !parse(sequence, { open: true }).problem) : []
   })
   const swaps = $derived(typeof picked === 'string' ? lookup.swaps[lookupChar(picked)] ?? [] : [])
+  const alternatives = createAlternatives(() => ({ at: chosen, part: picked, adapter: options().adapter }))
   // The characters each description encodes, asked once, for the merge list of a chosen node.
   /** @type {Record<string, { status: 'loading', id: number } | { status: 'failed' } | { status: 'ready', chars: string[] }>} */
   let described = $state.raw({})
@@ -559,6 +561,8 @@ export function createEditor(options) {
     get picked() { return picked },
     get splits() { return splits },
     get swaps() { return swaps },
+    /** The recursive alternatives of the chosen part (see `createAlternatives`). */
+    get alternatives() { return alternatives },
     /** The characters the chosen node encodes, once the adapter has answered; none for a component. */
     get merges() {
       if (!isNode(picked)) return []
