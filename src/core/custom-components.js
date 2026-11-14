@@ -7,12 +7,14 @@ import { customsOf, isNode, leaves, parse, write } from './ids.js'
 /**
  * @typedef {{ in: string, text: string, count: number, characters: string[], status: 'verified' | 'candidate', basis: 'difference' | 'inverse' }} CustomEquivalent
  * @typedef {{ text: string, kind: import('./custom.js').CustomKind, source: string, description?: string, fragment?: string,
- *   uses: number, examples: string[], subtractions?: string[], draw?: string, id?: string, char?: string, equivalents: CustomEquivalent[] }} CustomComponent
+ *   uses: number, examples: string[], subtractions?: string[], character?: CustomCharacter, draw?: string, id?: string, char?: string, equivalents: CustomEquivalent[] }} CustomComponent
+ * @typedef {{ text: string, char: string, variant?: string, in: string, basis: 'editorial' }} CustomCharacter The encoded character a component is read as a form of, in the notation of `in` (𢎘z); `editorial` marks a reading no table states.
  * @typedef {{ id: string, char: string, names: string[] }} CustomForm One form under its identifier, with every name and confirmed expression it has.
  * @typedef {{ format: string, version: number, components: CustomComponent[], forms?: CustomForm[] }} CustomComponentsData
- * @typedef {{ text: string, id?: string, description?: string, names: { text: string, source: string | null }[], subtractions: string[] }} CustomPart
+ * @typedef {{ text: string, id?: string, description?: string, names: { text: string, source: string | null, editorial?: boolean }[], subtractions: string[] }} CustomPart
  *   One component with the other ways its form is written: each table's name for it (`source`), the
- *   expressions two or more characters confirm (no `source`), and the subtractions that name it.
+ *   expressions two or more characters confirm (no `source`), the character it is read as a form
+ *   of (`editorial`), and the subtractions that name it.
  */
 
 /**
@@ -104,7 +106,10 @@ export function createCustomComponents(data) {
       const row = by.get(text), form = formOf.get(text)
       if (!row && !form) return undefined
       const id = form?.id ?? row?.id
+      /** @type {CustomPart['names']} */
       const names = (form?.names ?? []).filter(name => name !== text).map(name => ({ text: name, source: by.get(name)?.source ?? null }))
+      const read = [row, ...(form?.names ?? []).map(name => by.get(name))].map(one => one?.character).find(Boolean)
+      if (read) names.push({ text: read.text, source: read.in, editorial: true })
       const description = row?.description ?? form?.names.map(name => by.get(name)?.description).find(Boolean)
       // The shortest subtractions first: one part taken from a common character reads soonest.
       const subtractions = [...(id ? formSubtractions.get(id) ?? [] : [])].sort((a, b) => [...a].length - [...b].length)

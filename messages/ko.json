@@ -405,6 +405,7 @@
   "info.site.chise": "CHISE IDS",
   "info.custom.kind": "미인코딩 구성 요소",
   "info.custom.names": "다른 표기",
+  "info.custom.editorial": "편집자 판단",
   "info.custom.source.babelstone": "BabelStone",
   "info.custom.source.chise": "CHISE",
   "info.custom.source.zi-tools": "zi.tools",

@@ -175,6 +175,17 @@ for (const [custom, list] of [...equivalents]) for (const row of list.filter(row
 // A stroke chain the grammar gives a character is that character.
 const CHAIN_NAMES = Object.entries(STROKE_CHAINS).map(([chain, char]) => ({ chain: `#(${chain})`, char }))
 
+// A component this project reads as a form of an encoded character: no table says so, and the row
+// carries what it rests on (scripts/data/custom-characters.json).
+const editorial = JSON.parse(await readFile(new URL('./data/custom-characters.json', import.meta.url), 'utf8'))
+/** @type {Map<string, { text: string, char: string, variant?: string, in: string, basis: 'editorial' }>} */
+const characterOf = new Map()
+for (const row of editorial.rows) {
+  if (!used.has(row.component)) throw new Error(`custom-characters.json: no table writes ${row.component}`)
+  if (characterOf.has(row.component)) throw new Error(`custom-characters.json: ${row.component} is listed twice`)
+  characterOf.set(row.component, { text: `${row.char}${row.variant ?? ''}`, char: row.char, ...(row.variant ? { variant: row.variant } : {}), in: row.in, basis: row.basis })
+}
+
 const components = [...used].map(([text, entry]) => {
   const kind = /** @type {'numbered'} */ (customKind(text))
   const chars = [...entry.chars]
@@ -196,12 +207,14 @@ const components = [...used].map(([text, entry]) => {
     ...(note ? { description: note.description, ...(note.fragment ? { fragment: note.fragment } : {}) } : {}),
     uses: chars.length, examples: chars.slice(0, 8), usedIn: chars.join(''),
     ...(subtractions.length ? { subtractions } : {}),
+    ...(characterOf.has(text) ? { character: characterOf.get(text) } : {}),
     equivalents: equivalents.get(text) ?? [],
   }
 }).sort((a, b) => SOURCES.indexOf(a.source) - SOURCES.indexOf(b.source) || b.uses - a.uses || (a.text < b.text ? -1 : 1))
 
-// What draws each component: BabelStone's fragment or the private-use glyph of its font, else the
-// first equivalent that names characters only, confirmed ones first and subtractions last.
+// What draws each component: BabelStone's fragment or the private-use glyph of its font, the
+// character it is read as a form of, else the first equivalent that names characters only,
+// confirmed ones first and subtractions last.
 const palette = JSON.parse(await readFile(data('ids-parts.json'), 'utf8'))
 const glyphAt = palette.columns.indexOf('glyph')
 const glyphs = new Map(palette.parts.filter(row => row[glyphAt]).map(row => [row[0], row[glyphAt]]))
@@ -211,6 +224,7 @@ const rowOf = new Map(components.map(row => [row.text, row]))
 /** @param {typeof components[number]} row What may draw a component, the best first. */
 const candidatesOf = row => [
   ...(row.fragment ? [row.fragment] : []), ...(glyphs.has(row.text) ? [glyphs.get(row.text)] : []),
+  ...(row.character ? [row.character.char] : []),
   ...[...row.equivalents].sort((a, b) => Number(a.basis === 'inverse') - Number(b.basis === 'inverse')
     || Number(b.status === 'verified') - Number(a.status === 'verified') || b.count - a.count).map(item => item.text),
 ]
@@ -435,6 +449,7 @@ const document = {
     withEquivalent: components.filter(row => row.equivalents.length).length,
     verified: components.filter(row => row.equivalents.some(item => item.status === 'verified')).length,
     drawable,
+    editorial: editorial.rows.length,
     characters: characters.length,
     forms: formRows.length,
   },
@@ -442,6 +457,7 @@ const document = {
   retired: retiredRows,
   strokeLetters: strokeLetters.strokes,
   chainNames: CHAIN_NAMES,
+  editorial: editorial.rows,
   components,
   characters,
 }
@@ -453,13 +469,14 @@ const flat = tableRows(/** @type {any} */ (document)).map(row => {
     id: row.id, entity: `&${row.id};`, char: `U+${(0xf0000 + row.number).toString(16).toUpperCase()}`,
     babelstone: named('babelstone'), chise: named('chise'), zi_tools: named('zi-tools'), expression: named('unnamed'),
     subtractions: row.subtractions.join(' '),
+    character: row.character?.text ?? '',
     description: row.names.map(name => name.description ?? '').filter(Boolean).join('; '),
     status: row.status, uses: row.uses, used_in: row.usedIn,
     equivalents: row.equivalents.map(item => ({ in: item.in, text: item.text, status: item.status, count: item.count, ...(item.id ? { id: item.id } : {}) })),
     of: row.of,
   }
 })
-const COLUMNS = /** @type {const} */ (['id', 'entity', 'char', 'babelstone', 'chise', 'zi_tools', 'expression', 'subtractions', 'description', 'status', 'uses', 'used_in', 'equivalents', 'of'])
+const COLUMNS = /** @type {const} */ (['id', 'entity', 'char', 'babelstone', 'chise', 'zi_tools', 'expression', 'subtractions', 'character', 'description', 'status', 'uses', 'used_in', 'equivalents', 'of'])
 /** @param {typeof flat[number]} row @returns {string[]} */
 const cells = row => COLUMNS.map(column => column === 'equivalents' ? row.equivalents.map(item => `${item.in}:${item.text}:${item.status}:${item.count}`).join(' | ')
   : column === 'of' ? row.of.map(other => `${other.relation}:${other.id}`).join(' | ') : String(row[column]))

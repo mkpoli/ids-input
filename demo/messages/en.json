@@ -444,6 +444,7 @@
   "appendix.status.any": "Any",
   "appendix.status.confirmed": "Confirmed",
   "appendix.status.candidate": "Candidate",
+  "appendix.status.editorial": "Editorial",
   "appendix.status.none": "No equivalent",
   "appendix.relation.candidate": "Candidate for",
   "appendix.relation.arrangement": "Arrangement of",

@@ -145,4 +145,18 @@ describe('a component with the other ways its form is written', () => {
     expect(custom.describe('&CDP-8964;').description).toBe('outside of 鸟岛 (F2E7)')
     expect(custom.describe('{9999}')).toBeUndefined()
   })
+  it('reads a chain as the character form it joins, marked editorial', () => {
+    const row = doc.components.find(one => one.text === '#(-𠃍㇉)')
+    expect(row.character).toEqual({ text: '𢎘z', char: '𢎘', variant: 'z', in: 'zi-tools', basis: 'editorial' })
+    expect(row.draw).toBe('𢎘')
+    expect(custom.describe('#(-𠃍㇉)').names).toContainEqual({ text: '𢎘z', source: 'zi-tools', editorial: true })
+    expect(custom.drawable('⿸丿⿴#(-𠃍㇉)十')).toBe('⿸丿⿴𢎘十')
+    // The hooked chain is its own shape: no table and no reading gives it a character.
+    expect(doc.components.find(one => one.text === '#(-𠃌㇉)').character).toBeUndefined()
+    for (const one of doc.editorial) {
+      expect(one.basis).toBe('editorial')
+      expect(one.sources.length).toBeGreaterThan(0)
+      expect(doc.components.some(other => other.text === one.component)).toBe(true)
+    }
+  })
 })

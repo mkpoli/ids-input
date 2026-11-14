@@ -405,6 +405,7 @@
   "info.site.chise": "CHISE IDS",
   "info.custom.kind": "未编码部件",
   "info.custom.names": "其他写法",
+  "info.custom.editorial": "编者认定",
   "info.custom.source.babelstone": "BabelStone",
   "info.custom.source.chise": "CHISE",
   "info.custom.source.zi-tools": "字统网",

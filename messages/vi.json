@@ -405,6 +405,7 @@
   "info.site.chise": "CHISE IDS",
   "info.custom.kind": "Thành phần chưa mã hóa",
   "info.custom.names": "Cách viết khác",
+  "info.custom.editorial": "Biên tập",
   "info.custom.source.babelstone": "BabelStone",
   "info.custom.source.chise": "CHISE",
   "info.custom.source.zi-tools": "zi.tools",

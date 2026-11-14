@@ -569,8 +569,8 @@
             <p class="label">{t('info.custom.names')}</p>
             <div class="spellings">
               {#each custom.names as name (name.text)}
-                <button type="button" class="relation spelling" disabled={disabled || !onpick} aria-label={`${t('info.insert', { part: name.text })}${name.source ? ` · ${t(`info.custom.source.${name.source}`)}` : ''}`} onclick={() => pick(name.text)}>
-                  <span class="spelled" lang="ja">{name.text}</span>{#if name.source}<span class="label">{t(`info.custom.source.${name.source}`)}</span>{/if}
+                <button type="button" class="relation spelling" disabled={disabled || !onpick} aria-label={`${t('info.insert', { part: name.text })}${name.source ? ` · ${t(`info.custom.source.${name.source}`)}` : ''}${name.editorial ? ` · ${t('info.custom.editorial')}` : ''}`} onclick={() => pick(name.text)}>
+                  <span class="spelled" lang="ja">{name.text}</span>{#if name.source}<span class="label">{t(`info.custom.source.${name.source}`)}{#if name.editorial}{' · '}{t('info.custom.editorial')}{/if}</span>{/if}
                 </button>
               {/each}
               {#each subtractions as written (written)}

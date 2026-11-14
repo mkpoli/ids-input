@@ -405,6 +405,7 @@
   "info.site.chise": "CHISE IDS",
   "info.custom.kind": "符号化されていない部品",
   "info.custom.names": "別の書き方",
+  "info.custom.editorial": "編者による",
   "info.custom.source.babelstone": "BabelStone",
   "info.custom.source.chise": "CHISE",
   "info.custom.source.zi-tools": "zi.tools",

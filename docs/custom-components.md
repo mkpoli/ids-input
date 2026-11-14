@@ -122,6 +122,9 @@ zi.tools' `ids_lv1.txt` at the pinned revision. GPL-2.0-or-later, since CHISE's 
   component beside one or two characters gives one; a spelling two forms would both claim is
   dropped. `createCustomComponents(data).normalize(text)` writes such a subtraction as the form's
   identifier, and `drawable` draws it as the form.
+- `character`: the encoded character a component is read as a form of, `{ text, char, variant, in,
+  basis }` — `#(-𠃍㇉)` as `𢎘z`. `basis` is `editorial`: no table states it. The rows and their
+  sources are `editorial`, from `scripts/data/custom-characters.json`.
 - `equivalents`: what the component is in another table, `{ in, text, count, characters, status,
   basis, id, arrangements }`; `id` is the form the text is, and `arrangements` the same parts
   bracketed another way, each a form of its own. A component carries its form's `id` and `char`,
