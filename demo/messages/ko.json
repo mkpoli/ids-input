@@ -488,5 +488,6 @@
   "library.uses": "사용 수",
   "history.title": "표기법의 역사",
   "history.earliest": "확인한 가장 이른 기록",
-  "history.undated": "연대 미상"
+  "history.undated": "연대 미상",
+  "appendix.derivedFrom": "도출 근거"
 }

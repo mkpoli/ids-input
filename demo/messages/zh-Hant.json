@@ -488,5 +488,6 @@
   "library.uses": "使用數",
   "history.title": "記法沿革",
   "history.earliest": "所見最早記錄",
-  "history.undated": "年代不詳"
+  "history.undated": "年代不詳",
+  "appendix.derivedFrom": "推導自"
 }
