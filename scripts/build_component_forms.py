@@ -62,7 +62,8 @@ def pieces(cs, ch):
     shape.simplify()
     loops = []
     for contour in shape.contours:
-        loop = pathops.Path(); contour.draw(loop.getPen()); loops.append(loop)
+        loop = pathops.Path(); contour.draw(loop.getPen())
+        if abs(loop.area) >= 1: loops.append(loop)  # a sliver left by simplifying is no piece
     def inside(small, large):
         return abs(pathops.op(small, large, pathops.PathOp.INTERSECTION).area) >= 0.98 * abs(small.area)
     depth = [sum(inside(a, b) for j, b in enumerate(loops) if j != i) for i, a in enumerate(loops)]
