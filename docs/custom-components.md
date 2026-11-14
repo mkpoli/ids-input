@@ -70,6 +70,30 @@ start. `strokeLetters` in the data file gives the chain for each CJK stroke, fro
 from 黒丿乀's table (<https://note.com/midzchi_/n/n21737ee18736>), whose author warns that it
 contains mistakes.
 
+## Earlier and proposed notation
+
+Four documents on zi.tools' notation predate or extend the grammar above. None of what they add
+occurs in the published tables (`ids_lv0.txt` to `ids_lv2.txt`, revision `2597437`), so the parser
+does not read it; it is recorded here for text copied from older posts.
+
+- **Connector chains.** 解读特殊IDS (2022-12-18) lists a chain's strokes first and how they join
+  after: `>` tail to head, `^` head to head, `v` tail to tail, as in 臼 `⿶#(丿丨一𠃍>>v)⿰一一`.
+  A closed shape numbers its strokes from 0 and names the closing pair (`,0v4`). Curves are `Qa`
+  to `Qd` and `Qw` to `Qz`, with crossing pairs as four digits (`0205`). Today's chains write a
+  reversed stroke with `-` and a crossing with `xN`.
+- **Stroke letters.** IDS说明文档 3.0 beta (Losketch, 2024-06-04) gives `B` 扁, `D` 点, `G` 钩,
+  `H` 横, `N` 捺, `P` 撇, `Q` 圈, `S` 竖, `T` 提, `W` 弯, `X` 斜, `Z` 折, in either case. The current
+  grammar keeps `H S P N D T J Z Wg Q`, with `Z` only as the leftward stroke of `#(SZ)`; `B` and
+  `X` are gone from it. 黒丿乀's table suggests `BNg` for ㇃, which is the older `B`.
+- **Rotation by an angle.** 对于⿿这一IDS的补充 1.0.1 and 1.0.2 (鹏鹏喵) propose `⿿[90]`,
+  `⿿[-90]` and `⿿[±45]`, with `[±180]` the default that may be left out.
+- **Selector names.** 更为细致的IDS介绍 α-Ⅳ (ml-UFOp-W.S.-ahcvsh-qnb, 2024-07-03) names the
+  variant identifiers (提交源选择器, 可统一组件变体规则选择器, 部分可统一组件变体规则选择器,
+  镜像选择器), counts UCV entries against IRGN2476, and says over two hundred further identifiers
+  have no stated meaning.
+
+These were read as files a reader supplied; they carry no licence and are not in the repository.
+
 ## What reads them
 
 `parse` reads the three components as one part each (`customKind`), keeps an operator's modifier
