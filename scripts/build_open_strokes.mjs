@@ -43,7 +43,7 @@ const RELIABLE = ['⿰', '⿱', '⿲', '⿳', '⿴', '⿵', '⿶', '⿷', '⿸',
 const ENCLOSING = new Set([...'⿴⿵⿶⿷⿸⿹⿺⿻'])
 /** Where the held part is written among the enclosure's strokes: the index it is put in at. */
 const PLACEMENTS = /** @type {Record<string, (outer: string) => number>} */ ({
-  before: outer => outer.length, after: () => 0, 'after-1': () => 1, 'after-2': () => 2, 'after-3': () => 3,
+  'outer-first': outer => outer.length, 'inner-first': () => 0, 'after-1': () => 1, 'after-2': () => 2, 'after-3': () => 3,
   'before-last': outer => outer.length - 1, 'before-last-2': outer => outer.length - 2,
 })
 /** How many recorded characters an enclosure needs, and how many of them its place must write right, to be learned. */
@@ -174,8 +174,8 @@ function placed(name, outer, inner) {
   return at < 0 || at > outer.length ? null : outer.slice(0, at) + inner + outer.slice(at)
 }
 /** The place an operator's enclosure usually takes: a walking or open-topped one is written last, a full one is closed by its last stroke, a left-open one begins with its top stroke. @param {Tree & { op: string }} tree */
-const usualPlace = tree => tree.op === '⿶' || tree.op === '⿺' && 'leaf' in tree.parts[0] && WALKING.has(tree.parts[0].leaf) ? 'after'
-  : tree.op === '⿴' ? 'before-last' : tree.op === '⿷' ? 'after-1' : 'before'
+const usualPlace = tree => tree.op === '⿶' || tree.op === '⿺' && 'leaf' in tree.parts[0] && WALKING.has(tree.parts[0].leaf) ? 'inner-first'
+  : tree.op === '⿴' ? 'before-last' : tree.op === '⿷' ? 'after-1' : 'outer-first'
 /**
  * The orders a description is written in, from its components' orders. A component the table does
  * not record is read by its own description in turn. With `learned`, an order is written only
@@ -447,8 +447,8 @@ a place among the first's strokes:
 
 | Place | The held part is written |
 | --- | --- |
-| \`before\` | after the whole enclosure |
-| \`after\` | before the enclosure |
+| \`outer-first\` | after the whole enclosure |
+| \`inner-first\` | before the enclosure |
 | \`after-1\`, \`after-2\`, \`after-3\` | after the enclosure's first one, two or three strokes |
 | \`before-last\`, \`before-last-2\` | before the enclosure's last one or two strokes |
 
@@ -456,7 +456,7 @@ The place is learned per enclosure from the characters the source records: an en
 least ${SUPPORT} such characters takes the place that writes the most of them as recorded, if that is
 ${Math.round(AGREEMENT * 100)}% or more. \`cns11643\` teaches ${rulesOf('cns11643').length} places and \`rime-stroke\` ${rulesOf('rime-stroke').length}; \`manifest.json\` lists them
 under \`induction.learned\`. An enclosure without a learned place takes its operator's usual one:
-\`after\` for ⿶ and for ⿺ with 辶 or 廴, \`before-last\` for ⿴, \`after-1\` for ⿷, \`before\` otherwise.
+\`inner-first\` for ⿶ and for ⿺ with 辶 or 廴, \`before-last\` for ⿴, \`after-1\` for ⿷, \`outer-first\` otherwise.
 
 ⿹ and ⿻ have no usual place that holds, so they are induced through only for the enclosures with a
 learned one. In \`cns11643\`: ${crossing('cns11643')}.

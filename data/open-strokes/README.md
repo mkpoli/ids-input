@@ -73,8 +73,8 @@ a place among the first's strokes:
 
 | Place | The held part is written |
 | --- | --- |
-| `before` | after the whole enclosure |
-| `after` | before the enclosure |
+| `outer-first` | after the whole enclosure |
+| `inner-first` | before the enclosure |
 | `after-1`, `after-2`, `after-3` | after the enclosure's first one, two or three strokes |
 | `before-last`, `before-last-2` | before the enclosure's last one or two strokes |
 
@@ -82,10 +82,10 @@ The place is learned per enclosure from the characters the source records: an en
 least 5 such characters takes the place that writes the most of them as recorded, if that is
 90% or more. `cns11643` teaches 56 places and `rime-stroke` 106; `manifest.json` lists them
 under `induction.learned`. An enclosure without a learned place takes its operator's usual one:
-`after` for ⿶ and for ⿺ with 辶 or 廴, `before-last` for ⿴, `after-1` for ⿷, `before` otherwise.
+`inner-first` for ⿶ and for ⿺ with 辶 or 廴, `before-last` for ⿴, `after-1` for ⿷, `outer-first` otherwise.
 
 ⿹ and ⿻ have no usual place that holds, so they are induced through only for the enclosures with a
-learned one. In `cns11643`: ⿹气 before (58 of 62), ⿹弓 before (6 of 6), ⿻一 before (13 of 14), ⿻大 after-1 (13 of 14), ⿻十 before (5 of 5).
+learned one. In `cns11643`: ⿹气 outer-first (58 of 62), ⿹弓 outer-first (6 of 6), ⿻一 outer-first (13 of 14), ⿻大 after-1 (13 of 14), ⿻十 outer-first (5 of 5).
 
 ⿰ ⿱ ⿲ ⿳ ⿴ ⿵ ⿶ ⿷ ⿸ ⿺ are induced through at every level of the description. A component the source
 does not record is read by its own description in turn, and one of BabelStone's numbered components

@@ -119,7 +119,7 @@ describe('the open stroke-order release', () => {
     }
     const cns = manifest.induction.learned.find(entry => entry.source === 'cns11643').rules
     // 廴 is written after what it carries, 气 before what it holds.
-    expect(cns.find(rule => rule.operator === '⿺' && rule.enclosure === '廴')?.place).toBe('after')
-    expect(cns.find(rule => rule.operator === '⿹' && rule.enclosure === '气')?.place).toBe('before')
+    expect(cns.find(rule => rule.operator === '⿺' && rule.enclosure === '廴')?.place).toBe('inner-first')
+    expect(cns.find(rule => rule.operator === '⿹' && rule.enclosure === '气')?.place).toBe('outer-first')
   })
 })
