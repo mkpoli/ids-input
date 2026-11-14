@@ -588,7 +588,9 @@ two). `preview` draws a sequence that may hold empty slots (`⬚`); its options 
 Error named `TooLargeError` for a sequence larger than it draws, `UnavailableError` when its data
 cannot be read at all, and any other Error when it cannot draw. `IdsPreview` shows placeholders in the layout's boxes until a drawing arrives, a badge
 (Preview, Approximate, Final, Could not compose, Too large), and the adapter's `drawing` in place of
-the preview when there is one. While the data is unavailable, the placeholders stand with no badge.
+the preview when there is one. While the data is unavailable, the placeholders stand with no badge. It binds
+`step`, where the drawing stands: `idle`, `loading`, `composed`, `final`, `failed`, `capped` or
+`unavailable`.
 
 `IdsPreview` takes a tab `document` and `session` for direct layer editing, and binds `scopes` for
 export. Drag a part, or the selected layer's outline, to move it; drag an edge to scale one axis,
