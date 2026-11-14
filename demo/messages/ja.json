@@ -286,7 +286,6 @@
   "compare.parts": "{count}部品",
   "compare.open": "工房で開く",
   "compare.try": "zi.toolsで試す",
-  "compare.back": "工房へ",
   "compare.credit": "KAGEの描画は、zi.toolsがGlyphWikiの部品から記述を組み、KAGEが描いたものです。",
   "compare.license": "GlyphWikiのデータは自由に利用できます。KAGEエンジンはGPL-3.0です。描画は計測時点のものです。",
   "compare.operators": "IDSの構造符は点線の枠で表示されます。左右・上下・三列・三段・囲みを表します。",

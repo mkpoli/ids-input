@@ -225,7 +225,7 @@
 {/snippet}
 
 <div class="page">
-  <PageHeader title={t('appendix.title')} {t} bind:locale />
+  <PageHeader page="unencoded" title={t('appendix.title')} {t} bind:locale />
 
   <main>
     <section class="notations" aria-label={t('appendix.notations')}>

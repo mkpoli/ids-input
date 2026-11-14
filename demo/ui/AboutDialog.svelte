@@ -69,19 +69,9 @@
 <script>
   // What the workshop is, what it runs on, and what shaped it.
   import Dialog from './Dialog.svelte'
+  import { pages } from '../lib/pages.js'
   /** @type {{ open: boolean, t: (key: string, params?: Record<string, string | number>) => string }} */
   let { open = $bindable(false), locale, t } = $props()
-  // The workshop's other pages, each named by its own title.
-  const pages = $derived([
-    { path: 'sources.html', label: t('sources.title') },
-    { path: 'unencoded.html', label: t('appendix.title') },
-    { path: 'component-atlas.html', label: t('app.atlas') },
-    { path: 'ucv.html', label: t('ucv.title') },
-    { path: 'normalization.html', label: t('normalization.title') },
-    { path: 'open-data.html', label: t('app.openData') },
-    { path: 'compare.html', label: t('app.compare') },
-    { path: 'engines.html', label: t('app.engines') }
-  ])
   const groups = $derived([
     { label: t('app.about.reported'), people: reported },
     { label: t('app.about.quoted'), people: quoted },
@@ -95,8 +85,8 @@
     <p class="links"><a href="https://github.com/mkpoli/ids-input" target="_blank" rel="noreferrer">ids-input</a> · <a href="https://github.com/mkpoli/han-compose" target="_blank" rel="noreferrer">han-compose</a> · <a href="https://mkpo.li" rel="me">mkpoli</a></p>
     <h3>{t('app.about.pages')}</h3>
     <ul class="list">
-      {#each pages as page}
-        <li><a href={`./${page.path}?lang=${locale}`}>{page.label}</a></li>
+      {#each pages(t) as page (page.id)}
+        <li><a href={`./${page.id}.html?lang=${locale}`}>{page.label}</a></li>
       {/each}
     </ul>
     <h3>{t('app.about.licenses')}</h3>

@@ -286,7 +286,6 @@
   "compare.parts": "{count} bộ phận",
   "compare.open": "Mở trong xưởng",
   "compare.try": "Thử trên zi.tools",
-  "compare.back": "Xưởng",
   "compare.credit": "Hình KAGE do zi.tools tổng hợp mô tả từ các bộ phận GlyphWiki và KAGE vẽ.",
   "compare.license": "Dữ liệu GlyphWiki được dùng tự do; động cơ KAGE theo GPL-3.0. Hình vẽ là ảnh chụp tại thời điểm đo.",
   "compare.operators": "IDS được viết bằng các ký hiệu cấu trúc; các ô nét đứt là ký hiệu trái-phải, trên-dưới, ba cột, ba hàng và bao quanh.",
