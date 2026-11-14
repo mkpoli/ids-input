@@ -56,6 +56,16 @@ try {
     await page.waitForTimeout(800)
     assert.equal(await card.count(), 0, 'no hover card over a selected description')
 
+    // A part put in from the tools after a field selection gets the structure pane's list again.
+    await field.focus()
+    await page.keyboard.press('Home')
+    for (let i = 0; i < 3; i++) await page.keyboard.press('ArrowRight')
+    await page.keyboard.press('Shift+ArrowRight')
+    await card.waitFor({ timeout: 15000 })
+    await page.locator('.ids-slot').fill('木')
+    await page.locator('.ids-slot').press('Enter')
+    await page.locator('.ids-swaps').waitFor({ timeout: 15000 })
+
     assert.deepEqual(errors, [])
     console.log(`PASS ${scheme}: selected text lists its alternatives beside the field`)
     await page.close()

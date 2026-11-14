@@ -201,7 +201,7 @@ export function createEditor(options) {
     invalidateResolution()
     caret = null
     hovered = null
-    tree = next; chosen = select; lone = false; selectionVersion++; note = ''
+    tree = next; chosen = select; lone = false; inField = false; selectionVersion++; note = ''
     // An empty tree is an empty field, not an empty slot (⬚); a slot is written inside a node.
     // A draft the tree cannot read yet (it is not a description) is put back as it was typed.
     if (!typing) draft = written ?? (next === null ? '' : writeDraft(next))

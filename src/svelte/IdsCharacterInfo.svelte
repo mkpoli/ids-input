@@ -266,12 +266,13 @@
   }
   // While a part is dragged the card stays shut: as a popover it would sit over the part the pointer aims at.
   let dragging = false
-  /** @param {HTMLElement} element @param {string} value @param {number} delay */
-  function schedule(element, value, delay) {
+  /** `always` opens the card with nothing known of the part but its code point, for a section the host adds.
+   * @param {HTMLElement} element @param {string} value @param {number} delay @param {boolean} [always] */
+  function schedule(element, value, delay, always = false) {
     if (dragging) return
     // A mark records strokes but no script and no Unicode identity (々, 〡), and the panel is the
     // only place its strokes are laid out; it opens for the stroke record too.
-    if (!componentIdentity(value) && !(adapter.characterInfo && characterScript(value)) && !strokeRecords?.has(value) && !(isJurchen(value) && jurchenStrokes?.has(value))) { leave(); return }
+    if (!always && !componentIdentity(value) && !(adapter.characterInfo && characterScript(value)) && !strokeRecords?.has(value) && !(isJurchen(value) && jurchenStrokes?.has(value))) { leave(); return }
     keep()
     if (anchor === element && char === value && (open || showTimer !== undefined)) return
     close(); anchor = element; anchorPath = pathOf(element); char = value
@@ -362,7 +363,7 @@
     }
     const value = element.dataset.character ?? ''
     if (!value) return
-    if (!open || anchor !== element) { clearTimeout(showTimer); showTimer = undefined; schedule(element, value, 0) }
+    if (!open || anchor !== element) { clearTimeout(showTimer); showTimer = undefined; schedule(element, value, 0, Boolean(extra)) }
     pinned = selected = anchor === element
     keep()
   }

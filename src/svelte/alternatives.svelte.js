@@ -16,8 +16,8 @@ export function createAlternatives(source) {
   /** @type {Alternative[]} */
   let found = $state.raw([])
   let truncated = $state(false), failed = $state(false), loading = $state(false)
-  /** The part the results belong to, and how deep its search has gone or is going. */
-  let key = '', depth = -1
+  /** The part the results belong to, read by every getter, and how deep its search has gone. */
+  let key = $state(''), depth = -1
   let wanted = $state(0)
   /** @type {AbortController | null} */
   let controller = null
