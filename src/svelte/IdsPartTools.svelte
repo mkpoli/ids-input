@@ -12,6 +12,7 @@
   import { shortcut } from './shortcut.js'
   import { watchFallback } from './fallback-font.js'
   import { loadUcvIndex, loadUcvOutlines } from './ucv.js'
+  import { ucvIdentifier } from '../core/forms.js'
 
   /** @typedef {{ text: string, tree: import('../core/ids.js').Part, operation: 'expand' | 'merge' | 'both' }} Option */
 
@@ -50,12 +51,18 @@
     if (!ucv || !part) return []
     // A variant identifier after the component names one of its forms; the entries are the component's.
     const base = variantOf(part).base
+    // A form no code point names is written with its identifier where the adapter draws such forms.
+    // A component that is the whole text takes none: only a description carries an identifier.
+    const named = Boolean(editor.adapter.formed) && (editor.chosen?.length ?? 0) > 0
     return ucv.formsOf(base).filter(entry => entry.kind === 'unifiable')
-      .map(entry => ({ id: entry.id, forms: entry.forms.filter(form => form.text !== base) }))
-      .filter(entry => entry.forms.some(form => form.text))
+      .map(entry => ({ id: entry.id, forms: entry.forms.map((form, at) => {
+        const id = form.text || !named || form.undrawn ? null : ucvIdentifier(entry.id, at + 1, entry.forms.length)
+        return { ...form, write: form.text ?? (id ? base + id : null) }
+      }).filter(form => form.write !== part) }))
+      .filter(entry => entry.forms.some(form => form.write))
   })
   $effect(() => { if (offered.length && !ucvOutlines) loadUcvOutlines().then(outlines => { ucvOutlines = outlines }, () => {}) })
-  const unified = $derived(offered.map(entry => ({ id: entry.id, forms: entry.forms.filter(form => form.text || ucvOutlines?.[form.glyph]) })))
+  const unified = $derived(offered.map(entry => ({ id: entry.id, forms: entry.forms.filter(form => form.write || ucvOutlines?.[form.glyph]) })))
   const replaceable = $derived((Boolean(part) && (editor.swaps.length > 0 || editor.splits.length > 0 || unified.length > 0)) || merges.length > 0 || additional.length > 0 || truncated || failed)
   const label = $derived(t('ids.swaps.label', { part: part || written }))
 
@@ -280,10 +287,12 @@
                 {:else}<span class="ids-unified-entry">UCV {entry.id}</span>{/if}
                 {#each entry.forms as form, place (place)}
                   {@const outline = ucvOutlines?.[form.glyph]}
-                  {#if form.text}
-                    <button type="button" class="ids-swap ids-unified-form" data-form={form.glyph} disabled={editor.disabled} title={`${part} → ${form.text}`} aria-label={`${part} → ${form.text}`}
-                      draggable="true" ondragstart={event => event.dataTransfer?.setData('text/plain', /** @type {string} */ (form.text))} onclick={() => editor.take(/** @type {string} */ (form.text))}>
-                      {#if outline}<svg viewBox="0 0 200 200" aria-hidden="true"><path d={outline} /></svg>{:else}{form.text}{/if}
+                  {#if form.write}
+                    <!-- A component with an identifier is put as written: `take` would read its letters as typed operators. -->
+                    <button type="button" class="ids-swap ids-unified-form" data-form={form.glyph} disabled={editor.disabled} title={`${part} → ${form.write}`} aria-label={`${part} → ${form.write}`}
+                      draggable="true" ondragstart={event => event.dataTransfer?.setData('text/plain', /** @type {string} */ (form.write))}
+                      onclick={() => { if (form.text) editor.take(form.text); else editor.put(/** @type {string} */ (form.write), editor.chosen) }}>
+                      {#if outline}<svg viewBox="0 0 200 200" aria-hidden="true"><path d={outline} /></svg>{:else}{form.write}{/if}
                     </button>
                   {:else if outline}
                     <span class="ids-unified-form" data-form={form.glyph} role="img" title={t('ids.ucv.form', { name: form.glyph })} aria-label={t('ids.ucv.form', { name: form.glyph })}>

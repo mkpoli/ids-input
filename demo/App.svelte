@@ -17,7 +17,7 @@
   import { composerPreview as composerAt } from '@han-compose/composer'
   import { variationSequences } from '@han-compose/composer/variants'
   import engineOutlines from 'ids-engine-outlines'
-  import { EMPTY_MARKS, OPERATORS, characterStrokes, componentQuery, isJurchen, isShuishu, parse, substituteSequences, unalias } from '../src/core/index.js'
+  import { EMPTY_MARKS, OPERATORS, characterStrokes, componentQuery, drawnText, isJurchen, isShuishu, parse, substituteSequences, unalias } from '../src/core/index.js'
   import { loadStrokeRecords } from '../src/svelte/strokes.js'
   import { createDocumentSession, layerAtPath, sessionRecord, toSequence } from '../src/document/index.js'
   import { documentFile, readDocumentFile } from './lib/documents.js'
@@ -41,6 +41,8 @@
   import characterInfo from '../data/character-info.json.gz?url'
   import chains from '../data/zi-tools-chains.tsv.gz?url'
   import custom from '../data/custom-components.json.gz?url'
+  import variations from '../data/ucv.json?url'
+  import variationOutlines from '../data/ucv-outlines.json.gz?url'
   import characters from '../data/character-vocabulary.tsv.gz?url'
   import { LOCALES, appMessages } from './lib/locales.js'
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
@@ -127,7 +129,13 @@
   let { embed = false } = $props()
   const params = new URLSearchParams(location.search)
   /** A preview over the export at `base`, read from wherever this build holds it. @param {Parameters<typeof composerAt>[0]} options */
-  const composerPreview = options => composerAt({ ...options, base: readFrom(options.base) })
+  const composerPreview = options => {
+    const draw = composerAt({ ...options, base: readFrom(options.base) })
+    // The engine reads no variant identifier: a form one names is written as what draws it first,
+    // for the tabs' icons and the layers as for the preview.
+    return /** @type {typeof draw} */ (Object.assign(async (/** @type {string} */ sequence, /** @type {any} */ asking) =>
+      draw(await drawnText(sequence, babel.formed, asking), asking), { warm: draw.warm }))
+  }
   // What a share names: this page, or the published site for the desktop app, whose own address
   // opens nothing outside it.
   const shareFrom = DESKTOP ? new URL(SITE) : location
@@ -139,7 +147,7 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const sealAdapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, jurchen: jurchenData, ids, layers, zitools, chise: corpus, project: projectIds, overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains, custom })
+  const sealAdapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, jurchen: jurchenData, ids, layers, zitools, chise: corpus, project: projectIds, overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains, custom, variations })
 
   const operatorSet = new Set(OPERATORS.map(([op]) => op))
   const babel = { ...sealAdapter, recognizeDrawing, parts: async () => {
@@ -183,7 +191,9 @@
   const previews = new Map()
   // The outlines the engine draws without the export, as the page serves the package's `data/`: the
   // names the package reads, and the URL Vite gives each file it bundles. See `vite.config.js`.
-  const bundles = engineOutlines
+  // The forms of the component variation lists that only an outline draws go to the engine as the
+  // host's own outlines.
+  const bundles = { ...engineOutlines, 'host/outlines.json.gz': variationOutlines }
   /** @param {string} at @param {boolean} split @param {'sans' | 'serif' | 'fangsong' | 'kaisho'} style @param {string} [owner] A view whose drawings the others must not cancel. */
   const previewAt = (at, split, style, owner = '', preferExport = false) => {
     const key = `${at}\0${split ? '1' : '0'}\0${style}\0${owner}\0${preferExport ? '1' : '0'}`

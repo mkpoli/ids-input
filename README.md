@@ -203,6 +203,13 @@ descriptions of the IRG component variation entries the component is a form of (
 UCV #1, 間 for 閒 in NUCV #325), each under its entry; choosing one writes it in the component's
 place. `componentForms(part, { sequences, ucv })` in the core gives that list.
 
+A form of an entry that no code point names is written with zi.tools' variant identifier after the
+component: `壬q0012` is the second form of UCV #1. An adapter that answers `formed(sequence)`
+(`babelStoneAdapter({ variations })` over `data/ucv.json`) has the menu offer those forms too, and
+the preview draws each from `data/ucv-outlines.json.gz`, which a host lists for the composer as
+`host/outlines.json.gz`. Without them the identifier is kept in the description and the plain
+component is drawn.
+
 With `variations`, `IdsPartTools` also offers the forms the IRG unifies with the chosen component
 (its UCV entries, read from `data/ucv.json` when a component is first chosen); `variationsHref(entry)`
 gives each entry number a link.

@@ -8,7 +8,7 @@ inputs:
   sha:
     description: The han-compose commit holding the package
     required: false
-    default: 64d0ec7659d71ecd39149e17b91f9ab0eb4d896b
+    default: 4d8d0270852015c0f3b962612bb09de5055a9d11
 runs:
   using: composite
   steps:

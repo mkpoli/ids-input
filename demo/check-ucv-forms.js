@@ -12,6 +12,7 @@ try {
   for (const scheme of /** @type {const} */ (['light', 'dark'])) {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2, colorScheme: scheme })
     page.setDefaultNavigationTimeout(120000)
+    page.setDefaultTimeout(180000)
     const errors = []
     page.on('pageerror', error => errors.push(error.message))
 
@@ -20,8 +21,10 @@ try {
     assert.deepEqual(await page.locator('.ids-pick-tabs [role="tab"]').allInnerTexts(), ['Parts', 'Templates', 'Take parts from', 'Find'])
 
     // A component whose entries hold no form that can be written gets no row.
-    await Promise.all([page.waitForResponse(response => response.url().includes('ucv.json')), page.locator('.ids-tree .ids-part').nth(0).click()])
-    await page.waitForTimeout(500)
+    // The forms arrow on 壬 says the lists are read.
+    await page.locator('.ids-tree .ids-cell[data-index="1"] .ids-forms-toggle').waitFor()
+    await page.locator('.ids-tree .ids-part').nth(0).click()
+    await page.waitForTimeout(800)
     assert.equal(await page.locator('.ids-swaps .ids-unified').count(), 0, '氵 has only an undrawn, unwritten form')
 
     // A chosen component with unifiable forms lists them beside its other alternatives.
@@ -31,8 +34,8 @@ try {
     await row.locator('svg path').first().waitFor()
     assert.equal(await row.locator('.ids-unified-entry').innerText(), 'UCV 1')
     assert.match(await row.locator('.ids-unified-entry').getAttribute('href') ?? '', /ucv\.html\?lang=en#ucv-1$/)
-    assert.deepEqual(await row.locator('button.ids-unified-form').evaluateAll(nodes => nodes.map(node => node.getAttribute('data-form'))), ['u738b', 'u2123c'])
-    assert.equal(await row.locator('span.ids-unified-form').count(), 1, 'the form with no text of its own is shown, not offered')
+    assert.deepEqual(await row.locator('button.ids-unified-form').evaluateAll(nodes => nodes.map(node => node.getAttribute('data-form'))), ['u58ec-t', 'u738b', 'u2123c'])
+    assert.equal(await row.locator('button.ids-unified-form[data-form="u58ec-t"]').getAttribute('title'), '壬 → 壬q0012', 'the form no code point names is written with its identifier')
     if (shots) { await page.screenshot({ path: join(shots, `ucv-part-${scheme}.png`) }); await page.locator('.ids-swaps').screenshot({ path: join(shots, `ucv-alternatives-${scheme}.png`) }) }
     await row.locator('button.ids-unified-form[data-form="u738b"]').click()
     await page.waitForFunction(() => /** @type {HTMLInputElement | null} */ (document.querySelector('.ids-field input'))?.value === '⿰氵王')
