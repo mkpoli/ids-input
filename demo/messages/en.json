@@ -488,5 +488,8 @@
   "library.empty": "Choose a part",
   "library.code": "Code point",
   "library.strokes": "Strokes",
-  "library.uses": "Uses"
+  "library.uses": "Uses",
+  "history.title": "Notation history",
+  "history.earliest": "Earliest evidence found",
+  "history.undated": "Undated"
 }

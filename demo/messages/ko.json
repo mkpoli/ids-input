@@ -485,5 +485,8 @@
   "library.empty": "부품을 고르세요",
   "library.code": "코드 포인트",
   "library.strokes": "획수",
-  "library.uses": "사용 수"
+  "library.uses": "사용 수",
+  "history.title": "표기법의 역사",
+  "history.earliest": "확인한 가장 이른 기록",
+  "history.undated": "연대 미상"
 }
