@@ -1823,9 +1823,10 @@
       "equivalent": 722,
       "ids": 24989,
       "borrowed": 1281,
-      "none": 78,
+      "within": 48,
+      "none": 30,
       "reasons": {
-        "undescribed": 78,
+        "undescribed": 30,
         "unreadable": 0,
         "operator": 0,
         "component": 0
@@ -1838,9 +1839,10 @@
       "equivalent": 681,
       "ids": 3,
       "borrowed": 8,
-      "none": 78,
+      "within": 50,
+      "none": 28,
       "reasons": {
-        "undescribed": 78,
+        "undescribed": 28,
         "unreadable": 0,
         "operator": 0,
         "component": 0
@@ -1853,9 +1855,10 @@
       "equivalent": 1121,
       "ids": 91242,
       "borrowed": 4184,
-      "none": 78,
+      "within": 49,
+      "none": 29,
       "reasons": {
-        "undescribed": 78,
+        "undescribed": 29,
         "unreadable": 0,
         "operator": 0,
         "component": 0
@@ -1897,7 +1900,7 @@
     },
     {
       "name": "induced.tsv.gz",
-      "rows": 124231,
+      "rows": 124378,
       "columns": [
         "char",
         "codepoint",
@@ -1908,7 +1911,7 @@
         "ids",
         "lent"
       ],
-      "bytes": 1923844
+      "bytes": 1925598
     },
     {
       "name": "entered.tsv",
@@ -1926,7 +1929,7 @@
     },
     {
       "name": "wanted.tsv",
-      "rows": 234,
+      "rows": 87,
       "columns": [
         "char",
         "codepoint",
@@ -1939,7 +1942,7 @@
         "read",
         "within"
       ],
-      "bytes": 14193
+      "bytes": 4325
     }
   ],
   "texts": [

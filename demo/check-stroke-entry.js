@@ -13,13 +13,14 @@ try {
   await page.locator('.wanted').first().waitFor()
   await page.locator('tbody tr').first().waitFor()
 
-  // ⺛ is read inside the characters written with 旡, and the reading can be taken with its basis.
+  // ⻋ is read inside the characters written with 车 in two orders, so it is left to a person; the
+  // first reading can be taken with its basis.
   const order = page.getByLabel('Order', { exact: true }), basis = page.getByLabel('Basis', { exact: true })
-  await page.locator('.wanted', { hasText: '⺛' }).click()
-  assert.equal(await page.locator('.glyph').innerText(), '⺛')
+  await page.locator('.wanted', { hasText: '⻋' }).click()
+  assert.equal(await page.locator('.glyph').innerText(), '⻋')
   await page.locator('.ways button').first().click()
-  assert.equal(await order.inputValue(), '1535')
-  assert.equal(await basis.inputValue(), '33 of 33 characters with 旡, cns11643')
+  assert.equal(await order.inputValue(), '1521')
+  assert.equal(await basis.inputValue(), '73 of 84 characters with 车, cns11643')
 
   // 〡 is wanted and nothing reads it. The check saves a row for it, so it stops where a person already has.
   assert.equal(/\n〡\tcns11643\t/.test(before), false, '〡 is entered: the check would overwrite it')

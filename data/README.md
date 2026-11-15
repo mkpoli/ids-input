@@ -1335,9 +1335,11 @@ and how often the rules agree with the sources. Built by `scripts/build_open_str
 
 ## `stroke-form-names.tsv`
 
-The component a radical form is searched under in the descriptions where that is not the ideograph
-Unicode pairs it with: `form`, `name`, `basis`. `scripts/build_open_strokes.mjs` reads a wanted form
-inside the characters written with the named component. ⺫ is paired with 目 and drawn as 罒.
+The component each radical form without a stroke order is drawn as: `form`, `name`, `shape`
+(`same` where the form has the component's outline, `variant` where it is only drawn close to it)
+and `basis`, what a comparison of the two in Noto Sans CJK JP found. `scripts/build_open_strokes.mjs`
+reads a form inside the characters written with the named component and takes that as its order
+only where `shape` is `same`. ⺫ is paired with 目 by Unicode and drawn as 罒.
 
 ## `stroke-orders-entered.tsv`
 

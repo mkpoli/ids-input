@@ -11,7 +11,8 @@
 //   induced.tsv.gz      characters a source lacks, written from a character the source has:
 //                       the unified ideograph a compatibility form or radical is equivalent to, or
 //                       the components of its ideographic description sequence; and, where that
-//                       fails, the order another source records, borrowed and marked so
+//                       fails, the order another source records, borrowed and marked so; and
+//                       for a radical form, the order the characters written with it leave
 //
 // An induced order joins the orders of a description's components. The side-by-side and stacked
 // operators join them in order. An enclosure is written around what it holds at a place learned,
@@ -446,12 +447,16 @@ for (const line of readFileSync(new URL('../data/component-forms.tsv', import.me
   if (origin === 'unicode-ucd' && detail === 'EquivalentUnifiedIdeograph' && [...form].length === 1 && [...char].length === 1) PAIRS.set(form, char)
 }
 // A pair of nearly the same appearance is not always the same shape: ⺫ is paired with 目 and drawn
-// as 罒. `data/stroke-form-names.tsv` names the component such a form is drawn as.
+// as 罒. `data/stroke-form-names.tsv` names the component each form is drawn as and says whether it
+// has that component's outline; only then is what the component is written as the form's order.
+/** @type {Set<string>} The forms drawn with the outline of the component they are read under. */
+const SAME_SHAPE = new Set()
 for (const line of readFileSync(new URL('../data/stroke-form-names.tsv', import.meta.url), 'utf8').split('\n')) {
   if (!line || line.startsWith('#')) continue
-  const [form, name, basis] = line.split('\t')
-  if ([...form].length !== 1 || [...(name ?? '')].length !== 1 || !basis?.trim()) throw Error(`data/stroke-form-names.tsv: ${line}`)
+  const [form, name, shape, basis] = line.split('\t')
+  if ([...form].length !== 1 || [...(name ?? '')].length !== 1 || !['same', 'variant'].includes(shape) || !basis?.trim()) throw Error(`data/stroke-form-names.tsv: ${line}`)
   PAIRS.set(form, name)
+  if (shape === 'same') SAME_SHAPE.add(form)
 }
 /** @type {string[][]} */
 const induced = []
@@ -476,7 +481,7 @@ function lend(char, source) {
   }
   return null
 }
-const left = SOURCES.map(({ source, table, region }) => {
+const passes = SOURCES.map(({ source, table, region }) => {
   // An entered order stands beside the source's: it writes its character and the characters it is a component of.
   const entered = own.get(source).entered
   const known = new Map(own.get(source).orders)
@@ -543,6 +548,48 @@ const left = SOURCES.map(({ source, table, region }) => {
   equate()
   const none = result.failed.filter(entry => !equal.has(entry.char) && !borrowed.has(entry.char))
   induced.push(...result.rows, ...equal.values(), ...[...borrowed].map(([char, lender]) => [char, point(char), known.get(char).join(' '), 'borrowed', lender, source, '', lender]))
+  // What the source's own characters write each character left as, under its own name or the name
+  // of the component it is drawn as.
+  const mine = own.get(source).orders
+  /** @type {Map<string, { named: string, within: ReturnType<typeof readWithin> }>} */
+  const readings = new Map()
+  for (const component of new Set(none.flatMap(entry => [entry.char, ...entry.blockers]))) {
+    let named = component, within = readWithin(component, mine, region, places)
+    if (!within.found.length && PAIRS.has(component)) { named = PAIRS.get(component); within = readWithin(named, mine, region, places) }
+    readings.set(component, { named, within })
+  }
+  const count = basis => result.rows.filter(row => row[3] === basis).length
+  return { source, recorded: table.size, entered: entered.size, equivalent: count('equivalent') + equal.size, ids: count('ids'), borrowed: borrowed.size, left: none, readings }
+})
+/**
+ * The order a source's characters agree a form is written as: the form has the outline of the
+ * component it is read under, enough characters were read, and nearly all leave one order.
+ * @param {string} source @param {string} char
+ */
+function agreed(source, char) {
+  const reading = passes.find(pass => pass.source === source).readings.get(char)
+  if (!reading || !SAME_SHAPE.has(char) || reading.within.found.length < SUPPORT) return null
+  const [order, count] = reading.within.votes[0]
+  return count / reading.within.found.length >= AGREEMENT ? { order, named: reading.named } : null
+}
+const left = passes.map(({ left: without, readings, ...row }) => {
+  const { source } = row
+  // A form takes the order its own source's characters agree on, else the one another source's do.
+  // Only a character that keeps no other back is taken: nothing is read again after it.
+  const taken = new Set()
+  for (const { char, blockers } of without) {
+    if (without.some(other => other.blockers.includes(char))) continue
+    let found = agreed(source, char), lender = ''
+    // Another source's characters are read only where this one's are too few, not where they disagree.
+    if (!found && (readings.get(char)?.within.found.length ?? 0) < SUPPORT) for (const other of LENDERS[source]) {
+      const theirs = agreed(other, char)
+      if (theirs) { found = { order: inSymbols(theirs.order, source), named: theirs.named }; lender = other; break }
+    }
+    if (!found) continue
+    induced.push([char, point(char), found.order, 'within', found.named, source, '', lender])
+    taken.add(char)
+  }
+  const none = without.filter(entry => !taken.has(entry.char))
   const reasons = { undescribed: 0, unreadable: 0, operator: 0, component: 0 }
   /** @type {Map<string, { blocks: string[], alone: number }>} */
   const blocking = new Map()
@@ -557,15 +604,11 @@ const left = SOURCES.map(({ source, table, region }) => {
     }
   }
   for (const [component, entry] of [...blocking].sort((a, b) => b[1].alone - a[1].alone || b[1].blocks.length - a[1].blocks.length || byCodePoint(a[0], b[0]))) {
-    // What the source's own characters write the component as, under its own name or the paired ideograph's.
-    const mine = own.get(source).orders
-    let named = component, within = readWithin(component, mine, region, places)
-    if (!within.found.length && PAIRS.has(component)) { named = PAIRS.get(component); within = readWithin(named, mine, region, places) }
+    const { named, within } = readings.get(component)
     wanted.push([component, point(component), source, String(entry.blocks.length), String(entry.alone), entry.blocks.slice(0, 8).join(''),
       within.found.length ? named : '', String(within.found.length), within.votes.slice(0, 3).map(([order, count]) => `${order}×${count}`).join(' '), within.found.slice(0, 8).join('')])
   }
-  const count = basis => result.rows.filter(row => row[3] === basis).length
-  return { source, recorded: table.size, entered: entered.size, equivalent: count('equivalent') + equal.size, ids: count('ids'), borrowed: borrowed.size, none: none.length, reasons }
+  return { ...row, within: taken.size, none: none.length, reasons }
 })
 induced.sort((a, b) => SOURCES.findIndex(entry => entry.source === a[5]) - SOURCES.findIndex(entry => entry.source === b[5]) || byCodePoint(a[0], b[0]))
 // The two sources on the characters both record, and the orders induced from CNS against what Rime
@@ -772,6 +815,14 @@ convention they follow.
   components, and \`from\` is the other source whose order the row repeats, in this source's
   symbols. ${n(cover('cns11643').borrowed)} rows in \`cns11643\`, ${n(cover('rime-stroke').borrowed)} in \`rime-stroke\`, ${n(cover('kanjivg').borrowed)} in \`kanjivg\`.
 
+- \`within\`: the character is a form of the CJK Radicals Supplement with the outline of a
+  component the descriptions name, \`from\` is that component, and the order is what the source's
+  characters write the component as: each character whose description names it, with the other
+  parts' orders taken off the front and the back of its own. It is taken where at least ${SUPPORT}
+  characters were read and ${Math.round(AGREEMENT * 100)}% or more leave the same order; \`lent\` names the source whose
+  characters were read where the row's own had too few. ${n(cover('cns11643').within)} rows in \`cns11643\`, ${n(cover('rime-stroke').within)} in
+  \`rime-stroke\`, ${n(cover('kanjivg').within)} in \`kanjivg\`.
+
 A source borrows from the nearest convention first: \`cns11643\` from \`rime-stroke\` then
 \`kanjivg\`, \`rime-stroke\` from \`cns11643\` then \`kanjivg\`, \`kanjivg\` from \`cns11643\` then
 \`rime-stroke\`; an order entered for the lender counts as its own. A component is borrowed before
@@ -855,15 +906,17 @@ eight of the characters. \`named\` is the name it was found under. The descripti
 form of the CJK Radicals Supplement itself: they name the unified ideograph Unicode's
 \`EquivalentUnifiedIdeograph.txt\` pairs it with (旡 for ⺛), so a form is searched under that
 ideograph. Where the pair is not the shape the form is drawn as, \`data/stroke-form-names.tsv\` in
-the repository names the component that is: ⺫ is paired with 目 and searched under 罒. The reading
-is of that component as those characters write it, which is the form's only where the characters
-draw the form. It is evidence for a person entering the order, and no row is written from it.
+the repository names the component that is: ⺫ is paired with 目 and searched under 罒. That file
+also says whether each form has its component's outline. A form that does, with a reading enough
+characters agree on, gets a \`within\` row in \`induced.tsv.gz\` and leaves this list. What stays
+here is read from too few characters, in rival orders, or under a component the form is only drawn
+close to: there the reading is evidence for a person entering the order.
 
 ## Coverage
 
-| Source | Recorded | Entered | By equivalence | From IDS | Borrowed | Without an order |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-${left.map(row => `| \`${row.source}\` | ${n(row.recorded)} | ${n(row.entered)} | ${n(row.equivalent)} | ${n(row.ids)} | ${n(row.borrowed)} | ${n(row.none)} |`).join('\n')}
+| Source | Recorded | Entered | By equivalence | From IDS | Borrowed | Read in characters | Without an order |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+${left.map(row => `| \`${row.source}\` | ${n(row.recorded)} | ${n(row.entered)} | ${n(row.equivalent)} | ${n(row.ids)} | ${n(row.borrowed)} | ${n(row.within)} | ${n(row.none)} |`).join('\n')}
 
 "Without an order" counts the Han characters the workshop's composer draws or either IDS source
 describes that end with no row for that source, borrowed ones included. Why, for each:
@@ -910,6 +963,6 @@ numbered component BabelStone gives no fragment for.
 \`bun scripts/build_open_strokes.mjs\` fetches the sources and writes the files, this one included.
 `)
 writeFileSync(new URL('manifest.json', OUT), JSON.stringify(manifest, null, 2) + '\n')
-for (const row of left) console.log(`${row.source}: ${row.recorded} recorded, ${row.equivalent} by equivalence, ${row.ids} from descriptions, ${row.borrowed} borrowed, ${row.none} without an order`)
+for (const row of left) console.log(`${row.source}: ${row.recorded} recorded, ${row.equivalent} by equivalence, ${row.ids} from descriptions, ${row.borrowed} borrowed, ${row.within} read in characters, ${row.none} without an order`)
 console.log(`same order in both sources: ${agreement.sameOrder} of ${agreement.shared}`)
 console.log(`induced from CNS, against Rime: ${heldOutAgree} of ${heldOut.length} (${(100 * heldOutAgree / heldOut.length).toFixed(1)}%)`)

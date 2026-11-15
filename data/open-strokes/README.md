@@ -13,9 +13,9 @@ The format is `ids-input/open-strokes`, version 3.
 | `cns11643.tsv.gz` | 76,282 | Taiwan's standard order, from CNS 全字庫: `char`, `codepoint`, `orders`, `cns` (the CNS plane-codes mapped to the character). Open Government Data License 1.0. |
 | `rime-stroke.tsv.gz` | 102,582 | Rime's five-stroke dictionary: `char`, `codepoint`, `orders`. LGPL-3.0. |
 | `kanjivg.tsv.gz` | 6,728 | Japanese order, from KanjiVG: `char`, `codepoint`, `orders`, `strokes` (KanjiVG's type of each stroke, as it writes them). CC BY-SA 3.0. |
-| `induced.tsv.gz` | 124,231 | Induced and borrowed orders: `char`, `codepoint`, `orders`, `basis`, `from`, `source`, `ids`, `lent`. Each row keeps the terms of its `source` and of the sources in `lent`. |
+| `induced.tsv.gz` | 124,378 | Induced and borrowed orders: `char`, `codepoint`, `orders`, `basis`, `from`, `source`, `ids`, `lent`. Each row keeps the terms of its `source` and of the sources in `lent`. |
 | `entered.tsv` | 1 | Orders entered by hand: `char`, `codepoint`, `orders`, `basis`, `by`, `source`, `date`. CC0 1.0. |
-| `wanted.tsv` | 234 | Characters and components no source has an order for, with what the source's characters write them as: `char`, `codepoint`, `source`, `blocks`, `alone`, `examples`, `named`, `found`, `read`, `within`. CC0 1.0. |
+| `wanted.tsv` | 87 | Characters and components no source has an order for, with what the source's characters write them as: `char`, `codepoint`, `source`, `blocks`, `alone`, `examples`, `named`, `found`, `read`, `within`. CC0 1.0. |
 | `manifest.json` | | Sources with checksums, licences, coverage and the tables below. |
 | `LICENSE-rime-stroke-LGPL-3.0.txt`, `LICENSE-GPL-3.0.txt`, `AUTHORS-rime-stroke.txt` | | The terms and authors of the Rime dictionary. |
 | `LICENSE-kanjivg-CC-BY-SA-3.0.txt` | | The terms of KanjiVG. |
@@ -86,6 +86,14 @@ convention they follow.
 - `borrowed`: the source has no order for the character and none can be written from its
   components, and `from` is the other source whose order the row repeats, in this source's
   symbols. 1,281 rows in `cns11643`, 8 in `rime-stroke`, 4,184 in `kanjivg`.
+
+- `within`: the character is a form of the CJK Radicals Supplement with the outline of a
+  component the descriptions name, `from` is that component, and the order is what the source's
+  characters write the component as: each character whose description names it, with the other
+  parts' orders taken off the front and the back of its own. It is taken where at least 5
+  characters were read and 90% or more leave the same order; `lent` names the source whose
+  characters were read where the row's own had too few. 48 rows in `cns11643`, 50 in
+  `rime-stroke`, 49 in `kanjivg`.
 
 A source borrows from the nearest convention first: `cns11643` from `rime-stroke` then
 `kanjivg`, `rime-stroke` from `cns11643` then `kanjivg`, `kanjivg` from `cns11643` then
@@ -220,26 +228,28 @@ eight of the characters. `named` is the name it was found under. The description
 form of the CJK Radicals Supplement itself: they name the unified ideograph Unicode's
 `EquivalentUnifiedIdeograph.txt` pairs it with (旡 for ⺛), so a form is searched under that
 ideograph. Where the pair is not the shape the form is drawn as, `data/stroke-form-names.tsv` in
-the repository names the component that is: ⺫ is paired with 目 and searched under 罒. The reading
-is of that component as those characters write it, which is the form's only where the characters
-draw the form. It is evidence for a person entering the order, and no row is written from it.
+the repository names the component that is: ⺫ is paired with 目 and searched under 罒. That file
+also says whether each form has its component's outline. A form that does, with a reading enough
+characters agree on, gets a `within` row in `induced.tsv.gz` and leaves this list. What stays
+here is read from too few characters, in rival orders, or under a component the form is only drawn
+close to: there the reading is evidence for a person entering the order.
 
 ## Coverage
 
-| Source | Recorded | Entered | By equivalence | From IDS | Borrowed | Without an order |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| `cns11643` | 76,282 | 1 | 722 | 24,989 | 1,281 | 78 |
-| `rime-stroke` | 102,582 | 0 | 681 | 3 | 8 | 78 |
-| `kanjivg` | 6,728 | 0 | 1,121 | 91,242 | 4,184 | 78 |
+| Source | Recorded | Entered | By equivalence | From IDS | Borrowed | Read in characters | Without an order |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `cns11643` | 76,282 | 1 | 722 | 24,989 | 1,281 | 48 | 30 |
+| `rime-stroke` | 102,582 | 0 | 681 | 3 | 8 | 50 | 28 |
+| `kanjivg` | 6,728 | 0 | 1,121 | 91,242 | 4,184 | 49 | 29 |
 
 "Without an order" counts the Han characters the workshop's composer draws or either IDS source
 describes that end with no row for that source, borrowed ones included. Why, for each:
 
 | Source | No description | Unreadable description | Operator not induced through | Component without an order |
 | --- | ---: | ---: | ---: | ---: |
-| `cns11643` | 78 | 0 | 0 | 0 |
-| `rime-stroke` | 78 | 0 | 0 | 0 |
-| `kanjivg` | 78 | 0 | 0 | 0 |
+| `cns11643` | 30 | 0 | 0 | 0 |
+| `rime-stroke` | 28 | 0 | 0 | 0 |
+| `kanjivg` | 29 | 0 | 0 | 0 |
 
 An unreadable description is a single component, carries 〾 or an operator modifier, or names a
 numbered component BabelStone gives no fragment for.
