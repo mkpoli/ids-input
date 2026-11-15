@@ -45,6 +45,7 @@
     funnel: 'M4 5h16l-6 7v6l-4 2v-8Z',
     table: 'M4 5h16v14H4zM4 10h16M10 10v9',
     clock: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM12 7v5l3 2',
+    document: 'M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7',
     eye: 'M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12ZM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z',
   }
 </script>

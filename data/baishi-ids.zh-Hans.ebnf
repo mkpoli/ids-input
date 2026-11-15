@@ -1,0 +1,209 @@
+(* zi.tools IDS Extension：zi.tools数据库的延展IDS（其文档称“白式”）语法，采用ISO/IEC 14977 EBNF格式。
+
+   数据范围：接受https://github.com/yi-bai/ids在提交
+   2597437b928e8d530b7ae09cf53fe5ec7868569c（2026-10-31）下
+   ids_lv0.txt、ids_lv1.txt与ids_lv2.txt共306,102行中的全部行（4行格式错误者除外）。
+
+   参考来源：《（白式）IDS 延展语法导论》（2026-03-20，下文简称“I26”）第31–33页的EBNF，
+   由NightFurySL2001根据白易（Yi Bai，zi.tools）的设计整理，见
+   https://github.com/NightFurySL2001/bai-ids。I26声明其EBNF“仅供参考，并非正式定义”。
+
+   相对I26的修订（在下文注释中以CHANGE标注）：
+     C1：第三列（备选拆分组）可以省略；
+     C2：中日韩笔画区段延续至U+31E5。
+   仅消除歧义而不改变所接受语言的重写以SAME-LANGUAGE标注。
+   I26的原规则名以[I26: ...]标出。
+
+   特殊序列：? Ideographic ?与? Radical ?分别为Unicode 18.0.0 PropList.txt中的同名属性；
+   ? CJK stroke ?为U+31C0..U+31E5；? TAB ?为U+0009。
+
+   本文件采用MIT许可证，与ids-input（https://github.com/mkpoli/ids-input）代码一致。
+   此记法出自zi.tools作者。*)
+
+(* ================= 1.行 ================= *)
+
+(* ids_lv0/1/2.txt中的一行：字头、一个TAB、主条目，以及可选的一个TAB和备选条目。[I26: IDS_Definition_Row]
+   CHANGE C1：备选拆分组可以省略。I26写作"(TAB IDS_Alternative_Definition)"而未加"?"，
+   这会拒绝所有两列的行（lv0的102034行中有95043行）；其正文（§3.1）与README均说明第三列可选。*)
+row = headword, tab, primary group, [tab, alternative group] ;
+
+(*被描述的字符。[I26: Ideograph_Char] *)
+headword = ideograph char ;
+
+(*默认拆分（主组）。[I26: IDS_Locale_Definition]
+   SAME-LANGUAGE：I26将裸露的IDS_Sequence列为第一备选项，而entry已涵盖该情况。*)
+primary group = entry, {";", entry} ;
+
+(*合理性较低或不常用的拆分（第三列）。[I26: IDS_Alternative_Definition] *)
+alternative group = entry, {";", entry} ;
+
+(*单条拆分：可选的唯一性前缀、IDS、可选的括号内变体标识符。[I26: IDS_Locale_Sequence] *)
+entry = [uniqueness prefix], ids, [sequence variants] ;
+
+(* ================= 2.表意文字描述序列（IDS） ================= *)
+
+(*一条IDS：笔画链，或运算符及其操作数。[I26: IDS_Sequence]
+   SAME-LANGUAGE：I26为重叠运算符与包围/减法运算符分别提供了带括号与不带括号两个分支（通过IDS_BinaryOperator）；
+   此处改为将方括号设为可选。*)
+ids = stroke chain
+    | unary operator, component
+    | binary operator, component, component
+    | overlap operator, [overlap modifier], component, component
+    | indexed operator, [index modifier], component, component
+    | ternary operator, component, component, component ;
+
+(*一个操作数（部件）。[I26: IDS_Component]
+   SAME-LANGUAGE：I26还列出了Stroke_Sequence（已属于IDS）以及 〢 〣（已属于Ideographic，因而已是taggable char）。*)
+component = ids | taggable char, [component variant] | curve | "リ" | "コ" ;
+
+(*单目运算符：镜像、旋转。[I26: IDS_UnaryOperator] *)
+unary operator = "⿾" | "⿿" ;
+
+(*不带方括号修饰的双目运算符。[I26: IDS_BinaryUniqueOperator] *)
+binary operator = "⿰" | "⿱" | "⿸" | "⿹" | "⿺" | "⿽" ;
+
+(*重叠运算符。[I26: IDS_BinaryOverlapOperator] *)
+overlap operator = "⿻" ;
+
+(*包围与减法运算符，可带索引修饰。㇯（U+31EF）见于文档说明，但数据中尚未使用。[I26: IDS_BinaryAmbiguousOperator] *)
+indexed operator = "⿴" | "⿵" | "⿶" | "⿷" | "⿼" | "㇯" ;
+
+(*三目运算符。[I26: IDS_TrinaryOperator] *)
+ternary operator = "⿲" | "⿳" ;
+
+(* ================= 3.重叠修饰符 ⿻[...] ================= *)
+
+(* ⿻ 后的方括号：正向说明，以及可选的"|"与反向说明。[I26: Overlap_Modifier] *)
+overlap modifier = "[", overlap spec, ["|", overlap spec], "]" ;
+
+(*简写形式（切片）或完整形式（交叉矩阵）。[I26: Overlap_Matrix] *)
+overlap spec = slice | crossing matrix ;
+
+(*简写形式a:b，按第二操作数的横向笔画计数。[I26: Overlap_Horizontal_Indexing] *)
+slice = [slice bound], ":", [slice bound] ;
+
+(*切片的一端；负数表示从底部倒数。*)
+slice bound = number | negative number ;
+
+(*完整形式：以逗号分隔的若干行，每个横向结构占一行。
+   SAME-LANGUAGE：I26写作Overlap_Rows | Overlap_Cell+，且空行存在双重可选性；
+   本写法对每个字符串仅有唯一推导且所接受语言相同（至少包含一个单元格或至少包含一个逗号）。*)
+crossing matrix = matrix cell, {matrix cell}, {",", matrix row}
+                | ",", matrix row, {",", matrix row} ;
+
+(*可为空的单元格行。[I26: Overlap_Row] *)
+matrix row = {matrix cell} ;
+
+(*单个单元格："."或"_"表示接触，x或a-d表示交叉（a-d命名对应段），l或r表示左右侧。
+   [I26: Overlap_Cell, Overlap_Identity, Overlap_Crossing, Overlap_Non_Crossing] *)
+matrix cell = "." | "_" | "x" | "a" | "b" | "c" | "d" | "l" | "r" ;
+
+(* ================= 4.索引修饰符 ⿴[n] ㇯[n] ================= *)
+
+(*指定所处的包围区域（⿴ ⿵ ⿶ ⿷ ⿼）或所减的重复部分（㇯），从0开始计数；[0]省略不写。
+   [I26: Index_Modifier] *)
+index modifier = "[", number, "]" ;
+
+(* ================= 5.笔画链#(...) ================= *)
+
+(*首尾相接的笔画序列，末尾可选闭合标记z。[I26: Stroke_Sequence] *)
+stroke chain = "#", "(", stroke part, {stroke part}, ["z"], ")" ;
+
+(*笔画链中的一节：可选的反向标记"-"、一个笔画、可选的交叉或断开标记。[I26: Stroke_Part] *)
+stroke part = [reversal], stroke, [crossing | break] ;
+
+(*以字符或字母表示的单个笔画。*)
+stroke = ideograph char | stroke letter ;
+
+(* "-"：表示其后的笔画首尾对调接入。[I26: StReversed_Indicator] *)
+reversal = "-" ;
+
+(* "x" n：表示当前笔画与同一笔画链中的第n笔相交，从0开始计数。[I26: StCrossing_Indicator] *)
+crossing = "x", number ;
+
+(* "b"：强制断开；规范化时不得将此笔画与下一笔画合并。[I26: StBreak_Indicator] *)
+break = "b" ;
+
+(*笔画的字母拼写。H横，S竖，P撇，N捺，D点，T提，J提捺（㇝），Z左（仅见于 ㇘），
+   Wg弯钩，Qa-Qd为四段四分之一圆弧；S或P后的"Hw"表示圆转入横；末尾的"g"表示钩。
+   [I26: Stroke_Letter] *)
+stroke letter = ("H" | "S" | "P" | "N"), ["g"]
+              | ("S" | "P"), "Hw", ["g"]
+              | "D" | "T" | "J" | "Z"
+              | "Wg"
+              | "Q", ("a" | "b" | "c" | "d") ;
+
+(* ================= 6.变体标识符 ================= *)
+
+(*紧随IDS之后的括号列表：表明该拆分所描述的字形变体。[I26: Variant_Identifier_Definition] *)
+sequence variants = "(", variant id, {",", variant id}, ")" ;
+
+(*紧接在部件字符后的标签：指明所用的部件变体。[I26: the Variant_Identifier in Ideo_with_Variant_ID] *)
+component variant = variant id ;
+
+(*字源字母或小写变体标签。[I26: Variant_Identifier]
+   SAME-LANGUAGE：I26中的五个分支存在重叠："."同时属于
+   Wildcard_Source与Alternate_Variants，且每个UCV_Full_Position与
+   Imaginary_UCV字符串也同属Alternate_Variants。各类别按模式依次匹配区分，
+   以最先匹配者为准；模式列于https://ids.mkpo.li/baishi#variant-id。*)
+variant id = source letter | style tag ;
+
+(*单个IRG字源字母。[I26: Unicode_Sources] *)
+source letter = "B" | "G" | "H" | "J" | "K" | "M" | "P" | "Q" | "S" | "T" | "U" | "V" ;
+
+(*点号、数字与小写字母：通配符"."、笔形样式与位置字母、UCV的q/p/x/y代码、qq代码。
+   [I26: Wildcard_Source | UCV_Full_Position | Imaginary_UCV | Alternate_Variants] *)
+style tag = tag char, {tag char} ;
+
+(*样式标签中允许使用的字符。*)
+tag char = "." | digit | lower letter ;
+
+(* ================= 7.唯一性前缀{...} ================= *)
+
+(*花括号内指明该条目所属抽象字形的对应字符，从而使IDS能够映射回唯一码位；
+   "?"（及可选数字）标记与该字其他字源差异较大的字源字形；末尾可选的字源字母用于进一步限定。
+   [I26: Unique_Sequence_Separator] *)
+uniqueness prefix = "{", ["?", [digit]], taggable char, [source letter], "}" ;
+
+(* ================= 8.字符 ================= *)
+
+(*可独立出现（作字头或笔画链成员）的字符。[I26: Ideograph_Char]
+   SAME-LANGUAGE：I26还列出了 〢 〣，而它们已属于Ideographic。*)
+ideograph char = taggable char | curve | "リ" | "コ" ;
+
+(*可附带部件变体标签的字符。[I26: Ideograph_Char_with_Variant] *)
+taggable char = hanzi | cjk stroke | "ユ" | "ス" ;
+
+(*汉字与部首。[I26: Hanzi]
+   SAME-LANGUAGE：删去了I26末尾的"|"（空备选项）。*)
+hanzi = ? Ideographic ? | ? Radical ? ;
+
+(*中日韩笔画区段。
+   CHANGE C2：U+31C0..U+31E5。I26止于U+31E3，并称U+31E4/U+31E5不在zi.tools的笔画集中
+   （其注释误印为“U+30E4和U+30E5”，显然指U+31E4/U+31E5）。数据中实际存在行
+   "㇥ {㇥}#(SHP)"，将U+31E5用作字头及花括号内字符。[I26: CJK_Stroke] *)
+cjk stroke = ? CJK stroke ? ;
+
+(*四种顺时针四分之一圆弧。[I26: Curves] *)
+curve = "◝" | "◞" | "◟" | "◜" ;
+
+(* [I26: TAB] *)
+tab = ? TAB ? ;
+
+(* ================= 9.数字与字母 ================= *)
+
+(*不带前导零的非负整数。[I26: Number] *)
+number = "0" | nonzero digit, {digit} ;
+
+(* [I26: Negative_Number] *)
+negative number = "-", nonzero digit, {digit} ;
+
+(* [I26: Positive_Numeral] *)
+nonzero digit = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ;
+
+(* [I26: One_Digit_Number] *)
+digit = "0" | nonzero digit ;
+
+(*小写字母a-z。*)
+lower letter = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m"
+             | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" ;
