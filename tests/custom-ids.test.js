@@ -91,3 +91,78 @@ describe('form identifiers in data/custom-components.json.gz', () => {
     expect(custom.drawable('⿹&X-99999;一')).toBe('⿹&X-99999;一')
   })
 })
+
+describe('a form written as a character less its other parts', () => {
+  const doc = JSON.parse(gunzipSync(readFileSync(new URL('../data/custom-components.json.gz', import.meta.url))).toString('utf8'))
+  const custom = createCustomComponents(doc)
+  const id = text => doc.components.find(row => row.text === text).id
+
+  it('lists every such spelling, with one or two parts taken', () => {
+    const horse = doc.components.find(row => row.text === '{51}').subtractions
+    expect(horse).toContain('㇯馬灬')
+    expect(horse).toContain('㇯㇯𠙖冫几')
+    expect(doc.components.find(row => row.text === '{53}').subtractions).toContain('㇯鸟一')
+    for (const row of doc.components) for (const written of row.subtractions ?? []) expect(parse(written).problem).toBeUndefined()
+  })
+  it('gives a spelling to one form only', () => {
+    const owner = new Map()
+    for (const row of doc.components) for (const written of row.subtractions ?? []) {
+      expect(owner.get(written) ?? row.id).toBe(row.id)
+      owner.set(written, row.id)
+    }
+  })
+  it('normalizes a subtraction to the form, alone or inside a description', () => {
+    expect(custom.normalize('㇯馬灬')).toBe(`&${id('{51}')};`)
+    expect(custom.normalize('⿰木㇯鸟一')).toBe(`⿰木&${id('{53}')};`)
+    expect(custom.normalize('⿰氵㇯㇯𠙖冫几')).toBe(`⿰氵&${id('{51}')};`)
+    // A subtraction that names no form, and a text with none, stay as they are.
+    expect(custom.normalize('㇯軍車')).toBe('㇯軍車')
+    expect(custom.normalize('⿰木木')).toBe('⿰木木')
+    expect(custom.normalize('㇯馬')).toBe('㇯馬')
+  })
+  it('draws a subtraction as the form it names', () => {
+    expect(custom.drawable('㇯鸟一')).toBe(custom.get('{53}').draw)
+    expect(custom.drawableLeaves('⿰木㇯馬灬')).toEqual({ text: `⿰木${custom.get('{51}').draw}`, leaves: [0, 1] })
+    expect(custom.drawable('㇯軍車')).toBe('㇯軍車')
+  })
+})
+
+describe('a component with the other ways its form is written', () => {
+  const doc = JSON.parse(gunzipSync(readFileSync(new URL('../data/custom-components.json.gz', import.meta.url))).toString('utf8'))
+  const custom = createCustomComponents(doc)
+
+  it('names the form in each table, with its expression and subtractions', () => {
+    const part = custom.describe('{53}')
+    expect(part.id).toBe('X-00053')
+    expect(part.description).toBe('outside of 鸟岛 (F2E7)')
+    expect(part.names).toEqual([{ text: '&CDP-8964;', source: 'chise' }, { text: '⿱丿⿴#(-𠃌㇉)丶', source: null }])
+    expect(part.subtractions).toContain('㇯鸟一')
+    expect([...part.subtractions[0]].length).toBeLessThanOrEqual([...part.subtractions.at(-1)].length)
+  })
+  it('answers the same form from any of its names', () => {
+    expect(custom.describe('&CDP-8964;').names.map(name => name.text)).toContain('{53}')
+    expect(custom.describe('&X-00053;').names.map(name => name.text)).toEqual(['{53}', '&CDP-8964;', '⿱丿⿴#(-𠃌㇉)丶'])
+    expect(custom.describe('&CDP-8964;').description).toBe('outside of 鸟岛 (F2E7)')
+    expect(custom.describe('{9999}')).toBeUndefined()
+  })
+  it('reads a chain as the character form it joins, marked editorial', () => {
+    const row = doc.components.find(one => one.text === '#(-𠃍㇉)')
+    expect(row.character).toEqual({ text: '𢎘z', char: '𢎘', variant: 'z', in: 'zi-tools', basis: 'editorial' })
+    expect(row.draw).toBe('𢎘')
+    expect(custom.describe('#(-𠃍㇉)').names).toContainEqual({ text: '𢎘z', source: 'zi-tools', editorial: true })
+    expect(custom.drawable('⿸丿⿴#(-𠃍㇉)十')).toBe('⿸丿⿴𢎘十')
+    // The font's one glyph of 𢎘 stands in for the z form: the drawing is marked approximate.
+    expect(row.drawApproximate).toBe(true)
+    expect(custom.drawableLeaves('⿸丿⿴#(-𠃍㇉)十')).toEqual({ text: '⿸丿⿴𢎘十', leaves: [0, 1, 2], approximate: ['#(-𠃍㇉)'] })
+    expect(custom.drawableLeaves(`⿰木&${row.id};`).approximate).toEqual([`&${row.id};`])
+    expect(custom.drawableLeaves('⿹{53}一').approximate).toBeUndefined()
+    expect(doc.components.filter(one => one.drawApproximate).map(one => one.text)).toEqual(['#(-𠃍㇉)'])
+    // The hooked chain is its own shape: no table and no reading gives it a character.
+    expect(doc.components.find(one => one.text === '#(-𠃌㇉)').character).toBeUndefined()
+    for (const one of doc.editorial) {
+      expect(one.basis).toBe('editorial')
+      expect(one.sources.length).toBeGreaterThan(0)
+      expect(doc.components.some(other => other.text === one.component)).toBe(true)
+    }
+  })
+})
