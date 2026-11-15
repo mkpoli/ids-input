@@ -7,19 +7,22 @@ import { customKind, customLength, isCustom } from '../../src/core/index.js'
  * @typedef {'babelstone' | 'chise' | 'zi-tools'} Notation
  * @typedef {{ text: string, source: Notation | 'unnamed', description?: string }} FormName
  * @typedef {{ in: Notation, text: string, status: 'confirmed' | 'candidate', count: number, characters: string[], id?: string }} FormEquivalent
- * @typedef {{ char: string, text: string, in: Notation, of: string, status: string }} FormDerived
+ * @typedef {{ in: Notation, text: string, attested: boolean, status?: 'confirmed' | 'candidate', of?: string }} FormSpelling A description of a character in one notation: the table's own, or derived from `of`.
+ * @typedef {{ char: string, spellings: FormSpelling[] }} FormCharacter A character that names the form, with each way it is written.
  * @typedef {object} FormRow
  * @property {string} id The form's identifier, X-00053.
  * @property {number} number
  * @property {string} shown What is drawn for it: a name, or its expression.
  * @property {FormName[]} names
+ * @property {string[]} subtractions The form as a character less its other parts, ㇯馬灬.
+ * @property {{ text: string, in: Notation, basis: 'editorial', reason?: string }} [character] The encoded character the form is read as, 𢎘z: no table says so.
  * @property {{ id: string, relation: 'confirmed' | 'candidate' | 'arrangement' }[]} of The forms an unnamed one was found for.
  * @property {FormEquivalent[]} equivalents
  * @property {{ other: string, note: string }[]} yours
  * @property {number} uses
  * @property {string} usedIn
- * @property {FormDerived[]} derived
- * @property {'confirmed' | 'candidate' | 'none'} status
+ * @property {FormCharacter[]} derived
+ * @property {'confirmed' | 'candidate' | 'editorial' | 'none'} status
  * @property {string} hay Everything a query may match, lower case.
  */
 
@@ -40,13 +43,30 @@ export function sideText(cid) {
  */
 export function formRows(doc, mine = []) {
   const by = new Map(doc.components.map(row => [row.text, row]))
-  /** @type {Map<string, FormDerived[]>} */
-  const derived = new Map()
-  for (const row of doc.characters ?? []) for (const id of row.ids ?? []) {
-    const list = derived.get(id) ?? []
-    derived.set(id, list)
-    list.push({ char: row.char, text: row.text, in: row.in, of: row.of, status: row.status })
+  // Each character once per form, with every notation it is written in: a table's own description
+  // and what follows from another table's stand side by side, the derived one saying what from.
+  /** @type {Map<string, Map<string, Map<string, FormSpelling>>>} */
+  const gathered = new Map()
+  /** @param {string} id @param {string} char @param {FormSpelling} spelling */
+  const spell = (id, char, spelling) => {
+    const chars = gathered.get(id) ?? new Map()
+    gathered.set(id, chars)
+    const spellings = chars.get(char) ?? new Map()
+    chars.set(char, spellings)
+    const key = `${spelling.in}\0${spelling.text}`, seen = spellings.get(key)
+    if (!seen || (spelling.attested && !seen.attested)) spellings.set(key, spelling)
   }
+  for (const row of /** @type {any[]} */ (doc.characters ?? [])) for (const id of row.ids ?? []) {
+    spell(id, row.char, row.attested ? { in: row.in, text: row.text, attested: true }
+      : { in: row.in, text: row.text, attested: false, status: row.status === 'verified' ? 'confirmed' : 'candidate', of: row.of })
+    // What a substitution starts from is the other table's own description.
+    if (row.basis === 'substitution') spell(id, row.char, { in: row.from, text: row.of, attested: true })
+  }
+  const ORDER = ['babelstone', 'chise', 'zi-tools']
+  /** @type {Map<string, FormCharacter[]>} */
+  const derived = new Map([...gathered].map(([id, chars]) => [id, [...chars].map(([char, spellings]) => ({
+    char, spellings: [...spellings.values()].sort((a, b) => Number(b.attested) - Number(a.attested) || ORDER.indexOf(a.in) - ORDER.indexOf(b.in) || (a.text < b.text ? -1 : 1)),
+  }))]))
   // Where an unnamed form comes from: the forms it was found for.
   /** @type {Map<string, { id: string, relation: 'confirmed' | 'candidate' | 'arrangement' }[]>} */
   const origin = new Map()
@@ -63,6 +83,8 @@ export function formRows(doc, mine = []) {
     if (!isCustom(item.text)) point(item.id, row.id, item.status === 'verified' ? 'confirmed' : 'candidate')
     for (const other of item.arrangements ?? []) point(other.id, row.id, 'arrangement')
   }
+  /** @type {Map<string, string>} */
+  const reasons = new Map((/** @type {any} */ (doc).editorial ?? []).map((/** @type {any} */ row) => [row.component, row.reason]))
   const pairs = mine.map(pair => ({ a: sideText(pair.a), b: sideText(pair.b), note: pair.note }))
   return (doc.forms ?? []).map(form => {
     const named = form.names.flatMap(name => by.get(name) ?? [])
@@ -83,7 +105,12 @@ export function formRows(doc, mine = []) {
         count: Math.max(seen?.count ?? 0, item.count, characters.length), characters, ...(item.id ?? seen?.id ? { id: item.id ?? seen?.id } : {}) })
     }
     const equivalents = [...equal.values()].sort((a, b) => Number(b.status === 'confirmed') - Number(a.status === 'confirmed') || b.count - a.count)
+    const subtractions = [...new Set(named.flatMap(row => /** @type {{ subtractions?: string[] }} */ (row).subtractions ?? []))]
     const of = origin.get(form.id) ?? []
+    // The character one of the form's names is read as, with what that reading rests on.
+    const reader = named.find(row => row.character)
+    const reason = reader && reasons.get(reader.text)
+    const character = reader?.character ? { text: reader.character.text, in: /** @type {Notation} */ (reader.character.in), basis: reader.character.basis, ...(reason ? { reason } : {}) } : undefined
     // A name is matched whatever its case was typed in; two pairs to one other side are one line.
     const lower = form.names.map(name => name.toLowerCase())
     /** @type {Map<string, { other: string, note: string }>} */
@@ -96,13 +123,13 @@ export function formRows(doc, mine = []) {
     }
     const mineHere = [...paired.values()]
     const usedIn = [...new Set(named.flatMap(row => [.../** @type {string} */ (/** @type {any} */ (row).usedIn ?? row.examples.join(''))]))].join('')
-    const status = named.length > 1 || equivalents.some(item => item.status === 'confirmed') || of.some(other => other.relation === 'confirmed') ? 'confirmed' : equivalents.length || of.length ? 'candidate' : 'none'
+    const status = named.length > 1 || equivalents.some(item => item.status === 'confirmed') || of.some(other => other.relation === 'confirmed') ? 'confirmed' : equivalents.length || of.length ? 'candidate' : character ? 'editorial' : 'none'
     const mentions = derived.get(form.id) ?? []
-    const hay = [form.id, `&${form.id};`, ...names.flatMap(name => [name.text, name.description ?? '']),
+    const hay = [form.id, `&${form.id};`, ...subtractions, character?.text ?? '', ...names.flatMap(name => [name.text, name.description ?? '']),
       ...equivalents.flatMap(item => [item.text, item.characters.join(''), item.id ?? '']), ...of.map(other => other.id),
-      usedIn, ...mentions.flatMap(row => [row.char, row.text]), ...mineHere.flatMap(pair => [pair.other, pair.note])].join('\n').toLowerCase()
+      usedIn, ...mentions.flatMap(row => [row.char, ...row.spellings.map(one => one.text)]), ...mineHere.flatMap(pair => [pair.other, pair.note])].join('\n').toLowerCase()
     return {
-      id: form.id, number: Number(form.id.slice(2)), shown: named.find(row => row.draw)?.text ?? form.names[0], names, of, equivalents, yours: mineHere,
+      id: form.id, number: Number(form.id.slice(2)), shown: named.find(row => row.draw)?.text ?? form.names[0], names, subtractions, ...(character ? { character } : {}), of, equivalents, yours: mineHere,
       uses: [...usedIn].length, usedIn, derived: mentions, status: /** @type {FormRow['status']} */ (status), hay,
     }
   }).sort((a, b) => a.number - b.number)
@@ -115,7 +142,7 @@ export const querySummary = query => query.trim().toLowerCase().split(/\s+/u).fi
 /**
  * Whether a row answers a query.
  * @param {FormRow} row @param {string[]} terms
- * @param {'all' | Notation | 'unnamed' | 'yours'} source @param {'any' | 'confirmed' | 'candidate' | 'none'} status
+ * @param {'all' | Notation | 'unnamed' | 'yours'} source @param {'any' | 'confirmed' | 'candidate' | 'editorial' | 'none'} status
  */
 export function matches(row, terms, source, status) {
   if (status !== 'any' && row.status !== status) return false
