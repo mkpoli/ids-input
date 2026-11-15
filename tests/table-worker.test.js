@@ -3,13 +3,15 @@
 import { expect, it } from 'bun:test'
 import { babelStoneAdapter } from '../src/adapter/index.js'
 import { answer } from '../src/adapter/table-worker.js'
+import { turn } from '../src/core/search.js'
 
 const TABLE = ['林\t⿰木木(GHTJKPV)', '森\t⿱木林(GHTJKPV)', '相\t⿰木目(GHTJKPV)', '想\t⿱相心(GHTJKPV)', '淋\t⿰氵林(GHTJKPV)', ''].join('\n')
 const PROJECT = '淋\t⿰水林\n'
 const at = (/** @type {string} */ text) => `data:text/plain,${encodeURIComponent(text)}`
 const FILES = { ids: at(TABLE), project: at(PROJECT) }
 
-/** A worker on this thread: each message goes to the worker's own handler, each answer comes back in a later turn. */
+/** A worker on this thread: each message reaches the worker's own handler in a later turn of the
+ * event loop, and each answer comes back in a later one, as between two threads. */
 function loopback() {
   /** @type {any[]} */
   const posted = []
@@ -17,7 +19,11 @@ function loopback() {
   const worker = { posted, terminated: false, terminate() { worker.terminated = true },
     postMessage(/** @type {any} */ message) {
       posted.push(message)
-      answer(structuredClone(message)).then(reply => { if (reply && !worker.terminated) worker.onmessage?.({ data: structuredClone(reply) }) })
+      const sent = structuredClone(message)
+      turn().then(() => answer(sent)).then(async reply => {
+        await turn()
+        if (reply && !worker.terminated) worker.onmessage?.({ data: structuredClone(reply) })
+      })
     } }
   return worker
 }
@@ -89,4 +95,18 @@ it('answers a description search that waited for the index before the similar se
     page.findByIds('木 目', { limit: 9 }).then(() => answered.push('ids')),
   ])
   expect(answered).toEqual(['ids', 'similar'])
+})
+
+it('stands the index build aside while questions keep arriving', async () => {
+  // Enough characters that the index takes several slices.
+  const many = Array.from({ length: 40000 }, (_, i) => `${String.fromCodePoint(0x20000 + i)}\t⿰⿱木${String.fromCodePoint(0x4E00 + i % 20000)}${String.fromCodePoint(0x4E00 + i % 977)}`).join('\n')
+  const page = babelStoneAdapter({ ids: at(`${TABLE}${many}\n`), worker: loopback })
+  await page.structure('林')
+  let found = false
+  const search = page.findByIds('木 目', { limit: 9 }).then(result => { found = true; return result })
+  // One question after another, each asked on the answer before: all are answered before the search.
+  let answers = 0
+  for (let i = 0; i < 40; i++) { await page.structure('森'); if (!found) answers++ }
+  expect(answers).toBe(40)
+  expect((await search).hits.map(hit => hit.char)).toContain('相')
 })

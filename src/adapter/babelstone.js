@@ -233,7 +233,9 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  * files, with its own downloads, so the tables are parsed and indexed once and off the caller's
  * thread. Elsewhere, and for a host that passes its own `table` or `fetch`, neither of which a
  * worker can use, they are answered on the caller's thread. `after` is a promise the description tables (`ids`, `zitools`, `chise`, `project`) and
- * that worker wait for before they load, for a page with something to show first. `smallSeal` adds the compiled CHISE Small Seal document to the
+ * that worker wait for before they load, for a page with something to show first. The search index
+ * is built in slices with `pause` awaited between them, a turn of the event loop unless one is
+ * passed, so a thread with other callers answers them meanwhile. `smallSeal` adds the compiled CHISE Small Seal document to the
  * same table and palette; its modern correspondences supply search labels and character information.
  * `sketches` is the URL of `data/sketch-parts.json.gz` (or its decoded document), the prepared
  * glyph masks the Find tab's drawing search compares with; without it the tab builds them from
@@ -256,10 +258,10 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  *   sketches?: string | URL | import('../core/sketch-data.js').SketchData,
  *   shuishu?: string | URL | import('./shuishu-data.js').ShuishuData,
  *   jurchen?: string | URL | import('./jurchen-data.js').JurchenData,
- *   worker?: (() => Worker) | null, after?: Promise<unknown> }} options
+ *   worker?: (() => Worker) | null, after?: Promise<unknown>, pause?: () => Promise<void> }} options
  * @returns {IdsAdapter & { table: () => Promise<Map<string, Sequence[]>> }}
  */
-export function babelStoneAdapter({ ids, zitools, chise, project, components, componentsText, overwrite, overwriteText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, chains, custom, customOutlines, variations, characterInfo, layers, layersText, smallSeal, sketches, shuishu, jurchen, table: given, palette: givenPalette, fetch: get = download, after,
+export function babelStoneAdapter({ ids, zitools, chise, project, components, componentsText, overwrite, overwriteText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, chains, custom, customOutlines, variations, characterInfo, layers, layersText, smallSeal, sketches, shuishu, jurchen, table: given, palette: givenPalette, fetch: get = download, after, pause,
 
   worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./table-worker.js', import.meta.url), { type: 'module' }) } = {}) {
   // A page with something to show first passes `after`: the description tables and the worker that
@@ -1049,7 +1051,7 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
     async findByIds(query, { limit = 60, signal, componentLookup = true } = {}) {
       if (remote) return inWorker('findByIds', signal, query, { limit, componentLookup })
       const search = await localSearch()
-      await search.prepare()
+      await search.prepare({ pause })
       const result = search.search(query, { limit, componentLookup })
       signal?.throwIfAborted()
       return result
@@ -1064,7 +1066,7 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
     async findSimilar(query, { limit = 60, signal } = {}) {
       if (remote) return inWorker('findSimilar', signal, query, { limit })
       const search = await localSearch()
-      await search.prepare()
+      await search.prepare({ pause })
       // A similar search is several searches: whoever else waited for the index is answered first.
       await turn()
       const result = search.similar(query, { limit })
