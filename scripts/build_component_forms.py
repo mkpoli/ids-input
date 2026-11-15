@@ -242,6 +242,58 @@ def jin_with_ba(cs, style='sans'):
     drawn.draw(pen)
     return [group([pen.value])]
 
+def groups_box(groups):
+    """The ink box of prepared groups, curve extrema included, as (left, bottom, right, top)."""
+    xs, ys = [], []
+    for contour in groups:
+        for ops, points in contour:
+            at, i, k = None, 0, 0
+            while k < len(ops):
+                if ops[k] == 'Q':
+                    control, end = points[i:i+2], points[i+2:i+4]
+                    for axis, out in ((0, xs), (1, ys)):
+                        a, b, c = at[axis], control[axis], end[axis]
+                        den = a - 2 * b + c
+                        t = (a - b) / den if den else -1
+                        if 0 < t < 1: out.append((1 - t) ** 2 * a + 2 * (1 - t) * t * b + t * t * c)
+                    at, i, k = end, i + 4, k + 2
+                else:
+                    at, i, k = points[i:i+2], i + 2, k + 1
+                xs.append(at[0]); ys.append(at[1])
+    return min(xs), min(ys), max(xs), max(ys)
+
+def fitted_groups(groups, box):
+    """Prepared groups scaled and moved so their ink fills `box`, (left, bottom, right, top)."""
+    x0, y0, x1, y1 = groups_box(groups)
+    left, bottom, right, top = box
+    kx, ky = (right - left) / (x1 - x0), (top - bottom) / (y1 - y0)
+    move = lambda v, i: round(left + (v - x0) * kx if i % 2 == 0 else bottom + (v - y0) * ky, 2)
+    return [[[ops, [move(v, i) for i, v in enumerate(points)]] for ops, points in contour] for contour in groups]
+
+def groups_path(groups):
+    path = pathops.Path()
+    for contour in groups:
+        for ops, points in contour:
+            i, k = 0, 0
+            while k < len(ops):
+                if ops[k] == 'M': path.moveTo(*points[i:i+2]); i += 2; k += 1
+                elif ops[k] == 'L': path.lineTo(*points[i:i+2]); i += 2; k += 1
+                else: path.quadTo(*points[i:i+4]); i += 4; k += 2
+            path.close()
+    return path
+
+# 黄金萬兩 as the 揮春 in the UHK 港生活 article writes it: 黄's body, then 金 with 八 for its roof
+# hanging from the foot of 由, then 萬's band, as ink boxes (left, bottom, right, top) in em units.
+# 金's top is set from 由's bottom bar, where its centre stem ends, 8 units into the bar so the
+# strokes join; Serif's 由 stands on feet below the bar. The composer would give each operand a row.
+HUANG_JIN_WAN = '⿳龷由⿳八⿻王丷⿱田⿵冂山'
+HUANG_BODY_BOX, JIN_BOX, WAN_BAND_BOX = (185, 560, 815, 840), (60, 215, 940), (120, -78, 880, 192)
+
+def huang_jin_wan(body, jin, band):
+    body = fitted_groups(body, HUANG_BODY_BOX)
+    bar = pathops.op(groups_path(body), rect_path(495, 0, 505, 1000), pathops.PathOp.INTERSECTION).bounds[1]
+    return body + fitted_groups(jin, (*JIN_BOX, bar + 8)) + fitted_groups(band, WAN_BAND_BOX)
+
 def huang_body(cs):
     """黄 without its last two strokes, which 金's top stands in for.
 
@@ -575,6 +627,7 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     forms['⿱田⿵冂山'] = WAN_WITHOUT_CAO[style]
     forms['⿱龷由'] = [group(huang_body(cs))]
     forms['⿱八⿻王丷'] = jin_with_ba(cs, style)
+    forms[HUANG_JIN_WAN] = huang_jin_wan(forms['⿱龷由'], forms['⿱八⿻王丷'], forms['⿱田⿵冂山'])
     # The top of the KRM vulgar 處 (K07097330): ⺊'s dot as a bar, the stem centred on the cover
     # and joined to it. One component, reused as the top of ⿳⺊冖人 and its relatives.
     forms['⿱⺊冖'] = seal_dot_top(cs, style)
@@ -645,6 +698,14 @@ result['editorial'] = {
         'kaisho': 'Kureedo 上 without its baseline, with editorial stem spacing and an extended rightward bar, over native 冖.',
         'donors': {'sans': ['上', '冖'], 'serif': ['上', '冖'], 'kaisho': ['上', '冖']},
         'forms': ['⿱⺊冖'],
+    },
+    'UHK-HUANG-JIN-WAN-LIANG': {
+        'kind': 'editorial ligature from font-derived forms',
+        'reference': '揮春上的合體字　你看懂幾多？ (新春篇), UHK 港生活, 2015-02-12',
+        'url': 'https://hk.ulifestyle.com.hk/topic/detail/200474/',
+        'limitation': 'A photographed brush 揮春 sets the structure: 金 takes 黄\'s 八 for its roof, hanging from 由, over 萬\'s band. Outlines are the face\'s own 黄 body, 金 with ㇒ and ㇏ for its roof, and 萬 with 岡\'s 山 for 禸; the boxes are editorial.',
+        'donors': {'sans': ['黄', '金', '㇒', '㇏', '萬', '岡'], 'serif': ['黄', '金', '㇒', '㇏', '萬', '岡']},
+        'forms': [HUANG_JIN_WAN],
     },
 }
 # The table is the engine's: it is committed in a han-compose checkout, which `bun run data` copies
