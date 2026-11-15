@@ -166,13 +166,16 @@ export const SHEET = [
       { id: 'list-default', label: 'default', hint: 'listDefault', quotes: [{ char: '一', text: '#(H)(.)', row: 1, glyphs: [{ char: '一', parts: [[0]] }], strokes: true, focus: ['(.)'] }] },
       { id: 'list-source', label: 'source', hint: 'listSource', quotes: [{ char: '画', text: '⿱一.⿶凵.由(J)', row: 10044, glyphs: [{ char: '画', parts: [[1], [2, 0, 3], [4, 5, 6, 7, 8]] }], focus: ['(J)'] }] },
       { id: 'list-style', label: 'style', hint: 'listStyle', quotes: [{ char: '土', text: '⿱十.一t(t)', row: 2336, glyphs: [{ char: '地', parts: [[4, 5], [6]], rest: [0, 1, 2, 3] }], focus: ['(t)'] }] },
-      { id: 'list-position', label: 'position', hint: 'listPosition', quotes: [{ char: '勳', text: '⿺熏.力(r)', row: 1268, glyphs: ['composed'], focus: ['(r)'] }] },
+      { id: 'list-position', label: 'position', hint: 'listPosition', quotes: [
+        { char: '䴢', text: '⿱鹿.木.(u)', row: 27427, glyphs: ['composed'], focus: ['(u)'] },
+        { char: '䴢', text: '⿸鹿.木.(.)', row: 27427, glyphs: [{ char: '䴢', parts: [[0, 7, 6, 4, 5, 12, 14, 2, 13, 8, 9], [1, 3, 11, 10]] }] },
+      ] },
       { id: 'list-mirror', label: 'mirror', hint: 'listMirror', quotes: [{ char: '𱤻', text: '⿾止.(m)', row: 94401, glyphs: [{ char: '𱤻', parts: [[0]] }], focus: ['(m)'] }] },
       { id: 'list-merged', label: 'merged', hint: 'listMerged', quotes: [{ char: '七', text: '⿻乚一(.,T)', row: 4, file: 'ids_lv1.txt', glyphs: [{ char: '七', parts: [[1], [0]] }], focus: ['(.,T)'] }] },
     ] },
     { id: 'source-letter', rules: ['source letter'], legends: [SOURCE_LETTERS] },
     { id: 'style-tag', rules: ['style tag'], legends: [STYLE_LETTERS, POSITION_LETTERS], cards: [
-      { id: 'list-ucv', anchors: ['ucv-position'], label: 'ucv', hint: 'listUcv', quotes: [{ char: '口', text: '⿴〢二.(q3162)', row: 1508, glyphs: ['composed'], focus: ['(q3162)'] }] },
+      { id: 'list-ucv', anchors: ['ucv-position'], label: 'ucv', hint: 'listUcv', quotes: [{ char: '工', text: '⿳一.𠃑.一.(q4082)', row: 4070, glyphs: ['composed'], focus: ['(q4082)'] }] },
       { id: 'list-analogy', anchors: ['imaginary-ucv'], label: 'analogy', hint: 'listAnalogy', quotes: [{ char: '父', text: '⿱儿.乂.(qq222)', row: 9271, glyphs: ['composed'], focus: ['(qq222)'] }] },
     ] },
   ] },
@@ -233,7 +236,7 @@ export const SHEET = [
       { char: '函', text: '⿻[:-1]丂⿶凵.⿰冫⿱丿丶.(J)', row: 1022, slots: [0, 1, 2, 3, 3], glyphs: [{ char: '函', parts: [[1, 6, 7, 8], [2, 0, 3], [5, 9], [10, 4]] }], focus: ['[:-1]'] },
     ] },
     { id: 'worked-che', hint: 'workedChe', quotes: [
-      { char: '車', text: '車\t⿻十.旦.\t⿻丨亘.', row: 16587, glyphs: [{ char: '車', parts: [[0, 2], [5, 4, 3, 1]] }, { char: '車', parts: [[2], [0, 5, 4, 3, 1]] }], focus: [[6, 7]] },
+      { char: '車', text: '車\t⿻十.旦.\t⿻丨亘.', row: 16587, glyphs: [{ char: '車', parts: [[0, 2], [5, 4, 3, 1]] }, { char: '車', parts: [[2], [0, 5, 4, 3, 1]] }], focus: [[7, 8]] },
     ] },
     { id: 'worked-gui', hint: 'workedGui', open: true, quotes: [
       { char: '龜', text: '⿱⺈⿴[4]⿻[.,.__,r,,bxx]⿹⿺乚.丨⿱ココ⿱#(一-𠃍丨b一)コ乂d(J)', row: 20893, slots: [0, 1, 1, 1, 1, 1, 1, 2],

@@ -91,6 +91,13 @@ describe('the cheatsheet\'s cards', () => {
   it('draw something for every quotation', () => {
     for (const card of cards) for (const quote of card.quotes) expect(quote.glyphs.some(Boolean), `${card.id} ${quote.text}`).toBe(true)
   })
+  it('mark the second TAB of a row with an alternative group', () => {
+    for (const id of ['row-alternative', 'worked-che']) {
+      const [quote] = cards.find(card => card.id === id).quotes
+      expect(focusOf(quote).map(([from, to]) => [...quote.text].slice(from, to).join('')), id).toEqual(['\t'])
+      expect(focusOf(quote)[0][0], id).toBe([...quote.text].lastIndexOf('\t'))
+    }
+  })
   it('colour as many parts as an entry writes, four at most', () => {
     for (const card of cards) for (const quote of card.quotes) {
       const tokens = tokenise(quote.text, { strokes: quote.strokes })
