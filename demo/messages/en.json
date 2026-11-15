@@ -590,6 +590,7 @@
   "history.title": "Notation history",
   "history.earliest": "Earliest evidence found",
   "history.undated": "Undated",
+  "appendix.derivedFrom": "Derived from",
   "atlas.search": "Character, cid or a character it appears in",
   "atlas.kind.label": "Code point",
   "atlas.kind.all": "All",

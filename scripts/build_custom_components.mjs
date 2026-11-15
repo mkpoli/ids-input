@@ -329,14 +329,27 @@ const retiredRows = ledger.rows.filter(row => row.note.startsWith('merged into')
 const characters = []
 const seenRow = new Set()
 /** @param {typeof characters[number]} row */
+/** @type {Record<string, Map<string, Set<string>>>} Each table's descriptions of a character, with characters written whole. */
+const written = {}
+/** @param {string} source @param {string} char @param {string} text */
+const attestedIn = (source, char, text) => {
+  const table = written[source] ??= new Map()
+  let texts = table.get(char)
+  if (!texts) table.set(char, texts = new Set((tables[source].get(char) ?? []).flatMap(tree => [write(tree), write(frames[source].collapse(tree))])))
+  return texts.has(text)
+}
 const emit = row => {
   // The forms the description names, by identifier.
-  const ids = [...new Set(customsOf(plainTree(row.text)).map(idOf).filter(Boolean))]
+  // Both sides count: the description, and for a substitution the one it was made from.
+  const ids = [...new Set([...customsOf(plainTree(row.text)), ...(row.basis === 'substitution' ? customsOf(plainTree(row.of)) : [])].map(idOf).filter(Boolean))]
   if (ids.length) Object.assign(row, { ids })
   const key = `${row.char}\0${row.in}\0${row.text}`
   // Only a whole description is a row: written out, a long one may pass what a description holds.
   if (seenRow.has(key) || parse(row.text).problem) return
   seenRow.add(key)
+  // Whether the table the description is written for writes it itself: such a row is that table's
+  // own description, reached here from the other side.
+  if (attestedIn(row.in, row.char, row.text)) Object.assign(row, { attested: true })
   characters.push(row)
 }
 const verified = firm

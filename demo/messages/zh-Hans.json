@@ -587,6 +587,7 @@
   "history.title": "记法沿革",
   "history.earliest": "所见最早记录",
   "history.undated": "年代不详",
+  "appendix.derivedFrom": "推导自",
   "atlas.search": "字符、cid或包含它的字符",
   "atlas.kind.label": "码位",
   "atlas.kind.all": "全部",

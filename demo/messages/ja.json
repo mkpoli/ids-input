@@ -587,6 +587,7 @@
   "history.title": "記法の歴史",
   "history.earliest": "確認できた最古の記録",
   "history.undated": "年代不明",
+  "appendix.derivedFrom": "導出元",
   "atlas.search": "文字・cid・その部品を含む字",
   "atlas.kind.label": "符号位置",
   "atlas.kind.all": "すべて",

@@ -26,7 +26,16 @@ describe('the appendix table of forms', () => {
     expect(outside.equivalents.some(item => item.text === '&CDP-8964;' || item.text === '{53}')).toBe(false)
     expect([...outside.usedIn]).toContain('鸟')
     expect(outside.uses).toBe([...outside.usedIn].length)
-    expect(outside.derived.find(row => row.char === '乌' && row.in === 'babelstone').text).toBe('⿹㇯{53}丶一')
+    // A character is listed once, with every notation it is written in.
+    expect(new Set(outside.derived.map(row => row.char)).size).toBe(outside.derived.length)
+    const wu = outside.derived.find(row => row.char === '乌').spellings
+    // What subtraction derives for 乌 is what BabelStone itself writes: the row is that table's own.
+    expect(wu.find(one => one.in === 'babelstone')).toEqual({ in: 'babelstone', text: '⿹㇯{53}丶一', attested: true })
+    // A table's own description and one derived for another table stand side by side.
+    const niao = outside.derived.find(row => row.char === '鸟').spellings
+    expect(niao.find(one => one.in === 'babelstone')).toEqual({ in: 'babelstone', text: '⿹{53}一', attested: true })
+    expect(niao.find(one => one.in === 'zi-tools' && !one.attested).of).toBe('⿹{53}一')
+    for (const row of rows) for (const one of row.derived) expect(new Set(one.spellings.map(s => s.in + s.text)).size).toBe(one.spellings.length)
   })
   it('says which form an unnamed one was found for', () => {
     const arranged = rows.find(row => row.names[0].text === '⿴⿱丿#(-𠃌㇉)丶')

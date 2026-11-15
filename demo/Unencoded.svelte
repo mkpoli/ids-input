@@ -331,8 +331,19 @@
                 <tr class="detail">
                   <td colspan="6">
                     <ul class="derived">
-                      {#each row.derived as one (one.char + one.in + one.text)}
-                        <li><span class="char" lang="ja">{one.char}</span><span class="tag" data-source={one.in}>{t(`appendix.source.${one.in}`)}</span>{@render written(one.text, row.id)}{@render mark(one.status === 'verified' ? 'confirmed' : 'candidate', false)}<span class="by" lang="ja">{@render written(one.of, row.id)}</span></li>
+                      {#each row.derived as one (one.char)}
+                        <li>
+                          <span class="char" lang="ja">{one.char}</span>
+                          <ul class="spellings">
+                            {#each one.spellings as spelling (spelling.in + spelling.text)}
+                              <li>
+                                <span class="tag" data-source={spelling.in} data-derived={spelling.attested ? undefined : ''} title={spelling.attested ? undefined : `${t('appendix.derivedFrom')} ${spelling.of ?? ''}`}>{t(`appendix.source.${spelling.in}`)}</span>
+                                {@render written(spelling.text, row.id)}
+                                {#if !spelling.attested && spelling.status}{@render mark(spelling.status, false)}{/if}
+                              </li>
+                            {/each}
+                          </ul>
+                        </li>
                       {/each}
                     </ul>
                   </td>
@@ -439,7 +450,12 @@
   .by{font-family:var(--ids-font),var(--ids-glyph-fallback);font-size:11px;color:var(--ui-color-ink-muted);overflow-wrap:anywhere}
   .num{text-align:end;white-space:nowrap;color:var(--ui-color-ink-muted);font-variant-numeric:tabular-nums}
   .detail td{background:var(--ui-color-surface-sunken)}
-  .derived{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:6px 18px}
+  .derived{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:10px 22px;align-items:start}
+  .derived > li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 10px;align-items:start}
+  .spellings{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+  .spellings li{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+  /* A description no table writes itself, reached from another table's: its tag is dashed. */
+  .tag[data-derived]{border-style:dashed}
   .char{font-family:var(--ids-font);font-size:17px;line-height:1.2}
   .identity{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
   .name{font-family:var(--ids-font),ui-monospace,monospace;font-size:15px;line-height:1.3;overflow-wrap:anywhere}

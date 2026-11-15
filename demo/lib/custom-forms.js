@@ -7,7 +7,8 @@ import { customKind, customLength, isCustom } from '../../src/core/index.js'
  * @typedef {'babelstone' | 'chise' | 'zi-tools'} Notation
  * @typedef {{ text: string, source: Notation | 'unnamed', description?: string }} FormName
  * @typedef {{ in: Notation, text: string, status: 'confirmed' | 'candidate', count: number, characters: string[], id?: string }} FormEquivalent
- * @typedef {{ char: string, text: string, in: Notation, of: string, status: string }} FormDerived
+ * @typedef {{ in: Notation, text: string, attested: boolean, status?: 'confirmed' | 'candidate', of?: string }} FormSpelling A description of a character in one notation: the table's own, or derived from `of`.
+ * @typedef {{ char: string, spellings: FormSpelling[] }} FormCharacter A character that names the form, with each way it is written.
  * @typedef {object} FormRow
  * @property {string} id The form's identifier, X-00053.
  * @property {number} number
@@ -18,7 +19,7 @@ import { customKind, customLength, isCustom } from '../../src/core/index.js'
  * @property {{ other: string, note: string }[]} yours
  * @property {number} uses
  * @property {string} usedIn
- * @property {FormDerived[]} derived
+ * @property {FormCharacter[]} derived
  * @property {'confirmed' | 'candidate' | 'none'} status
  * @property {string} hay Everything a query may match, lower case.
  */
@@ -40,13 +41,30 @@ export function sideText(cid) {
  */
 export function formRows(doc, mine = []) {
   const by = new Map(doc.components.map(row => [row.text, row]))
-  /** @type {Map<string, FormDerived[]>} */
-  const derived = new Map()
-  for (const row of doc.characters ?? []) for (const id of row.ids ?? []) {
-    const list = derived.get(id) ?? []
-    derived.set(id, list)
-    list.push({ char: row.char, text: row.text, in: row.in, of: row.of, status: row.status })
+  // Each character once per form, with every notation it is written in: a table's own description
+  // and what follows from another table's stand side by side, the derived one saying what from.
+  /** @type {Map<string, Map<string, Map<string, FormSpelling>>>} */
+  const gathered = new Map()
+  /** @param {string} id @param {string} char @param {FormSpelling} spelling */
+  const spell = (id, char, spelling) => {
+    const chars = gathered.get(id) ?? new Map()
+    gathered.set(id, chars)
+    const spellings = chars.get(char) ?? new Map()
+    chars.set(char, spellings)
+    const key = `${spelling.in}\0${spelling.text}`, seen = spellings.get(key)
+    if (!seen || (spelling.attested && !seen.attested)) spellings.set(key, spelling)
   }
+  for (const row of /** @type {any[]} */ (doc.characters ?? [])) for (const id of row.ids ?? []) {
+    spell(id, row.char, row.attested ? { in: row.in, text: row.text, attested: true }
+      : { in: row.in, text: row.text, attested: false, status: row.status === 'verified' ? 'confirmed' : 'candidate', of: row.of })
+    // What a substitution starts from is the other table's own description.
+    if (row.basis === 'substitution') spell(id, row.char, { in: row.from, text: row.of, attested: true })
+  }
+  const ORDER = ['babelstone', 'chise', 'zi-tools']
+  /** @type {Map<string, FormCharacter[]>} */
+  const derived = new Map([...gathered].map(([id, chars]) => [id, [...chars].map(([char, spellings]) => ({
+    char, spellings: [...spellings.values()].sort((a, b) => Number(b.attested) - Number(a.attested) || ORDER.indexOf(a.in) - ORDER.indexOf(b.in) || (a.text < b.text ? -1 : 1)),
+  }))]))
   // Where an unnamed form comes from: the forms it was found for.
   /** @type {Map<string, { id: string, relation: 'confirmed' | 'candidate' | 'arrangement' }[]>} */
   const origin = new Map()
@@ -100,7 +118,7 @@ export function formRows(doc, mine = []) {
     const mentions = derived.get(form.id) ?? []
     const hay = [form.id, `&${form.id};`, ...names.flatMap(name => [name.text, name.description ?? '']),
       ...equivalents.flatMap(item => [item.text, item.characters.join(''), item.id ?? '']), ...of.map(other => other.id),
-      usedIn, ...mentions.flatMap(row => [row.char, row.text]), ...mineHere.flatMap(pair => [pair.other, pair.note])].join('\n').toLowerCase()
+      usedIn, ...mentions.flatMap(row => [row.char, ...row.spellings.map(one => one.text)]), ...mineHere.flatMap(pair => [pair.other, pair.note])].join('\n').toLowerCase()
     return {
       id: form.id, number: Number(form.id.slice(2)), shown: named.find(row => row.draw)?.text ?? form.names[0], names, of, equivalents, yours: mineHere,
       uses: [...usedIn].length, usedIn, derived: mentions, status: /** @type {FormRow['status']} */ (status), hay,

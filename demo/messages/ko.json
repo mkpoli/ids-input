@@ -587,6 +587,7 @@
   "history.title": "표기법의 역사",
   "history.earliest": "확인한 가장 이른 기록",
   "history.undated": "연대 미상",
+  "appendix.derivedFrom": "도출 근거",
   "atlas.search": "글자, cid 또는 쓰인 글자",
   "atlas.kind.label": "코드 포인트",
   "atlas.kind.all": "전체",
