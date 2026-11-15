@@ -208,6 +208,26 @@ export function createParser(ebnf) {
       if (out.size !== was || blank !== empty.get(name)) { empty.set(name, blank); changed = true }
     }
   }
+  // A rule that can reach itself before reading anything is left-recursive; the memo's guard against
+  // cycles would reject text such a rule accepts, so such a grammar is refused.
+  /** @param {Expr} expr @param {Set<string>} out */
+  const leading = (expr, out) => {
+    if (expr.t === 'nt') out.add(expr.text)
+    else if (expr.t === 'alt') for (const item of expr.items) leading(item, out)
+    else if (expr.t === 'seq') { for (const item of expr.items) { leading(item, out); if (!nullable(item)) break } }
+    else if (expr.t === 'opt' || expr.t === 'rep') leading(expr.item, out)
+    return out
+  }
+  for (const name of rules.keys()) {
+    const seen = new Set(), stack = [name]
+    while (stack.length) {
+      const one = /** @type {string} */ (stack.pop())
+      for (const next of leading(/** @type {{ expr: Expr }} */ (rules.get(one)).expr, new Set())) {
+        if (next === name) throw new Error(`the rule ${name} is left-recursive`)
+        if (!seen.has(next) && rules.has(next)) { seen.add(next); stack.push(next) }
+      }
+    }
+  }
   /** Terminals and special sequences alike, by what they print. @param {Expr} expr */
   const label = expr => expr.t === 'special' ? `? ${expr.text} ?` : JSON.stringify(/** @type {{ text: string }} */ (expr).text)
   /**

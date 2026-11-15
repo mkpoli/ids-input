@@ -56,6 +56,10 @@ describe('the grammar-driven parser', () => {
   it('reads the grammar file the page publishes, special sequences included', () => {
     expect([...parser.rules.keys()]).toContain('row')
     expect(() => createParser(grammar.replaceAll('? TAB ?', '? Tabulator ?'))).toThrow(/Tabulator/)
+    // The memo reads each rule once from each place, which a left-recursive rule would need more of.
+    expect(() => createParser('a = a, "x" | "y" ;')).toThrow(/left-recursive/)
+    expect(() => createParser('s = b, "x" ; b = [s] ;')).toThrow(/left-recursive/)
+    expect(createParser('s = "(", [s], ")" ;').accepts('s', '(())')).toBe(true)
   })
   it('accepts every row of the three levels except the four malformed ones, and covers each whole', () => {
     const files = rebuild().map(text => text.split('\n'))
