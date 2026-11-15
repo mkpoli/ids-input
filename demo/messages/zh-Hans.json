@@ -625,6 +625,5 @@
   "strokes.empty": "尚未录入",
   "strokes.error.orders": "请用数字1至5，不同写法之间以空格分隔",
   "strokes.error.char": "只能输入一个字",
-  "strokes.error.basis": "请填写依据",
   "strokes.error.by": "请填写录入者"
 }

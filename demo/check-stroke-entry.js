@@ -27,11 +27,18 @@ try {
   await page.locator('.keys button[title="Backspace"]').click()
   assert.equal(await order.inputValue(), '431134')
 
-  // A row without a basis is refused, and nothing is written.
+  // A row with nobody named is refused, and nothing is written.
+  await page.getByLabel('Entered by').fill('')
+  await page.getByRole('button', { name: 'Save' }).click()
+  await page.locator('.ui-error', { hasText: 'Say who entered it' }).waitFor()
+  assert.equal(readFileSync(file, 'utf8'), before)
+
+  // The basis may be left out.
   await page.getByLabel('Entered by').fill('check')
   await page.getByRole('button', { name: 'Save' }).click()
-  await page.locator('.ui-error', { hasText: 'A basis is required' }).waitFor()
-  assert.equal(readFileSync(file, 'utf8'), before)
+  await page.locator('tbody tr', { hasText: '龹' }).waitFor()
+  assert.match(readFileSync(file, 'utf8'), /\n龹\tcns11643\t431134\t\tcheck\t\d{4}-\d{2}-\d{2}\n$/)
+  await page.locator('.wanted', { hasText: '龹' }).first().click()
 
   await page.getByLabel('Basis', { exact: true }).fill('browser check')
   await page.getByRole('button', { name: 'Save' }).click()

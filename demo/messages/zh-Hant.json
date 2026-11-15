@@ -625,6 +625,5 @@
   "strokes.empty": "尚未輸入",
   "strokes.error.orders": "請用數字1至5，不同寫法之間以空格分隔",
   "strokes.error.char": "只能輸入一個字",
-  "strokes.error.basis": "請填寫依據",
   "strokes.error.by": "請填寫輸入者"
 }

@@ -10,7 +10,8 @@ export const ENTRY_SYMBOLS = /** @type {Record<string, RegExp>} */ ({
 /** The columns of a row, in the file's order. */
 export const ENTRY_COLUMNS = /** @type {const} */ (['char', 'source', 'orders', 'basis', 'by', 'date'])
 
-/** @typedef {{ char: string, source: string, orders: string, basis: string, by: string, date: string }} StrokeEntry */
+/** A row. `basis` is where the order was read, and may be empty.
+ * @typedef {{ char: string, source: string, orders: string, basis: string, by: string, date: string }} StrokeEntry */
 
 /**
  * What is wrong with a row, as the name of the field at fault, or null when the build takes it. A
@@ -24,7 +25,7 @@ export function entryProblem(entry) {
   if (!ENTRY_SYMBOLS[entry.source ?? '']) return 'source'
   if (!ENTRY_SYMBOLS[entry.source ?? ''].test(entry.orders ?? '')) return 'orders'
   // A tab or a line break would split the row.
-  if (!entry.basis?.trim() || /[\t\n\r]/.test(entry.basis)) return 'basis'
+  if (/[\t\n\r]/.test(entry.basis ?? '')) return 'basis'
   if (!entry.by?.trim() || /[\t\n\r]/.test(entry.by)) return 'by'
   if (!/^\d{4}-\d{2}-\d{2}$/.test(entry.date ?? '')) return 'date'
   return null
@@ -44,7 +45,7 @@ export function parseEntries(text, name = 'data/stroke-orders-entered.tsv') {
   const entries = []
   for (const [index, line] of text.split('\n').entries()) {
     if (!line || line.startsWith('#')) continue
-    const [char, source, orders, basis, by, date] = line.split('\t')
+    const [char, source, orders, basis = '', by, date] = line.split('\t')
     const entry = { char, source, orders, basis, by, date }, problem = entryProblem(entry)
     if (problem) throw Error(`${name}:${index + 1}: ${problem}`)
     if (entries.some(other => other.char === char && other.source === source)) throw Error(`${name}:${index + 1}: ${char} is entered twice for ${source}`)

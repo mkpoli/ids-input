@@ -625,6 +625,5 @@
   "strokes.empty": "まだ入力がありません",
   "strokes.error.orders": "1〜5の数字で、書き方ごとに空白で区切ります",
   "strokes.error.char": "一字だけ",
-  "strokes.error.basis": "根拠が必要です",
   "strokes.error.by": "入力者を書いてください"
 }

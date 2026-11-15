@@ -18,7 +18,7 @@ it('names the field a row is refused for', () => {
   expect(entryProblem({ ...row, orders: 'hs' })).toBe('orders')
   expect(entryProblem({ ...row, source: 'rime-stroke', orders: 'hs zp' })).toBe(null)
   expect(entryProblem({ ...row, orders: '12  21' })).toBe('orders')
-  expect(entryProblem({ ...row, basis: ' ' })).toBe('basis')
+  expect(entryProblem({ ...row, basis: '' })).toBe(null)
   expect(entryProblem({ ...row, basis: 'a\tb' })).toBe('basis')
   expect(entryProblem({ ...row, by: '' })).toBe('by')
   expect(entryProblem({ ...row, date: '15 Nov' })).toBe('date')

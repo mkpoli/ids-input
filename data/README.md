@@ -1337,7 +1337,7 @@ and how often the rules agree with the sources. Built by `scripts/build_open_str
 
 Stroke orders entered by hand for characters and components the sources of `open-strokes/` do not
 record: `char`, `source`, `orders`, `basis`, `by`, `date`, tab-separated, one row per character and
-source. The build refuses a row without a basis and publishes the rows as `open-strokes/entered.tsv`;
+source. `basis` may be left empty. The build publishes the rows as `open-strokes/entered.tsv`;
 `open-strokes/wanted.tsv` ranks the components worth entering next.
 
 The workshop's Stroke orders page (`demo/Strokes.svelte`, <https://ids.mkpo.li/strokes>) enters them: it

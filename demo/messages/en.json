@@ -628,6 +628,5 @@
   "strokes.empty": "Nothing entered yet",
   "strokes.error.orders": "Digits 1–5, with a space between ways",
   "strokes.error.char": "One character",
-  "strokes.error.basis": "A basis is required",
   "strokes.error.by": "Say who entered it"
 }

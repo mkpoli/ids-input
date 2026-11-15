@@ -625,6 +625,5 @@
   "strokes.empty": "Chưa nhập gì",
   "strokes.error.orders": "Dùng chữ số 1–5, cách nhau bằng dấu cách giữa các cách viết",
   "strokes.error.char": "Chỉ một chữ",
-  "strokes.error.basis": "Cần có căn cứ",
   "strokes.error.by": "Hãy ghi người nhập"
 }

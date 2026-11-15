@@ -5,7 +5,7 @@
 //   rime-stroke.tsv.gz  Rime's five-stroke dictionary: the CNS table with the orders its authors
 //                       added, through Extension J (LGPL-3.0)
 //   kanjivg.tsv.gz      Japanese order, as KanjiVG draws it stroke by stroke (CC BY-SA 3.0)
-//   entered.tsv         orders entered by hand in `data/stroke-orders-entered.tsv`, each with its basis
+//   entered.tsv         orders entered by hand in `data/stroke-orders-entered.tsv`
 //   wanted.tsv          the components whose order would let the most characters be written
 //   induced.tsv.gz      characters a source lacks, written from a character the source has:
 //                       the unified ideograph a compatibility form or radical is equivalent to, or
@@ -651,7 +651,7 @@ additions do not all follow CNS order.
 ## Entered orders
 
 \`entered.tsv\` holds orders entered by hand for characters and components a source does not
-record, in that source's symbols. \`basis\` gives the citation or the reasoning behind each, \`by\`
+record, in that source's symbols. \`basis\` gives the citation or the reasoning behind one where it was noted, \`by\`
 who entered it. An entered order is this project's reading and never enters a source's file; it
 writes its own character and lets the characters it is a component of be induced.
 

@@ -145,7 +145,7 @@
     const today = new Date()
     /** @type {StrokeEntry} */
     const entry = {
-      char: current, source, orders: orders.trim().replace(/\s+/g, ' '), basis: basis.trim(), by: by.trim(),
+      char: current, source, orders: orders.trim().replace(/\s+/g, ' '), basis: basis.trim().replace(/\s+/g, ' '), by: by.trim(),
       date: `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`,
     }
     problem = entryProblem(entry)
@@ -234,8 +234,7 @@
             </div>
             <TextField label={t('strokes.order')} bind:value={orders} mono placeholder="12345" autocomplete="off" spellcheck={false}
               error={problem === 'orders' ? t('strokes.error.orders') : problem === 'char' ? t('strokes.error.char') : undefined} />
-            <TextField label={t('strokes.basis')} bind:value={basis} placeholder={t('strokes.basisPlaceholder')} autocomplete="off"
-              error={problem === 'basis' ? t('strokes.error.basis') : undefined} />
+            <TextField label={t('strokes.basis')} bind:value={basis} placeholder={t('strokes.basisPlaceholder')} autocomplete="off" />
             <TextField label={t('strokes.by')} bind:value={by} autocomplete="nickname" spellcheck={false}
               error={problem === 'by' ? t('strokes.error.by') : undefined} />
             <div class="actions">
