@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { cardSvg } from '../worker/card.js'
-import { cardParts, characterFor, namedFor, unitsFor } from '../worker/render.js'
+import { cardParts, characterFor, firstDrawn, namedFor, unitsFor } from '../worker/render.js'
 
 const env = { ASSETS: { fetch: async () => new Response(null, { status: 404 }) } }
 const drawing = { d: 'M0 0L100 0L100 100Z' }
@@ -36,5 +36,16 @@ describe('the units a card draws a named sequence in', () => {
     expect(await characterFor(env, '⿰木子')).toBe(null)
     // The index reads ⿱亠公 as 𬺤, a different character; the example names 衮 and no character.
     expect(namedFor('⿱亠公', '𬺤')).toBe(null)
+  })
+})
+
+describe('the ways a card may draw a sequence', () => {
+  it('takes the first that draws, and fails as the last did when none does', async () => {
+    const asked = []
+    const draw = async way => { asked.push(way); if (way !== 'plain') throw new Error(`no outline for ${way}`); return 'drawing' }
+    expect(await firstDrawn(['formed', 'plain'], draw)).toBe('drawing')
+    expect(asked).toEqual(['formed', 'plain'])
+    expect(await firstDrawn(['plain', 'never asked'], draw)).toBe('drawing')
+    await expect(firstDrawn(['formed', 'other'], draw)).rejects.toThrow('no outline for other')
   })
 })
