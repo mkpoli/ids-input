@@ -144,7 +144,8 @@ describe('the open stroke-order release', () => {
     const symbols = { cns11643: /^[1-5]+( [1-5]+)*$/, 'rime-stroke': /^[hspnz]+( [hspnz]+)*$/, kanjivg: /^[1-5]+( [1-5]+)*$/ }
     for (const [char, , written, basis, by, source, date] of entered.slice(1)) {
       expect(written).toMatch(symbols[source])
-      expect(basis && by).toBeTruthy()
+      expect(basis).not.toMatch(/[\t\n\r]/)
+      expect(by).toBeTruthy()
       expect(date).toMatch(/^\d{4}-\d{2}-\d{2}$/)
       // An entered order is never a second opinion on a recorded one.
       expect(tables[source].has(char)).toBe(false)

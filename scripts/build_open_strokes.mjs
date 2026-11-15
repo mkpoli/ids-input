@@ -5,7 +5,7 @@
 //   rime-stroke.tsv.gz  Rime's five-stroke dictionary: the CNS table with the orders its authors
 //                       added, through Extension J (LGPL-3.0)
 //   kanjivg.tsv.gz      Japanese order, as KanjiVG draws it stroke by stroke (CC BY-SA 3.0)
-//   entered.tsv         orders entered by hand in `data/stroke-orders-entered.tsv`, each with its basis
+//   entered.tsv         orders entered by hand in `data/stroke-orders-entered.tsv`
 //   wanted.tsv          the components whose order would let the most characters be written
 //   induced.tsv.gz      characters a source lacks, written from a character the source has:
 //                       the unified ideograph a compatibility form or radical is equivalent to, or
@@ -29,6 +29,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { gunzipSync, gzipSync } from 'node:zlib'
 import { characterScript } from '../src/core/scripts.js'
+import { parseEntries } from '../src/core/stroke-entry.js'
 
 const OUT = new URL('../data/open-strokes/', import.meta.url)
 const RIME = {
@@ -328,20 +329,9 @@ const validation = SOURCES.map(({ source, table, region }) => {
 
 // --- Orders entered by hand ----------------------------------------------------------------------
 
-const SYMBOLS = { cns11643: /^[1-5]+( [1-5]+)*$/, 'rime-stroke': /^[hspnz]+( [hspnz]+)*$/, kanjivg: /^[1-5]+( [1-5]+)*$/ }
 /** @type {string[][]} */
-const enteredRows = []
-for (const [index, line] of readFileSync(new URL('../data/stroke-orders-entered.tsv', import.meta.url), 'utf8').split('\n').entries()) {
-  if (!line || line.startsWith('#')) continue
-  const [char, source, orders, basis, by, date] = line.split('\t')
-  const at = `data/stroke-orders-entered.tsv:${index + 1}`
-  // A component can be a CJK stroke or a letter a description borrows, so any one character is taken.
-  if ([...(char ?? '')].length !== 1) throw Error(`${at}: one character per row`)
-  if (!SYMBOLS[source]?.test(orders ?? '')) throw Error(`${at}: orders must be written in the symbols of cns11643, rime-stroke or kanjivg`)
-  if (!basis || !by || !/^\d{4}-\d{2}-\d{2}$/.test(date ?? '')) throw Error(`${at}: a basis, who entered it and the date are required`)
-  if (enteredRows.some(row => row[0] === char && row[5] === source)) throw Error(`${at}: ${char} is entered twice for ${source}`)
-  enteredRows.push([char, point(char), orders, basis, by, source, date])
-}
+const enteredRows = parseEntries(readFileSync(new URL('../data/stroke-orders-entered.tsv', import.meta.url), 'utf8'))
+  .map(({ char, source, orders, basis, by, date }) => [char, point(char), orders, basis, by, source, date])
 enteredRows.sort((a, b) => a[5].localeCompare(b[5]) || byCodePoint(a[0], b[0]))
 
 const repertoire = JSON.parse(gunzipSync(readFileSync(new URL('../data/han-parts.json.gz', import.meta.url)))).keys
@@ -661,7 +651,7 @@ additions do not all follow CNS order.
 ## Entered orders
 
 \`entered.tsv\` holds orders entered by hand for characters and components a source does not
-record, in that source's symbols. \`basis\` gives the citation or the reasoning behind each, \`by\`
+record, in that source's symbols. \`basis\` gives the citation or the reasoning behind one where it was noted, \`by\`
 who entered it. An entered order is this project's reading and never enters a source's file; it
 writes its own character and lets the characters it is a component of be induced.
 
