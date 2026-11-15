@@ -6,9 +6,12 @@ import { compose, dataUrls, sketch as composerSketch, unpack } from '@han-compos
 import { documentView } from '@han-compose/composer/document-view'
 import { boxCorners, layerFrames, renderScopes } from '../src/document/index.js'
 import { sourceFor } from '@han-compose/composer/source'
+import { HOST_OUTLINES } from '@han-compose/composer/host'
 import { cardSvg, SIZE, codePoint } from './card.js'
 import { JURCHEN_VARIANT, OPERATORS } from '../src/core/ids.js'
-import { plainText } from '../src/core/preview.js'
+import { drawnText } from '../src/core/preview.js'
+import { formedText } from '../src/core/forms.js'
+import { createUcvIndex } from '../src/core/ucv.js'
 import { facesFor } from './fonts.js'
 import { COMPOSER_BASE } from '../demo/lib/composer.js'
 import { EXAMPLES } from '../demo/lib/examples.js'
@@ -34,15 +37,17 @@ const read = async (env, path) => {
 /**
  * How a source reads the outlines this deployment serves under `/og/data/`, where `og-assets.mjs`
  * copies the drawing engine's files: each by the name of the engine's `data/` path it answers for.
- * The loader leaves a file out unless it is copied to `data/`.
+ * The loader leaves a file out unless it is copied to `data/`. The outlines of the component
+ * variation forms no code point names are the host's own, read where the engine asks for them.
  * @param {any} env
  */
 const loadFor = env => {
   const SERVED = /^sources\/([a-z-]+)\/outlines\.json\.gz$|^unicode\/outlines\/([0-9a-f]+\.json\.gz)$|^numbered-sans-outlines\.json\.gz$/
   /** The deployment's name for a file the engine names; the numbered components' Sans cuts keep theirs. @param {string} path */
-  const served = path => path.replace(SERVED, (name, script, shard) => script ? `${script}-outlines.json.gz` : shard ? `unicode-outlines/${shard}` : name)
+  const served = path => path === HOST_OUTLINES ? 'ucv-outlines.json.gz'
+    : path.replace(SERVED, (name, script, shard) => script ? `${script}-outlines.json.gz` : shard ? `unicode-outlines/${shard}` : name)
   /** @type {Record<string, string>} */
-  const loaders = {}
+  const loaders = { [HOST_OUTLINES]: new URL(`/og/data/${served(HOST_OUTLINES)}`, 'https://assets/').href }
   for (const path of Object.keys(dataUrls)) {
     if (SERVED.test(path)) loaders[path] = new URL(`/og/data/${served(path)}`, 'https://assets/').href
   }
@@ -66,6 +71,19 @@ const idsIndex = env => index ??= read(env, 'data/ids-index.json.gz')
   .then(bytes => bytes === null ? {} : unpack(bytes))
   .then(text => JSON.parse(text))
   .catch(() => ({}))
+
+/** @type {Promise<import('../src/core/ucv.js').UcvIndex | null> | null} */
+let variations = null
+const ucvIndex = env => variations ??= read(env, 'data/ucv.json.gz')
+  .then(bytes => bytes === null ? null : unpack(bytes).then(text => createUcvIndex(JSON.parse(text))))
+  .catch(() => null)
+
+/**
+ * A sequence as the engine draws it: a component written with a variant identifier (壬q0012) as the
+ * outline of the form it names, and plain where the lists name none or cannot be read.
+ * @param {any} env @param {string} sequence
+ */
+const drawn = (env, sequence) => drawnText(sequence, async text => formedText(text, await ucvIndex(env)))
 
 /** One character, a Jurchen variant sequence counting as one. @param {string} text */
 const isOneCharacter = text => [...text].length === 1 || JURCHEN_VARIANT.test(text)
@@ -91,8 +109,7 @@ async function drawUnits(env, units, first) {
 
 /** The sequence composed, or null where it could not be. @param {any} env @param {string} sequence */
 async function draw(env, sequence) {
-  // The engine reads no variant identifier (壬q0012): the card draws each component plain.
-  sequence = plainText(sequence)
+  sequence = await drawn(env, sequence)
   const { loaders, read } = loadFor(env)
   const source = sourceFor(sequence, { base: COMPOSER_BASE, loaders, read })
   await source.ready()
@@ -105,7 +122,7 @@ async function draw(env, sequence) {
  * @param {any} env @param {string} sequence @param {any} document
  */
 async function drawDocument(env, sequence, document) {
-  sequence = plainText(sequence)
+  sequence = await drawn(env, sequence)
   const { loaders, read } = loadFor(env)
   const source = sourceFor(sequence, { base: COMPOSER_BASE, separate: true, loaders, read })
   await source.ready()
