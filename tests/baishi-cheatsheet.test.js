@@ -5,8 +5,9 @@ import { COMPOSER_BASE } from '../demo/lib/composer.js'
 import { LOCALES, appMessages } from '../demo/lib/locales.js'
 import { readGrammar } from '../demo/lib/railroad.js'
 import {
-  GROUP_LABELS, SHEET, SOURCE, STROKE_LETTERS, anchorsOf, bareOf, cardsOf, componentsWritten, composedDrawn, contoursOf, entriesOf, focusOf, glyphsDrawn, idsOf, kindOf, quotations, tokenise,
+  GROUP_LABELS, SHEET, SOURCE, STROKE_LETTERS, anchorsOf, bareOf, cardsOf, componentsWritten, composedDrawn, contoursOf, entriesOf, focusOf, glyphsDrawn, idsOf, kindOf, linkedOf, quotations, tokenise,
 } from '../demo/lib/baishi-cheatsheet.js'
+import { CHEATSHEET_SECTIONS, SECTIONS, sectionHref } from '../demo/lib/baishi-sections.js'
 
 const read = path => readFileSync(new URL(path, import.meta.url), 'utf8')
 const outlines = JSON.parse(read('../demo/lib/baishi-cheatsheet-outlines.json'))
@@ -129,22 +130,23 @@ describe('the cheatsheet\'s cards', () => {
   })
 })
 
-describe('the links between the cheatsheet and the specification', async () => {
-  const { CHEATSHEET_SECTIONS, SECTIONS, sectionHref } = await import('../demo/lib/baishi-sections.js').catch(() => ({ CHEATSHEET_SECTIONS: null, SECTIONS: null, sectionHref: null }))
+describe('the links between the cheatsheet and the specification', () => {
   it('give the cheatsheet an anchor for every section the specification links to', () => {
-    // The shared module reads the grammar through the bundler; its list is read from its source where that fails.
-    const wanted = CHEATSHEET_SECTIONS ?? [...read('../demo/lib/baishi-sections.js').match(/CHEATSHEET_SECTIONS = [^[]*\[([\s\S]*?)\]\)/)[1].matchAll(/'([^']+)'/g)].map(match => match[1])
-    expect(wanted.length).toBeGreaterThan(30)
     expect(new Set(anchorsOf()).size).toBe(anchorsOf().length)
-    expect([...anchorsOf()].sort()).toEqual([...wanted].sort())
+    expect([...anchorsOf()].sort()).toEqual([...CHEATSHEET_SECTIONS].sort())
   })
   it('link the cheatsheet only to anchors the specification has', () => {
-    // Every anchor of the sheet is a rule of the grammar in kebab case or one of the module's named constructs.
-    const source = read('../demo/lib/baishi-sections.js')
-    const named = new Set([...source.matchAll(/\{ id: '([^']+)'/g)].map(match => match[1]))
-    const ids = SECTIONS ? new Set(SECTIONS.map(section => section.id)) : new Set([...[...grammar.keys()].map(rule => rule.replaceAll(' ', '-')), ...named])
+    const ids = new Set(SECTIONS.map(section => section.id))
     for (const id of anchorsOf()) expect(ids.has(id), id).toBe(true)
-    if (sectionHref) expect(sectionHref('spec', 'stroke-chain')).toBe('./baishi.html#stroke-chain')
+    // What the page links to: every section and group, and each card by the first of its anchors.
+    expect(linkedOf().sort()).toEqual([
+      'alternative-group', 'binary-operator', 'break', 'closing', 'component', 'component-variant', 'crossing', 'crossing-matrix', 'curve', 'entry',
+      'ids', 'imaginary-ucv', 'index-modifier', 'indexed-operator', 'katakana', 'overlap-modifier', 'overlap-operator', 'primary-group', 'reversal',
+      'reverse-matrix', 'row', 'sequence-variants', 'slice', 'source-letter', 'stroke-chain', 'stroke-letter', 'style-tag', 'taggable-char',
+      'ternary-operator', 'ucv-position', 'unary-operator', 'uniqueness-prefix', 'variant-id',
+    ])
+    for (const id of linkedOf()) expect(ids.has(id), id).toBe(true)
+    expect(sectionHref('spec', 'stroke-chain')).toBe('./baishi.html#stroke-chain')
   })
   it('renders each anchor once on the page', () => {
     const page = read('../demo/BaishiCheatsheet.svelte')

@@ -7,7 +7,7 @@
 // every link from the page to the specification lands on an anchor there. IDS_PAGE_SHOTS saves each view.
 import { chromium } from 'playwright-core'
 import { strict as assert } from 'node:assert'
-import { anchorsOf, cardsOf } from './lib/baishi-cheatsheet.js'
+import { anchorsOf, cardsOf, linkedOf } from './lib/baishi-cheatsheet.js'
 const base = process.env.IDS_URL ?? 'http://localhost:5186'
 const shots = process.env.IDS_PAGE_SHOTS
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH })
@@ -35,24 +35,31 @@ try {
     const orphans = await page.evaluate(() => [...document.querySelectorAll('.quote')].flatMap(quote => ['s0', 's1', 's2', 's3']
       .filter(slot => quote.querySelector(`.token.${slot}`) && !quote.querySelector(`.part.${slot}`)).map(slot => `${quote.textContent?.trim()} ${slot}`)))
     assert.deepEqual(orphans, [], `${view}: no colour without its strokes`)
-    // Text in a part's colour reads on the card: 4.5 to 1 against the card's surface.
+    // Text in a part's colour reads on the card, 4.5 to 1 against the card's surface, and under the
+    // marker, where a token is 20px bold: 3 to 1, as for large text.
     const contrasts = await page.evaluate(() => {
       const channel = (/** @type {number} */ value) => { const c = value / 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4 }
       const luminance = (/** @type {string} */ colour) => { const [r, g, b] = (colour.match(/[\d.]+/g) ?? []).map(Number); return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b) }
+      const ratio = (/** @type {string} */ a, /** @type {string} */ b) => { const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x); return (light + 0.05) / (dark + 0.05) }
       const card = getComputedStyle(/** @type {Element} */ (document.querySelector('article.card'))).backgroundColor
-      return ['s0', 's1', 's2', 's3'].map(slot => {
-        const [light, dark] = [luminance(getComputedStyle(/** @type {Element} */ (document.querySelector(`.token.${slot}`))).color), luminance(card)].sort((a, b) => b - a)
-        return (light + 0.05) / (dark + 0.05)
-      })
+      const marked = /** @type {Element} */ (document.querySelector('.token:is(.s0,.s1,.s2,.s3) .stretch.subject'))
+      const mark = getComputedStyle(marked).backgroundColor
+      return { size: parseFloat(getComputedStyle(marked).fontSize), weight: Number(getComputedStyle(marked).fontWeight),
+        slots: ['s0', 's1', 's2', 's3'].map(slot => { const colour = getComputedStyle(/** @type {Element} */ (document.querySelector(`.token.${slot}`))).color; return [ratio(colour, card), ratio(colour, mark)] }) }
     })
-    for (const [slot, contrast] of contrasts.entries()) assert.ok(contrast >= 4.5, `${view}: part colour ${slot} has ${contrast.toFixed(2)} to 1 on the card`)
+    assert.ok(contrasts.size >= 18.66 && contrasts.weight >= 700, `${view}: a marked token is large text`)
+    for (const [slot, [onCard, onMark]] of contrasts.slots.entries()) {
+      assert.ok(onCard >= 4.5, `${view}: part colour ${slot} has ${onCard.toFixed(2)} to 1 on the card`)
+      assert.ok(onMark >= 3, `${view}: part colour ${slot} has ${onMark.toFixed(2)} to 1 on the marker`)
+    }
 
     // Every anchor the two pages share is here, and every link to the specification lands there.
     const here = new Set(await page.evaluate(() => [...document.querySelectorAll('[id]')].map(element => element.id)))
     for (const id of anchorsOf()) assert.ok(here.has(id), `${view}: #${id} is on the cheatsheet`)
     for (const id of back) assert.ok(here.has(id), `${view}: the specification's link to #${id} lands on the cheatsheet`)
     const out = await page.evaluate(() => [...document.querySelectorAll('main a[href^="./baishi.html"]')].map(link => /** @type {HTMLAnchorElement} */ (link).hash.slice(1)))
-    assert.ok(out.length >= anchorsOf().length - 12, `${view}: the sections and cards link to the specification`)
+    // The sections, the groups and the cards that stand for an anchor link to it, and the sources to the grammar's first rule.
+    assert.deepEqual([...out].sort(), [...linkedOf(), 'row'].sort(), `${view}: the sections and cards link to the specification`)
     for (const id of out) assert.ok(specAnchors.has(id), `${view}: the cheatsheet's link to #${id} lands on the specification`)
     assert.equal(await page.locator('header.bar a[href^="./baishi.html"]').count(), 1, `${view}: the header links to the specification`)
 

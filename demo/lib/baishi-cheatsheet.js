@@ -251,6 +251,10 @@ export const cardsOf = () => SHEET.flatMap(section => [...(section.cards ?? []),
 export const anchorsOf = () => SHEET.filter(section => section.id !== 'worked').flatMap(section => [section.id, ...(section.cards ?? []).flatMap(card => card.anchors ?? []),
   ...(section.groups ?? []).flatMap(group => [group.id, ...(group.cards ?? []).flatMap(card => card.anchors ?? [])])])
 
+/** Every anchor of the specification the sheet links to: its sections, its groups and the first anchor of each card that has one. @returns {string[]} */
+export const linkedOf = () => SHEET.filter(section => section.id !== 'worked').flatMap(section => [section.id, ...(section.cards ?? []).flatMap(card => card.anchors?.slice(0, 1) ?? []),
+  ...(section.groups ?? []).flatMap(group => [group.id, ...(group.cards ?? []).flatMap(card => card.anchors?.slice(0, 1) ?? [])])])
+
 const UNARY = '⿾⿿', TERNARY = '⿲⿳', BINARY = '⿰⿱⿴⿵⿶⿷⿸⿹⿺⿻⿼⿽㇯'
 /** The katakana components that take no tag. */
 const UNTAGGED = 'コリ'
