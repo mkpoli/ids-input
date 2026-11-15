@@ -754,16 +754,33 @@ describe('the action', () => {
     stub = stubGitHub()
     /** @type {URL[]} */
     const opened = []
-    const address = await drawReport(payload(), run, 9, async page => {
+    /** @type {(string | null)[]} */
+    const faces = []
+    const address = await drawReport(payload(), run, 9, async (page, face) => {
       opened.push(page)
+      faces.push(face)
       return PNG
     })
     expect(opened.map(String)).toEqual([`${SITE}/?ids=x`])
+    // The report names no face, so the workshop's own choice is photographed.
+    expect(faces).toEqual([null])
     expect(address).toMatch(/^https:\/\/github\.com\/mkpoli\/ids-input\/raw\/bug-attachments\/reports\/\d{4}\/\d{2}\/[0-9a-f-]+\.png$/)
     expect(stub.calls.find(call => call.key === 'POST /repos/mkpoli/ids-input/git/blobs').body).toEqual({ content: toBase64(PNG), encoding: 'base64' })
     const rewritten = stub.calls.find(call => call.key === `PATCH ${ISSUES}/9`).body.body
     expect(rewritten).toContain(`![the reported drawing](${address})`)
     expect(rewritten.endsWith(`${reportMarker(key)}\n`)).toBe(true)
+  })
+  it('photographs the drawing in the face the reporter drew in', async () => {
+    /** @type {(string | null)[]} */
+    const faces = []
+    const inFace = (/** @type {unknown} */ face) => payload({ report: { ...payload().report, context: JSON.stringify({ face }) } })
+    // One stub for the four runs: each new one would keep the one before as the fetch to restore.
+    stub = stubGitHub()
+    for (const face of ['serif', 'klee', 'comic', 7]) {
+      await drawReport(inFace(face), run, 9, async (_page, chosen) => { faces.push(chosen); return PNG })
+    }
+    // A face the font switch does not offer is not handed to the page.
+    expect(faces).toEqual(['serif', 'klee', null, null])
   })
   it('says so in the issue when the drawing cannot be taken', async () => {
     stub = stubGitHub()
