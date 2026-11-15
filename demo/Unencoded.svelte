@@ -75,7 +75,7 @@
 
   // The query lives in the address, so a search can be linked to.
   const SOURCES = /** @type {const} */ (['all', 'babelstone', 'chise', 'zi-tools', 'unnamed', 'yours'])
-  const STATUSES = /** @type {const} */ (['any', 'confirmed', 'candidate', 'none'])
+  const STATUSES = /** @type {const} */ (['any', 'confirmed', 'candidate', 'editorial', 'none'])
   /** @template {string} T @param {readonly T[]} list @param {string | null} value @returns {T} */
   const oneOf = (list, value) => list.find(item => item === value) ?? list[0]
   let hashed = ''
@@ -318,6 +318,9 @@
                         {#if item.id && item.id !== row.id}<a class="link" href={`?q=${item.id}`} onclick={event => { event.preventDefault(); show(/** @type {string} */ (item.id)) }}>{item.id}</a>{/if}
                       </li>
                     {/each}
+                    {#if row.character}
+                      <li><span class="tag" data-source={row.character.in}>{t(`appendix.source.${row.character.in}`)}</span><span class="name" lang="ja">{row.character.text}</span><span class="tag" data-derived title={row.character.reason}>{t('appendix.status.editorial')}</span></li>
+                    {/if}
                     {#each row.yours as pair (pair.other)}<!-- one line per other side: formRows joins the notes -->
                       <li><span class="tag">{t('appendix.yours')}</span><span class="name" lang="ja">{pair.other}</span>{#if pair.note}<span class="by">{pair.note}</span>{/if}</li>
                     {/each}

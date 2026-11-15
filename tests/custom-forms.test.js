@@ -66,7 +66,7 @@ describe('the appendix table of forms', () => {
   it('narrows by source and by status', () => {
     expect(find('', 'babelstone')).toHaveLength(doc.counts.bySource.babelstone)
     expect(find('', 'unnamed').every(row => row.names.every(name => name.source === 'unnamed'))).toBe(true)
-    expect(find('', 'all', 'confirmed').length + find('', 'all', 'candidate').length + find('', 'all', 'none').length).toBe(rows.length)
+    expect(find('', 'all', 'confirmed').length + find('', 'all', 'candidate').length + find('', 'all', 'editorial').length + find('', 'all', 'none').length).toBe(rows.length)
     expect(find('', 'all', 'none').every(row => !row.equivalents.length)).toBe(true)
     expect(find('', 'yours')).toEqual([])
   })
@@ -96,6 +96,17 @@ describe('a description with its custom parts set apart', () => {
   })
 })
 
+describe('a form read as an encoded character', () => {
+  it('carries the reading and what it rests on, and is found by the character', () => {
+    const row = rows.find(one => one.names.some(name => name.text === '#(-𠃍㇉)'))
+    expect(row.character).toMatchObject({ text: '𢎘z', in: 'zi-tools', basis: 'editorial' })
+    expect(row.character.reason).toContain('⿹𢎘z一')
+    expect(row.status).toBe('editorial')
+    expect(find('𢎘z').map(one => one.id)).toContain(row.id)
+    expect(find('', 'all', 'editorial').map(one => one.id)).toEqual([row.id])
+  })
+})
+
 describe('the forms table as files', () => {
   const read = name => readFileSync(new URL(`../data/${name}`, import.meta.url), 'utf8')
   const json = JSON.parse(read('custom-forms.json'))
@@ -120,6 +131,7 @@ describe('the forms table as files', () => {
     const line = read('custom-forms.tsv').split('\n').find(one => one.startsWith(`${outside.id}\t`))
     expect(line.split('\t')[json.columns.indexOf('equivalents')]).toContain('zi-tools:⿱丿⿴#(-𠃌㇉)丶:confirmed')
     expect(line.split('\t')[json.columns.indexOf('subtractions')]).toContain('㇯鸟一')
+    expect(json.rows.find(one => one.zi_tools === '#(-𠃍㇉)')).toMatchObject({ character: '𢎘z', status: 'editorial' })
   })
 })
 

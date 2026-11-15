@@ -15,13 +15,14 @@ import { customKind, customLength, isCustom } from '../../src/core/index.js'
  * @property {string} shown What is drawn for it: a name, or its expression.
  * @property {FormName[]} names
  * @property {string[]} subtractions The form as a character less its other parts, ㇯馬灬.
+ * @property {{ text: string, in: Notation, basis: 'editorial', reason?: string }} [character] The encoded character the form is read as, 𢎘z: no table says so.
  * @property {{ id: string, relation: 'confirmed' | 'candidate' | 'arrangement' }[]} of The forms an unnamed one was found for.
  * @property {FormEquivalent[]} equivalents
  * @property {{ other: string, note: string }[]} yours
  * @property {number} uses
  * @property {string} usedIn
  * @property {FormCharacter[]} derived
- * @property {'confirmed' | 'candidate' | 'none'} status
+ * @property {'confirmed' | 'candidate' | 'editorial' | 'none'} status
  * @property {string} hay Everything a query may match, lower case.
  */
 
@@ -82,6 +83,8 @@ export function formRows(doc, mine = []) {
     if (!isCustom(item.text)) point(item.id, row.id, item.status === 'verified' ? 'confirmed' : 'candidate')
     for (const other of item.arrangements ?? []) point(other.id, row.id, 'arrangement')
   }
+  /** @type {Map<string, string>} */
+  const reasons = new Map((/** @type {any} */ (doc).editorial ?? []).map((/** @type {any} */ row) => [row.component, row.reason]))
   const pairs = mine.map(pair => ({ a: sideText(pair.a), b: sideText(pair.b), note: pair.note }))
   return (doc.forms ?? []).map(form => {
     const named = form.names.flatMap(name => by.get(name) ?? [])
@@ -104,6 +107,10 @@ export function formRows(doc, mine = []) {
     const equivalents = [...equal.values()].sort((a, b) => Number(b.status === 'confirmed') - Number(a.status === 'confirmed') || b.count - a.count)
     const subtractions = [...new Set(named.flatMap(row => /** @type {{ subtractions?: string[] }} */ (row).subtractions ?? []))]
     const of = origin.get(form.id) ?? []
+    // The character one of the form's names is read as, with what that reading rests on.
+    const reader = named.find(row => row.character)
+    const reason = reader && reasons.get(reader.text)
+    const character = reader?.character ? { text: reader.character.text, in: /** @type {Notation} */ (reader.character.in), basis: reader.character.basis, ...(reason ? { reason } : {}) } : undefined
     // A name is matched whatever its case was typed in; two pairs to one other side are one line.
     const lower = form.names.map(name => name.toLowerCase())
     /** @type {Map<string, { other: string, note: string }>} */
@@ -116,13 +123,13 @@ export function formRows(doc, mine = []) {
     }
     const mineHere = [...paired.values()]
     const usedIn = [...new Set(named.flatMap(row => [.../** @type {string} */ (/** @type {any} */ (row).usedIn ?? row.examples.join(''))]))].join('')
-    const status = named.length > 1 || equivalents.some(item => item.status === 'confirmed') || of.some(other => other.relation === 'confirmed') ? 'confirmed' : equivalents.length || of.length ? 'candidate' : 'none'
+    const status = named.length > 1 || equivalents.some(item => item.status === 'confirmed') || of.some(other => other.relation === 'confirmed') ? 'confirmed' : equivalents.length || of.length ? 'candidate' : character ? 'editorial' : 'none'
     const mentions = derived.get(form.id) ?? []
-    const hay = [form.id, `&${form.id};`, ...subtractions, ...names.flatMap(name => [name.text, name.description ?? '']),
+    const hay = [form.id, `&${form.id};`, ...subtractions, character?.text ?? '', ...names.flatMap(name => [name.text, name.description ?? '']),
       ...equivalents.flatMap(item => [item.text, item.characters.join(''), item.id ?? '']), ...of.map(other => other.id),
       usedIn, ...mentions.flatMap(row => [row.char, ...row.spellings.map(one => one.text)]), ...mineHere.flatMap(pair => [pair.other, pair.note])].join('\n').toLowerCase()
     return {
-      id: form.id, number: Number(form.id.slice(2)), shown: named.find(row => row.draw)?.text ?? form.names[0], names, subtractions, of, equivalents, yours: mineHere,
+      id: form.id, number: Number(form.id.slice(2)), shown: named.find(row => row.draw)?.text ?? form.names[0], names, subtractions, ...(character ? { character } : {}), of, equivalents, yours: mineHere,
       uses: [...usedIn].length, usedIn, derived: mentions, status: /** @type {FormRow['status']} */ (status), hay,
     }
   }).sort((a, b) => a.number - b.number)
@@ -135,7 +142,7 @@ export const querySummary = query => query.trim().toLowerCase().split(/\s+/u).fi
 /**
  * Whether a row answers a query.
  * @param {FormRow} row @param {string[]} terms
- * @param {'all' | Notation | 'unnamed' | 'yours'} source @param {'any' | 'confirmed' | 'candidate' | 'none'} status
+ * @param {'all' | Notation | 'unnamed' | 'yours'} source @param {'any' | 'confirmed' | 'candidate' | 'editorial' | 'none'} status
  */
 export function matches(row, terms, source, status) {
   if (status !== 'any' && row.status !== status) return false
