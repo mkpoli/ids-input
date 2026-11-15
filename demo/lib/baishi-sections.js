@@ -37,6 +37,7 @@ const CONSTRUCTS = /** @type {Section[]} */ ([
 
 /** The prose sections of the specification. */
 const PROSE = /** @type {Section[]} */ ([
+  { id: 'parser', rule: null, parent: null, title: 'baishi.heading.parser' },
   { id: 'history', rule: null, parent: null, title: 'baishi.heading.changes' },
   { id: 'differences', rule: null, parent: null, title: 'baishi.heading.data' },
   { id: 'unsettled', rule: null, parent: null, title: 'baishi.heading.unsettled' },

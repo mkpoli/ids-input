@@ -7,8 +7,7 @@
   import PageHeader from './ui/PageHeader.svelte'
   import IdsPartIcon from '../src/svelte/IdsPartIcon.svelte'
   import { translator } from '../src/svelte/index.js'
-  import { parse, withoutVariants, write } from '../src/core/index.js'
-  import { chainPath } from '../src/core/chain-shape.js'
+  import { drawingOf } from './lib/baishi-drawing.js'
   import { composerPreview } from '@han-compose/composer'
   import engineOutlines from 'ids-engine-outlines'
   import { LOCALES, appMessages } from './lib/locales.js'
@@ -18,6 +17,7 @@
   import { SvelteSet } from 'svelte/reactivity'
   import { onMount } from 'svelte'
   import RailroadCanvas from './ui/RailroadCanvas.svelte'
+  import BaishiParser from './ui/BaishiParser.svelte'
   import { CHEATSHEET_SECTIONS, ruleId, sectionHref } from './lib/baishi-sections.js'
   import { railroad, readGrammar } from './lib/railroad.js'
   import {
@@ -57,19 +57,6 @@
   const adapter = /** @type {import('../src/adapter/types.js').IdsAdapter} */ (/** @type {unknown} */ ({
     icon: queued, fontStyle: 'sans', drawable: async (/** @type {string} */ text) => ({ text, leaves: [] }),
   }))
-  /**
-   * What draws one description: a chain as its own line, a description the workshop reads as its
-   * preview without the variant identifiers, or nothing. The preview applies no bracket after an
-   * operator, and subtraction and replacement are search syntax, so none of those is drawn.
-   * @param {string} body @returns {{ kind: 'chain', d: string } | { kind: 'composed', sequence: string } | null}
-   */
-  function drawingOf(body) {
-    const bare = body.replace(/^\{[^}]*\}/u, '')
-    if (/^#\(.*\)$/u.test(bare)) { const d = chainPath(bare); return d ? { kind: 'chain', d } : null }
-    if (/[㇯🔄[]/u.test(body)) return null
-    const read = parse(body)
-    return !read.problem && read.tree !== null ? { kind: 'composed', sequence: write(withoutVariants(read.tree)) } : null
-  }
   /** The descriptions the composer drew, and those it could not. */
   const composed = new SvelteSet(), undrawn = new SvelteSet()
   /** Ask for a description's drawing once its place comes into view.
@@ -108,7 +95,7 @@
   }))
 
   const TOC = /** @type {const} */ ([
-    ['rows', []], ['operators', ['angles']], ['variants', ['source-letters', 'ucv-position', 'imaginary-ucv', 'alternate', 'other']],
+    ['parser', []], ['rows', []], ['operators', ['angles']], ['variants', ['source-letters', 'ucv-position', 'imaginary-ucv', 'alternate', 'other']],
     ['chains', ['letters', 'modifiers', 'characters', 'compounds', 'reverse', 'cross', 'break-mark', 'closing', 'curves']],
     ['overlap', ['quick-slice', 'matrix', 'reverse-matrix', 'curveCase']], ['index', []], ['subtract', []], ['prefix', []],
     ['replace', []], ['levels', []], ['history', []], ['differences', []], ['unsettled', []], ['ebnf', []], ['sources', []],
@@ -219,6 +206,11 @@
 
     <main>
       <p class="lead">{t('baishi.lead')}</p>
+
+      <section id="parser" aria-labelledby="parser-title">
+        <h2 id="parser-title">{t('baishi.heading.parser')}</h2>
+        <BaishiParser grammar={corrected} {t} {gloss} zh={locale.startsWith('zh')} />
+      </section>
 
       <section id="rows" aria-labelledby="rows-title">
         <h2 id="rows-title">{t('baishi.heading.rows')}</h2>

@@ -91,6 +91,21 @@ PDF editions in English, Simplified and Traditional Chinese (`docs/spec/`, writt
 
 Licence: MIT, as this package's code. The notation is the work of the zi.tools authors.
 
+## `zi-tools-rows.tsv.gz`
+
+The rows of Yi Bai's three IDS levels at commit `2597437b928e8d530b7ae09cf53fe5ec7868569c`
+(2026-10-31), <https://github.com/yi-bai/ids>, for the parser on the zi.tools IDS Extension appendix.
+Each line is a level, a TAB and that level's row: `0` for every line of `ids_lv0.txt`, then `1` and `2`
+only where `ids_lv1.txt` or `ids_lv2.txt` writes the line differently from the level before. A header
+line names the commit and the source hashes (SHA-256): `ids_lv0.txt`
+`af5a0de3aae85ee1a69001918a78d4060d9a334c508ad2c6ac5854786791d474`, `ids_lv1.txt`
+`aa9ba7e394d8fd5cf797b6b9bd6ae5b4546f5222d10f15158c656f099b35c0cf`, `ids_lv2.txt`
+`b728e92679a9cb18a8f67f55f654f03875791dc34f6bab41ed1d4b4116bea7d6`. `tests/baishi-parser.test.js`
+rebuilds the three files from it byte for byte and parses every row with `data/baishi-ids.ebnf`. Rebuild
+it with `bun scripts/build_zi_tools_rows.mjs`.
+
+Licence: MIT, Copyright (c) 2021 Yi Bai; see `data/licences/yi-bai-ids-MIT.txt`.
+
 ## `babelstone-ids.tsv.gz`
 
 BabelStone IDS (Ideographic Description Sequences for CJK Unified Ideographs) by Andrew West (魏安),
