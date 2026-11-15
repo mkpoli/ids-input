@@ -456,14 +456,16 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     forms['⿳士冖一']=crown+[bar]
     forms['⿱⿱士冖一']=crown+[bar]
     # 興's upper component: preserve the open top of 𦥑 and remove 一八 below.
-    # Crop the outer frame at the native baseline; keep 同's counters intact.
+    # Crop the outer frame at the native baseline; keep 同's counters intact. The font draws 同's 冂
+    # in one outline with 𦥑, so the counter inside it (c[6]) stays with the frame: each group then
+    # draws alone as it draws in the form, where the counter alone filled 同 solid.
     c=cs('興')
     if style=='sans':
-        forms['⿴𦥑同']=[crop_group([c[5],c[7]], (0,222,1000,880)),group([c[0],c[1],c[2],c[6]])]
+        forms['⿴𦥑同']=[crop_group([c[5],c[7]], (0,222,1000,880))+group([c[6]]),group([c[0],c[1],c[2]])]
     else:
         # Drop the bottom 一's terminal before clipping: its tip rises above y=197.
         outer=[('moveTo', ((854,197),))]+c[3][7:]
-        forms['⿴𦥑同']=[crop_group([outer,c[7]], (0,197,1000,880)),group([c[0],c[4],c[5],c[6]])]
+        forms['⿴𦥑同']=[crop_group([outer,c[7]], (0,197,1000,880))+group([c[6]]),group([c[0],c[4],c[5]])]
     # The connected-stroke regional 卑 (also U+FA35), without its bottom 十.
     # Keep its native em, including the downward stroke emerging from 日.
     c=cs('卑')
