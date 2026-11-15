@@ -966,7 +966,7 @@ export const SOURCES = [
       ko: '통합 가능·통합 불가 부품 차이와 예시 글자. 문서를 생성하는 데이터 파일에서 읽었으며, 자형 그림은 GlyphWiki 글리프이다.',
       vi: 'Các biến thể bộ phận hợp nhất được và không hợp nhất được cùng chữ ví dụ, đọc từ tệp dữ liệu sinh ra tài liệu; hình dạng lấy từ GlyphWiki.',
     },
-    used: ['data/ucv.json', 'data/ucv-forms.json.gz'],
+    used: ['data/ucv.json', 'data/ucv-forms.json.gz', 'data/ucv-outlines.json.gz'],
   },
   {
     id: 'irg-ws2021',

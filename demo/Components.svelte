@@ -71,7 +71,7 @@
 </script>
 
 <div class="page">
-  <PageHeader title={t('library.title')} {t} bind:locale links={[{ href: `./unencoded.html?lang=${locale}`, label: t('appendix.title') }]} />
+  <PageHeader page="components" title={t('library.title')} {t} bind:locale links={[{ href: `./unencoded.html?lang=${locale}`, label: t('appendix.title') }]} />
   <div class="body">
     <!-- A cell is chosen by the part it shows, whether or not the editor could insert it: a numbered
          component with no fragment is read-only in the palette and still has a card here. -->

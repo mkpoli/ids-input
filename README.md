@@ -198,6 +198,18 @@ remains in the field. Resolution is bounded to eight opened components and 128 c
 and non-unifiable component variations from `data/ucv.json`, each form drawn from
 `data/ucv-forms.json.gz`; the workshop shows it as its `/ucv` page.
 
+With `variations`, the menu of a component's forms in `IdsTree` also lists the other characters and
+descriptions of the IRG component variation entries the component is a form of (王 and 𡈼 for 壬 in
+UCV #1, 間 for 閒 in NUCV #325), each under its entry; choosing one writes it in the component's
+place. `componentForms(part, { sequences, ucv })` in the core gives that list.
+
+A form of an entry that no code point names is written with zi.tools' variant identifier after the
+component: `壬q0012` is the second form of UCV #1. An adapter that answers `formed(sequence)`
+(`babelStoneAdapter({ variations })` over `data/ucv.json`) has the menu offer those forms too, and
+the preview draws each from `data/ucv-outlines.json.gz`, which a host lists for the composer as
+`host/outlines.json.gz`. Without them the identifier is kept in the description and the plain
+component is drawn.
+
 With `variations`, `IdsPartTools` also offers the forms the IRG unifies with the chosen component
 (its UCV entries, read from `data/ucv.json` when a component is first chosen); `variationsHref(entry)`
 gives each entry number a link.
@@ -209,6 +221,7 @@ drawing pad; it asks the adapter for the palette and takes its glyph shapes from
 `--ids-font`. The Components panel shows the most used parts first, then every Han
 component of one stroke count, including compound IDS, grouped by first stroke. Palette text can be selected and copied;
 its stroke keys (横 豎 撇 點 折) list the parts written with the strokes typed, in writing order, fewest strokes first, and switch off the keys no part goes on with.
+In the All characters view the same keys search every Han character, by the orders of `data/open-strokes/rime-stroke.tsv.gz`, and combine with a stroke count.
 compound cells show their sequence and expose the stroke count on hover. `adapter.icon` supplies their outlines;
 without it, the cells use a font-based layout. Icon rendering must accept concurrent
 requests independently of the main preview. The components take colours from CSS custom properties with light and dark defaults
@@ -588,7 +601,9 @@ two). `preview` draws a sequence that may hold empty slots (`⬚`); its options 
 Error named `TooLargeError` for a sequence larger than it draws, `UnavailableError` when its data
 cannot be read at all, and any other Error when it cannot draw. `IdsPreview` shows placeholders in the layout's boxes until a drawing arrives, a badge
 (Preview, Approximate, Final, Could not compose, Too large), and the adapter's `drawing` in place of
-the preview when there is one. While the data is unavailable, the placeholders stand with no badge.
+the preview when there is one. While the data is unavailable, the placeholders stand with no badge. It binds
+`step`, where the drawing stands: `idle`, `loading`, `composed`, `final`, `failed`, `capped` or
+`unavailable`.
 
 `IdsPreview` takes a tab `document` and `session` for direct layer editing, and binds `scopes` for
 export. Drag a part, or the selected layer's outline, to move it; drag an edge to scale one axis,
@@ -915,7 +930,7 @@ which are laid out as equal cells. Under Vite, keep both packages out of depende
 (`optimizeDeps: { exclude: ['ids-input', '@han-compose/composer'] }`) so the Worker's URL resolves;
 `composerPreview({ base, worker })` takes a function making the Worker for other bundlers.
 
-The demo draws Sans from `https://ids-input-composer.mkpoli.workers.dev/a83fc941166b-sans-compose-layout-v4-f6+variants/`,
+The demo draws Sans from `https://ids-input-composer.mkpoli.workers.dev/a83fc941166b-sans-compose-layout-v4-f7+variants/`,
 Serif from the serif export, Fangsong from the Zhuque Fangsong export, and Kaisho from the Kureedo export; `?composer=<url>` or
 `VITE_COMPOSER_BASE` points every face at another copy of one export. A face that cannot draw a
 description draws the encoded character it names in that face, else the Sans export's drawing.
@@ -962,6 +977,7 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   a whole, because 102,894 of its 211,319 descriptions are CHISE's (`data/COPYING-chise-ids.txt`,
   source record `data/chise-sources.json`); the other 108,425 are public-domain BabelStone rows and
   each row says which it is. Code stays MIT.
+- `data/component-atlas.json.gz`: GPL-2.0-or-later, counted from `data/ids-corpus.json.gz`.
 - `data/seal-sources.txt.gz`: Unicode SealSources, Unicode-3.0
   (`data/COPYING-seal-sources.txt`).
 - `fonts/IDSSeal*`, with the engine's `small-seal` outlines in its package: derived Kaiyuan glyphs under
@@ -1387,6 +1403,23 @@ link is rebuilt on the published site with only the parameters that open the seq
 replaces the form with the issue it became; a report matching an open issue says so and links to
 it, and a refused or timed-out one keeps the text and offers another try.
 
+### Embedding the workshop
+
+`/editor.html` is the workshop as one editor for another page's frame. It has no tabs, no site
+menus, no sharing, layers or export, and keeps no tabs, history or language of its own. `?ids=` opens
+a sequence and `?lang=` picks the language. A search hit or a replacement takes the place of the
+sequence. Each change is posted to the host page; a host can replace the sequence:
+
+```js
+addEventListener('message', ({ data }) => {
+  if (data?.type === 'ids-input:sequence') console.log(data.sequence, data.whole)
+})
+frame.contentWindow.postMessage({ type: 'ids-input:open', sequence: '⿰木木' }, '*')
+```
+
+`sequence` is the text as written; `whole` is the complete description, or `''` while it does not
+parse.
+
 ### Desktop app
 
 `desktop/` wraps the workshop in a [Tauri](https://tauri.app/) window for Windows, macOS and Linux.
@@ -1490,6 +1523,7 @@ bun run build:demo      # the demo into dist/
 bun run build:site      # assets into dist/, share-card Worker into dist-worker/
 bun run dev:worker      # the worker and dist/ locally, on port 8787
 bun run build:example-drawings   # the examples' drawings, after COMPOSER_BASE changes
+bun run build:baishi-cheatsheet  # the cheatsheet's outlines, after COMPOSER_BASE or its cards change
 bun run build:sketch-parts       # the drawing search's glyph masks, after a font change
 ```
 
@@ -1553,6 +1587,12 @@ request to the assets.
 The prepared drawings in `demo/lib/example-drawings.json` are composed once from the export at
 `demo/lib/composer.js`'s `COMPOSER_BASE`; `bun run build:example-drawings` rebuilds them, and
 `tests/example-drawings.test.js` fails while the file and the export disagree.
+
+The zi.tools IDS cheatsheet (`demo/lib/baishi-cheatsheet.js`) quotes Yi Bai's data at one commit and
+colours the contours of real outlines. `bun run build:baishi-cheatsheet` looks every quotation up in
+the row it names, then stores each drawn character's contours from the export in
+`demo/lib/baishi-cheatsheet-outlines.json`; `tests/baishi-cheatsheet.test.js` fails while the cards
+and the file disagree.
 
 `data/sketch-parts.json.gz` is built by `scripts/build_sketch_parts.py` from the bundled faces and
 the system Noto Sans CJK JP (`NOTO_SANS_CJK` overrides its path). `tests/sketch-data.test.js` reads
