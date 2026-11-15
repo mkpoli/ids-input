@@ -15,6 +15,7 @@
   import { entryProblem, parseEntries } from '../src/core/stroke-entry.js'
   import { unpack } from '@han-compose/composer'
   import wantedText from '../data/open-strokes/wanted.tsv?raw'
+  import formsText from '../data/component-forms.tsv?raw'
 
   /** @typedef {import('../src/core/stroke-entry.js').StrokeEntry} StrokeEntry */
 
@@ -96,6 +97,14 @@
   const item = $derived(queue.find(entry => entry.char === current))
   const point = $derived(current ? `U+${(current.codePointAt(0) ?? 0).toString(16).toUpperCase().padStart(4, '0')}` : '')
   const elsewhere = $derived(current ? Object.entries(recorded).filter(([key]) => key !== source).flatMap(([key, found]) => found.get(current) ? [{ key, orders: /** @type {string[]} */ (found.get(current)) }] : []) : [])
+
+  // Unicode pairs each radical form and stroke with a unified ideograph of the same or nearly the
+  // same appearance. The sources record the ideograph, so its order is offered as a start; the two
+  // are not always written alike, which is why it is not taken unseen.
+  const PAIRS = new Map(formsText.split('\n').map(line => line.split('\t')).filter(row => row[2] === 'unicode-ucd' && row[3] === 'EquivalentUnifiedIdeograph').map(row => [row[0], row[1]]))
+  const pair = $derived(PAIRS.get(current) ?? '')
+  /** The paired ideograph's orders, the chosen source's first. */
+  const paired = $derived(pair ? Object.entries(recorded).flatMap(([key, found]) => found.get(pair) ? [{ key, orders: /** @type {string[]} */ (found.get(pair)) }] : []).sort((a, b) => Number(b.key === source) - Number(a.key === source)) : [])
 
   let orders = $state(''), basis = $state('')
   /** @type {ReturnType<typeof entryProblem>} */
@@ -186,6 +195,14 @@
               <div class="wide"><dt>{t('strokes.examples')}</dt>
                 <dd class="examples" lang="ja">{#each item.examples as example (example)}<a href={`./#${encodeURIComponent(example)}`}>{example}</a>{/each}</dd></div>
             {/if}
+            {#each paired as known (known.key)}
+              <div class="wide"><dt>{t(SOURCE_NAMES[known.key])} <span class="char" lang="ja">{pair}</span></dt>
+                <dd class="known">
+                  <span class="written">{strokes(known.orders.join(' '))}</span><span class="mono">{known.orders.join(' ')}</span>
+                  <button type="button" class="ui-button" data-size="xs" aria-label={`${t('strokes.use')} ${pair}, ${t(SOURCE_NAMES[known.key])}`}
+                    onclick={() => { orders = known.orders.join(' '); basis = `${pair} (Unicode EquivalentUnifiedIdeograph), ${known.key}` }}>{t('strokes.use')}</button>
+                </dd></div>
+            {/each}
             {#each elsewhere as known (known.key)}
               <div class="wide"><dt>{t(SOURCE_NAMES[known.key])}</dt>
                 <dd class="known">
@@ -269,6 +286,7 @@
   .facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 20px;margin:0}
   .facts .wide{grid-column:1/-1}
   dt{font-size:11.5px;color:var(--ui-color-ink-muted)}
+  dt .char{font-size:14px;color:var(--ui-color-ink)}
   dd{margin:2px 0 0;font-size:15px;font-variant-numeric:tabular-nums}
   .examples{display:flex;flex-wrap:wrap;gap:2px 8px;font-size:24px;line-height:1.3}
   .examples a{color:inherit;text-decoration:none;border-radius:var(--ui-radius-xs)}
