@@ -457,12 +457,14 @@
 #grammar(("component variant", "sequence variants"))
 #said("tagAfter", ("D1", "p.1"))
 #said("tagEnd", ("D1", "p.1"))
-#said("tagOmit", ("I26", "p.8 §4.3"))
+#said("tagOmit", ("I26", "p.8 §4.2"))
 #examples("tags")
 #examples("lists")
 
 #t("baishi.variants.kinds")
 #grammar(("variant id", "style tag", "tag char", "lower letter"))
+#text(fill: soft)[#badge("inference") #t("baishi.kind.order")]
+
 #table(
   columns: (auto, 1fr),
   head(
@@ -513,16 +515,16 @@
 #examples("ucv")
 
 == #t("baishi.heading.imaginary") <imaginary-ucv>
-#said("imaginary", ("I26", "p.11 §4.3.3"))
+#said("imaginary", ("I26", "p.11 §4.3.2"))
 #examples("imaginary")
 
 == #t("baishi.heading.alternate") <alternate>
-#said("alternate", ("I26", "p.12 §4.3.4"))
+#said("alternate", ("I26", "p.12 §4.3.3"))
 #table(
   columns: (auto, 1fr),
   head(
     t("baishi.alternate.letter"),
-    [#t("baishi.alternate.gloss") #at(("I26", "pp.12–13 §4.3.4"))],
+    [#t("baishi.alternate.gloss") #at(("I26", "pp.12–13 §4.3.3"))],
     repeat: false,
   ),
   ..D
@@ -540,7 +542,7 @@
     ))
     .flatten(),
 )
-#said("compose", ("I26", "p.13 §4.3.4"))
+#said("compose", ("I26", "p.13 §4.3.3"))
 #examples("alternate")
 
 == #t("baishi.heading.other") <other>
@@ -615,21 +617,21 @@
 
 == #raw("-") #t("baishi.heading.reverse") <reverse>
 #grammar(("reversal",))
-#said("reverse", ("I26", "p.15 §5.4"))
+#said("reverse", ("I26", "p.15 §5.3"))
 #examples("reverse")
 
 == #raw("x") #t("baishi.heading.cross") <cross>
 #grammar(("crossing",))
-#said("cross", ("I26", "p.15 §5.4"))
+#said("cross", ("I26", "p.15 §5.3"))
 #examples("cross")
 
 == #raw("b") #t("baishi.heading.break") <break-mark>
 #grammar(("break",))
-#said("break", ("I26", "p.15 §5.4"))
+#said("break", ("I26", "p.15 §5.3"))
 #examples("break")
 
 == #raw("z") #t("baishi.heading.closed") <closing>
-#said("closed", ("I26", "p.15 §5.4"))
+#said("closed", ("I26", "p.15 §5.3"))
 #examples("closed")
 
 == #t("baishi.heading.curves") <curves>
@@ -923,7 +925,7 @@
 ]
 
 == #t("baishi.i26grammar") · I26 pp.31–33 <i26-grammar>
-#said("ebnf", ("I26", "p.33"))
+#said("ebnf", ("I26", "p.31"))
 #block(width: 100%, fill: sunken, inset: 8pt, radius: 2pt, raw(
   D.EBNF,
   block: true,
@@ -971,6 +973,15 @@
       for url in doc.links {
         parbreak()
         link(url, text(size: 8pt, url))
+      }
+      if "edition" in doc and doc.edition != none {
+        parbreak()
+        link(doc.edition.url, text(size: 8pt, doc.edition.url))
+        [ ]
+        text(fill: muted)[#t(
+            "baishi.doc.edition",
+            date: doc.edition.read,
+          ) #hans(doc.edition.printed)]
       }
       parbreak()
       text(fill: soft, t("baishi.doc.note." + doc.key))
