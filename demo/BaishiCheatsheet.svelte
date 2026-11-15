@@ -17,7 +17,8 @@
   import { SECTIONS, sectionHref } from './lib/baishi-sections.js'
   import { readGrammar } from './lib/railroad.js'
   import ebnf from '../data/baishi-ids.ebnf?raw'
-  import { DRAFTS, GLOSS, GRAMMAR, GROUP_LABELS, SHEET, SOURCE, UNUSED, arityOf, bareOf, entriesOf, focusOf, idsOf, kindOf, tokenise } from './lib/baishi-cheatsheet.js'
+  import { DRAFTS, GLOSS, GRAMMAR, GROUP_LABELS, SHEET, SOURCE, UNUSED, arityOf, bareOf, entriesOf, focusOf, idsOf, kindOf, tokenise, variantBody } from './lib/baishi-cheatsheet.js'
+  import { drawingOf } from './lib/baishi-drawing.js'
   import outlines from './lib/baishi-cheatsheet-outlines.json'
 
   const params = new URLSearchParams(location.search)
@@ -34,6 +35,7 @@
   const GLYPHS = /** @type {Record<string, string[]>} */ ({ ...outlines.components, ...outlines.glyphs })
   const COMPOSED = /** @type {Record<string, string[]>} */ (outlines.composed)
   const ROWS = /** @type {Record<string, string>} */ (outlines.rows)
+  const VARIANTS = /** @type {Record<string, string>} */ (outlines.variants)
   const grammar = readGrammar(ebnf)
   const anchors = new Map(SECTIONS.map(section => [section.id, section]))
   /** An anchor's name: the title the specification gives it, or its rule. @param {string} id */
@@ -220,6 +222,13 @@
     const font = entries.find(entry => entry.ids.includes('J')) ?? plain
     return entries.map(entry => ({ ...entry, font: entry === font, named: tag ? entry.ids.includes(tag) || (tag === '.' && entry === plain) : false }))
   }
+  /** A variant no outline shows: its chain as a line, or the composer's drawing of it without its identifiers.
+   * @param {string} text @returns {{ line: string } | { sketch: string } | null} */
+  function sketchOf(text) {
+    const drawing = drawingOf(variantBody(text))
+    if (drawing?.kind === 'chain') return { line: drawing.d }
+    return drawing && VARIANTS[drawing.sequence] ? { sketch: VARIANTS[drawing.sequence] } : null
+  }
   /** The drawing of a component's variant inside a character that has it, where a card gives one.
    * @param {string} char @param {string[]} ids */
   const variantTile = (char, ids) => sheet.flatMap(section => [...section.cards, ...section.groups.flatMap(group => group.cards)]).flatMap(card => card.quotes)
@@ -234,7 +243,10 @@
     const kept = new Set([...all.filter(variant => variant.named || variant.font), ...all].slice(0, 6))
     const variants = all.filter(variant => kept.has(variant))
     return { token, ...describe(token), char, glyph: all.length ? '' : glyph,
-      variants: variants.map(variant => ({ ...variant, ink: variant.font ? glyph : '', tile: variantTile(char, variant.ids) })), more: all.length - variants.length,
+      variants: variants.map(variant => {
+        const tile = variantTile(char, variant.ids)
+        return { ...variant, ink: variant.font ? glyph : '', tile, sketch: variant.font || tile ? null : sketchOf(variant.text) }
+      }), more: all.length - variants.length,
       // The other quotations of the card stand beside an operator's bracket: with it and without.
       beside: token.kind === 'op' && pointed.card.quotes.length > 1 ? pointed.card.quotes : [] }
   })
@@ -291,7 +303,9 @@
           {#each tip.variants as variant (variant.text)}
             <li class:named={variant.named}>
               {#if variant.tile}<span class="mini">{@render drawing(variant.tile, null, false)}</span>
-              {:else if variant.ink}<svg class="mini" viewBox="0 0 1000 1000" role="img" aria-label={tip.char}><path class="ink" d={variant.ink} /></svg>{/if}
+              {:else if variant.ink}<svg class="mini" viewBox="0 0 1000 1000" role="img" aria-label={tip.char}><path class="ink" d={variant.ink} /></svg>
+              {:else if variant.sketch && 'line' in variant.sketch}<svg class="mini composed" viewBox="0 0 1000 1000" aria-hidden="true"><path class="line" d={variant.sketch.line} /></svg>
+              {:else if variant.sketch}<svg class="mini composed" viewBox="0 0 1000 1000" aria-hidden="true"><path class="ink" d={variant.sketch.sketch} /></svg>{/if}
               <code>{variant.text}</code>
             </li>
           {/each}
@@ -411,7 +425,7 @@
           <li><span class="what">{t('cheatsheet.source.data')}</span> <a href={SOURCE.repository} target="_blank" rel="noreferrer">yi-bai/ids</a> <a href={`${SOURCE.repository}/tree/${SOURCE.commit}`} target="_blank" rel="noreferrer"><code>{SOURCE.commit.slice(0, 8)}</code></a> · {SOURCE.date} · MIT</li>
           <li><span class="what">{t('cheatsheet.source.notation')}</span> <b class="key">{GRAMMAR.key}</b> <a href={GRAMMAR.url} target="_blank" rel="noreferrer" lang="zh-Hans">{GRAMMAR.title}</a> · {GRAMMAR.date} · {t('cheatsheet.source.notationBy')} <span class="weak">{t('cheatsheet.source.notationNote')}</span></li>
           <li><span class="what">{t('cheatsheet.source.drafts')}</span> <b class="key">{DRAFTS.key}</b> {DRAFTS.author}, <span lang="zh-Hans">{DRAFTS.title}</span> {DRAFTS.versions} <span class="weak">{t('cheatsheet.source.draftsNote')}</span></li>
-          <li><span class="what">{t('cheatsheet.source.grammar')}</span> <a href={sectionHref('spec', 'row')}>{t('baishi.title')}</a> · <code>data/baishi-ids.ebnf</code></li>
+          <li><span class="what">{t('cheatsheet.source.grammar')}</span> <a href={sectionHref('spec', 'row')}>{t('baishi.title')}</a> · <a href={`./baishi-railroad.html?lang=${locale}`}>{t('railroad.title')}</a> · <code>data/baishi-ids.ebnf</code></li>
           <li><span class="what">{t('cheatsheet.source.outlines')}</span> <a href="https://github.com/notofonts/noto-cjk" target="_blank" rel="noreferrer">Noto Sans CJK JP</a> · <a href="https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project" target="_blank" rel="noreferrer">Plangothic</a> · <a href="https://github.com/mkpoli/han-compose" target="_blank" rel="noreferrer">han-compose</a> <code>{outlines.composer.commit}</code></li>
         </ul>
       </footer>
@@ -545,6 +559,8 @@
   .variants li.named{background:var(--mark)}
   .variants li.more{align-self:center;color:var(--ui-color-ink-muted)}
   .mini{flex:none;display:block;inline-size:34px;block-size:34px;border-radius:5px;background:var(--ui-color-surface-sunken)}
+  .mini.composed{background:none;outline:1.5px dashed var(--ui-color-control-border);outline-offset:-1.5px}
+  .mini .line{fill:none;stroke:var(--ui-color-ink);stroke-width:64;stroke-linecap:round;stroke-linejoin:round}
 
   .zoom{display:flex;flex-wrap:wrap;align-items:flex-start;gap:18px}
   .zoomed{display:flex;flex-wrap:wrap;gap:10px}

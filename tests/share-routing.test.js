@@ -20,7 +20,7 @@ describe('Pages sequence routing', () => {
     }
   })
   it('serves every published page by its extensionless address', () => {
-    const built = ['/open-data', '/unencoded', '/ucv', '/normalization', '/baishi', '/baishi-cheatsheet']
+    const built = ['/open-data', '/unencoded', '/ucv', '/normalization', '/baishi', '/baishi-cheatsheet', '/baishi-railroad']
     const copied = readdirSync(new URL('../demo/public/', import.meta.url)).filter(file => file.endsWith('.html')).map(file => `/${file.slice(0, -5)}`)
     for (const path of [...built, ...copied]) expect(route(path)).toEqual({ kind: 'asset' })
   })

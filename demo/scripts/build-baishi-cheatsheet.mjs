@@ -2,8 +2,8 @@
 // Rebuild demo/lib/baishi-cheatsheet-outlines.json: what the cheatsheet draws, prepared from the
 // export at COMPOSER_BASE so the page waits for no composer. It holds the outline of every
 // character a card colours and of every component a card writes, contour by contour; the
-// composer's drawing of each sequence no outline has, part by part; and each written component's
-// own row of the data, for the variants a tooltip lists.
+// composer's drawing of each sequence no outline has, part by part; each written component's own
+// row of the data, for the variants a tooltip lists; and the composer's drawing of those variants.
 //
 // Before drawing, every quotation of demo/lib/baishi-cheatsheet.js is looked up in Yi Bai's data at
 // the commit it names: a quotation that is not in its row stops the build, and the ones found are
@@ -21,7 +21,8 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { compose, fromUrl } from '@han-compose/composer/loader'
 import { COMPOSER_BASE } from '../lib/composer.js'
-import { SOURCE, STROKE_LETTERS, cardsOf, componentsWritten, composedDrawn, contoursOf, entriesOf, glyphsDrawn, quotations, tokenise } from '../lib/baishi-cheatsheet.js'
+import { SOURCE, STROKE_LETTERS, cardsOf, componentsWritten, composedDrawn, contoursOf, entriesOf, glyphsDrawn, quotations, tokenise, variantBody } from '../lib/baishi-cheatsheet.js'
+import { drawingOf } from '../lib/baishi-drawing.js'
 
 const redrawn = process.argv.includes('--redrawn')
 const folder = process.argv.slice(2).find(argument => !argument.startsWith('--'))
@@ -113,6 +114,21 @@ for (const char of componentsWritten()) {
   if (contours) components[char] = contours
 }
 
+// The composer's drawing of each entry of those rows that it draws whole, for a tooltip's variants
+// that no outline shows; a chain is drawn on the page.
+/** @type {Record<string, string>} */
+const variants = {}
+for (const [char, row] of Object.entries(rows)) {
+  for (const entry of entriesOf(`${char}\t${row}`)) {
+    const drawing = drawingOf(variantBody(entry))
+    if (drawing?.kind !== 'composed' || drawing.sequence in variants) continue
+    try {
+      const drawn = await compose(source, drawing.sequence)
+      if (!drawn.approximate?.length) variants[drawing.sequence] = drawn.parts.map(part => part.d).join('')
+    } catch { /* the composer draws nothing for it: the tooltip shows the text alone */ }
+  }
+}
+
 const manifest = source.manifest
 const data = {
   base: COMPOSER_BASE,
@@ -124,6 +140,7 @@ const data = {
   composed,
   components,
   rows,
+  variants,
 }
 writeFileSync(out, JSON.stringify(data, null, 1) + '\n')
-console.log(`${data.quotations.length} quotations found, ${Object.keys(glyphs).length} outlines, ${Object.keys(composed).length} composed, ${Object.keys(components).length} component outlines, ${Object.keys(rows).length} rows, ${JSON.stringify(data).length} bytes -> demo/lib/baishi-cheatsheet-outlines.json`)
+console.log(`${data.quotations.length} quotations found, ${Object.keys(glyphs).length} outlines, ${Object.keys(composed).length} composed, ${Object.keys(components).length} component outlines, ${Object.keys(rows).length} rows, ${Object.keys(variants).length} variants, ${JSON.stringify(data).length} bytes -> demo/lib/baishi-cheatsheet-outlines.json`)

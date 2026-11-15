@@ -163,9 +163,9 @@ function checkParity() {
   // Every message the page names outright (keys built from data are the tables', checked above
   // through the data), in the same order. Left out: the page's title bar, its contents list and
   // the label of the contents list, the accessible names of its rule list and of the → between a
-  // text and what it becomes (the PDF shows the arrow), the link to the cheatsheet, and the
-  // heading of the parser, which reads text typed into the page.
-  const PAGE_ONLY = new Set(['baishi.title', 'baishi.contents', 'baishi.grammar', 'baishi.becomes', 'baishi.toCheatsheet', 'baishi.heading.parser'])
+  // text and what it becomes (the PDF shows the arrow), the links to the cheatsheet and to the
+  // diagram's own page, and the heading of the parser, which reads text typed into the page.
+  const PAGE_ONLY = new Set(['baishi.title', 'baishi.contents', 'baishi.grammar', 'baishi.becomes', 'baishi.toCheatsheet', 'baishi.grand.page', 'baishi.heading.parser'])
   const keys = (/** @type {string} */ text) => [...text.matchAll(/\bt\(\s*['"](baishi\.[\w.]+)['"]/g)]
     .map(match => match[1]).filter(key => !key.endsWith('.') && !PAGE_ONLY.has(key))
   const pageKeys = keys(read('demo/Baishi.svelte'))

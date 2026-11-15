@@ -207,10 +207,18 @@ export const SHEET = [
       { char: '包', text: '⿻[l,l,.]勹己.(J)', row: 1286, glyphs: [{ char: '包', parts: [[0, 1, 2], [3, 4]] }], focus: ['[l,l,.]'] },
     ] },
     { id: 'overlap-segment', label: 'segment', hint: 'segment', quotes: [{ char: '与', text: '⿺⿻[b]㇉一.一.(J)', row: 15, glyphs: [{ char: '与', parts: [[4, 0, 3], [2], [1]] }], focus: ['[b]'] }] },
-    { id: 'overlap-reverse', anchors: ['reverse-matrix'], label: 'reverse2', hint: 'reverse2', quotes: [{ char: '𫠣', text: '⿻[1:|b]𠃌⿱⿻𠃊.一.八d', row: 74703, glyphs: [{ char: '𫠣' }], focus: ['[1:|b]'] }] },
+    { id: 'overlap-reverse', anchors: ['reverse-matrix'], label: 'reverse2', hint: 'reverse2', quotes: [{ char: '𫠣', text: '⿻[1:|b]𠃌⿱⿻𠃊.一.八d', row: 74703, glyphs: [{ char: '𫠣', parts: [
+        [[2, 0, 342.5, 1000, 410.9], [2, 400, 410.9, 1000, 537.1], [0, 400, 410.9, 1000, 537.1], [2, 300, 610.5, 1000, 1000]],
+        [[2, 0, 0, 1000, 175.1], [2, 0, 249.6, 1000, 342.5], [2, 0, 410.9, 400, 537.1], [0, 0, 410.9, 400, 537.1], [2, 0, 537.1, 1000, 610.5], [2, 0, 610.5, 300, 1000]],
+        [[2, 0, 175.1, 1000, 249.6]],
+        [1, 3]] }], focus: ['[1:|b]'] }] },
   ] },
   { id: 'index-modifier', label: 'index', rules: ['index modifier'], cards: [
-    { id: 'index-space', label: 'space', hint: 'space', quotes: [{ char: '𫡆', text: '⿴[1]⿴㠯.一.一.', row: 74738, glyphs: [{ char: '𫡆' }], focus: ['[1]'] }] },
+    { id: 'index-space', label: 'space', hint: 'space', quotes: [{ char: '𫡆', text: '⿴[1]⿴㠯.一.一.', row: 74738, glyphs: [{ char: '𫡆', parts: [
+      [[4, 0, 0, 1000, 200.5], [2, 0, 0, 1000, 200.5], [4, 0, 200.5, 127.5, 266.8], [4, 833, 200.5, 1000, 266.8], [4, 0, 266.8, 1000, 678.8], [3, 0, 266.8, 1000, 678.8], [0, 0, 266.8, 1000, 678.8],
+        [4, 0, 678.8, 127.5, 745.2], [4, 877, 678.8, 1000, 745.2], [4, 0, 745.2, 1000, 1000], [1, 0, 745.2, 1000, 1000]],
+      [[4, 127.5, 200.5, 833, 266.8]],
+      [[4, 127.5, 678.8, 877, 745.2]]] }], focus: ['[1]'] }] },
   ] },
   { id: 'worked', label: 'worked', cards: [
     { id: 'worked-shi', hint: 'workedShi', quotes: [
@@ -383,6 +391,9 @@ export function bareOf(tokens, entry) {
   if (own.some(token => token.kind === 'open' || token.stretches.some(piece => piece.role === 'mod'))) return null
   return own.filter(token => token.kind === 'op' || token.kind === 'part').map(token => token.stretches[0].text).join('')
 }
+
+/** An entry without its list: what a variant is drawn from. @param {string} entry */
+export const variantBody = entry => entry.replace(/(?<!#)\([^()]*\)$/u, '')
 
 /** The identifiers of an entry's list, or none where it has no list: the brackets of a chain are no list.
  * @param {string} entry @returns {string[]} */
