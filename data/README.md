@@ -444,8 +444,9 @@ either place.
 export format, for a composer to place as components: `{ records: { "&GW-u58ec-t;": record } }`,
 each under the reference a description names the glyph by, `&GW-` and its GlyphWiki name. The
 200-unit square is scaled to a 1000-unit em with its top at 880, and every polygon is wound the
-same way. The workshop hands the file to the engine as the host's outlines; a component written
-with a variant identifier (`壬q0012`) is drawn from it.
+same way. The workshop hands the file to the engine as the host's outlines, in the page and in the
+Worker that draws a share card; a component written with a variant identifier (`壬q0012`) is drawn
+from it.
 
 - Licence of the list: the repository declares none. Its content is the IRG working document,
   published under the Unicode Terms of Use, <https://www.unicode.org/copyright.html>.

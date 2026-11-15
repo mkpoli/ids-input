@@ -103,6 +103,19 @@ try {
     assert.notEqual(Buffer.compare(cutPng, Buffer.from(await bareImage.arrayBuffer())), 0, 'a numbered component is drawn with its Sans cut')
   } finally { await bare.dispose() }
 
+  // A component written with a variant identifier draws as the form it names, from that form's
+  // outline, so a deployment without the outlines draws the plain component: another card.
+  const varied = `https://ids.mkpo.li/og/${encodeURIComponent('⿰氵壬q0012')}.png`
+  const formImage = await runtime.dispatchFetch(varied)
+  assert.equal(formImage.status, 200)
+  const formPng = Buffer.from(await formImage.arrayBuffer())
+  const plain = runtimeOver('/og/data/ucv-outlines.json.gz')
+  try {
+    const plainForm = await plain.dispatchFetch(varied)
+    assert.equal(plainForm.status, 200)
+    assert.notEqual(Buffer.compare(formPng, Buffer.from(await plainForm.arrayBuffer())), 0, 'a form no code point names is drawn from its outline')
+  } finally { await plain.dispose() }
+
   // A component form fills a leaf that the bundled-only source would draw as one part; the card
   // must still find a scoped document rather than fall back to the sequence.
   const filledSequence = '⿰⿱文厂⿱文厂'
