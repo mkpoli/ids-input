@@ -830,13 +830,14 @@ reads the description tables: `findByIds` and the other `find` methods, `structu
 `search`, `containing`, `characterInfo` and `table`. The tables are downloaded, parsed and indexed
 once, there, and the page parses none of them. The index is built in slices, and stands aside while
 other questions keep arriving. A host that passes its own `table` or `fetch`, neither of which a
-worker can use, is answered on the caller's thread. On
+worker can use, is answered on the caller's thread, and so is everyone once a worker could not be
+built. On
 the full table (97,680 characters) under Bun 1.3.14 on an AMD Ryzen 7 9800X3D, building it took
 1.4 to 2.1 s and 55 to 65 MB of heap over several runs. A query naming components answers in
 1 to 35 ms (`⿱木⿰木木` 15 to 33 ms, `日月` 8 ms, `⿰⺡木` 17 to 35 ms); the broadest wildcard queries
 take longer (`⿰？木` 0.2 to 0.3 s, `⿴囗？` 0.4 to 0.5 s, `⿰？？`, which matches 91,193 characters,
 0.6 to 1 s). In the workshop under headless Chromium, a fresh page showed its first results 3.4 to
-5 s after navigation over three runs, the table's download and parsing included. Without a Worker (Bun, tests) everything runs on the caller's thread.
+5 s after navigation over three runs, the table's download and parsing included. Where there is no Worker, everything runs on the caller's thread.
 
 ### Names and vocabulary
 

@@ -110,3 +110,34 @@ it('stands the index build aside while questions keep arriving', async () => {
   expect(answers).toBe(40)
   expect((await search).hits.map(hit => hit.char)).toContain('相')
 })
+
+it('answers on this thread when a worker cannot be built, and when one fails before it answers', async () => {
+  const none = babelStoneAdapter({ ...FILES, worker: () => { throw new Error('no worker here') } })
+  expect(await none.encoded('⿰木木')).toEqual(['林'])
+  expect((await none.findByIds('木 目', { limit: 9 })).hits.map(hit => hit.char)).toContain('相')
+  /** @type {any[]} */
+  const made = []
+  // A worker whose module never loads: it takes its messages and says nothing.
+  const dead = babelStoneAdapter({ ...FILES, worker: () => { const worker = { postMessage() {}, terminate() {} }; made.push(worker); return /** @type {any} */ (worker) } })
+  const lost = dead.structure('林')
+  await turn()
+  made[0].onerror({ preventDefault() {} })
+  await expect(lost).rejects.toThrow('The table worker failed.')
+  expect((await dead.structure('林')).map(sequence => sequence.text)).toEqual(['⿰木木'])
+  expect(made).toHaveLength(1)
+})
+
+it('leaves a custom component and character information out of the wait for the first drawing', async () => {
+  const worker = loopback()
+  let release = () => {}
+  const after = new Promise(resolve => { release = () => resolve(undefined) })
+  const info = { format: 1, characters: {} }
+  const page = babelStoneAdapter({ ...FILES, after, worker: () => worker, characterInfo: /** @type {any} */ (info) })
+  const held = page.structure('林')
+  const asked = /** @type {any} */ (page).characterInfo('林').catch(() => 'answered')
+  await turn(); await turn(); await turn()
+  expect(worker.posted.map((/** @type {any} */ message) => message.method).filter(Boolean)).toEqual(['characterInfo'])
+  release()
+  expect((await held).map(sequence => sequence.text)).toEqual(['⿰木木'])
+  await asked
+})
