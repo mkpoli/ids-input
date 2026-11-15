@@ -6,9 +6,12 @@ import { compose, dataUrls, sketch as composerSketch, unpack } from '@han-compos
 import { documentView } from '@han-compose/composer/document-view'
 import { boxCorners, layerFrames, renderScopes } from '../src/document/index.js'
 import { sourceFor } from '@han-compose/composer/source'
+import { HOST_OUTLINES } from '@han-compose/composer/host'
 import { cardSvg, SIZE, codePoint } from './card.js'
 import { JURCHEN_VARIANT, OPERATORS } from '../src/core/ids.js'
-import { plainText } from '../src/core/preview.js'
+import { drawnText, plainText } from '../src/core/preview.js'
+import { formedText } from '../src/core/forms.js'
+import { createUcvIndex } from '../src/core/ucv.js'
 import { facesFor } from './fonts.js'
 import { COMPOSER_BASE } from '../demo/lib/composer.js'
 import { EXAMPLES } from '../demo/lib/examples.js'
@@ -34,15 +37,17 @@ const read = async (env, path) => {
 /**
  * How a source reads the outlines this deployment serves under `/og/data/`, where `og-assets.mjs`
  * copies the drawing engine's files: each by the name of the engine's `data/` path it answers for.
- * The loader leaves a file out unless it is copied to `data/`.
- * @param {any} env
+ * The loader leaves a file out unless it is copied to `data/`. With `forms`, the outlines of the
+ * component variation forms no code point names are listed as the host's own.
+ * @param {any} env @param {{ forms?: boolean }} [options]
  */
-const loadFor = env => {
+const loadFor = (env, { forms = false } = {}) => {
   const SERVED = /^sources\/([a-z-]+)\/outlines\.json\.gz$|^unicode\/outlines\/([0-9a-f]+\.json\.gz)$|^numbered-sans-outlines\.json\.gz$/
   /** The deployment's name for a file the engine names; the numbered components' Sans cuts keep theirs. @param {string} path */
-  const served = path => path.replace(SERVED, (name, script, shard) => script ? `${script}-outlines.json.gz` : shard ? `unicode-outlines/${shard}` : name)
+  const served = path => path === HOST_OUTLINES ? 'ucv-outlines.json.gz'
+    : path.replace(SERVED, (name, script, shard) => script ? `${script}-outlines.json.gz` : shard ? `unicode-outlines/${shard}` : name)
   /** @type {Record<string, string>} */
-  const loaders = {}
+  const loaders = forms ? { [HOST_OUTLINES]: new URL(`/og/data/${served(HOST_OUTLINES)}`, 'https://assets/').href } : {}
   for (const path of Object.keys(dataUrls)) {
     if (SERVED.test(path)) loaders[path] = new URL(`/og/data/${served(path)}`, 'https://assets/').href
   }
@@ -66,6 +71,41 @@ const idsIndex = env => index ??= read(env, 'data/ids-index.json.gz')
   .then(bytes => bytes === null ? {} : unpack(bytes))
   .then(text => JSON.parse(text))
   .catch(() => ({}))
+
+/** @type {Promise<import('../src/core/ucv.js').UcvIndex | null> | null} */
+let variations = null
+// The lists are kept once read; a read that fails is asked for again by the next card.
+const ucvIndex = env => variations ??= read(env, 'data/ucv.json.gz')
+  .then(async bytes => {
+    if (bytes === null) throw new Error('data/ucv.json.gz is not served')
+    return createUcvIndex(JSON.parse(await unpack(bytes)))
+  })
+  .catch(() => { variations = null; return null })
+
+/**
+ * The ways to draw a sequence, the first that the engine draws being the card's: with each component
+ * written with a variant identifier (壬q0012) as the outline of the form it names, then plain. One
+ * way where the sequence names no such form or the lists cannot be read.
+ * @param {any} env @param {string} sequence
+ * @returns {Promise<{ sequence: string, forms: boolean }[]>}
+ */
+async function waysToDraw(env, sequence) {
+  const plain = plainText(sequence)
+  const formed = await drawnText(sequence, async text => formedText(text, await ucvIndex(env)))
+  return formed === plain ? [{ sequence: plain, forms: false }] : [{ sequence: formed, forms: true }, { sequence: plain, forms: false }]
+}
+
+/**
+ * The first of `ways` that `draw` answers; the last failure where none does.
+ * @template Way, Drawing @param {Way[]} ways @param {(way: Way) => Promise<Drawing>} draw @returns {Promise<Drawing>}
+ */
+export async function firstDrawn(ways, draw) {
+  let failure
+  for (const way of ways) {
+    try { return await draw(way) } catch (error) { failure = error }
+  }
+  throw failure
+}
 
 /** One character, a Jurchen variant sequence counting as one. @param {string} text */
 const isOneCharacter = text => [...text].length === 1 || JURCHEN_VARIANT.test(text)
@@ -91,12 +131,13 @@ async function drawUnits(env, units, first) {
 
 /** The sequence composed, or null where it could not be. @param {any} env @param {string} sequence */
 async function draw(env, sequence) {
-  // The engine reads no variant identifier (壬q0012): the card draws each component plain.
-  sequence = plainText(sequence)
-  const { loaders, read } = loadFor(env)
-  const source = sourceFor(sequence, { base: COMPOSER_BASE, loaders, read })
-  await source.ready()
-  return await compose(source, sequence, { separate: false, fontStyle: 'sans' })
+  // A form whose outline cannot be read is drawn as its plain component.
+  return await firstDrawn(await waysToDraw(env, sequence), async ({ sequence, forms }) => {
+    const { loaders, read } = loadFor(env, { forms })
+    const source = sourceFor(sequence, { base: COMPOSER_BASE, loaders, read })
+    await source.ready()
+    return await compose(source, sequence, { separate: false, fontStyle: 'sans' })
+  })
 }
 
 /**
@@ -105,6 +146,7 @@ async function draw(env, sequence) {
  * @param {any} env @param {string} sequence @param {any} document
  */
 async function drawDocument(env, sequence, document) {
+  // A document's components carry no variant identifier (`assertDocument`).
   sequence = plainText(sequence)
   const { loaders, read } = loadFor(env)
   const source = sourceFor(sequence, { base: COMPOSER_BASE, separate: true, loaders, read })
@@ -114,12 +156,21 @@ async function drawDocument(env, sequence, document) {
   return { view: documentView(document, drawing, sketch, { renderer: { layerFrames, renderScopes } }), drawing }
 }
 
+/**
+ * What `cardSvg` is given for a card. The units are passed only where the card draws several, so a
+ * card of one drawing is laid out and labelled as a sequence.
+ * @param {string} sequence @param {any} drawing @param {string | null} char
+ * @param {{ units: string[], drawings: (any | null)[], codepoint?: string } | null} [shown] @param {any} [document]
+ */
+export const cardParts = (sequence, drawing, char, shown = null, document = null) =>
+  ({ sequence, drawing, char, units: shown?.units, drawings: shown?.drawings, codepoint: shown?.codepoint, document })
+
 /** Rasterized card PNG. @param {any} env @param {string} sequence @param {any} drawing @param {string | null} char */
 async function png(env, sequence, drawing, char, shown = null, document = null) {
   const Resvg = await ready()
   const units = shown?.units ?? [sequence]
   const { buffers, familyOf } = await facesFor(env, units.join('') + (char ?? '') + (shown?.codepoint ?? '') + (document?.title ?? ''))
-  const render = await Resvg.async(cardSvg({ sequence, drawing, char, familyOf, units, drawings: shown?.drawings, codepoint: shown?.codepoint, document }), {
+  const render = await Resvg.async(cardSvg({ ...cardParts(sequence, drawing, char, shown, document), familyOf }), {
     font: { fontBuffers: buffers, defaultFontFamily: 'Noto Sans CJK JP', sansSerifFamily: 'Noto Sans CJK JP', loadSystemFonts: false },
     fitTo: { mode: 'original' },
   })
@@ -209,6 +260,8 @@ export async function cardResponse(env, ctx, sequence, document = null, token = 
   const answer = new Response(body, { headers: {
     'content-type': 'image/png', 'content-length': String(body.length), 'cache-control': KEPT,
     'x-og-card': document ? drawn.scopes ? 'document' : 'document-fallback' : 'sequence',
+    // Whether the engine drew the sequence, or the frame is empty.
+    'x-og-drawing': sequenceDrawing ? 'drawn' : 'empty',
   } })
   if (cache) ctx.waitUntil(cache.put(key, answer.clone()))
   return answer

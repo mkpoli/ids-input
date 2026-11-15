@@ -23,6 +23,7 @@
   import equivalencesUrl from '../data/ids-equivalences.json?url'
   import { workshopAdapter } from './lib/workshop-adapter.js'
   import variationOutlines from '../data/ucv-outlines.json.gz?url'
+  import variationOutlinesSans from '../data/ucv-outlines-sans.json.gz?url'
   import { LOCALES, appMessages } from './lib/locales.js'
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
   import { createIconDrawings } from './lib/icons.js'
@@ -214,12 +215,13 @@
   // The outlines the engine draws without the export, as the page serves the package's `data/`: the
   // names the package reads, and the URL Vite gives each file it bundles. See `vite.config.js`.
   // The forms of the component variation lists that only an outline draws go to the engine as the
-  // host's own outlines.
-  const bundles = { ...engineOutlines, 'host/outlines.json.gz': variationOutlines }
+  // host's own outlines: drawn in Gothic for Sans, in Mincho for every other face.
+  /** @param {'sans' | 'serif' | 'fangsong' | 'kaisho'} style */
+  const bundlesFor = style => ({ ...engineOutlines, 'host/outlines.json.gz': style === 'sans' ? variationOutlinesSans : variationOutlines })
   /** @param {string} at @param {boolean} split @param {'sans' | 'serif' | 'fangsong' | 'kaisho'} style @param {string} [owner] A view whose drawings the others must not cancel. */
   const previewAt = (at, split, style, owner = '', preferExport = false) => {
     const key = `${at}\0${split ? '1' : '0'}\0${style}\0${owner}\0${preferExport ? '1' : '0'}`
-    if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split, fontStyle: style, preferExport, loaders: bundles }))
+    if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split, fontStyle: style, preferExport, loaders: bundlesFor(style) }))
     return /** @type {ReturnType<typeof composerPreview>} */ (previews.get(key))
   }
   // The drawings demo/scripts/build-example-drawings.mjs prepares for this export, one per example.
@@ -372,9 +374,9 @@
   const iconDrawings = new Map()
   /** A face's drawer for tabs and the tree, falling back to the default export. @param {string} at @param {'sans' | 'serif' | 'fangsong' | 'kaisho'} style */
   const drawerAt = (at, style) => {
-    const composed = composerPreview({ base: at, fontStyle: style, loaders: bundles })
+    const composed = composerPreview({ base: at, fontStyle: style, loaders: bundlesFor(style) })
     if (exportUrl(at) === preparedBase && style === 'sans') return composed
-    const sans = composerPreview({ base: COMPOSER_BASE, fontStyle: 'sans', loaders: bundles })
+    const sans = composerPreview({ base: COMPOSER_BASE, fontStyle: 'sans', loaders: bundlesFor('sans') })
     return async (/** @type {string} */ sequence) => {
       const adapted = await babel.overwrite?.(sequence).catch(() => []) ?? []
       for (const char of adapted) {

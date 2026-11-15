@@ -275,7 +275,7 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
   /** @type {ReturnType<typeof componentIndex> | null} */
   let index = null
   let indexGeneration = -1
-  /** @type {Promise<{by: Map<string, string[]>, prefixes: Set<string>}> | null} */
+  /** @type {Promise<{by: Map<string, string[]>, begins: (text: string) => boolean}> | null} */
   let described = null
   let describedGeneration = -1
   /** @type {Promise<ReturnType<typeof createSearch>> | null} */
@@ -959,20 +959,36 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
         described = Promise.resolve(search.table).then(found => {
           /** @type {Map<string, string[]>} */
           const by = new Map()
-          const prefixes = new Set()
           for (const [char, sequences] of found) for (const { text } of sequences) {
             if (!isSequence(text)) continue
-            let prefix = ''
-            for (const point of text) { prefix += point; prefixes.add(prefix) }
             const chars = by.get(text)
             if (chars) { if (!chars.includes(char)) chars.push(char) } else by.set(text, [char])
           }
-          return { by, prefixes }
+          // The descriptions under their first two code points: a text of two or more is compared
+          // with the few that open as it does.
+          /** @param {string} text */
+          const opening = text => {
+            const first = /** @type {number} */ (text.codePointAt(0)) > 0xFFFF ? 2 : 1
+            return text.slice(0, first + ((text.codePointAt(first) ?? 0) > 0xFFFF ? 2 : 1))
+          }
+          /** @type {Map<string, string[]>} */
+          const opened = new Map()
+          for (const text of by.keys()) {
+            const key = opening(text), same = opened.get(key)
+            if (same) same.push(text); else opened.set(key, [text])
+          }
+          /** Whether some description begins with `text`. @param {string} text */
+          const begins = text => {
+            const key = opening(text)
+            if (key.length === text.length && !opened.has(key)) return [...opened.keys()].some(known => known.startsWith(text))
+            return (opened.get(key) ?? []).some(known => known.startsWith(text))
+          }
+          return { by, begins }
         }).catch(error => { described = null; throw error })
         describedGeneration = search.generation
       }
 
-      const { by, prefixes } = await described
+      const { by, begins } = await described
       signal?.throwIfAborted()
       const tree = parse(sequence.trim()).tree
       if (!tree || typeof tree === 'string') return []
@@ -988,14 +1004,14 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
           let written = [part.note ? `${part.op}[${part.note}]` : part.op]
           for (const child of part.parts) {
             const choices = descriptions(child)
-            written = written.flatMap(prefix => choices.map(choice => prefix + choice).filter(text => prefixes.has(text)))
+            written = written.flatMap(prefix => choices.map(choice => prefix + choice).filter(begins))
           }
           return [...new Set([write(part), ...written.flatMap(text => by.get(text) ?? [])])]
         }
         let written = [root.note ? `${root.op}[${root.note}]` : root.op]
         for (const child of root.parts) {
           const choices = descriptions(child)
-          written = written.flatMap(prefix => choices.map(choice => prefix + choice).filter(text => prefixes.has(text)))
+          written = written.flatMap(prefix => choices.map(choice => prefix + choice).filter(begins))
         }
         return written.flatMap(text => by.get(text) ?? [])
       }
