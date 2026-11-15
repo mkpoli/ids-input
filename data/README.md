@@ -1333,6 +1333,12 @@ from CNS 全字庫, Rime's five-stroke dictionary, Japanese order from KanjiVG, 
 BabelStone's and Yi Bai's IDS, or borrowed from another of the three, for characters a source lacks. Its own `README.md` gives the fields, rules, licences
 and how often the rules agree with the sources. Built by `scripts/build_open_strokes.mjs`.
 
+## `stroke-form-names.tsv`
+
+The component a radical form is searched under in the descriptions where that is not the ideograph
+Unicode pairs it with: `form`, `name`, `basis`. `scripts/build_open_strokes.mjs` reads a wanted form
+inside the characters written with the named component. ⺫ is paired with 目 and drawn as 罒.
+
 ## `stroke-orders-entered.tsv`
 
 Stroke orders entered by hand for characters and components the sources of `open-strokes/` do not

@@ -219,9 +219,10 @@ such orders, each with the number of characters that write it (`1535×32`), and 
 eight of the characters. `named` is the name it was found under. The descriptions never name a
 form of the CJK Radicals Supplement itself: they name the unified ideograph Unicode's
 `EquivalentUnifiedIdeograph.txt` pairs it with (旡 for ⺛), so a form is searched under that
-ideograph. The reading is of the ideograph as those characters write it, which is the form's only
-where the characters draw the form. It is evidence for a person entering the order, and no row is
-written from it.
+ideograph. Where the pair is not the shape the form is drawn as, `data/stroke-form-names.tsv` in
+the repository names the component that is: ⺫ is paired with 目 and searched under 罒. The reading
+is of that component as those characters write it, which is the form's only where the characters
+draw the form. It is evidence for a person entering the order, and no row is written from it.
 
 ## Coverage
 

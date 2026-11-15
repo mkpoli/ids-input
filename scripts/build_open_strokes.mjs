@@ -445,6 +445,14 @@ for (const line of readFileSync(new URL('../data/component-forms.tsv', import.me
   const [form, char, origin, detail] = line.split('\t')
   if (origin === 'unicode-ucd' && detail === 'EquivalentUnifiedIdeograph' && [...form].length === 1 && [...char].length === 1) PAIRS.set(form, char)
 }
+// A pair of nearly the same appearance is not always the same shape: ⺫ is paired with 目 and drawn
+// as 罒. `data/stroke-form-names.tsv` names the component such a form is drawn as.
+for (const line of readFileSync(new URL('../data/stroke-form-names.tsv', import.meta.url), 'utf8').split('\n')) {
+  if (!line || line.startsWith('#')) continue
+  const [form, name, basis] = line.split('\t')
+  if ([...form].length !== 1 || [...(name ?? '')].length !== 1 || !basis?.trim()) throw Error(`data/stroke-form-names.tsv: ${line}`)
+  PAIRS.set(form, name)
+}
 /** @type {string[][]} */
 const induced = []
 /** @type {string[][]} */
@@ -846,9 +854,10 @@ such orders, each with the number of characters that write it (\`1535×32\`), an
 eight of the characters. \`named\` is the name it was found under. The descriptions never name a
 form of the CJK Radicals Supplement itself: they name the unified ideograph Unicode's
 \`EquivalentUnifiedIdeograph.txt\` pairs it with (旡 for ⺛), so a form is searched under that
-ideograph. The reading is of the ideograph as those characters write it, which is the form's only
-where the characters draw the form. It is evidence for a person entering the order, and no row is
-written from it.
+ideograph. Where the pair is not the shape the form is drawn as, \`data/stroke-form-names.tsv\` in
+the repository names the component that is: ⺫ is paired with 目 and searched under 罒. The reading
+is of that component as those characters write it, which is the form's only where the characters
+draw the form. It is evidence for a person entering the order, and no row is written from it.
 
 ## Coverage
 

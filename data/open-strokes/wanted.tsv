@@ -15,7 +15,7 @@ char	codepoint	source	blocks	alone	examples	named	found	read	within
 ⺞	U+2E9E	cns11643	0	0		歺	25	21354×25	𠎀𡛝𢀸𢤅𢴴𣦷𣦸𣦼
 ⺠	U+2EA0	cns11643	0	0		民	52	51515×51 5515×1	㢯㥸䂥䇇䋋䛉䟨䡑
 ⺣	U+2EA3	cns11643	0	0		灬	227	4444×226 3444×1	㶨㶵㶻㷊㷛㷦㷶㸐
-⺫	U+2EAB	cns11643	0	0		目	971	25111×967 251114×3 32511×1	㮂㺺䀎䀐䀑䀒䀓䀔
+⺫	U+2EAB	cns11643	0	0		罒	380	25221×378 25351×2	㗄㝲㝶㡢㬅䉚䍐䍒
 ⺯	U+2EAF	cns11643	0	0		糹	1034	554444×1021 554534×9 55444×2	䊵䊶䊷䊸䊹䊺䊻䊼
 ⺰	U+2EB0	cns11643	0	0		纟	191	551×190 5514×1	䌶䌷䌸䌹䌺䌻䌼䌽
 ⺱	U+2EB1	cns11643	0	0		罓	12	2534×12	𠤣𡴓𦆢𦉮𦊋𦊕𦊬𦋇
@@ -93,7 +93,7 @@ char	codepoint	source	blocks	alone	examples	named	found	read	within
 ⺞	U+2E9E	rime-stroke	0	0		歺	36	shpzn×36	𠎀𠗗𡛝𢀸𢤅𢴴𣣰𣦷
 ⺠	U+2EA0	rime-stroke	0	0		民	74	zhzhz×74 zzhz×1	㢯㥸䂥䇇䋋䛉䟨䡑
 ⺣	U+2EA3	rime-stroke	0	0		灬	410	nnnn×410	㶨㶵㶻㷊㷛㷦㷱㷶
-⺫	U+2EAB	rime-stroke	0	0		目	1295	szhhh×1294 szhhhn×3 pszhh×1	㺺䀎䀐䀑䀒䀓䀔䀕
+⺫	U+2EAB	rime-stroke	0	0		罒	543	szssh×543 szpzh×2 szsshn×1	㝲㝶䉚䍐䍒䍓䍔䍕
 ⺯	U+2EAF	rime-stroke	0	0		糹	1156	zznnnn×1156 zznspn×8 zznzpn×7	䊵䊶䊷䊸䊹䊺䊻䊼
 ⺰	U+2EB0	rime-stroke	0	0		纟	416	zzh×416 zzhn×1	䌶䌷䌸䌹䌺䌻䌼䌽
 ⺱	U+2EB1	rime-stroke	0	0		罓	18	szpn×17 szs×1	𦆢𦉮𦊋𦊕𦊬𦋇𦋱𦋵
@@ -171,7 +171,7 @@ char	codepoint	source	blocks	alone	examples	named	found	read	within
 ⺞	U+2E9E	kanjivg	0	0		歺	1	21354×1	粲
 ⺠	U+2EA0	kanjivg	0	0		民	7	51515×7	岷愍氓泯眠緡罠
 ⺣	U+2EA3	kanjivg	0	0		灬	21	4444×21	勲杰濕点烈烋烹焦
-⺫	U+2EAB	kanjivg	0	0		目	42	25111×42	冒勖泪盲相盻省眇
+⺫	U+2EAB	kanjivg	0	0		罒	42	25221×42	壊夢寧徳德懌懐擇
 ⺯	U+2EAF	kanjivg	0	0			0		
 ⺰	U+2EB0	kanjivg	0	0			0		
 ⺱	U+2EB1	kanjivg	0	0			0		

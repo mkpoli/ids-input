@@ -14,6 +14,8 @@ const entered = plain('entered.tsv'), wanted = plain('wanted.tsv')
 const orders = rows => new Map(rows.slice(1).map(row => [row[0], row[2].split(' ')]))
 const digits = code => [...code].map(letter => ({ h: '1', s: '2', p: '3', n: '4', z: '5' })[letter]).join('')
 const twins = new Map(readFileSync(new URL('../data/component-forms.tsv', import.meta.url), 'utf8').split('\n').map(line => line.split('\t')).filter(row => row[2] === 'unicode-ucd' && row[3] === 'EquivalentUnifiedIdeograph').map(row => [row[0], row[1]]))
+// The component a form is drawn as, where that is not its Unicode pair.
+const drawnAs = new Map(readFileSync(new URL('../data/stroke-form-names.tsv', import.meta.url), 'utf8').split('\n').filter(line => line && !line.startsWith('#')).map(line => line.split('\t')).map(row => [row[0], row[1]]))
 const point = char => `U+${char.codePointAt(0).toString(16).toUpperCase().padStart(4, '0')}`
 
 describe('the open stroke-order release', () => {
@@ -162,6 +164,13 @@ describe('the open stroke-order release', () => {
     expect([...row[9]]).toContain('旣')
   })
 
+  it('reads ⺫ under 罒, the component it is drawn as, and not under its Unicode pair 目', () => {
+    expect(twins.get('⺫')).toBe('目')
+    const row = wanted.find(entry => entry[0] === '⺫' && entry[2] === 'cns11643')
+    expect(row?.[6]).toBe('罒')
+    expect(row?.[8].split(' ')[0].split('×')[0]).toBe(orders(cns).get('罒')[0])
+  })
+
   it('keeps entered orders apart and says what is still wanted', () => {
     const tables = { 'rime-stroke': orders(rime), cns11643: orders(cns), kanjivg: orders(kanjivg) }
     const symbols = { cns11643: /^[1-5]+( [1-5]+)*$/, 'rime-stroke': /^[hspnz]+( [hspnz]+)*$/, kanjivg: /^[1-5]+( [1-5]+)*$/ }
@@ -198,7 +207,7 @@ describe('the open stroke-order release', () => {
         expect([...within].every(example => tables[row.source].has(example))).toBe(true)
         expect([...within].length).toBeLessThanOrEqual(Math.min(8, Number(found)))
         // A form no description names is searched under the ideograph Unicode pairs it with.
-        if (named && named !== char) expect(twins.get(char)).toBe(named)
+        if (named && named !== char) expect(drawnAs.get(char) ?? twins.get(char)).toBe(named)
       }
       expect(rows.every((entry, index) => !index || Number(rows[index - 1][4]) >= Number(entry[4]))).toBe(true)
     }
