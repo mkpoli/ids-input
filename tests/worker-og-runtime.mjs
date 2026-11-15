@@ -103,6 +103,29 @@ try {
     assert.notEqual(Buffer.compare(cutPng, Buffer.from(await bareImage.arrayBuffer())), 0, 'a numbered component is drawn with its Sans cut')
   } finally { await bare.dispose() }
 
+  // A component written with a variant identifier draws as the form it names, from that form's
+  // outline. A deployment without the outlines, or without the lists that name the form, draws the
+  // plain component: one card, which is neither the form's nor the empty frame of a failed drawing.
+  const cardOf = async (sequence, withheld = null) => {
+    const over = withheld ? runtimeOver(withheld) : runtime
+    try {
+      const image = await over.dispatchFetch(`https://ids.mkpo.li/og/${encodeURIComponent(sequence)}.png`)
+      assert.equal(image.status, 200)
+      return { png: Buffer.from(await image.arrayBuffer()), drawing: image.headers.get('x-og-drawing') }
+    } finally { if (withheld) await over.dispose() }
+  }
+  const formed = await cardOf('⿰氵壬q0012')
+  const unlisted = await cardOf('⿰氵壬q0012', '/og/data/ucv.json.gz')
+  const unoutlined = await cardOf('⿰氵壬q0012', '/og/data/ucv-outlines.json.gz')
+  assert.deepEqual([formed.drawing, unlisted.drawing, unoutlined.drawing], ['drawn', 'drawn', 'drawn'])
+  assert.notEqual(Buffer.compare(formed.png, unoutlined.png), 0, 'a form no code point names is drawn from its outline')
+  assert.equal(Buffer.compare(unlisted.png, unoutlined.png), 0, 'without the outlines the card is the plain component, as without the lists')
+  // No outline answers for &GW-none;, so that card's frame is empty.
+  assert.equal((await cardOf('⿰氵&GW-none;')).drawing, 'empty')
+  // An entry is drawn as its description, with or without a letter in it.
+  assert.equal((await cardOf('{士}⿱士口')).drawing, 'drawn')
+  assert.equal((await cardOf('^⿰氵骨$(GHTJKPV)')).drawing, 'drawn')
+
   // A component form fills a leaf that the bundled-only source would draw as one part; the card
   // must still find a scoped document rather than fall back to the sequence.
   const filledSequence = '⿰⿱文厂⿱文厂'

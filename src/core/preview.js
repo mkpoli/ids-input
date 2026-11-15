@@ -147,7 +147,7 @@ export function plainText(text) {
  * @param {{ signal?: AbortSignal }} [options]
  */
 export async function drawnText(text, formed, options) {
-  if (!/[.0-9A-Za-z]/.test(text)) return text
+  if (!/[.0-9A-Za-z]/.test(text)) return plainText(text)
   const shaped = formed ? await formed(text, options).then(answer => answer, () => null) : null
   return shaped ?? plainText(text)
 }

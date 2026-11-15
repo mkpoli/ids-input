@@ -160,4 +160,7 @@ it('reads a text as a composer draws it when no form is known', async () => {
   expect(await drawnText('⿰氵壬q0012', async () => { throw new Error('unread') })).toBe('⿰氵壬')
   expect(await drawnText('⿰氵壬q0012', undefined)).toBe('⿰氵壬')
   expect(await drawnText('⿰氵壬', async () => { throw new Error('never asked') })).toBe('⿰氵壬')
+  // An entry is drawn as its description, whether or not it holds a letter to ask about.
+  expect(await drawnText('{士}⿱士口', async () => { throw new Error('never asked') })).toBe('⿱士口')
+  expect(plainText('{士}⿱士口')).toBe('⿱士口')
 })
