@@ -196,7 +196,7 @@ export const SOURCES = [
       ko: '주석이 없는 한자 분해를 보충한다.',
       vi: 'Bổ sung các cách phân tích chữ Hán không có chú thích.',
     },
-    used: ['data/yi-bai-ids.tsv.gz'],
+    used: ['data/yi-bai-ids.tsv.gz', 'data/zi-tools-rows.tsv.gz'],
   },
   {
     id: 'unihan',
