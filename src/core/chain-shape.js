@@ -23,6 +23,8 @@ const LETTERS = new Map(Object.entries(STROKE_CHAINS).filter(([chain]) => /^[A-Z
 for (const [char, letters] of /** @type {[string, string][]} */ ([['㇆', 'HSg'], ['㇕', 'HS'], ['㇖', 'Hg'], ['㇗', 'SH'], ['㇙', 'ST'], ['㇚', 'Sg'], ['㇛', 'PD'], ['㇜', 'PH'], ['㇞', 'SHS'], ['㇟', 'SHwg'], ['㇠', 'HPHwg'], ['㇡', 'HSHSg'], ['㇐', 'H'], ['㇑', 'S'], ['㇒', 'P'], ['㇔', 'D'], ['㇏', 'N'], ['㇓', 'SP'], ['㇃', 'N'], ['◝', 'Qa'], ['◞', 'Qb'], ['◟', 'Qc'], ['◜', 'Qd']])) {
   if (!LETTERS.has(char)) LETTERS.set(char, letters)
 }
+/** One stroke written in letters, as the grammar gives it: HPHwg is H, then PHwg. */
+const UNIT = /^(?:[SP]Hwg?|[HSPN]g?|[DTJZ]|Wg|Q[abcd])/
 
 /** @typedef {[number, number] | [number, number, number, number]} Step A step of the pen, and for a curve where it bends. */
 /** The steps of one stroke written in letters, or null where a letter is none.
@@ -44,6 +46,62 @@ function steps(letters) {
   return out
 }
 
+/** A stroke of a chain as written (`back` for a leading `-`, `mark` its `xN` or `b`) and the points
+ * the pen reaches, the first being where the stroke starts; a curve's point carries where it bends.
+ * @typedef {{ back: boolean, stroke: string, mark: string, points: number[][] }} Walked */
+/**
+ * A chain walked stroke by stroke, before it is fitted to the square; null where the text is no
+ * chain or names a stroke this does not know.
+ * @param {string} chain @returns {{ strokes: Walked[], closed: boolean } | null}
+ */
+function walk(chain) {
+  const body = /^#\((.*)\)$/su.exec(chain)?.[1] ?? chain
+  const chars = [...body]
+  /** @type {Walked[]} */
+  const strokes = []
+  let x = 0, y = 0, closed = false
+  for (let at = 0; at < chars.length; at++) {
+    let char = chars[at], back = false
+    if (char === '-') { back = true; char = chars[++at] }
+    if (char === undefined) return null
+    if (char === 'z' && at === chars.length - 1 && !back) { closed = true; break }
+    let letters = LETTERS.get(char), stroke = char
+    if (letters === undefined) {
+      const unit = UNIT.exec(chars.slice(at).join(''))?.[0]
+      if (!unit) return null
+      at += unit.length - 1
+      letters = stroke = unit
+    }
+    const moves = steps(letters)
+    if (!moves || !moves.length) return null
+    const points = [[x, y]]
+    // Written backwards, a curve bends round the same corner seen from its other end.
+    for (const [dx, dy, bx, by] of back ? moves.map(([a, b, c, d]) => c === undefined ? [-a, -b] : [-a, -b, c - a, /** @type {number} */ (d) - b]).reverse() : moves) {
+      points.push(bx === undefined ? [x + dx, y + dy] : [x + dx, y + dy, x + bx, y + /** @type {number} */ (by)])
+      x += dx; y += dy
+    }
+    let mark = ''
+    if (chars[at + 1] === 'b') { at++; mark = 'b' }
+    else if (chars[at + 1] === 'x') { at++; mark = 'x'; while (/[0-9]/.test(chars[at + 1] ?? '')) mark += chars[++at] }
+    strokes.push({ back, stroke, mark, points })
+  }
+  return strokes.length ? { strokes, closed } : null
+}
+
+/** What sets walked points in the 1000-unit square: the line centred, its longer side 760 units.
+ * @param {number[][]} points */
+function fit(points) {
+  const xs = points.map(point => point[0]), ys = points.map(point => point[1])
+  const x0 = Math.min(...xs), y0 = Math.min(...ys), w = Math.max(...xs) - x0, h = Math.max(...ys) - y0
+  const scale = 760 / Math.max(w, h, 0.5), ox = 500 - (w * scale) / 2, oy = 500 - (h * scale) / 2
+  /** @param {number} px @param {number} py @returns {[number, number]} */
+  const place = (px, py) => [Math.round(ox + (px - x0) * scale), Math.round(oy + (py - y0) * scale)]
+  /** @param {number[]} point @param {number} index */
+  const to = (point, index) => index === 0 ? `M${place(point[0], point[1]).join(' ')}`
+    : point.length > 2 ? `Q${place(point[2], point[3]).join(' ')} ${place(point[0], point[1]).join(' ')}` : `L${place(point[0], point[1]).join(' ')}`
+  return { place, to }
+}
+
 /**
  * The line a stroke chain describes, as SVG path data to be stroked, in a 1000-unit square; null
  * where the text is no chain or names a stroke this does not know. `-` writes a stroke backwards,
@@ -52,44 +110,35 @@ function steps(letters) {
  * @returns {string | null}
  */
 export function chainPath(chain) {
-  const body = /^#\((.*)\)$/su.exec(chain)?.[1] ?? chain
-  const chars = [...body]
-  /** A point reached, and for a curve the point it bends round. @type {number[][][]} */
-  const lines = [[[0, 0]]]
-  let x = 0, y = 0, closed = false
-  for (let at = 0; at < chars.length; at++) {
-    let char = chars[at], back = false
-    if (char === '-') { back = true; char = chars[++at] }
-    if (char === undefined) return null
-    if (char === 'z' && at === chars.length - 1 && !back) { closed = true; break }
-    let letters = LETTERS.get(char)
-    if (letters === undefined) {
-      // Letters written out: a run of them is one stroke.
-      let run = ''
-      while (at < chars.length && /[A-Za-z]/.test(chars[at]) && !(run && /[bxz]/.test(chars[at]))) run += chars[at++]
-      at--
-      letters = run
-    }
-    const moves = letters ? steps(letters) : null
-    if (!moves || !moves.length) return null
-    // Written backwards, a curve bends round the same corner seen from its other end.
-    for (const [dx, dy, bx, by] of back ? moves.map(([a, b, c, d]) => c === undefined ? [-a, -b] : [-a, -b, c - a, /** @type {number} */ (d) - b]).reverse() : moves) {
-      lines[lines.length - 1].push(bx === undefined ? [x + dx, y + dy] : [x + dx, y + dy, x + bx, y + /** @type {number} */ (by)])
-      x += dx; y += dy
-    }
-    if (chars[at + 1] === 'b') { at++; lines.push([[x, y]]) }
-    else if (chars[at + 1] === 'x') { at++; while (/[0-9]/.test(chars[at + 1] ?? '')) at++ }
+  const walked = walk(chain)
+  if (!walked) return null
+  const lines = [[walked.strokes[0].points[0]]]
+  for (const stroke of walked.strokes) {
+    lines[lines.length - 1].push(...stroke.points.slice(1))
+    if (stroke.mark === 'b') lines.push([/** @type {number[]} */ (stroke.points.at(-1)).slice(0, 2)])
   }
   const points = lines.flat()
-  if (points.length < 2) return null
-  const xs = points.map(point => point[0]), ys = points.map(point => point[1])
-  const x0 = Math.min(...xs), y0 = Math.min(...ys), w = Math.max(...xs) - x0, h = Math.max(...ys) - y0
-  const scale = 760 / Math.max(w, h, 0.5), ox = 500 - (w * scale) / 2, oy = 500 - (h * scale) / 2
-  /** @param {number} px @param {number} py */
-  const at = (px, py) => `${Math.round(ox + (px - x0) * scale)} ${Math.round(oy + (py - y0) * scale)}`
-  /** @param {number[]} point @param {number} index */
-  const to = (point, index) => index === 0 ? `M${at(point[0], point[1])}` : point.length > 2 ? `Q${at(point[2], point[3])} ${at(point[0], point[1])}` : `L${at(point[0], point[1])}`
+  const { place, to } = fit(points)
   const drawn = lines.filter(line => line.length > 1)
-  return drawn.map((line, index) => line.map(to).join('') + (closed && drawn.length === 1 ? 'Z' : '')).join('')
-    + (closed && drawn.length > 1 ? `L${at(points[0][0], points[0][1])}` : '')
+  return drawn.map(line => line.map(to).join('') + (walked.closed && drawn.length === 1 ? 'Z' : '')).join('')
+    + (walked.closed && drawn.length > 1 ? `L${place(points[0][0], points[0][1]).join(' ')}` : '')
+}
+
+/**
+ * The same line stroke by stroke, in the same square: each stroke as the chain writes it, its own
+ * path, and where the pen starts and ends it.
+ * @param {string} chain `#(-𠃌㇉)`, or its contents.
+ * @returns {{ strokes: { back: boolean, stroke: string, mark: string, d: string, from: [number, number], to: [number, number] }[], closed: boolean } | null}
+ */
+export function chainStrokes(chain) {
+  const walked = walk(chain)
+  if (!walked) return null
+  const { place, to } = fit(walked.strokes.flatMap(stroke => stroke.points))
+  return {
+    closed: walked.closed,
+    strokes: walked.strokes.map(({ back, stroke, mark, points }) => {
+      const last = /** @type {number[]} */ (points.at(-1))
+      return { back, stroke, mark, d: points.map(to).join(''), from: place(points[0][0], points[0][1]), to: place(last[0], last[1]) }
+    }),
+  }
 }

@@ -5,25 +5,29 @@
   // sequence, the character it encodes, its code points, export). File and Edit menus lead the toolbar;
   // the toolbar holds undo, redo, examples, sharing, the language, settings and sources; the tab
   // strip's + opens a blank tab and its chevron opens the templates and examples as starting points.
+  // Embedded (`editor.html`), it is one description inside a host page: no tabs, no site chrome,
+  // nothing kept between visits, and each change posted to the host instead of written into the address.
   import SiteSelect from './ui/SiteSelect.svelte'
   import { onMount, tick, untrack } from 'svelte'
   import { watchFallback } from '../src/svelte/fallback-font.js'
-  import { IdsCharacterInfo, IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, OperatorIcon, createEditor, shortcut, translator } from '../src/svelte/index.js'
+  import { IdsAlternatives, IdsCharacterInfo, IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, OperatorIcon, createEditor, shortcut, translator } from '../src/svelte/index.js'
   import { APPROXIMATE, composableDescription } from '@han-compose/composer/compose'
   import { hasTangut } from '@han-compose/composer/tangut'
   import { composerPreview as composerAt } from '@han-compose/composer'
   import { variationSequences } from '@han-compose/composer/variants'
   import engineOutlines from 'ids-engine-outlines'
-  import { EMPTY_MARKS, OPERATORS, characterStrokes, componentQuery, isJurchen, isShuishu, parse, substituteSequences, unalias } from '../src/core/index.js'
+  import { EMPTY_MARKS, OPERATORS, characterStrokes, componentQuery, drawnText, isJurchen, isShuishu, parse, substituteSequences, unalias } from '../src/core/index.js'
   import { loadStrokeRecords } from '../src/svelte/strokes.js'
   import { createDocumentSession, layerAtPath, sessionRecord, toSequence } from '../src/document/index.js'
   import { documentFile, readDocumentFile } from './lib/documents.js'
   import equivalencesUrl from '../data/ids-equivalences.json?url'
   import { dataAdapter } from './lib/workshop-adapter.js'
+  import variationOutlines from '../data/ucv-outlines.json.gz?url'
   import { LOCALES, appMessages } from './lib/locales.js'
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
   import { createIconDrawings } from './lib/icons.js'
   import { createSampleDrawings } from './lib/sample-drawings.js'
+  import { createDrawingOrder } from './lib/drawing-order.js'
   import { recognizeDrawing } from './lib/sketch-recognizer.js'
   import { COMPOSER_BASE, COMPOSER_BASES, readFrom } from './lib/composer.js'
   import { DESKTOP, SITE } from './lib/desktop.js'
@@ -101,9 +105,17 @@
     return () => window.removeEventListener('storage', onStorage)
   })
 
+  /** @type {{ embed?: boolean }} */
+  let { embed = false } = $props()
   const params = new URLSearchParams(location.search)
   /** A preview over the export at `base`, read from wherever this build holds it. @param {Parameters<typeof composerAt>[0]} options */
-  const composerPreview = options => composerAt({ ...options, base: readFrom(options.base) })
+  const composerPreview = options => {
+    const draw = composerAt({ ...options, base: readFrom(options.base) })
+    // The engine reads no variant identifier: a form one names is written as what draws it first,
+    // for the tabs' icons and the layers as for the preview.
+    return /** @type {typeof draw} */ (Object.assign(async (/** @type {string} */ sequence, /** @type {any} */ asking) =>
+      draw(await drawnText(sequence, babel.formed, asking), asking), { warm: draw.warm }))
+  }
   // What a share names: this page, or the published site for the desktop app, whose own address
   // opens nothing outside it.
   const shareFrom = DESKTOP ? new URL(SITE) : location
@@ -153,7 +165,9 @@
   const previews = new Map()
   // The outlines the engine draws without the export, as the page serves the package's `data/`: the
   // names the package reads, and the URL Vite gives each file it bundles. See `vite.config.js`.
-  const bundles = engineOutlines
+  // The forms of the component variation lists that only an outline draws go to the engine as the
+  // host's own outlines.
+  const bundles = { ...engineOutlines, 'host/outlines.json.gz': variationOutlines }
   /** @param {string} at @param {boolean} split @param {'sans' | 'serif' | 'fangsong' | 'kaisho'} style @param {string} [owner] A view whose drawings the others must not cancel. */
   const previewAt = (at, split, style, owner = '', preferExport = false) => {
     const key = `${at}\0${split ? '1' : '0'}\0${style}\0${owner}\0${preferExport ? '1' : '0'}`
@@ -164,6 +178,9 @@
   // At 2 MB they come as a chunk of their own, asked for at once and read when they arrive, so the
   // page draws without waiting for them.
   const EXAMPLE_SEQUENCES = new Set(EXAMPLES.map(example => example.sequence))
+  // The character each example names, or none: what the corpus answers for the example's sequence
+  // (tests/example-characters.test.js), known before the corpus has loaded.
+  const EXAMPLE_CHARACTERS = new Map(EXAMPLES.map(example => [example.sequence, example.char]))
   let prepared = $state.raw(/** @type {Map<string, import('../src/adapter/types.js').Drawing>} */ (new Map()))
   const preparedReady = import('./lib/example-drawings.json')
     .then(({ default: data }) => { prepared = new Map(Object.entries(data.drawings).map(([sequence, entry]) => [sequence, entry.drawn])) })
@@ -248,7 +265,9 @@
       // parts keep the layout, and a modifier is left to the exact answer above, since the
       // modifier-free reading is only a guess.
       if (!sequence.includes('[') && APPROXIMATE.some(operator => sequence.includes(operator))) {
-        const [named] = await babel.encoded(sequence).catch(() => [])
+        // An example states the character it names, so it draws without waiting for the corpus.
+        const [named] = EXAMPLE_CHARACTERS.has(sequence) ? [EXAMPLE_CHARACTERS.get(sequence) || undefined]
+          : await babel.encoded(sequence).catch(() => [])
         if (named !== undefined && [...named].length === 1 && named !== sequence) {
           try { return await draw(named, options) } catch { /* compose it */ }
         }
@@ -294,6 +313,11 @@
     previewsWithExamples.set(key, preview)
     return preview
   }
+  // The description being edited is drawn first: the tab icons and the font switch's samples wait
+  // while it loads, so the other faces' exports and the icons' parts do not share its connection.
+  let previewStep = $state(/** @type {'idle' | 'loading' | 'composed' | 'final' | 'failed' | 'capped' | 'unavailable'} */ ('idle'))
+  const order = createDrawingOrder()
+  $effect(() => order.hold(previewStep === 'loading'))
   // Tab icons need their own drawer so their requests cannot cancel the main preview.
   /** @type {Map<string, ReturnType<typeof createIconDrawings>>} */
   const iconDrawings = new Map()
@@ -318,9 +342,10 @@
   const iconsAt = (at, style) => {
     const key = `${at}\0${style}`
     if (!iconDrawings.has(key)) {
-      const draw = drawerAt(at, style)
-      iconDrawings.set(key, createIconDrawings(async sequence =>
-        (style === 'sans' && exportUrl(at) === preparedBase && !hasEmoji(sequence) ? await preparedFor(sequence) : null) ?? draw(sequence)))
+      // A prepared drawing needs no export: it is answered ahead of the composed icons' queue.
+      const composed = createIconDrawings(order.after(drawerAt(at, style)))
+      iconDrawings.set(key, async sequence =>
+        (style === 'sans' && exportUrl(at) === preparedBase && !hasEmoji(sequence) ? await preparedFor(sequence) : null) ?? composed(sequence))
     }
     return /** @type {ReturnType<typeof createIconDrawings>} */ (iconDrawings.get(key))
   }
@@ -347,7 +372,7 @@
       sampleDrawings.delete(oldKey)
     }
     if (!sampleDrawings.has(key)) {
-      const preview = previewAt(at, separate, option.style, `switch-${option.key}`)
+      const preview = order.after(previewAt(at, separate, option.style, `switch-${option.key}`))
       sampleDrawings.set(key, createSampleDrawings((sequence, { signal }) => preview(sequence, { signal })))
     }
     return /** @type {ReturnType<typeof createSampleDrawings>} */ (sampleDrawings.get(key))
@@ -369,7 +394,8 @@
   let locale = $state(LOCALES.find(([code]) => code === wanted)?.[0]
     ?? (traditional.test(wanted) ? 'zh-Hant' : undefined)
     ?? LOCALES.find(([code]) => wanted.startsWith(code.split('-')[0]))?.[0] ?? 'en')
-  $effect(() => save('locale', locale))
+  // A host's `?lang=` stays with the frame; the site keeps the reader's own language.
+  $effect(() => { if (!embed) save('locale', locale) })
   $effect(() => { document.documentElement.lang = locale })
   const messages = $derived(LOCALES.find(([code]) => code === locale)?.[2])
   const t = $derived(translator({ ...appMessages('en'), ...messages, ...appMessages(locale) }, locale))
@@ -488,10 +514,11 @@
 
   // The tabs of the workspace: one description each, the open ones and the active one kept for the
   // next visit. A tab's tree and history wait in `states` while another tab is shown.
-  const stored = readTabs(), linkedDocument = documentFrom(location)
-  const linked = linkedDocument ? toSequence(linkedDocument.root) : sequenceFrom(location)
+  // Embedded, only `?ids=` opens a sequence: the page's own path is no sequence, and there are no tabs to restore.
+  const stored = embed ? [] : readTabs(), linkedDocument = embed ? null : documentFrom(location)
+  const linked = embed ? params.get('ids') ?? '' : linkedDocument ? toSequence(linkedDocument.root) : sequenceFrom(location)
   // Bring the old single-document autosave into the first tab on upgrade.
-  if (!stored.length) {
+  if (!stored.length && !embed) {
     const previous = load('current', '')
     if (typeof previous === 'string' && previous) stored.push(makeTab(previous))
   }
@@ -502,7 +529,7 @@
   // the one kept active stays.
   const linkedRecord = linkedDocument ? sessionRecord(createDocumentSession(linkedDocument)) : undefined
   const fromLink = linked && !linkedTab ? makeTab(linked, linked, linkedRecord) : undefined
-  const opening = stored.length ? [...stored, ...(fromLink ? [fromLink] : [])] : [fromLink ?? makeTab(linked || EXAMPLES[0].sequence)]
+  const opening = stored.length ? [...stored, ...(fromLink ? [fromLink] : [])] : [fromLink ?? makeTab(linked || (embed ? '' : EXAMPLES[0].sequence))]
   const initial = fromLink ?? (keptTab && linked && keptTab.sequence === linked ? keptTab : linkedTab) ?? keptTab ?? opening[0]
   let tabs = $state(opening)
   let activeId = $state(initial.id)
@@ -512,7 +539,7 @@
   let closedGroups = $state.raw([])
   // Sequences opened in this browser, newest first, for File -> Recent.
   let recents = $state(readRecent())
-  if (linked) recents = remember(linked, linkedRecord)
+  if (linked && !embed) recents = remember(linked, linkedRecord)
   const activeTab = $derived(/** @type {import('./lib/tabs.js').Tab} */ (tabs.find(tab => tab.id === activeId) ?? tabs[0]))
   /** @type {Map<string, ReturnType<typeof editor.snapshot>>} */
   const states = new Map()
@@ -543,13 +570,15 @@
   const canAdjust = $derived(Boolean((drawing || scopes) && !drawing?.cut))
   /** Start direct editing from a double-click on the drawing. @param {MouseEvent} event */
   function startAdjust(event) {
+    if (embed) return
     if (adjusting || !canAdjust) return
     // Only the drawing box starts it; the toolbar and the caption keep their own double-click.
     if (!(event.target instanceof Element) || !event.target.closest('.ids-preview-large')) return
     adjusting = true
   }
-  // The address starts on the tab shown, as it does after every change.
-  history.replaceState(null, '', linkTo(editor.draft, location, addressDocument(sessionFor(initial).document)))
+  // The address starts on the tab shown, as it does after every change; a host page hears of it.
+  if (embed) syncAddress()
+  else history.replaceState(null, '', linkTo(editor.draft, location, addressDocument(sessionFor(initial).document)))
   // Each change stays in its tab and is written into the address, so the link opens it; the tabs
   // and the active one are kept at the same time, a keystroke at a time.
   $effect(() => editor.listen(text => {
@@ -724,11 +753,27 @@
   }
   function undoAction() { if (!travelLayer(true)) editor.undo() }
   function redoAction() { if (!travelLayer(false)) editor.redo() }
-  /** Keep the address on the active tab, including transforms when they carry state. */
+  /** Keep the address on the active tab, including transforms when they carry state. Embedded, the
+   *  host page hears of the sequence instead: `{ type: 'ids-input:sequence', sequence, whole }`. */
   function syncAddress() {
+    if (embed) {
+      if (window.parent !== window) window.parent.postMessage({ type: 'ids-input:sequence', sequence: editor.draft, whole: editor.tree === null ? '' : editor.whole }, '*')
+      return
+    }
     const tab = current()
     history.replaceState(null, '', linkTo(editor.draft, location, tab ? addressDocument(sessionFor(tab).document) : null))
   }
+  // A host page replaces the sequence with `{ type: 'ids-input:open', sequence }`.
+  onMount(() => {
+    if (!embed) return
+    /** @param {MessageEvent} event */
+    const heard = event => {
+      if (event.source !== window.parent || event.data?.type !== 'ids-input:open' || typeof event.data.sequence !== 'string') return
+      editor.reset(event.data.sequence)
+    }
+    window.addEventListener('message', heard)
+    return () => window.removeEventListener('message', heard)
+  })
   /** The active tab's document to share, or null when its sequence says it all. */
   function currentDocument() {
     const tab = current()
@@ -796,7 +841,7 @@
     syncAddress()
   }
   /** Keep the open tabs and the chosen one for the next visit. */
-  function store() { writeTabs(tabs, activeId) }
+  function store() { if (!embed) writeTabs(tabs, activeId) }
   /** Keep the active tab's tree and history before another is shown. */
   function flush() {
     const tab = current()
@@ -847,6 +892,12 @@
   /** A sequence opened in the active tab when it is empty, in the tab already showing it, else in a new tab. @param {string} sequence */
   function openSequence(sequence) {
     const text = sequence
+    // Embedded, there is one description: what a search hit or a replacement opens takes its place.
+    if (embed) {
+      toast = null
+      editor.reset(text)
+      return
+    }
     const open = tabs.find(tab => sameSequence(tab.sequence, text))
     if (open) {
       if (!EMPTY_MARKS.includes(text)) recents = remember(text, open.document)
@@ -1096,6 +1147,7 @@
   let dropping = $state(false)
   /** @param {DragEvent} event */
   function dropDocument(event) {
+    if (embed) return
     const files = event.dataTransfer?.files
     dropping = false
     if (!files?.length) return
@@ -1104,7 +1156,7 @@
   }
   /** @param {DragEvent} event */
   function dragFiles(event) {
-    if (!event.dataTransfer?.types.includes('Files')) return
+    if (embed || !event.dataTransfer?.types.includes('Files')) return
     event.preventDefault()
     event.dataTransfer.dropEffect = 'copy'
     dropping = true
@@ -1221,7 +1273,7 @@
 
   let replacementOpen = $state(false), aboutOpen = $state(false), sponsorOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false), pointsOpen = $state(false), layerOpen = $state(false), closeAllOpen = $state(false)
   // A problem report: the menus open it, and `?report=1` opens it on arrival.
-  let reportOpen = $state(params.get('report') === '1')
+  let reportOpen = $state(!embed && params.get('report') === '1')
   const endpoint = reportEndpoint(location)
   // The deep link opens the dialog once: the address drops it, so a reload lands in the workshop.
   if (reportOpen) {
@@ -1256,7 +1308,7 @@
     if (target.closest('dialog, [role="dialog"]')) return
     const command = (event.ctrlKey || event.metaKey) && !event.altKey
     const mod = command && !event.shiftKey
-    if (mod && event.key === ',') { event.preventDefault(); prefsOpen = true; return }
+    if (mod && event.key === ',' && !embed) { event.preventDefault(); prefsOpen = true; return }
     // The browser may keep Ctrl+Shift+T for its own closed tabs; where it does not, this reopens one.
     if (command && event.shiftKey && event.key.toLowerCase() === 't' && closedGroups.length
       && !target.closest('[role="menu"], [role="menubar"]')) {
@@ -1334,19 +1386,22 @@
   style:--chrome-height="{chromeHeight}px" style:--phone-tabs-height="{tabsHeight}px">
   <div class="chrome" bind:offsetHeight={chromeHeight}>
     <header class="bar">
+      {#if !embed}
       <SiteSelect title={t('app.title')} label={t('app.sitesLabel')} more={t('app.sitesMore')} {locale} href="/" compact />
       <span class="wide-only"><MenuBar label={t('app.menu')} menus={[{ label: t('app.file.label'), items: fileItems }, { label: t('app.edit.label'), items: editItems }]} {keyHints} /></span>
+      {/if}
       <nav class="tools" aria-label={t('app.toolbar')}>
         <div class="group">
           <button type="button" class="ui-button key-hint" disabled={!canUndo} title={undoTitle} aria-label={undoTitle} aria-keyshortcuts="Control+Z Meta+Z" onclick={undoAction}>
             <Icon name="undo" />{#if keyHints}<KeyHint combos={['mod+z']} />{/if}</button>
           <button type="button" class="ui-button key-hint" disabled={!canRedo} title={redoTitle} aria-label={redoTitle} aria-keyshortcuts="Control+Shift+Z Control+Y Meta+Shift+Z Meta+Y" onclick={redoAction}>
             <Icon name="redo" />{#if keyHints}<KeyHint combos={['mod+shift+z', 'mod+y']} />{/if}</button>
-          <span class="wide-only"><Menu label={t('app.history.label')} icon="history" text={false} items={historyItems} {keyHints} /></span>
+          {#if !embed}<span class="wide-only"><Menu label={t('app.history.label')} icon="history" text={false} items={historyItems} {keyHints} /></span>{/if}
         </div>
-        <span class="wide-only"><Menu label={t('app.examples.label')} icon="book" items={exampleItems} {keyHints} wide view={exampleView} /></span>
+        {#if !embed}<span class="wide-only"><Menu label={t('app.examples.label')} icon="book" items={exampleItems} {keyHints} wide view={exampleView} /></span>{/if}
       {@render fontSwitch(400)}
       </nav>
+      {#if !embed}
       <button type="button" class="sponsor" title={t('app.sponsor.label')} aria-label={t('app.sponsor.label')} aria-haspopup="dialog" aria-expanded={sponsorOpen} onclick={() => sponsorOpen = true}>
         <span class="sponsor-face" aria-hidden="true">
           <img src="/sponsor-face.webp" alt="" width="24" height="24" decoding="async" />
@@ -1363,12 +1418,15 @@
         <button type="button" class="ui-button" title={t('app.about.title')} aria-label={t('app.about.title')} onclick={() => aboutOpen = true}><Icon name="info" /></button>
       </div>
       <button type="button" class="ui-button more phone-only" title={t('app.menu')} aria-label={t('app.menu')} aria-haspopup="dialog" aria-expanded={moreOpen} onclick={() => moreOpen = true}><Icon name="menu" /></button>
+      {/if}
     </header>
+    {#if !embed}
     <div class="tabs-slot">
       <TabStrip bind:this={tabStrip} {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={() => addTab()} onduplicate={duplicateTab}
         oncloseothers={closeOthers} oncloseleft={closeLeft} oncloseright={closeRight} oncloseall={askCloseAll}
         onreopen={reopenClosed} canreopen={closedGroups.length > 0} onmove={moveTab} oncommit={store} {starter} />
     </div>
+    {/if}
   </div>
 
   <main class="workspace" bind:this={work}>
@@ -1419,7 +1477,7 @@
           </div>
           {#if view === 'shape'}
             <div class="tree-stage" data-character-info-avoid role="tabpanel" id="shape-panel" aria-labelledby="shape-tab">
-              <div class="tree-box"><IdsTree {editor} {keyHints} /></div>
+              <div class="tree-box"><IdsTree {editor} {keyHints} variations /></div>
             </div>
           {:else}
             {#key activeId}
@@ -1471,7 +1529,7 @@
             {#key activeId}
               <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false}
                 document={currentSession()?.document} session={currentSession()} version={documentTick} bind:scopes bind:slots
-                editable={adjusting} onchoose={path => editor.choose(path, { toggle: false })} onedit={layerChanged} bind:drawing bind:emoji bind:cut bind:cutLeaf>
+                editable={adjusting} onchoose={path => editor.choose(path, { toggle: false })} onedit={layerChanged} bind:drawing bind:emoji bind:cut bind:cutLeaf bind:step={previewStep}>
                 {#snippet detailContent()}
                   {#if substituted}
                     <span class="encoded-character substituted-character" lang="ja" title={substituted.sequence}>
@@ -1502,22 +1560,28 @@
             {/key}
           {/if}
           <div class="adjust">
+            {#if !embed}
             <button type="button" class="adjust-toggle" disabled={editor.tree === null}
               onclick={() => { const tab = current(); if (tab) { keepTabSession(tab); layerOpen = true } }}>{t('app.layers.label')}</button>
+            {/if}
             <button type="button" class="adjust-toggle" bind:this={largeButton} aria-haspopup="dialog" aria-controls="large-preview" aria-expanded={large} disabled={editor.tree === null}
               onclick={() => { large = true }}><Icon name="search" size={15} />{t('app.preview.large')}</button>
+            {#if !embed}
             <button type="button" class="adjust-toggle" aria-pressed={adjusting} disabled={!canAdjust}
               title={drawing?.cut ? t('ids.adjust.unavailable') : undefined}
               onclick={() => { adjusting = !adjusting }}>{t(adjusting ? 'ids.adjust.done' : 'ids.adjust.title')}</button>
             <button type="button" class="adjust-toggle adjust-report" onclick={() => { reportOpen = true }}><Icon name="mail" size={15} />{t('app.report.title')}</button>
+            {/if}
             {#if adjusting}
               <button type="button" disabled={!editor.chosen} onclick={resetChosen}>{t('ids.adjust.reset')}</button>
               <span class="adjust-hint">{t('ids.adjust.hint')}</span>
             {/if}
           </div>
         </div>
+        {#if !embed}
         <PartFills session={currentSession()} version={documentTick} chosen={editor.chosen} disabled={!scopes} {t}
           onchoose={path => editor.choose(path, { toggle: false })} onchange={layerChanged} />
+        {/if}
         <dialog id="large-preview" class="large-dialog" bind:this={largeDialog} aria-label={t('app.preview.large')}
           oncancel={() => { large = false }} onclose={() => { large = false; tick().then(() => { if (largeButton && !largeButton.disabled) largeButton.focus(); else largeButton?.closest('.adjust')?.querySelector('button:not(:disabled)')?.focus() }) }}
           onclick={event => {
@@ -1542,16 +1606,23 @@
           </div>
           {#if large}
             <IdsPreview {adapter} tree={editor.tree} {messages} {locale} small={false} notes={false}
-              document={currentSession()?.document} session={currentSession()} version={documentTick} editable={false} />
+              document={currentSession()?.document} session={currentSession()} version={documentTick} editable={false} bind:step={previewStep} />
           {/if}
         </dialog>
+        {#if !embed}
         <div class="details">
           <div class="block"><ExportPanel bind:this={exportPanel} {drawing} {scopes} {slots} {emoji} {cut} {cutLeaf} incomplete={exportIncomplete} document={currentSession()?.document} sequence={editor.whole} {t} onnote={note} /></div>
         </div>
+        {/if}
       </section>
     </div>
   </main>
-  <IdsCharacterInfo root={work} {adapter} {messages} {locale} disabled={editor.disabled} onpick={(part, path) => editor.take(part, path)} customHref={id => `/unencoded?q=${id}`} />
+  <IdsCharacterInfo root={work} {adapter} {messages} {locale} disabled={editor.disabled} onpick={(part, path) => editor.take(part, path)} customHref={id => `/unencoded?q=${id}`}>
+    <!-- A part chosen by selecting its text lists what can stand in its place under its card. -->
+    {#snippet extra({ path, close })}
+      {#if path && editor.chosenInField && path.join('.') === editor.chosen?.join('.')}<IdsAlternatives {editor} variations variationsHref={entry => `./ucv.html?lang=${locale}#ucv-${entry}`} onchoose={close} />{/if}
+    {/snippet}
+  </IdsCharacterInfo>
 
 </div>
 

@@ -120,8 +120,33 @@ try {
       await preset.click()
       assert.equal(pyramidRows(parse(await field.inputValue()).tree)?.cell, component)
     }
+    await page.locator('.ids-repeat input').first().fill('')
+    // A whole description with nothing chosen and no empty slot takes every generator, and the
+    // generated layout replaces it; a long one goes into an empty slot of a larger draft.
+    for (const [button, expected] of [
+      [preset, '⿳⿹勹䶹⿰⿹勹䶹⿹勹䶹⿲⿹勹䶹⿹勹䶹⿹勹䶹'],
+      [page.locator('[data-repeat="2+3"]'), '⿱⿰⿹勹䶹⿹勹䶹⿲⿹勹䶹⿹勹䶹⿹勹䶹'],
+      [page.locator('[data-five="212"]'), '⿳⿰⿹勹䶹⿹勹䶹⿹勹䶹⿰⿹勹䶹⿹勹䶹'],
+    ]) {
+      await field.fill('⿹勹䶹')
+      await part.fill('⿹勹䶹')
+      assert.equal(await button.isDisabled(), false, 'a whole description takes a generated layout')
+      await button.click()
+      assert.equal(await field.inputValue(), expected)
+    }
+    await page.keyboard.press('Control+z')
+    assert.equal(await field.inputValue(), '⿹勹䶹', 'an undo brings back the replaced description')
+    // A long pyramid replaces a whole description; in a larger one it must stay within the length limit.
+    await field.fill('⿹勹䶹')
+    await group.locator('[data-pyramid="12"]').click()
+    assert.equal(pyramidRows(parse(await field.inputValue()).tree)?.layers, 12, 'a long pyramid replaces the description')
+    await field.fill('⿰⬚木')
+    assert.equal(await group.locator('[data-pyramid="12"]').isDisabled(), true, 'too long beside 木')
+    assert.equal(await group.locator('[data-pyramid="12"]').getAttribute('title'), 'Too long.')
+    await group.locator('[data-pyramid="5"]').click()
+    assert.equal(pyramidRows(parse(await field.inputValue()).tree.parts[0])?.layers, 5, 'a pyramid fills the empty slot')
     assert.deepEqual(errors, [])
-    console.log(`PASS ${colorScheme}: typed parts and descriptions, slots, validation, presets, 2-row pyramids, custom rows, pyramid directions, Enter, tab persistence, Unicode components`)
+    console.log(`PASS ${colorScheme}: typed parts and descriptions, slots, validation, presets, 2-row pyramids, custom rows, pyramid directions, Enter, tab persistence, Unicode components, whole descriptions, long layouts`)
     await page.close()
   }
 } finally { await browser.close() }

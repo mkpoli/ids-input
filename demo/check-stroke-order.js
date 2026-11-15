@@ -64,6 +64,21 @@ try {
   assert.equal(await keys.locator('.stroke-typed').innerText(), 'Stroke order')
   assert.equal(await parts.locator('.parts-counts button[aria-pressed="true"]').count(), 1)
 
+  // All characters takes the strokes too, over every Han character, and a stroke count narrows them.
+  await parts.locator('.parts-counts button', { hasText: 'All characters' }).click()
+  await parts.locator('.parts-panel .part').first().waitFor()
+  await press('hhsh')
+  await parts.locator('.parts-panel .part[data-character="王"]').waitFor()
+  assert.ok((await shown()).slice(0, 12).includes('王'))
+  assert.equal(await keys.locator('.stroke-typed').innerText(), '㇐㇐㇑㇐')
+  // 珏 begins with 王's strokes and is not a palette component: nine strokes in all.
+  await parts.locator('.parts-counts button', { hasText: /^9$/ }).click()
+  await parts.locator('.parts-panel .part[data-character="珏"]').waitFor()
+  assert.ok(!(await shown()).includes('王'))
+  // Leaving the view leaves the stroke search.
+  await parts.locator('.parts-counts button').first().click()
+  assert.equal(await keys.locator('.stroke-typed').innerText(), 'Stroke order')
+
   // Strokes pressed before the palette has arrived are kept: the palette is held back a moment.
   const early = await browser.newPage({ viewport: { width: 1440, height: 900 } })
   let held = 0

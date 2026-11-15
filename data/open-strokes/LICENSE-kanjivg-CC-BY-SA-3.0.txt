@@ -1,0 +1,19 @@
+KanjiVG — kanjivg.tsv.gz and the rows of induced.tsv.gz whose source is kanjivg
+================================================================================
+
+Copyright (C) 2009/2010/2011 Ulrich Apel.
+
+This work is distributed under the conditions of the Creative Commons
+Attribution-Share Alike 3.0 Licence.
+
+  https://creativecommons.org/licenses/by-sa/3.0/
+
+KanjiVG's own header asks that its use be attributed by naming KanjiVG and
+linking to its website:
+
+  KanjiVG, https://kanjivg.tagaini.net
+
+These tables are adapted from the per-character SVG files of KanjiVG at revision
+610091ce618cf757ed1357a8954cd65283e015d6, <https://github.com/KanjiVG/kanjivg>:
+each kanji reduced to the types of its strokes in writing order, with a
+five-class code added by IDS Input. They are shared alike under the same licence.

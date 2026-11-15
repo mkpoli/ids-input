@@ -1,17 +1,13 @@
 <script>
   // A feature reference for the engines this site is compared with. One table, one column per
   // engine; cells say "—" where no public source documents a value.
-  import SiteSelect from './ui/SiteSelect.svelte'
+  import PageHeader from './ui/PageHeader.svelte'
   import { appMessages } from './lib/locales.js'
-  import { applyTheme, storedTheme } from './lib/theme.js'
-  import ThemeSwitch from './ui/ThemeSwitch.svelte'
   import { ENGINES, SECTIONS, SOURCES } from './lib/engine-table.js'
 
   const en = appMessages('en')
-
-  let theme = $state(storedTheme())
-  /** @param {import('./lib/theme.js').Theme} next */
-  const setTheme = next => { theme = next; applyTheme(next) }
+  /** @param {string} key */
+  const t = key => en[key] ?? key
 </script>
 
 <svelte:head>
@@ -19,16 +15,7 @@
 </svelte:head>
 
 <div class="page">
-  <header class="bar">
-    <SiteSelect title="IDS Workshop" label={en['app.sitesLabel']} more={en['app.sitesMore']} locale="en" href="./" />
-    <span class="slash" aria-hidden="true">/</span>
-    <h1>Engine comparison</h1>
-    <div class="end">
-      <a class="back" href="./compare.html">Comparison</a>
-      <ThemeSwitch {theme} label="Theme" labels={{ system: 'System', light: 'Light', dark: 'Dark' }} onchange={setTheme} />
-      <a class="back" href="./">Workshop</a>
-    </div>
-  </header>
+  <PageHeader page="engines" title="Engine comparison" {t} />
 
   <main>
     <p class="lead">What each engine reads and writes, how it composes, what it costs and what it is licensed under. One row per feature; one column per engine.</p>
@@ -79,13 +66,6 @@
 
 <style>
   .page{display:flex;flex-direction:column;min-height:100dvh}
-  .bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px max(18px,env(safe-area-inset-right)) 10px max(18px,env(safe-area-inset-left));
-    border-bottom:1px solid var(--ui-color-border);background:color-mix(in srgb,var(--ui-color-canvas) 88%,transparent);backdrop-filter:blur(10px);position:sticky;top:0;z-index:10}
-  .slash{color:var(--ui-color-border-strong)}
-  h1{margin:0;font-size:15px;font-weight:600;color:var(--ui-color-ink-muted);white-space:nowrap}
-  .end{display:flex;align-items:center;gap:10px;margin-left:auto;flex-wrap:wrap}
-  .back{font-size:13px;color:var(--ui-color-accent);text-decoration:none;padding:5px 9px;border-radius:var(--ui-radius-md)}
-  .back:hover{background:var(--ui-color-surface-hover)}
 
   main{width:100%;max-width:1500px;margin:0 auto;padding:26px max(18px,env(safe-area-inset-right)) 60px max(18px,env(safe-area-inset-left))}
   .lead{margin:0 0 6px;max-width:80ch;font-size:17px;line-height:1.55}
