@@ -54,6 +54,27 @@ def group(cs):
     for c in cs: replayRecording(c, Cu2QuPen(pen, 0.5))
     return pen.result
 
+def crop_wound(cs, box):
+    """`crop_group`, keeping the outlines' own winding: pathops returns its own, and a form whose
+    groups wind both ways cancels where they overlap."""
+    shape, rect = pathops.Path(), pathops.Path()
+    for c in cs: replayRecording(c, shape.getPen())
+    x0, y0, x1, y1 = box
+    rect.moveTo(x0, y0); rect.lineTo(x1, y0); rect.lineTo(x1, y1); rect.lineTo(x0, y1); rect.close()
+    cut = pathops.op(shape, rect, pathops.PathOp.INTERSECTION)
+    if cut.clockwise != shape.clockwise: cut.reverse()
+    pen = RecordingPen()
+    cut.draw(pen)
+    return group([pen.value])
+
+def set_in_em(groups, height):
+    """Groups scaled together about their foot to `height` units and centred on the em."""
+    xs = [v for outlines in groups for _, points in outlines for v in points[0::2]]
+    ys = [v for outlines in groups for _, points in outlines for v in points[1::2]]
+    k, middle, foot = height / (max(ys) - min(ys)), (min(xs) + max(xs)) / 2, min(ys)
+    return [[[ops, [round(500 + (v - middle) * k, 2) if i % 2 == 0 else round(foot + (v - foot) * k, 2)
+                    for i, v in enumerate(points)]] for ops, points in outlines] for outlines in groups]
+
 def pieces(cs, ch):
     """A glyph's untouching pieces: its contours merged where they overlap, each outer outline with
     the counters inside it."""
@@ -308,7 +329,9 @@ def wan_shan_brush(cs, style):
     return [group([band] + retained), group([shan])]
 
 hashes = {'sans':'b76b0433203017ca80401b2ee0dd69350349871c4b19d504c34dbdd80541690a', 'serif':'93069d8e9e45d515cc421c971a79e6a5777704b348e36a9ef86578bf58adef77'}
-result = {'license':'SIL OFL 1.1', 'sources':{}, 'forms':{}, 'positions':{}}
+# `native` lists, per face, the forms an encoded character holding them still draws from its own
+# glyph: the form gives a description its parts without keeping that glyph from it.
+result = {'license':'SIL OFL 1.1', 'sources':{}, 'forms':{}, 'positions':{}, 'native':{}}
 genzui_path = Path('fonts/GenZuiSans-Regular.woff2')
 genzui_sha = hashlib.sha256(genzui_path.read_bytes()).hexdigest()
 if genzui_sha != 'efb3b0bf65f178b52ede78a552cf7d642d1c9bbd47c3fbddf860d70ec92d7f7a':
@@ -406,6 +429,13 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     # TC supplies the 氺 form of 犀 and the four-stroke 卝 in 夢.
     tc=TTFont(path,fontNumber=3); tcgs=tc.getGlyphSet(); tccmap=tc.getBestCmap()
     tcs=lambda ch:contours(tcgs,tccmap[ord(ch)])
+    # ⿲𰀪丨⿱丶丶 is the lower half of 眔 as TC writes it, with 𰀪 and two dots; JP's 眔 writes
+    # ⿱罒氺. Its five strokes stand apart: 7 and 8 the 𰀪, 4 the stem, 5 and 6 the dots. Serif keeps
+    # its composed drawing.
+    if style=='sans':
+        c=tcs('眔')
+        forms['⿲𰀪丨⿱丶丶']=[group([c[7],c[8]]),group([c[4]]),group([c[5]]),group([c[6]])]
+        result['native'][style]=['⿲𰀪丨⿱丶丶']
     c=tcs('犀')
     forms['⿸尸氺']=[group(c[:7] if style=='sans' else [c[0],c[1],c[3],c[4]])]
     c=cs('橐')
@@ -499,7 +529,7 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     register_xie(forms, [group(part) for part in xie_noto(cs, style)])
     result['forms'][style]=forms
     result['sources'][style]={'name':font['name'].getDebugName(4),'version':font['name'].getDebugName(5),'sha256':sha,'face':0,
-        'additionalFaces':[{'face':3,'name':tc['name'].getDebugName(4),'forms':['⿸尸氺','⿳卝罒冖']}]}
+        'additionalFaces':[{'face':3,'name':tc['name'].getDebugName(4),'forms':['⿸尸氺','⿳卝罒冖']+(['⿲𰀪丨⿱丶丶'] if style=='sans' else [])}]}
 # The brush variant uses its own native donor font; no Noto fallback is bundled.
 from xie_kaisho import xie_kaisho
 brush_path = Path('fonts/Kureedo-Regular.woff2')
@@ -524,6 +554,13 @@ fangsong = TTFont(fangsong_path)
 fangsong_gs, fangsong_cmap = fangsong.getGlyphSet(), fangsong.getBestCmap()
 fangsong_cs = lambda ch: contours(fangsong_gs, fangsong_cmap[ord(ch)])
 result['forms']['fangsong'] = {'⿳艹田⿵冂山': wan_shan(fangsong_cs, 'fangsong')}
+# Zhuque Fangsong has no 眔; the right side of 鰥 writes its lower half, ⿲𰀪丨⿱丶丶. Contours 12
+# and 5 are the 𰀪, 14 and 13 the dots; the stem is one contour with the 罒, cut below the 罒's
+# bottom bar (which meets it at y=430) and clear of the frame's legs. The narrow column of 鰥 is set
+# 600 units high, as tall as 眔's lower half in the Noto faces.
+c=fangsong_cs('鰥')
+result['forms']['fangsong']['⿲𰀪丨⿱丶丶'] = set_in_em([group([c[12],c[5]]), crop_wound([c[0]], (580,-200,780,420)), group([c[14]]), group([c[13]])], 600)
+result['native']['fangsong'] = ['⿲𰀪丨⿱丶丶']
 result['sources']['fangsong'] = {
     'name': fangsong['name'].getDebugName(4), 'version': fangsong['name'].getDebugName(5),
     'sha256': fangsong_sha,
