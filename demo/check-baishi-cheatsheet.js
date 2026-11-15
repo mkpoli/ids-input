@@ -61,7 +61,8 @@ try {
     // The sections, the groups and the cards that stand for an anchor link to it, and the sources to the grammar's first rule.
     assert.deepEqual([...out].sort(), [...linkedOf(), 'row'].sort(), `${view}: the sections and cards link to the specification`)
     for (const id of out) assert.ok(specAnchors.has(id), `${view}: the cheatsheet's link to #${id} lands on the specification`)
-    assert.equal(await page.locator('header.bar a[href^="./baishi.html"]').count(), 1, `${view}: the header links to the specification`)
+    const header = await page.evaluate(() => [...document.querySelectorAll('header.bar a[href^="./baishi.html"]')].map(link => /** @type {HTMLAnchorElement} */ (link).hash))
+    assert.deepEqual(header, ['', '#parser'], `${view}: the header links to the specification and its parser`)
 
     if (name === 'desktop') {
       // Wide enough, a sequence stands on one line: every token of a card's quotation shares a line.
