@@ -142,13 +142,22 @@
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
   // The description tables are three megabytes a drawing rarely reads, and on a slow line they share
   // it with the layout the drawing waits for. They load once the first drawing is shown, at once
-  // when that drawing reads them or none is coming, and after ten seconds whatever happened.
+  // when that drawing reads them, none is coming or the reader touches the page, and after ten
+  // seconds whatever happened.
   let releaseTables = () => {}
   /** @type {Promise<void>} */
   const firstDrawing = new Promise(resolve => { releaseTables = resolve })
   onMount(() => {
-    const bound = setTimeout(releaseTables, 10_000)
-    return () => clearTimeout(bound)
+    const bound = setTimeout(() => { releaseTables(); endSearchWait() }, 10_000)
+    // A reader who types or clicks wants what they ask for, not the drawing first.
+    const options = { capture: true, once: true }
+    window.addEventListener('pointerdown', releaseTables, options)
+    window.addEventListener('keydown', releaseTables, options)
+    return () => {
+      clearTimeout(bound)
+      window.removeEventListener('pointerdown', releaseTables, options)
+      window.removeEventListener('keydown', releaseTables, options)
+    }
   })
   const sealAdapter = smallSealAdapter({ after: firstDrawing, data: sealData, shuishu: shuishuData, jurchen: jurchenData, ids, layers, zitools, chise: corpus, project: projectIds, overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains, custom })
 
@@ -158,18 +167,22 @@
     encoded: (/** @type {Parameters<typeof sealAdapter.encoded>} */ ...asked) => { releaseTables(); return sealAdapter.encoded(...asked) },
     structure: (/** @type {Parameters<typeof sealAdapter.structure>} */ ...asked) => { releaseTables(); return sealAdapter.structure(...asked) },
   }
-  // The first search reads the description tables, and the other faces' samples read six megabytes
+  // The first search reads the description tables, and the font switch's samples read six megabytes
   // of layout models: the samples wait for a first search under way, so the two do not share the line.
   let searching = 0, searched = false
   /** @type {(() => void)[]} */
   const afterSearch = []
+  /** The samples wait no longer: a first search has answered, or has had its ten seconds. */
+  const endSearchWait = () => {
+    searched = true
+    for (const start of afterSearch.splice(0)) start()
+  }
   /** @template {(...asked: any[]) => Promise<any>} Search @param {Search} search @returns {Search} */
   const counted = search => /** @type {Search} */ (async (...asked) => {
     searching++
     try { return await search(...asked) } finally {
       searching--
-      searched = true
-      for (const start of afterSearch.splice(0)) start()
+      endSearchWait()
     }
   })
   /** @returns {Promise<void>} */
