@@ -11,7 +11,8 @@
 //   induced.tsv.gz      characters a source lacks, written from a character the source has:
 //                       the unified ideograph a compatibility form or radical is equivalent to, or
 //                       the components of its ideographic description sequence; and, where that
-//                       fails, the order another source records, borrowed and marked so
+//                       fails, the order another source records, borrowed and marked so; and
+//                       for a radical form, the order the characters written with it leave
 //
 // An induced order joins the orders of a description's components. The side-by-side and stacked
 // operators join them in order. An enclosure is written around what it holds at a place learned,
@@ -362,6 +363,101 @@ function blockersOf(tree, table, region, places, within = []) {
   if (!place && !RELIABLE.includes(tree.op)) return new Set([OPERATOR])
   return new Set(tree.parts.flatMap(part => [...blockersOf(part, table, region, places, within)]))
 }
+/** The operators whose parts are written one after another. */
+const SEQUENTIAL = new Set(['⿰', '⿱', '⿲', '⿳'])
+/** @type {Map<string, Map<string, string[]>>} The characters whose description names each component, by region. */
+const namers = new Map()
+/** @param {string} region */
+function namersOf(region) {
+  let index = namers.get(region)
+  if (index) return index
+  index = new Map()
+  for (const char of new Set([...ids.keys(), ...second.keys()])) {
+    const sequence = described(char, region)
+    if (!sequence) continue
+    for (const part of new Set([...writtenOut(sequence)])) if (!ARITY[part]) (index.get(part) ?? index.set(part, []).get(part)).push(char)
+  }
+  namers.set(region, index)
+  return index
+}
+/**
+ * The orders written before and after a component in a description, when every operator on the way
+ * to it writes its parts one after another and the component occurs once. A character the table
+ * does not record is looked into by its own description.
+ * @param {Tree} tree @param {string} target @param {Map<string, string[]>} table @param {string} region @param {Map<string, string>} places
+ * @param {number} [depth] @returns {{ before: string[], after: string[] } | null}
+ */
+function around(tree, target, table, region, places, depth = 0) {
+  if ('leaf' in tree) {
+    if (tree.leaf === target) return { before: [''], after: [''] }
+    if (table.has(tree.leaf) || depth >= 3) return null
+    const sequence = described(tree.leaf, region), inner = sequence ? parse(sequence) : null
+    return inner && !('leaf' in inner) ? around(inner, target, table, region, places, depth + 1) : null
+  }
+  if (!SEQUENTIAL.has(tree.op)) return null
+  const sides = tree.parts.map(part => around(part, target, table, region, places, depth))
+  const at = sides.findIndex(Boolean)
+  if (at < 0 || sides.some((side, index) => side && index !== at)) return null
+  const rest = tree.parts.map((part, index) => index === at ? [''] : ordersOf(part, table, region, places))
+  if (rest.some(orders => !orders)) return null
+  return { before: joined([...rest.slice(0, at), sides[at].before]), after: joined([sides[at].after, ...rest.slice(at + 1)]) }
+}
+/**
+ * What a component is written as inside the characters a source records: each character whose
+ * description names it, with the other parts' orders taken off the front and the back of its own.
+ * The characters are found down to three descriptions deep.
+ * @param {string} target @param {Map<string, string[]>} table @param {string} region @param {Map<string, string>} places
+ */
+function readWithin(target, table, region, places) {
+  const index = namersOf(region), seen = new Set(), candidates = new Set()
+  /** @type {[string, number][]} */
+  const queue = [[target, 0]]
+  while (queue.length) {
+    const [component, depth] = queue.shift()
+    for (const char of index.get(component) ?? []) {
+      if (seen.has(char)) continue
+      seen.add(char)
+      if (table.has(char)) candidates.add(char); else if (depth < 3) queue.push([char, depth + 1])
+    }
+  }
+  /** @type {Map<string, number>} */
+  const votes = new Map()
+  const found = []
+  for (const char of [...candidates].sort(byCodePoint)) {
+    if (char === target) continue
+    const sequence = described(char, region), tree = sequence ? parse(sequence) : null
+    const sides = tree && !('leaf' in tree) ? around(tree, target, table, region, places) : null
+    if (!sides) continue
+    const read = new Set()
+    for (const order of table.get(char)) for (const before of sides.before) for (const after of sides.after) {
+      if (order.length > before.length + after.length && order.startsWith(before) && order.endsWith(after)) read.add(order.slice(before.length, order.length - after.length))
+    }
+    if (!read.size) continue
+    found.push(char)
+    for (const order of read) votes.set(order, (votes.get(order) ?? 0) + 1)
+  }
+  return { found, votes: [...votes].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])) }
+}
+// The descriptions name a radical form or a stroke by the unified ideograph Unicode pairs it with
+// (EquivalentUnifiedIdeograph.txt), so the characters a form is written in are found under that name.
+/** @type {Map<string, string>} */
+const PAIRS = new Map()
+for (const line of readFileSync(new URL('../data/component-forms.tsv', import.meta.url), 'utf8').split('\n')) {
+  const [form, char, origin, detail] = line.split('\t')
+  if (origin === 'unicode-ucd' && detail === 'EquivalentUnifiedIdeograph' && [...form].length === 1 && [...char].length === 1) PAIRS.set(form, char)
+}
+// A pair of nearly the same appearance is not always the same shape: ⺫ is paired with 目 and drawn
+// as 罒. `data/stroke-form-names.tsv` names the component each form is drawn as and says whether it
+// has that component's outline, which the evidence of a row read under it repeats.
+/** @type {Map<string, string>} Whether each form has the outline of the component it is read under. */
+const SHAPES = new Map()
+for (const line of readFileSync(new URL('../data/stroke-form-names.tsv', import.meta.url), 'utf8').split('\n')) {
+  if (!line || line.startsWith('#')) continue
+  const [form, name, shape, basis] = line.split('\t')
+  if ([...form].length !== 1 || [...(name ?? '')].length !== 1 || !['same', 'variant'].includes(shape) || !basis?.trim()) throw Error(`data/stroke-form-names.tsv: ${line}`)
+  PAIRS.set(form, name)
+  SHAPES.set(form, shape)
+}
 /** @type {string[][]} */
 const induced = []
 /** @type {string[][]} */
@@ -385,7 +481,7 @@ function lend(char, source) {
   }
   return null
 }
-const left = SOURCES.map(({ source, table, region }) => {
+const passes = SOURCES.map(({ source, table, region }) => {
   // An entered order stands beside the source's: it writes its character and the characters it is a component of.
   const entered = own.get(source).entered
   const known = new Map(own.get(source).orders)
@@ -452,6 +548,50 @@ const left = SOURCES.map(({ source, table, region }) => {
   equate()
   const none = result.failed.filter(entry => !equal.has(entry.char) && !borrowed.has(entry.char))
   induced.push(...result.rows, ...equal.values(), ...[...borrowed].map(([char, lender]) => [char, point(char), known.get(char).join(' '), 'borrowed', lender, source, '', lender]))
+  // What the source's own characters write each character left as, under its own name or the name
+  // of the component it is drawn as.
+  const mine = own.get(source).orders
+  /** @type {Map<string, { named: string, within: ReturnType<typeof readWithin> }>} */
+  const readings = new Map()
+  for (const component of new Set(none.flatMap(entry => [entry.char, ...entry.blockers]))) {
+    let named = component, within = readWithin(component, mine, region, places)
+    // Under whichever name more characters are written with.
+    const paired = PAIRS.has(component) ? readWithin(PAIRS.get(component), mine, region, places) : null
+    if (paired && paired.found.length > within.found.length) { named = PAIRS.get(component); within = paired }
+    readings.set(component, { named, within })
+  }
+  const count = basis => result.rows.filter(row => row[3] === basis).length
+  return { source, recorded: table.size, entered: entered.size, equivalent: count('equivalent') + equal.size, ids: count('ids'), borrowed: borrowed.size, left: none, readings }
+})
+/**
+ * What a source's characters write a form as most often, with the reading it comes from.
+ * @param {string} source @param {string} char
+ */
+function most(source, char) {
+  const reading = passes.find(pass => pass.source === source).readings.get(char)
+  return reading?.within.found.length ? { order: reading.within.votes[0][0], ...reading } : null
+}
+/** @type {string[][]} What each row read inside characters rests on. */
+const evidence = []
+const left = passes.map(({ left: without, readings, ...row }) => {
+  const { source } = row
+  // A form takes the order most of its own source's characters leave, else most of another source's.
+  // Only a character that keeps no other back is taken: nothing is read again after it.
+  const taken = new Set()
+  for (const { char } of without) {
+    if (without.some(other => other.blockers.includes(char))) continue
+    let found = most(source, char), lender = ''
+    if (!found) for (const other of LENDERS[source]) {
+      found = most(other, char)
+      if (found) { found = { ...found, order: inSymbols(found.order, source) }; lender = other; break }
+    }
+    if (!found) continue
+    induced.push([char, point(char), found.order, 'within', found.named, source, '', lender])
+    evidence.push([char, point(char), source, found.named, SHAPES.get(char) ?? '', String(found.within.found.length),
+      found.within.votes.slice(0, 3).map(([order, count]) => `${inSymbols(order, source)}×${count}`).join(' '), found.within.found.slice(0, 8).join(''), lender])
+    taken.add(char)
+  }
+  const none = without.filter(entry => !taken.has(entry.char))
   const reasons = { undescribed: 0, unreadable: 0, operator: 0, component: 0 }
   /** @type {Map<string, { blocks: string[], alone: number }>} */
   const blocking = new Map()
@@ -468,8 +608,7 @@ const left = SOURCES.map(({ source, table, region }) => {
   for (const [component, entry] of [...blocking].sort((a, b) => b[1].alone - a[1].alone || b[1].blocks.length - a[1].blocks.length || byCodePoint(a[0], b[0]))) {
     wanted.push([component, point(component), source, String(entry.blocks.length), String(entry.alone), entry.blocks.slice(0, 8).join('')])
   }
-  const count = basis => result.rows.filter(row => row[3] === basis).length
-  return { source, recorded: table.size, entered: entered.size, equivalent: count('equivalent') + equal.size, ids: count('ids'), borrowed: borrowed.size, none: none.length, reasons }
+  return { ...row, within: taken.size, none: none.length, reasons }
 })
 induced.sort((a, b) => SOURCES.findIndex(entry => entry.source === a[5]) - SOURCES.findIndex(entry => entry.source === b[5]) || byCodePoint(a[0], b[0]))
 // The two sources on the characters both record, and the orders induced from CNS against what Rime
@@ -506,6 +645,7 @@ const files = [
   write('induced.tsv.gz', ['char', 'codepoint', 'orders', 'basis', 'from', 'source', 'ids', 'lent'], induced),
   write('entered.tsv', ['char', 'codepoint', 'orders', 'basis', 'by', 'source', 'date'], enteredRows),
   write('wanted.tsv', ['char', 'codepoint', 'source', 'blocks', 'alone', 'examples'], wanted),
+  write('within.tsv', ['char', 'codepoint', 'source', 'named', 'shape', 'found', 'read', 'within', 'lent'], evidence),
 ]
 // The LGPL asks that its text, and the GPL's it builds on, travel with the data.
 const LICENCES = { 'rime-stroke-LGPL-3.0.txt': 'LICENSE-rime-stroke-LGPL-3.0.txt', 'GPL-3.0.txt': 'LICENSE-GPL-3.0.txt', 'rime-stroke-AUTHORS.txt': 'AUTHORS-rime-stroke.txt' }
@@ -564,6 +704,11 @@ const manifest = {
       licence: { name: 'Public domain' },
     },
     {
+      key: 'unicode-ucd', name: 'Unicode Character Database 18.0.0, EquivalentUnifiedIdeograph.txt: the ideograph a wanted radical form is searched under',
+      authors: 'Unicode, Inc.', url: 'https://www.unicode.org/Public/18.0.0/ucd/EquivalentUnifiedIdeograph.txt',
+      licence: { spdx: 'Unicode-3.0', url: 'https://www.unicode.org/license.txt' },
+    },
+    {
       key: 'yi-bai-ids', name: 'Yi Bai IDS, level 1: the descriptions used where BabelStone has none',
       authors: 'Yi Bai', url: 'https://github.com/yi-bai/ids', version: secondText.split('\n')[0].replace(/^# /, ''),
       licence: { spdx: 'MIT', url: 'https://opensource.org/license/mit', texts: [SECOND_LICENCE] },
@@ -605,6 +750,7 @@ The format is \`ids-input/open-strokes\`, version 3.
 | \`induced.tsv.gz\` | ${n(file('induced.tsv.gz').rows)} | Induced and borrowed orders: \`char\`, \`codepoint\`, \`orders\`, \`basis\`, \`from\`, \`source\`, \`ids\`, \`lent\`. Each row keeps the terms of its \`source\` and of the sources in \`lent\`. |
 | \`entered.tsv\` | ${n(file('entered.tsv').rows)} | Orders entered by hand: \`char\`, \`codepoint\`, \`orders\`, \`basis\`, \`by\`, \`source\`, \`date\`. CC0 1.0. |
 | \`wanted.tsv\` | ${n(file('wanted.tsv').rows)} | Characters and components no source has an order for: \`char\`, \`codepoint\`, \`source\`, \`blocks\`, \`alone\`, \`examples\`. CC0 1.0. |
+| \`within.tsv\` | ${n(file('within.tsv').rows)} | What each \`within\` row of \`induced.tsv.gz\` rests on: \`char\`, \`codepoint\`, \`source\`, \`named\`, \`shape\`, \`found\`, \`read\`, \`within\`, \`lent\`. Each row keeps the terms of the source whose characters were read. |
 | \`manifest.json\` | | Sources with checksums, licences, coverage and the tables below. |
 | \`LICENSE-rime-stroke-LGPL-3.0.txt\`, \`LICENSE-GPL-3.0.txt\`, \`AUTHORS-rime-stroke.txt\` | | The terms and authors of the Rime dictionary. |
 | \`LICENSE-kanjivg-CC-BY-SA-3.0.txt\` | | The terms of KanjiVG. |
@@ -670,6 +816,13 @@ convention they follow.
 - \`borrowed\`: the source has no order for the character and none can be written from its
   components, and \`from\` is the other source whose order the row repeats, in this source's
   symbols. ${n(cover('cns11643').borrowed)} rows in \`cns11643\`, ${n(cover('rime-stroke').borrowed)} in \`rime-stroke\`, ${n(cover('kanjivg').borrowed)} in \`kanjivg\`.
+
+- \`within\`: the character is a form of the CJK Radicals Supplement that no source records,
+  \`from\` is the component the descriptions write it as, and the order is what most of the
+  source's characters write that component as: each character whose description names it, with the
+  other parts' orders taken off the front and the back of its own. \`lent\` names the source whose
+  characters were read where the row's own has none. ${n(cover('cns11643').within)} rows in \`cns11643\`, ${n(cover('rime-stroke').within)} in
+  \`rime-stroke\`, ${n(cover('kanjivg').within)} in \`kanjivg\`. \`within.tsv\` gives what each rests on.
 
 A source borrows from the nearest convention first: \`cns11643\` from \`rime-stroke\` then
 \`kanjivg\`, \`rime-stroke\` from \`cns11643\` then \`kanjivg\`, \`kanjivg\` from \`cns11643\` then
@@ -741,15 +894,35 @@ writes its own character and lets the characters it is a component of be induced
 
 \`wanted.tsv\` lists, per source, what is left to enter: the characters that end without an
 order and the components that keep characters from being written, none of which any source
-records. \`blocks\` counts the characters a component keeps back and \`alone\` the ones it is the
+records or any recorded character is written with. \`blocks\` counts the characters a component keeps back and \`alone\` the ones it is the
 only obstacle to, most first.
 To add an order, append a row to \`data/stroke-orders-entered.tsv\` in the repository and rebuild.
 
+## Orders read inside characters
+
+\`within.tsv\` holds the evidence of each \`within\` row. \`found\` counts the characters whose
+description names the component, down to three descriptions deep, where the operators on the way
+to it are ⿰ ⿱ ⿲ ⿳ and every other part has an order: taking those off the front and the back of
+the character's own order leaves the component's. \`read\` gives up to three such orders, each
+with the number of characters that leave it (\`1521×73 1512×11\`); the row takes the first.
+\`within\` lists up to eight of the characters and \`lent\` the source they are from where it is
+not the row's own.
+
+\`named\` is the component the form was read under. The descriptions never name a form of the
+CJK Radicals Supplement itself: they name the unified ideograph Unicode's
+\`EquivalentUnifiedIdeograph.txt\` pairs it with (旡 for ⺛). Where that pair is not the shape the
+form is drawn as, \`data/stroke-form-names.tsv\` in the repository names the component that is:
+⺫ is paired with 目 and read under 罒. \`shape\` repeats that file's verdict: \`same\` where the
+form has the component's outline, \`variant\` where it is only drawn close to it.
+
+A \`within\` row is a reading, not a record. One read from few characters, from characters that
+disagree, or under a \`variant\` shape is weaker than the rest, and \`within.tsv\` says which.
+
 ## Coverage
 
-| Source | Recorded | Entered | By equivalence | From IDS | Borrowed | Without an order |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-${left.map(row => `| \`${row.source}\` | ${n(row.recorded)} | ${n(row.entered)} | ${n(row.equivalent)} | ${n(row.ids)} | ${n(row.borrowed)} | ${n(row.none)} |`).join('\n')}
+| Source | Recorded | Entered | By equivalence | From IDS | Borrowed | Read in characters | Without an order |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+${left.map(row => `| \`${row.source}\` | ${n(row.recorded)} | ${n(row.entered)} | ${n(row.equivalent)} | ${n(row.ids)} | ${n(row.borrowed)} | ${n(row.within)} | ${n(row.none)} |`).join('\n')}
 
 "Without an order" counts the Han characters the workshop's composer draws or either IDS source
 describes that end with no row for that source, borrowed ones included. Why, for each:
@@ -783,6 +956,10 @@ numbered component BabelStone gives no fragment for.
   carries its terms beside those of its own \`source\`.
 - BabelStone IDS, \`IDS.TXT\`, Andrew West (魏安), <https://www.babelstone.co.uk/CJK/IDS.TXT>, public
   domain: the descriptions induced rows are written from.
+- Unicode Character Database 18.0.0, \`EquivalentUnifiedIdeograph.txt\`,
+  <https://www.unicode.org/Public/18.0.0/ucd/EquivalentUnifiedIdeograph.txt>, Unicode License v3,
+  Copyright Unicode, Inc.: the ideograph a wanted radical form is searched under in \`wanted.tsv\`,
+  read from \`data/component-forms.tsv\`.
 
 - Yi Bai IDS, level 1, <https://github.com/yi-bai/ids>, MIT, Copyright (c) 2021 Yi Bai: the
   descriptions used where BabelStone has none. The licence text is beside this file.
@@ -792,6 +969,6 @@ numbered component BabelStone gives no fragment for.
 \`bun scripts/build_open_strokes.mjs\` fetches the sources and writes the files, this one included.
 `)
 writeFileSync(new URL('manifest.json', OUT), JSON.stringify(manifest, null, 2) + '\n')
-for (const row of left) console.log(`${row.source}: ${row.recorded} recorded, ${row.equivalent} by equivalence, ${row.ids} from descriptions, ${row.borrowed} borrowed, ${row.none} without an order`)
+for (const row of left) console.log(`${row.source}: ${row.recorded} recorded, ${row.equivalent} by equivalence, ${row.ids} from descriptions, ${row.borrowed} borrowed, ${row.within} read in characters, ${row.none} without an order`)
 console.log(`same order in both sources: ${agreement.sameOrder} of ${agreement.shared}`)
 console.log(`induced from CNS, against Rime: ${heldOutAgree} of ${heldOut.length} (${(100 * heldOutAgree / heldOut.length).toFixed(1)}%)`)

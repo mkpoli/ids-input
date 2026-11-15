@@ -95,6 +95,16 @@
       }
     },
     {
+      "key": "unicode-ucd",
+      "name": "Unicode Character Database 18.0.0, EquivalentUnifiedIdeograph.txt: the ideograph a wanted radical form is searched under",
+      "authors": "Unicode, Inc.",
+      "url": "https://www.unicode.org/Public/18.0.0/ucd/EquivalentUnifiedIdeograph.txt",
+      "licence": {
+        "spdx": "Unicode-3.0",
+        "url": "https://www.unicode.org/license.txt"
+      }
+    },
+    {
       "key": "yi-bai-ids",
       "name": "Yi Bai IDS, level 1: the descriptions used where BabelStone has none",
       "authors": "Yi Bai",
@@ -1813,9 +1823,10 @@
       "equivalent": 722,
       "ids": 24989,
       "borrowed": 1281,
-      "none": 78,
+      "within": 61,
+      "none": 17,
       "reasons": {
-        "undescribed": 78,
+        "undescribed": 17,
         "unreadable": 0,
         "operator": 0,
         "component": 0
@@ -1828,9 +1839,10 @@
       "equivalent": 681,
       "ids": 3,
       "borrowed": 8,
-      "none": 78,
+      "within": 61,
+      "none": 17,
       "reasons": {
-        "undescribed": 78,
+        "undescribed": 17,
         "unreadable": 0,
         "operator": 0,
         "component": 0
@@ -1843,9 +1855,10 @@
       "equivalent": 1121,
       "ids": 91242,
       "borrowed": 4184,
-      "none": 78,
+      "within": 61,
+      "none": 17,
       "reasons": {
-        "undescribed": 78,
+        "undescribed": 17,
         "unreadable": 0,
         "operator": 0,
         "component": 0
@@ -1887,7 +1900,7 @@
     },
     {
       "name": "induced.tsv.gz",
-      "rows": 124231,
+      "rows": 124414,
       "columns": [
         "char",
         "codepoint",
@@ -1898,7 +1911,7 @@
         "ids",
         "lent"
       ],
-      "bytes": 1923844
+      "bytes": 1926010
     },
     {
       "name": "entered.tsv",
@@ -1916,7 +1929,7 @@
     },
     {
       "name": "wanted.tsv",
-      "rows": 234,
+      "rows": 51,
       "columns": [
         "char",
         "codepoint",
@@ -1925,7 +1938,23 @@
         "alone",
         "examples"
       ],
-      "bytes": 6104
+      "bytes": 1407
+    },
+    {
+      "name": "within.tsv",
+      "rows": 183,
+      "columns": [
+        "char",
+        "codepoint",
+        "source",
+        "named",
+        "shape",
+        "found",
+        "read",
+        "within",
+        "lent"
+      ],
+      "bytes": 14168
     }
   ],
   "texts": [

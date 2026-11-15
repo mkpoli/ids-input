@@ -1,0 +1,184 @@
+char	codepoint	source	named	shape	found	read	within	lent
+⺂	U+2E82	cns11643	乛	same	135	5×133 1×1 51×1	买了厃壽夐奂奐尔	
+⺃	U+2E83	cns11643	乚	same	96	5×96	㐖㠩䯆䰲䵝乢乣乨	
+⺅	U+2E85	cns11643	亻	same	1372	32×1365 324×2 32121×1	㐰㐲㐳㐴㐵㐶㐷㐸	
+⺎	U+2E8E	cns11643	兀	same	56	135×55 132×1	㐳㫕㫯䑢䪲元卼堯	
+⺏	U+2E8F	cns11643	尣	same	2	3435×2	𡰇𪏍	
+⺐	U+2E90	cns11643	尢	same	12	135×11 1354×1	㞊无𡯤𡰍𡰗𡵈𢍽𢰛	
+⺒	U+2E92	cns11643	巳	same	73	515×73	㐶㰝㱼䄐䇃圯导巶	
+⺓	U+2E93	cns11643	幺	same	62	554×62	㓜㡫㭃乣吆幻幼後	
+⺔	U+2E94	cns11643	彑	same	20	551×19 3541×1	㣇㬪互彖彙彜彝疉	
+⺖	U+2E96	cns11643	忄	same	1116	424×1111 4244×2 413234×1	㣺㣼㣾㣿㤃㤄㤆㤇	
+⺘	U+2E98	cns11643	扌	same	1801	151×1795 121×4 1234×1	㧃㧄㧅㧆㧇㧈㧉㧊	
+⺙	U+2E99	cns11643	攵	same	415	3134×407 2154×3 354×2	㣊㣲㩿㪀㪁㪄㪇㪈	
+⺛	U+2E9B	cns11643	旡	same	33	1535×33	㤅旣旤炁黖𡉙𡍳𡲽	
+⺞	U+2E9E	cns11643	歺	same	25	21354×25	𠎀𡛝𢀸𢤅𢴴𣦷𣦸𣦼	
+⺠	U+2EA0	cns11643	民	same	52	51515×51 5515×1	㢯㥸䂥䇇䋋䛉䟨䡑	
+⺣	U+2EA3	cns11643	灬	same	227	4444×226 3444×1	㶨㶵㶻㷊㷛㷦㷶㸐	
+⺫	U+2EAB	cns11643	罒	same	380	25221×378 25351×2	㗄㝲㝶㡢㬅䉚䍐䍒	
+⺯	U+2EAF	cns11643	糹	same	1034	554444×1021 554534×9 55444×2	䊵䊶䊷䊸䊹䊺䊻䊼	
+⺰	U+2EB0	cns11643	纟	same	191	551×190 5514×1	䌶䌷䌸䌹䌺䌻䌼䌽	
+⺱	U+2EB1	cns11643	罓	same	12	2534×12	𠤣𡴓𦆢𦉮𦊋𦊕𦊬𦋇	
+⺹	U+2EB9	cns11643	耂	same	22	1213×22	㠻孝老考者耇耊𢳩	
+⺺	U+2EBA	cns11643	肀	same	4	5112×4	𢗱𣌦𤞍𦘡	
+⻀	U+2EC0	cns11643	艹	variant	2712	2112×2384 122×316 1221×8	㭉䒒䒓䒔䒕䒗䒘䒙	
+⻁	U+2EC1	cns11643	虎	variant	104	21531535×103 12531535×1	㙈䖊䖋䖌䖎䖐䖓䖔	
+⻂	U+2EC2	cns11643	衤	same	627	413234×613 45234×10 4132344×2	䘛䘜䘝䘞䘟䘢䘣䘤	
+⻄	U+2EC4	cns11643	西	same	42	125351×41 1253511×1	㛉䄽䇴䙶哂垔徆恓	
+⻅	U+2EC5	cns11643	见	same	34	2535×34	䩄伣岘枧现砚笕舰	
+⻆	U+2EC6	cns11643	角	variant	244	3535121×214 3535112×26 3525112×2	㓩䇶䚗䚘䚙䚚䚛䚜	
+⻈	U+2EC8	cns11643	讠	same	182	45×182	㺆䜣䜤䜥䜧䜨䜩狱	
+⻉	U+2EC9	cns11643	贝	same	80	2534×79 342534×1	㗷㺆䞍䞎䞏䞐则呗	
+⻋	U+2ECB	cns11643	车	same	84	1521×73 1512×11	䢀䢁䢂伡军斩毂砗	
+⻐	U+2ED0	cns11643	钅	same	305	31115×303 3111532×1 311154×1	䥺䥻䥼䥽䥾䦀䦁䦅	
+⻑	U+2ED1	cns11643	長	same	48	21111534×44 2111154×3 12111534×1	㙊㷃䂻䗅䛫䠆䩨倀	
+⻒	U+2ED2	cns11643	镸	same	126	2111154×126	䦈䦉䦊䦋套瓺肆蕻	
+⻓	U+2ED3	cns11643	长	same	11	3154×11	伥帐张怅枨胀账𪼴	
+⻔	U+2ED4	cns11643	门	variant	5	245×3 425×2	们扪钔𡭜𪡯	
+⻘	U+2ED8	cns11643	青	same	76	11213511×75 12511121555121×1	䑶䝼䞍䨝䨼䴖倩啨	
+⻙	U+2ED9	cns11643	韦	same	26	1152×26	㭏伟帏炜玮祎纬袆	
+⻚	U+2EDA	cns11643	页	same	64	132534×64	㑔嚣灏烦硕顶顷顸	
+⻛	U+2EDB	cns11643	风	same	10	3534×10	㐽㚯岚枫沨砜讽飒	
+⻜	U+2EDC	cns11643	飞	same	1	534×1	𫗌	
+⻝	U+2EDD	cns11643	食	variant	84	341511534×80 344511534×4	䉵䓹䬥䬩䬭䬸䭁䭆	
+⻟	U+2EDF	cns11643	飠	same	470	34151154×465 34451154×5	䬢䬣䬦䬧䬨䬪䬫䬬	
+⻠	U+2EE0	cns11643	饣	same	83	355×83	䭪蚀饤饥饦饧饨饩	
+⻢	U+2EE2	cns11643	马	same	133	551×133	㐷䘞䯃䯄䯅吗妈杩	
+⻣	U+2EE3	cns11643	骨	variant	275	2512453544×216 255453511×46 2512453511×12	䮩䯆䯇䯈䯉䯊䯋䯌	
+⻤	U+2EE4	cns11643	鬼	variant	133	3251213554×132 43251213554×1	㟴㱱䁛䈭䌆䫥䰟䰤	
+⻥	U+2EE5	cns11643	鱼	same	153	35251211×152 35251214444×1	䲝䲞䲟䲠䲡䲤渔稣	
+⻦	U+2EE6	cns11643	鸟	same	140	35451×139 5451×1	㭤㶉䴓䴔䴕䴖䴗䴘	
+⻧	U+2EE7	cns11643	卤	same	5	2125341×5	硵𠨄𠳱𫜊𫠗	
+⻨	U+2EE8	cns11643	麦	same	21	1121354×16 111354×4 113154×1	唛麸麺𥟀𥪣𧵷𨀱𨅫	
+⻩	U+2EE9	cns11643	黄	same	20	12212512134×20	横黉𨊇𨱑𪎷𪎸𪎼𪎿	
+⻪	U+2EEA	cns11643	黾	same	12	25125115×12	䋲渑绳鼋鼌𠊟𡸾𣈣	
+⻫	U+2EEB	cns11643	斉	same	10	41343211×10	㑪㨈剤済緕萕𦜝𨂋	
+⻬	U+2EEC	cns11643	齐	same	13	413432×13	侪剂哜挤济脐蛴跻	
+⻭	U+2EED	cns11643	歯	same	7	212143123452×7	噛𪗱𪘂𪘚𫠚𬬜𬹴	
+⻮	U+2EEE	cns11643	齿	same	23	21213452×23	啮龀龁龂龃龅龆龇	
+⻯	U+2EEF	cns11643	竜	same	12	4143125115×12	槞滝篭𠺠𡏡𢲣𣯡𥉫	
+⻰	U+2EF0	cns11643	龙	same	32	13543×22 13534×8 13435×2	䶮咙垄垅宠拢昽栊	
+⻱	U+2EF1	cns11643	龜	variant	23	3525112555151134×21 32511525115115134×1 32511551151125341×1	䶯䶰䶱䶲櫷龝龞𤒅	
+⻲	U+2EF2	cns11643	亀	same	4	352512125115×3 35251125115×1	䆴𠼓𪚲𪳥	
+⺂	U+2E82	rime-stroke	乛	same	36	z×35 h×1 zh×1	⺈买了壽氶疋龴𠀄	
+⺃	U+2E83	rime-stroke	乚	same	112	z×112	㐖䯆䰲䵝乢乣乨乩	
+⺅	U+2E85	rime-stroke	亻	same	1879	ps×1878 psn×3 nns×1	㐰㐲㐳㐴㐵㐶㐷㐸	
+⺎	U+2E8E	rime-stroke	兀	same	73	hpz×73 hpn×5 hps×1	㐳㫕㫯䑢䪲元光卼	
+⺏	U+2E8F	rime-stroke	尣	same	2	pnpz×2	𡰇𪏍	
+⺐	U+2E90	rime-stroke	尢	same	13	hpz×13 hpzn×1	㞊无𡯤𡰍𡰗𡵈𢍽𦬍	
+⺒	U+2E92	rime-stroke	巳	same	117	zhz×117 zh×1	㐶㰝㱼䄐䇃䕫凞圯	
+⺓	U+2E93	rime-stroke	幺	same	97	zzn×97	㓜㡫㭃䯚乣吆幻幼	
+⺔	U+2E94	rime-stroke	彑	same	28	zzh×28 pznh×2 pzh×1	㣇㬪互彖彘彙彜彝	
+⺖	U+2E96	rime-stroke	忄	same	1485	nns×1483 nsn×1114 nsnz×4	㣺㣼㣾㣿㤃㤄㤆㤇	
+⺘	U+2E98	rime-stroke	扌	same	2466	hsh×2463 hzh×1831 hzhz×6	㧃㧄㧅㧆㧇㧈㧉㧊	
+⺙	U+2E99	rime-stroke	攵	same	619	phpn×617 pzn×25 shzn×12	㣊㣲㩿㪀㪁㪄㪇㪈	
+⺛	U+2E9B	rime-stroke	旡	same	42	hzpz×42 hzp×1 hzpzz×1	㤅旣旤炁黖𡄊𡉙𡍳	
+⺞	U+2E9E	rime-stroke	歺	same	36	shpzn×36	𠎀𠗗𡛝𢀸𢤅𢴴𣣰𣦷	
+⺠	U+2EA0	rime-stroke	民	same	74	zhzhz×74 zzhz×1	㢯㥸䂥䇇䋋䛉䟨䡑	
+⺣	U+2EA3	rime-stroke	灬	same	410	nnnn×410	㶨㶵㶻㷊㷛㷦㷱㷶	
+⺫	U+2EAB	rime-stroke	罒	same	543	szssh×543 szpzh×2 szsshn×1	㝲㝶䉚䍐䍒䍓䍔䍕	
+⺯	U+2EAF	rime-stroke	糹	same	1156	zznnnn×1156 zznspn×8 zznzpn×7	䊵䊶䊷䊸䊹䊺䊻䊼	
+⺰	U+2EB0	rime-stroke	纟	same	416	zzh×416 zzhn×1	䌶䌷䌸䌹䌺䌻䌼䌽	
+⺱	U+2EB1	rime-stroke	罓	same	18	szpn×17 szs×1	𦆢𦉮𦊋𦊕𦊬𦋇𦋱𦋵	
+⺹	U+2EB9	rime-stroke	耂	same	33	hshp×33	㠻孝老考者耇耊𢳩	
+⺺	U+2EBA	rime-stroke	肀	same	4	zhhs×4	𢗱𣌦𤞍𦘡	
+⻀	U+2EC0	rime-stroke	艹	variant	3634	hss×3550 hshs×3194 shhs×2376	㭉䒒䒓䒔䒕䒖䒗䒘	
+⻁	U+2EC1	rime-stroke	虎	variant	142	shzphzpz×142 hszphzpz×1 shzphzp×1	㙈䖊䖋䖌䖎䖐䖓䖔	
+⻂	U+2EC2	rime-stroke	衤	same	826	nzspn×825 nhpspn×623 hzspn×17	䘛䘜䘝䘞䘟䘠䘢䘣	
+⻄	U+2EC4	rime-stroke	西	same	58	hszpzh×58 hszssh×6 hszpzhh×1	㛉䄽䇴䙶哂垔徆恓	
+⻅	U+2EC5	rime-stroke	见	same	84	szpz×84	䩄伣岘枧现砚笕舰	
+⻆	U+2EC6	rime-stroke	角	variant	319	pzpzhhs×312 pzpzhsh×280 pzszhhs×3	㓩䇶䚗䚘䚙䚚䚛䚜	
+⻈	U+2EC8	rime-stroke	讠	same	397	nz×397 n×2	㺆䜣䜤䜥䜦䜧䜨䜩	
+⻉	U+2EC9	rime-stroke	贝	same	151	szpn×151 pnszpn×1	㗷㺆㺙䞌䞍䞎䞏䞐	
+⻋	U+2ECB	rime-stroke	车	same	196	hzsh×164 hzhs×32	䢀䢁䢂伡军斩毂砗	
+⻐	U+2ED0	rime-stroke	钅	same	676	phhhz×676 phhh×2 phhhzn×1	䥺䥻䥼䥽䥾䥿䦀䦁	
+⻑	U+2ED1	rime-stroke	長	same	70	hshhhzpn×69 shhhhzpn×45 shhhhzn×3	㙊㷃䂻䗅䛫䠆䩨倀	
+⻒	U+2ED2	rime-stroke	镸	same	159	hshhhzn×159 shhhhzn×122	䦈䦉䦊䦋套瓺肆蕻	
+⻓	U+2ED3	rime-stroke	长	same	29	phzn×29	伥帐张怅枨胀苌账	
+⻔	U+2ED4	rime-stroke	门	variant	23	nsz×23 snz×3	们扪钔𡭜𪡯𫔬𫔸𫩖	
+⻘	U+2ED8	rime-stroke	青	same	103	hhshszhh×99 hhshpzhh×84 hhshpzhhz×1	䑶䝼䞍䨝䨼䴖倩凊	
+⻙	U+2ED9	rime-stroke	韦	same	66	hhzs×66	㭏伟帏炜玮祎纬苇	
+⻚	U+2EDA	rime-stroke	页	same	159	hpszpn×159	㑔嚣灏烦硕顶顷顸	
+⻛	U+2EDB	rime-stroke	风	same	32	pzpn×32	㐽㚯岚枫沨砜讽飒	
+⻜	U+2EDC	rime-stroke	飞	same	11	zpn×11	𫗌𮳛𮶞𮸽𮹂𰼠𱙆𱢿	
+⻝	U+2EDD	rime-stroke	食	variant	111	pnnzhhzpn×107 pnhzhhzpn×102 pnnzhhzn×2	䉵䓹䬥䬩䬭䬸䭁䭆	
+⻟	U+2EDF	rime-stroke	飠	same	581	pnnzhhzn×567 pnhzhhzn×546 pnhzhhshh×1	䬢䬣䬦䬧䬨䬪䬫䬬	
+⻠	U+2EE0	rime-stroke	饣	same	195	pzz×195 pz×1 pzzz×1	䭪蚀饤饥饦饧饨饩	
+⻢	U+2EE2	rime-stroke	马	same	269	zzh×269	㐷䘞䯃䯄䯅冯吗妈	
+⻣	U+2EE3	rime-stroke	骨	variant	345	szznzszhh×338 szhsnzpznh×265 szhsnzpznn×217	䮩䯆䯇䯈䯉䯊䯋䯌	
+⻤	U+2EE4	rime-stroke	鬼	variant	166	pszhhpzzn×158 pszhshpzzn×157 npszhshpzzn×2	㟴㱱䁛䈭䌆䫥䰟䰤	
+⻥	U+2EE5	rime-stroke	鱼	same	377	pzszhshh×377 pzszhshnnnn×1	䲝䲞䲟䲠䲡䲤渔稣	
+⻦	U+2EE6	rime-stroke	鸟	same	401	pznzh×401 znzh×1	㭤㶉䴓䴔䴕䴖䴗䴘	
+⻧	U+2EE7	rime-stroke	卤	same	23	shszpnh×23 hsszpn×1	硵禼鹾𠨄𠳱𫜊𫠗𫼵	
+⻨	U+2EE8	rime-stroke	麦	same	92	hhshpzn×92 hhhpzn×5 hhphzn×1	唛麸麹麺鿏鿺𥟀𥪣	
+⻩	U+2EE9	rime-stroke	黄	same	36	hsshszhshpn×36 hsshhszhshpn×6	横黉𨊇𨱑𪎷𪎸𪎼𪎿	
+⻪	U+2EEA	rime-stroke	黾	same	34	szhszhhz×34 szhszhh×1 szhszhhzz×1	䋲渑绳鼋鼌𠊟𡸾𣈣	
+⻫	U+2EEB	rime-stroke	斉	same	16	nhpnpshh×16	㑪㨈剤済緕萕𦜝𨂋	
+⻬	U+2EEC	rime-stroke	齐	same	25	nhpnps×25	侪剂哜挤济脐荠蛴	
+⻭	U+2EED	rime-stroke	歯	same	18	shshnphspnzs×18	噛齢𪗱𪘂𪘚𫠚𬬜𬹴	
+⻮	U+2EEE	rime-stroke	齿	same	89	shshpnzs×89	啮龀龁龂龃龄龅龆	
+⻯	U+2EEF	rime-stroke	竜	same	23	nhnphszhhz×23	槞滝篭𠺠𡏡𡙶𢲣𣯡	
+⻰	U+2EF0	rime-stroke	龙	same	58	hpzpn×58 hpznp×23 hpnpz×2	䶮咙垄垅宠拢昽栊	
+⻱	U+2EF1	rime-stroke	龜	variant	29	pszhhszzhhzhhzpnh×28 pzszhhszzzhzhhpn×26 pzszhhszzhhzhhzpnh×20	䶯䶰䶱䶲櫷龝龞𤒅	
+⻲	U+2EF2	rime-stroke	亀	same	10	pzszhhszhhz×10 pzszhshszhhz×3 pzszhhsszhhz×1	䆴𠼓𦿷𪚲𪳥𫝰𫠝𫣒	
+⺂	U+2E82	kanjivg	乛	same	13	5×13	免勇壽夐焔疎疏疑	
+⺃	U+2E83	kanjivg	乚	same	13	5×13	㐬乢乱侃儿孔扎札	
+⺅	U+2E85	kanjivg	亻	same	183	32×183	什仁仂仆仇仍仏仔	
+⺎	U+2E8E	kanjivg	兀	same	4	135×4	元光堯微	
+⺏	U+2E8F	kanjivg	尣	same	2	3435×2	𡰇𪏍	cns11643
+⺐	U+2E90	kanjivg	尢	same	1	135×1	无	
+⺒	U+2E92	kanjivg	巳	same	1	515×1	熈	
+⺓	U+2E93	kanjivg	幺	same	4	554×4	幼後玄酳	
+⺔	U+2E94	kanjivg	彑	same	7	551×7	互剝彙彜彝碌綠	
+⺖	U+2E96	kanjivg	忄	same	114	442×114	忖忙忤快忰忸忻怏	
+⺘	U+2E98	kanjivg	扌	same	182	121×182	打払扛扞扠扣扨扮	
+⺙	U+2E99	kanjivg	攵	same	43	3134×43	修啓孜微徴徹徽愍	
+⺛	U+2E9B	kanjivg	旡	same	1	1535×1	曁	
+⺞	U+2E9E	kanjivg	歺	same	1	21354×1	粲	
+⺠	U+2EA0	kanjivg	民	same	7	51515×7	岷愍氓泯眠緡罠	
+⺣	U+2EA3	kanjivg	灬	same	21	4444×21	勲杰濕点烈烋烹焦	
+⺫	U+2EAB	kanjivg	罒	same	42	25221×42	壊夢寧徳德懌懐擇	
+⺯	U+2EAF	kanjivg	糹	same	1034	554444×1021 554534×9 55444×2	䊵䊶䊷䊸䊹䊺䊻䊼	cns11643
+⺰	U+2EB0	kanjivg	纟	same	191	551×190 5514×1	䌶䌷䌸䌹䌺䌻䌼䌽	cns11643
+⺱	U+2EB1	kanjivg	罓	same	12	2534×12	𠤣𡴓𦆢𦉮𦊋𦊕𦊬𦋇	cns11643
+⺹	U+2EB9	kanjivg	耂	same	3	1213×3	孝老者	
+⺺	U+2EBA	kanjivg	肀	same	4	5112×4	𢗱𣌦𤞍𦘡	cns11643
+⻀	U+2EC0	kanjivg	艹	variant	247	122×247	夢寛満甍舊艾芋芍	
+⻁	U+2EC1	kanjivg	虎	variant	2	21351535×2	號鯱	
+⻂	U+2EC2	kanjivg	衤	same	50	45234×50	初衫衲衵衽衿袂袍	
+⻄	U+2EC4	kanjivg	西	same	5	125351×5	哂晒栖洒茜	
+⻅	U+2EC5	kanjivg	见	same	34	2535×34	䩄伣岘枧现砚笕舰	cns11643
+⻆	U+2EC6	kanjivg	角	variant	11	3535211×11	埆斛桷觚觜解觥触	
+⻈	U+2EC8	kanjivg	讠	same	182	45×182	㺆䜣䜤䜥䜧䜨䜩狱	cns11643
+⻉	U+2EC9	kanjivg	贝	same	80	2534×79 342534×1	㗷㺆䞍䞎䞏䞐则呗	cns11643
+⻋	U+2ECB	kanjivg	车	same	84	1521×73 1512×11	䢀䢁䢂伡军斩毂砗	cns11643
+⻐	U+2ED0	kanjivg	钅	same	305	31115×303 3111532×1 311154×1	䥺䥻䥼䥽䥾䦀䦁䦅	cns11643
+⻑	U+2ED1	kanjivg	長	same	5	21111534×5	帳張悵脹萇	
+⻒	U+2ED2	kanjivg	镸	same	3	2111154×3	套肆髟	
+⻓	U+2ED3	kanjivg	长	same	11	3154×11	伥帐张怅枨胀账𪼴	cns11643
+⻔	U+2ED4	kanjivg	门	variant	5	245×3 425×2	们扪钔𡭜𪡯	cns11643
+⻘	U+2ED8	kanjivg	青	same	5	12112511×4 12112521×1	情精菁靖静	
+⻙	U+2ED9	kanjivg	韦	same	26	1152×26	㭏伟帏炜玮祎纬袆	cns11643
+⻚	U+2EDA	kanjivg	页	same	64	132534×64	㑔嚣灏烦硕顶顷顸	cns11643
+⻛	U+2EDB	kanjivg	风	same	10	3534×10	㐽㚯岚枫沨砜讽飒	cns11643
+⻜	U+2EDC	kanjivg	飞	same	1	534×1	𫗌	cns11643
+⻝	U+2EDD	kanjivg	食	variant	4	341511534×3 342511534×1	喰餮饕饗	
+⻟	U+2EDF	kanjivg	飠	same	7	34251154×7	飢飯飲飼飽餓館	
+⻠	U+2EE0	kanjivg	饣	same	83	355×83	䭪蚀饤饥饦饧饨饩	cns11643
+⻢	U+2EE2	kanjivg	马	same	133	551×133	㐷䘞䯃䯄䯅吗妈杩	cns11643
+⻣	U+2EE3	kanjivg	骨	variant	13	2521452511×13	榾滑猾磆骭骰骸骼	
+⻤	U+2EE4	kanjivg	鬼	variant	11	3252113554×11	傀塊嵬愧槐蒐醜隗	
+⻥	U+2EE5	kanjivg	鱼	same	153	35251211×152 35251214444×1	䲝䲞䲟䲠䲡䲤渔稣	cns11643
+⻦	U+2EE6	kanjivg	鸟	same	140	35451×139 5451×1	㭤㶉䴓䴔䴕䴖䴗䴘	cns11643
+⻧	U+2EE7	kanjivg	卤	same	5	2125341×5	硵𠨄𠳱𫜊𫠗	cns11643
+⻨	U+2EE8	kanjivg	麦	same	21	1121354×16 111354×4 113154×1	唛麸麺𥟀𥪣𧵷𨀱𨅫	cns11643
+⻩	U+2EE9	kanjivg	黄	same	1	12212521134×1	横	
+⻪	U+2EEA	kanjivg	黾	same	12	25125115×12	䋲渑绳鼋鼌𠊟𡸾𣈣	cns11643
+⻫	U+2EEB	kanjivg	斉	same	3	21343112×3	剤済緕	
+⻬	U+2EEC	kanjivg	齐	same	13	413432×13	侪剂哜挤济脐蛴跻	cns11643
+⻭	U+2EED	kanjivg	歯	same	2	212143123452×2	噛齢	
+⻮	U+2EEE	kanjivg	齿	same	23	21213452×23	啮龀龁龂龃龅龆龇	cns11643
+⻯	U+2EEF	kanjivg	竜	same	2	2143125115×2	槞滝	
+⻰	U+2EF0	kanjivg	龙	same	32	13543×22 13534×8 13435×2	䶮咙垄垅宠拢昽栊	cns11643
+⻱	U+2EF1	kanjivg	龜	variant	1	3525112555151134×1	龝	
+⻲	U+2EF2	kanjivg	亀	same	1	35251125115×1	穐	
