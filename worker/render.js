@@ -8,6 +8,7 @@ import { boxCorners, layerFrames, renderScopes } from '../src/document/index.js'
 import { sourceFor } from '@han-compose/composer/source'
 import { cardSvg, SIZE, codePoint } from './card.js'
 import { JURCHEN_VARIANT, OPERATORS } from '../src/core/ids.js'
+import { plainText } from '../src/core/preview.js'
 import { facesFor } from './fonts.js'
 import { COMPOSER_BASE } from '../demo/lib/composer.js'
 import { EXAMPLES } from '../demo/lib/examples.js'
@@ -90,6 +91,8 @@ async function drawUnits(env, units, first) {
 
 /** The sequence composed, or null where it could not be. @param {any} env @param {string} sequence */
 async function draw(env, sequence) {
+  // The engine reads no variant identifier (壬q0012): the card draws each component plain.
+  sequence = plainText(sequence)
   const { loaders, read } = loadFor(env)
   const source = sourceFor(sequence, { base: COMPOSER_BASE, loaders, read })
   await source.ready()
@@ -102,6 +105,7 @@ async function draw(env, sequence) {
  * @param {any} env @param {string} sequence @param {any} document
  */
 async function drawDocument(env, sequence, document) {
+  sequence = plainText(sequence)
   const { loaders, read } = loadFor(env)
   const source = sourceFor(sequence, { base: COMPOSER_BASE, separate: true, loaders, read })
   await source.ready()
