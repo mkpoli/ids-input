@@ -42,10 +42,10 @@ await source.ready()
 // 黃金萬兩 as the photographed 揮春 writes it: 金's 八 hangs from the foot of 黄's 由, and 萬's
 // band stands under 金. The composer gives each operand of a stack its own row, so the three parts
 // are set here, in em units (y down), with 八 just overlapping 由 so the strokes join.
-const HUANG_JIN_WAN = '⿱⿱龷由⿱⿱⿰丿㇏⿻王丷⿱田⿵冂山'
+const HUANG_JIN_WAN = '⿳龷由⿳八⿻王丷⿱田⿵冂山'
 const HUANG_JIN_WAN_BOXES = [
   ['Noto Sans CJK: ⿱龷由', [185, 40, 815, 320]],
-  ['Noto Sans CJK: ⿱⿰丿㇏⿻王丷', [60, 312, 940, 665]],
+  ['Noto Sans CJK: ⿱八⿻王丷', [60, 312, 940, 665]],
   ['Noto Sans CJK: ⿱田⿵冂山', [120, 688, 880, 958]],
 ]
 

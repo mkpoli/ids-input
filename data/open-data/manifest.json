@@ -139,12 +139,12 @@
   "files": [
     {
       "name": "descriptions.json",
-      "bytes": 230375,
+      "bytes": 230363,
       "type": "application/json"
     },
     {
       "name": "descriptions.tsv",
-      "bytes": 37351,
+      "bytes": 37339,
       "type": "text/tab-separated-values"
     },
     {
