@@ -1,26 +1,31 @@
 {
   "format": "ids-input/open-strokes",
-  "version": 1,
+  "version": 2,
   "strokes": {
     "横": {
       "cns11643": "1",
-      "rime-stroke": "h"
+      "rime-stroke": "h",
+      "kanjivg": "1"
     },
     "豎": {
       "cns11643": "2",
-      "rime-stroke": "s"
+      "rime-stroke": "s",
+      "kanjivg": "2"
     },
     "撇": {
       "cns11643": "3",
-      "rime-stroke": "p"
+      "rime-stroke": "p",
+      "kanjivg": "3"
     },
     "點": {
       "cns11643": "4",
-      "rime-stroke": "n"
+      "rime-stroke": "n",
+      "kanjivg": "4"
     },
     "折": {
       "cns11643": "5",
-      "rime-stroke": "z"
+      "rime-stroke": "z",
+      "kanjivg": "5"
     }
   },
   "sources": [
@@ -64,6 +69,22 @@
       "changes": "Reduced to the Han characters with a complete five-class code, one row per character, in code point order."
     },
     {
+      "key": "kanjivg",
+      "name": "KanjiVG, the stroke types of its kanji files",
+      "authors": "Ulrich Apel and contributors",
+      "url": "https://kanjivg.tagaini.net",
+      "repository": "https://github.com/KanjiVG/kanjivg",
+      "revision": "610091ce618cf757ed1357a8954cd65283e015d6",
+      "licence": {
+        "spdx": "CC-BY-SA-3.0",
+        "url": "https://creativecommons.org/licenses/by-sa/3.0/",
+        "texts": [
+          "LICENSE-kanjivg-CC-BY-SA-3.0.txt"
+        ]
+      },
+      "changes": "Reduced to each kanji's stroke types in writing order, with a five-class code added by this project."
+    },
+    {
       "key": "babelstone-ids",
       "name": "BabelStone IDS (IDS.TXT), the descriptions induced rows are written from",
       "authors": "Andrew West (魏安)",
@@ -71,6 +92,20 @@
       "version": "BabelStone IDS, https://www.babelstone.co.uk/CJK/IDS.TXT, Andrew West (魏安); File Date 2025-06-27, sha256:cc2a0a97e6a51ed6ebe59870ef2af66e83f3c3c27387d79b4441bb2d791d78b1",
       "licence": {
         "name": "Public domain"
+      }
+    },
+    {
+      "key": "yi-bai-ids",
+      "name": "Yi Bai IDS, level 1: the descriptions used where BabelStone has none",
+      "authors": "Yi Bai",
+      "url": "https://github.com/yi-bai/ids",
+      "version": "Yi Bai IDS level 1, da1e9f8a09e2ec8faaf176bac99203f978282041; MIT; standard IDS, operator modifiers included.",
+      "licence": {
+        "spdx": "MIT",
+        "url": "https://opensource.org/license/mit",
+        "texts": [
+          "LICENSE-yi-bai-ids-MIT.txt"
+        ]
       }
     }
   ],
@@ -110,8 +145,8 @@
       }
     ],
     "inducedAgainstRime": {
-      "rows": 19315,
-      "agree": 9560
+      "rows": 24689,
+      "agree": 12148
     }
   },
   "induction": {
@@ -128,128 +163,1423 @@
       "⿺"
     ],
     "ways": 8,
+    "places": [
+      "outer-first",
+      "inner-first",
+      "after-1",
+      "after-2",
+      "after-3",
+      "before-last",
+      "before-last-2"
+    ],
+    "support": 5,
+    "agreement": 0.9,
+    "learned": [
+      {
+        "source": "cns11643",
+        "rules": [
+          {
+            "operator": "⿴",
+            "enclosure": "囗",
+            "place": "before-last",
+            "support": 219,
+            "agree": 205
+          },
+          {
+            "operator": "⿴",
+            "enclosure": "四",
+            "place": "before-last",
+            "support": 5,
+            "agree": 5
+          },
+          {
+            "operator": "⿵",
+            "enclosure": "門",
+            "place": "outer-first",
+            "support": 448,
+            "agree": 420
+          },
+          {
+            "operator": "⿵",
+            "enclosure": "𠘨",
+            "place": "outer-first",
+            "support": 37,
+            "agree": 37
+          },
+          {
+            "operator": "⿵",
+            "enclosure": "冂",
+            "place": "outer-first",
+            "support": 35,
+            "agree": 32
+          },
+          {
+            "operator": "⿵",
+            "enclosure": "鬥",
+            "place": "outer-first",
+            "support": 28,
+            "agree": 26
+          },
+          {
+            "operator": "⿵",
+            "enclosure": "戊",
+            "place": "after-2",
+            "support": 18,
+            "agree": 18
+          },
+          {
+            "operator": "⿵",
+            "enclosure": "乃",
+            "place": "outer-first",
+            "support": 7,
+            "agree": 7
+          },
+          {
+            "operator": "⿷",
+            "enclosure": "匚",
+            "place": "after-1",
+            "support": 102,
+            "agree": 92
+          },
+          {
+            "operator": "⿷",
+            "enclosure": "匸",
+            "place": "after-1",
+            "support": 18,
+            "agree": 18
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "疒",
+            "place": "outer-first",
+            "support": 845,
+            "agree": 800
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "广",
+            "place": "outer-first",
+            "support": 490,
+            "agree": 467
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "厂",
+            "place": "outer-first",
+            "support": 242,
+            "agree": 219
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "尸",
+            "place": "outer-first",
+            "support": 217,
+            "agree": 197
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "鹿",
+            "place": "outer-first",
+            "support": 117,
+            "agree": 109
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "戶",
+            "place": "outer-first",
+            "support": 55,
+            "agree": 52
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "厤",
+            "place": "outer-first",
+            "support": 23,
+            "agree": 22
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "户",
+            "place": "outer-first",
+            "support": 20,
+            "agree": 18
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "𠩺",
+            "place": "outer-first",
+            "support": 19,
+            "agree": 18
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "厭",
+            "place": "outer-first",
+            "support": 13,
+            "agree": 13
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "屵",
+            "place": "outer-first",
+            "support": 12,
+            "agree": 12
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "䧹",
+            "place": "outer-first",
+            "support": 11,
+            "agree": 10
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "丆",
+            "place": "outer-first",
+            "support": 5,
+            "agree": 5
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "府",
+            "place": "outer-first",
+            "support": 5,
+            "agree": 5
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "庚",
+            "place": "outer-first",
+            "support": 5,
+            "agree": 5
+          },
+          {
+            "operator": "⿹",
+            "enclosure": "气",
+            "place": "outer-first",
+            "support": 62,
+            "agree": 58
+          },
+          {
+            "operator": "⿹",
+            "enclosure": "戈",
+            "place": "after-1",
+            "support": 34,
+            "agree": 31
+          },
+          {
+            "operator": "⿹",
+            "enclosure": "弓",
+            "place": "outer-first",
+            "support": 6,
+            "agree": 6
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "走",
+            "place": "outer-first",
+            "support": 424,
+            "agree": 414
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "毛",
+            "place": "outer-first",
+            "support": 191,
+            "agree": 172
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "鬼",
+            "place": "outer-first",
+            "support": 167,
+            "agree": 160
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "麥",
+            "place": "outer-first",
+            "support": 88,
+            "agree": 86
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "尢",
+            "place": "outer-first",
+            "support": 78,
+            "agree": 75
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "鼠",
+            "place": "outer-first",
+            "support": 69,
+            "agree": 67
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "廴",
+            "place": "inner-first",
+            "support": 44,
+            "agree": 41
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "尾",
+            "place": "outer-first",
+            "support": 44,
+            "agree": 41
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "是",
+            "place": "outer-first",
+            "support": 33,
+            "agree": 32
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "見",
+            "place": "outer-first",
+            "support": 33,
+            "agree": 33
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "瓦",
+            "place": "outer-first",
+            "support": 32,
+            "agree": 31
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "虎",
+            "place": "outer-first",
+            "support": 29,
+            "agree": 29
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "瓜",
+            "place": "outer-first",
+            "support": 22,
+            "agree": 21
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "九",
+            "place": "outer-first",
+            "support": 20,
+            "agree": 19
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "爪",
+            "place": "outer-first",
+            "support": 20,
+            "agree": 18
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "𠃊",
+            "place": "inner-first",
+            "support": 15,
+            "agree": 14
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "元",
+            "place": "outer-first",
+            "support": 15,
+            "agree": 15
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "克",
+            "place": "outer-first",
+            "support": 12,
+            "agree": 11
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "免",
+            "place": "outer-first",
+            "support": 12,
+            "agree": 12
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "堯",
+            "place": "outer-first",
+            "support": 9,
+            "agree": 9
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "光",
+            "place": "outer-first",
+            "support": 9,
+            "agree": 9
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "先",
+            "place": "outer-first",
+            "support": 9,
+            "agree": 9
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "更",
+            "place": "outer-first",
+            "support": 8,
+            "agree": 8
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "几",
+            "place": "outer-first",
+            "support": 8,
+            "agree": 8
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "支",
+            "place": "outer-first",
+            "support": 7,
+            "agree": 7
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "竜",
+            "place": "outer-first",
+            "support": 7,
+            "agree": 7
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "乳",
+            "place": "outer-first",
+            "support": 6,
+            "agree": 6
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "尺",
+            "place": "outer-first",
+            "support": 5,
+            "agree": 5
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "夨",
+            "place": "inner-first",
+            "support": 5,
+            "agree": 5
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "龜",
+            "place": "outer-first",
+            "support": 5,
+            "agree": 5
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "羌",
+            "place": "outer-first",
+            "support": 5,
+            "agree": 5
+          },
+          {
+            "operator": "⿻",
+            "enclosure": "一",
+            "place": "outer-first",
+            "support": 14,
+            "agree": 13
+          },
+          {
+            "operator": "⿻",
+            "enclosure": "大",
+            "place": "after-1",
+            "support": 14,
+            "agree": 13
+          },
+          {
+            "operator": "⿻",
+            "enclosure": "十",
+            "place": "outer-first",
+            "support": 5,
+            "agree": 5
+          }
+        ]
+      },
+      {
+        "source": "rime-stroke",
+        "rules": [
+          {
+            "operator": "⿴",
+            "enclosure": "囗",
+            "place": "before-last",
+            "support": 291,
+            "agree": 289
+          },
+          {
+            "operator": "⿴",
+            "enclosure": "行",
+            "place": "after-3",
+            "support": 17,
+            "agree": 17
+          },
+          {
+            "operator": "⿴",
+            "enclosure": "井",
+            "place": "outer-first",
+            "support": 5,
+            "agree": 5
+          },
+          {
+            "operator": "⿴",
+            "enclosure": "四",
+            "place": "before-last",
+            "support": 5,
+            "agree": 5
+          },
+          {
+            "operator": "⿵",
+            "enclosure": "門",
+            "place": "outer-first",
+            "support": 543,
+            "agree": 537
+          },
+          {
+            "operator": "⿵",
+            "enclosure": "门",
+            "place": "outer-first",
+            "support": 176,
+            "agree": 176
+          },
+          {
+            "operator": "⿵",
+            "enclosure": "冂",
+            "place": "outer-first",
+            "support": 48,
+            "agree": 46
+          },
+          {
+            "operator": "⿵",
+            "enclosure": "𠘨",
+            "place": "outer-first",
+            "support": 44,
+            "agree": 44
+          },
+          {
+            "operator": "⿵",
+            "enclosure": "鬥",
+            "place": "outer-first",
+            "support": 35,
+            "agree": 35
+          },
+          {
+            "operator": "⿵",
+            "enclosure": "戊",
+            "place": "after-2",
+            "support": 23,
+            "agree": 22
+          },
+          {
+            "operator": "⿵",
+            "enclosure": "齊",
+            "place": "outer-first",
+            "support": 15,
+            "agree": 15
+          },
+          {
+            "operator": "⿵",
+            "enclosure": "⺆",
+            "place": "outer-first",
+            "support": 8,
+            "agree": 8
+          },
+          {
+            "operator": "⿵",
+            "enclosure": "乃",
+            "place": "outer-first",
+            "support": 8,
+            "agree": 8
+          },
+          {
+            "operator": "⿵",
+            "enclosure": "齐",
+            "place": "outer-first",
+            "support": 6,
+            "agree": 6
+          },
+          {
+            "operator": "⿵",
+            "enclosure": "网",
+            "place": "outer-first",
+            "support": 5,
+            "agree": 5
+          },
+          {
+            "operator": "⿶",
+            "enclosure": "凵",
+            "place": "inner-first",
+            "support": 46,
+            "agree": 44
+          },
+          {
+            "operator": "⿷",
+            "enclosure": "匚",
+            "place": "after-1",
+            "support": 139,
+            "agree": 136
+          },
+          {
+            "operator": "⿷",
+            "enclosure": "匸",
+            "place": "after-1",
+            "support": 20,
+            "agree": 19
+          },
+          {
+            "operator": "⿷",
+            "enclosure": "𠥓",
+            "place": "after-2",
+            "support": 5,
+            "agree": 5
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "疒",
+            "place": "outer-first",
+            "support": 1063,
+            "agree": 1053
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "广",
+            "place": "outer-first",
+            "support": 615,
+            "agree": 608
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "厂",
+            "place": "outer-first",
+            "support": 326,
+            "agree": 320
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "尸",
+            "place": "outer-first",
+            "support": 290,
+            "agree": 283
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "鹿",
+            "place": "outer-first",
+            "support": 131,
+            "agree": 128
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "虍",
+            "place": "outer-first",
+            "support": 82,
+            "agree": 81
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "麻",
+            "place": "outer-first",
+            "support": 74,
+            "agree": 74
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "戶",
+            "place": "outer-first",
+            "support": 65,
+            "agree": 65
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "户",
+            "place": "outer-first",
+            "support": 29,
+            "agree": 29
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "厤",
+            "place": "outer-first",
+            "support": 26,
+            "agree": 26
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "𠩺",
+            "place": "outer-first",
+            "support": 23,
+            "agree": 23
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "𠂇",
+            "place": "outer-first",
+            "support": 20,
+            "agree": 20
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "𠂆",
+            "place": "outer-first",
+            "support": 14,
+            "agree": 14
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "厭",
+            "place": "outer-first",
+            "support": 14,
+            "agree": 14
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "䧹",
+            "place": "outer-first",
+            "support": 14,
+            "agree": 14
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "屵",
+            "place": "outer-first",
+            "support": 13,
+            "agree": 13
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "厌",
+            "place": "outer-first",
+            "support": 11,
+            "agree": 11
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "𭆆",
+            "place": "outer-first",
+            "support": 10,
+            "agree": 10
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "𤕫",
+            "place": "outer-first",
+            "support": 10,
+            "agree": 10
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "庚",
+            "place": "outer-first",
+            "support": 8,
+            "agree": 8
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "𠂋",
+            "place": "outer-first",
+            "support": 7,
+            "agree": 7
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "产",
+            "place": "outer-first",
+            "support": 7,
+            "agree": 7
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "𠃜",
+            "place": "outer-first",
+            "support": 7,
+            "agree": 7
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "尹",
+            "place": "outer-first",
+            "support": 6,
+            "agree": 6
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "丆",
+            "place": "outer-first",
+            "support": 5,
+            "agree": 5
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "厃",
+            "place": "outer-first",
+            "support": 5,
+            "agree": 5
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "厥",
+            "place": "outer-first",
+            "support": 5,
+            "agree": 5
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "府",
+            "place": "outer-first",
+            "support": 5,
+            "agree": 5
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "𢊆",
+            "place": "outer-first",
+            "support": 5,
+            "agree": 5
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "廌",
+            "place": "outer-first",
+            "support": 5,
+            "agree": 5
+          },
+          {
+            "operator": "⿹",
+            "enclosure": "气",
+            "place": "outer-first",
+            "support": 105,
+            "agree": 105
+          },
+          {
+            "operator": "⿹",
+            "enclosure": "勹",
+            "place": "outer-first",
+            "support": 93,
+            "agree": 90
+          },
+          {
+            "operator": "⿹",
+            "enclosure": "戈",
+            "place": "after-1",
+            "support": 51,
+            "agree": 51
+          },
+          {
+            "operator": "⿹",
+            "enclosure": "𢦏",
+            "place": "after-3",
+            "support": 48,
+            "agree": 45
+          },
+          {
+            "operator": "⿹",
+            "enclosure": "⺄",
+            "place": "outer-first",
+            "support": 37,
+            "agree": 35
+          },
+          {
+            "operator": "⿹",
+            "enclosure": "弋",
+            "place": "after-1",
+            "support": 24,
+            "agree": 24
+          },
+          {
+            "operator": "⿹",
+            "enclosure": "弓",
+            "place": "outer-first",
+            "support": 7,
+            "agree": 7
+          },
+          {
+            "operator": "⿹",
+            "enclosure": "𠃌",
+            "place": "outer-first",
+            "support": 7,
+            "agree": 7
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "辶",
+            "place": "inner-first",
+            "support": 1110,
+            "agree": 1089
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "走",
+            "place": "outer-first",
+            "support": 500,
+            "agree": 497
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "毛",
+            "place": "outer-first",
+            "support": 254,
+            "agree": 253
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "風",
+            "place": "outer-first",
+            "support": 247,
+            "agree": 247
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "鬼",
+            "place": "outer-first",
+            "support": 201,
+            "agree": 200
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "麥",
+            "place": "outer-first",
+            "support": 92,
+            "agree": 92
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "尢",
+            "place": "outer-first",
+            "support": 80,
+            "agree": 80
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "鼠",
+            "place": "outer-first",
+            "support": 77,
+            "agree": 77
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "尾",
+            "place": "outer-first",
+            "support": 58,
+            "agree": 57
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "廴",
+            "place": "inner-first",
+            "support": 54,
+            "agree": 54
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "风",
+            "place": "outer-first",
+            "support": 53,
+            "agree": 53
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "瓦",
+            "place": "outer-first",
+            "support": 48,
+            "agree": 48
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "是",
+            "place": "outer-first",
+            "support": 43,
+            "agree": 43
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "見",
+            "place": "outer-first",
+            "support": 41,
+            "agree": 41
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "虎",
+            "place": "outer-first",
+            "support": 36,
+            "agree": 36
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "爪",
+            "place": "outer-first",
+            "support": 33,
+            "agree": 32
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "瓜",
+            "place": "outer-first",
+            "support": 29,
+            "agree": 29
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "九",
+            "place": "outer-first",
+            "support": 27,
+            "agree": 27
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "𠃊",
+            "place": "inner-first",
+            "support": 27,
+            "agree": 27
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "尣",
+            "place": "outer-first",
+            "support": 26,
+            "agree": 26
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "乙",
+            "place": "outer-first",
+            "support": 26,
+            "agree": 26
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "礼",
+            "place": "outer-first",
+            "support": 25,
+            "agree": 25
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "元",
+            "place": "outer-first",
+            "support": 24,
+            "agree": 24
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "辵",
+            "place": "outer-first",
+            "support": 22,
+            "agree": 22
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "克",
+            "place": "outer-first",
+            "support": 21,
+            "agree": 21
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "兀",
+            "place": "outer-first",
+            "support": 19,
+            "agree": 19
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "堯",
+            "place": "outer-first",
+            "support": 17,
+            "agree": 17
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "光",
+            "place": "outer-first",
+            "support": 15,
+            "agree": 15
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "先",
+            "place": "outer-first",
+            "support": 15,
+            "agree": 15
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "色",
+            "place": "outer-first",
+            "support": 14,
+            "agree": 14
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "免",
+            "place": "outer-first",
+            "support": 13,
+            "agree": 13
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "巴",
+            "place": "outer-first",
+            "support": 13,
+            "agree": 13
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "更",
+            "place": "outer-first",
+            "support": 12,
+            "agree": 12
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "支",
+            "place": "outer-first",
+            "support": 12,
+            "agree": 12
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "竜",
+            "place": "outer-first",
+            "support": 12,
+            "agree": 12
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "乳",
+            "place": "outer-first",
+            "support": 11,
+            "agree": 11
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "麦",
+            "place": "outer-first",
+            "support": 10,
+            "agree": 10
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "几",
+            "place": "outer-first",
+            "support": 9,
+            "agree": 9
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "尺",
+            "place": "outer-first",
+            "support": 7,
+            "agree": 7
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "夜",
+            "place": "outer-first",
+            "support": 7,
+            "agree": 7
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "羌",
+            "place": "outer-first",
+            "support": 6,
+            "agree": 6
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "包",
+            "place": "outer-first",
+            "support": 6,
+            "agree": 6
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "夨",
+            "place": "inner-first",
+            "support": 5,
+            "agree": 5
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "兒",
+            "place": "outer-first",
+            "support": 5,
+            "agree": 5
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "夌",
+            "place": "outer-first",
+            "support": 5,
+            "agree": 5
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "龍",
+            "place": "outer-first",
+            "support": 5,
+            "agree": 5
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "龜",
+            "place": "outer-first",
+            "support": 5,
+            "agree": 5
+          },
+          {
+            "operator": "⿻",
+            "enclosure": "一",
+            "place": "outer-first",
+            "support": 21,
+            "agree": 19
+          },
+          {
+            "operator": "⿻",
+            "enclosure": "大",
+            "place": "after-1",
+            "support": 15,
+            "agree": 14
+          },
+          {
+            "operator": "⿻",
+            "enclosure": "山",
+            "place": "after-1",
+            "support": 6,
+            "agree": 6
+          }
+        ]
+      },
+      {
+        "source": "kanjivg",
+        "rules": [
+          {
+            "operator": "⿵",
+            "enclosure": "門",
+            "place": "outer-first",
+            "support": 39,
+            "agree": 37
+          },
+          {
+            "operator": "⿷",
+            "enclosure": "匚",
+            "place": "after-1",
+            "support": 12,
+            "agree": 12
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "疒",
+            "place": "outer-first",
+            "support": 70,
+            "agree": 63
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "广",
+            "place": "outer-first",
+            "support": 41,
+            "agree": 39
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "尸",
+            "place": "outer-first",
+            "support": 24,
+            "agree": 23
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "厂",
+            "place": "outer-first",
+            "support": 20,
+            "agree": 19
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "虍",
+            "place": "outer-first",
+            "support": 9,
+            "agree": 9
+          },
+          {
+            "operator": "⿸",
+            "enclosure": "戸",
+            "place": "outer-first",
+            "support": 6,
+            "agree": 6
+          },
+          {
+            "operator": "⿹",
+            "enclosure": "勹",
+            "place": "outer-first",
+            "support": 12,
+            "agree": 12
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "瓦",
+            "place": "outer-first",
+            "support": 7,
+            "agree": 7
+          },
+          {
+            "operator": "⿺",
+            "enclosure": "廴",
+            "place": "inner-first",
+            "support": 5,
+            "agree": 5
+          },
+          {
+            "operator": "⿻",
+            "enclosure": "一",
+            "place": "outer-first",
+            "support": 9,
+            "agree": 9
+          }
+        ]
+      }
+    ],
     "validation": [
       {
         "source": "cns11643",
         "operators": [
           {
             "operator": "⿰",
-            "described": 48669,
-            "written": 46401,
-            "agree": 42326,
-            "induced": true
+            "described": 49032,
+            "written": 46876,
+            "agree": 42823,
+            "induced": "always"
           },
           {
             "operator": "⿱",
-            "described": 16600,
-            "written": 15544,
-            "agree": 13325,
-            "induced": true
+            "described": 16869,
+            "written": 15883,
+            "agree": 13681,
+            "induced": "always"
           },
           {
             "operator": "⿺",
-            "described": 2765,
-            "written": 2689,
-            "agree": 2317,
-            "induced": true
+            "described": 2788,
+            "written": 2708,
+            "agree": 2342,
+            "induced": "always"
           },
           {
             "operator": "⿸",
-            "described": 2436,
-            "written": 2336,
-            "agree": 2154,
-            "induced": true
+            "described": 2466,
+            "written": 2352,
+            "agree": 2183,
+            "induced": "always"
           },
           {
             "operator": "⿳",
-            "described": 1270,
-            "written": 956,
-            "agree": 729,
-            "induced": true
+            "described": 1397,
+            "written": 1185,
+            "agree": 916,
+            "induced": "always"
           },
           {
             "operator": "⿵",
-            "described": 736,
-            "written": 694,
-            "agree": 612,
-            "induced": true
+            "described": 738,
+            "written": 700,
+            "agree": 640,
+            "induced": "always"
           },
           {
             "operator": "⿲",
-            "described": 504,
-            "written": 452,
-            "agree": 387,
-            "induced": true
+            "described": 509,
+            "written": 462,
+            "agree": 395,
+            "induced": "always"
           },
           {
             "operator": "⿹",
-            "described": 318,
-            "written": 206,
-            "agree": 80,
-            "induced": false
+            "described": 330,
+            "written": 83,
+            "agree": 76,
+            "induced": "learned"
           },
           {
             "operator": "⿻",
-            "described": 265,
-            "written": 210,
-            "agree": 113,
-            "induced": false
+            "described": 285,
+            "written": 12,
+            "agree": 10,
+            "induced": "learned"
           },
           {
             "operator": "⿴",
-            "described": 254,
-            "written": 248,
-            "agree": 220,
-            "induced": true
+            "described": 256,
+            "written": 254,
+            "agree": 224,
+            "induced": "always"
           },
           {
             "operator": "⿷",
             "described": 143,
-            "written": 137,
-            "agree": 109,
-            "induced": true
+            "written": 136,
+            "agree": 110,
+            "induced": "always"
           },
           {
             "operator": "⿶",
-            "described": 47,
+            "described": 48,
             "written": 45,
-            "agree": 37,
-            "induced": true
+            "agree": 36,
+            "induced": "always"
           },
           {
             "operator": "⿽",
             "described": 15,
-            "written": 10,
-            "agree": 2,
-            "induced": false
+            "written": 0,
+            "agree": 0,
+            "induced": "never"
           },
           {
             "operator": "㇯",
             "described": 5,
-            "written": 4,
+            "written": 0,
             "agree": 0,
-            "induced": false
+            "induced": "never"
           },
           {
             "operator": "⿾",
             "described": 3,
-            "written": 3,
-            "agree": 1,
-            "induced": false
+            "written": 0,
+            "agree": 0,
+            "induced": "never"
           },
           {
             "operator": "⿿",
             "described": 3,
-            "written": 3,
-            "agree": 1,
-            "induced": false
+            "written": 0,
+            "agree": 0,
+            "induced": "never"
           },
           {
             "operator": "⿼",
             "described": 2,
-            "written": 2,
-            "agree": 1,
-            "induced": false
+            "written": 0,
+            "agree": 0,
+            "induced": "never"
           }
         ]
       },
@@ -258,122 +1588,218 @@
         "operators": [
           {
             "operator": "⿰",
-            "described": 62767,
-            "written": 62553,
-            "agree": 61424,
-            "induced": true
+            "described": 66176,
+            "written": 65101,
+            "agree": 64106,
+            "induced": "always"
           },
           {
             "operator": "⿱",
-            "described": 21407,
-            "written": 21235,
-            "agree": 20118,
-            "induced": true
+            "described": 22769,
+            "written": 21991,
+            "agree": 20953,
+            "induced": "always"
           },
           {
             "operator": "⿺",
-            "described": 3537,
-            "written": 3517,
-            "agree": 3410,
-            "induced": true
+            "described": 3729,
+            "written": 3643,
+            "agree": 3574,
+            "induced": "always"
           },
           {
             "operator": "⿸",
-            "described": 2981,
-            "written": 2967,
-            "agree": 2910,
-            "induced": true
+            "described": 3110,
+            "written": 3006,
+            "agree": 2968,
+            "induced": "always"
           },
           {
             "operator": "⿳",
-            "described": 1644,
-            "written": 1598,
-            "agree": 1418,
-            "induced": true
+            "described": 1810,
+            "written": 1635,
+            "agree": 1472,
+            "induced": "always"
           },
           {
             "operator": "⿵",
-            "described": 938,
-            "written": 933,
-            "agree": 886,
-            "induced": true
+            "described": 974,
+            "written": 952,
+            "agree": 934,
+            "induced": "always"
           },
           {
             "operator": "⿲",
-            "described": 687,
-            "written": 674,
-            "agree": 652,
-            "induced": true
+            "described": 710,
+            "written": 677,
+            "agree": 657,
+            "induced": "always"
           },
           {
             "operator": "⿹",
-            "described": 425,
-            "written": 409,
-            "agree": 241,
-            "induced": false
+            "described": 470,
+            "written": 338,
+            "agree": 333,
+            "induced": "learned"
           },
           {
             "operator": "⿻",
-            "described": 343,
-            "written": 310,
-            "agree": 184,
-            "induced": false
+            "described": 378,
+            "written": 17,
+            "agree": 15,
+            "induced": "learned"
           },
           {
             "operator": "⿴",
-            "described": 318,
-            "written": 317,
-            "agree": 298,
-            "induced": true
+            "described": 354,
+            "written": 352,
+            "agree": 331,
+            "induced": "always"
           },
           {
             "operator": "⿷",
-            "described": 188,
-            "written": 185,
-            "agree": 156,
-            "induced": true
+            "described": 189,
+            "written": 180,
+            "agree": 155,
+            "induced": "always"
           },
           {
             "operator": "⿶",
-            "described": 53,
-            "written": 53,
-            "agree": 49,
-            "induced": true
+            "described": 54,
+            "written": 51,
+            "agree": 47,
+            "induced": "always"
           },
           {
             "operator": "⿽",
             "described": 15,
-            "written": 13,
-            "agree": 2,
-            "induced": false
+            "written": 0,
+            "agree": 0,
+            "induced": "never"
           },
           {
             "operator": "㇯",
             "described": 9,
-            "written": 6,
+            "written": 0,
             "agree": 0,
-            "induced": false
+            "induced": "never"
           },
           {
             "operator": "⿾",
             "described": 4,
-            "written": 4,
-            "agree": 2,
-            "induced": false
+            "written": 0,
+            "agree": 0,
+            "induced": "never"
           },
           {
             "operator": "⿼",
             "described": 3,
-            "written": 3,
-            "agree": 2,
-            "induced": false
+            "written": 0,
+            "agree": 0,
+            "induced": "never"
           },
           {
             "operator": "⿿",
             "described": 3,
-            "written": 3,
+            "written": 0,
+            "agree": 0,
+            "induced": "never"
+          }
+        ]
+      },
+      {
+        "source": "kanjivg",
+        "operators": [
+          {
+            "operator": "⿰",
+            "described": 3991,
+            "written": 3173,
+            "agree": 2927,
+            "induced": "always"
+          },
+          {
+            "operator": "⿱",
+            "described": 1636,
+            "written": 1196,
+            "agree": 1039,
+            "induced": "always"
+          },
+          {
+            "operator": "⿸",
+            "described": 243,
+            "written": 195,
+            "agree": 183,
+            "induced": "always"
+          },
+          {
+            "operator": "⿺",
+            "described": 179,
+            "written": 154,
+            "agree": 103,
+            "induced": "always"
+          },
+          {
+            "operator": "⿻",
+            "described": 101,
+            "written": 2,
             "agree": 2,
-            "induced": false
+            "induced": "learned"
+          },
+          {
+            "operator": "⿵",
+            "described": 81,
+            "written": 60,
+            "agree": 49,
+            "induced": "always"
+          },
+          {
+            "operator": "⿳",
+            "described": 77,
+            "written": 36,
+            "agree": 29,
+            "induced": "always"
+          },
+          {
+            "operator": "⿹",
+            "described": 42,
+            "written": 4,
+            "agree": 4,
+            "induced": "learned"
+          },
+          {
+            "operator": "⿲",
+            "described": 37,
+            "written": 31,
+            "agree": 26,
+            "induced": "always"
+          },
+          {
+            "operator": "⿴",
+            "described": 36,
+            "written": 34,
+            "agree": 29,
+            "induced": "always"
+          },
+          {
+            "operator": "⿷",
+            "described": 16,
+            "written": 12,
+            "agree": 12,
+            "induced": "always"
+          },
+          {
+            "operator": "⿽",
+            "described": 5,
+            "written": 0,
+            "agree": 0,
+            "induced": "never"
+          },
+          {
+            "operator": "⿶",
+            "described": 5,
+            "written": 2,
+            "agree": 1,
+            "induced": "always"
           }
         ]
       }
@@ -383,16 +1809,44 @@
     {
       "source": "cns11643",
       "recorded": 76282,
+      "entered": 1,
       "equivalent": 719,
-      "ids": 19315,
-      "none": 7036
+      "ids": 24692,
+      "none": 1659,
+      "reasons": {
+        "undescribed": 164,
+        "unreadable": 316,
+        "operator": 657,
+        "component": 522
+      }
     },
     {
       "source": "rime-stroke",
       "recorded": 102582,
+      "entered": 0,
       "equivalent": 681,
-      "ids": 0,
-      "none": 89
+      "ids": 3,
+      "none": 86,
+      "reasons": {
+        "undescribed": 86,
+        "unreadable": 0,
+        "operator": 0,
+        "component": 0
+      }
+    },
+    {
+      "source": "kanjivg",
+      "recorded": 6728,
+      "entered": 0,
+      "equivalent": 754,
+      "ids": 70265,
+      "none": 25605,
+      "reasons": {
+        "undescribed": 531,
+        "unreadable": 1019,
+        "operator": 2316,
+        "component": 21739
+      }
     }
   ],
   "files": [
@@ -418,23 +1872,64 @@
       "bytes": 1165017
     },
     {
+      "name": "kanjivg.tsv.gz",
+      "rows": 6728,
+      "columns": [
+        "char",
+        "codepoint",
+        "orders",
+        "strokes"
+      ],
+      "bytes": 106027
+    },
+    {
       "name": "induced.tsv.gz",
-      "rows": 20715,
+      "rows": 97114,
       "columns": [
         "char",
         "codepoint",
         "orders",
         "basis",
         "from",
-        "source"
+        "source",
+        "ids"
       ],
-      "bytes": 316757
+      "bytes": 1483005
+    },
+    {
+      "name": "entered.tsv",
+      "rows": 1,
+      "columns": [
+        "char",
+        "codepoint",
+        "orders",
+        "basis",
+        "by",
+        "source",
+        "date"
+      ],
+      "bytes": 179
+    },
+    {
+      "name": "wanted.tsv",
+      "rows": 620,
+      "columns": [
+        "char",
+        "codepoint",
+        "source",
+        "blocks",
+        "alone",
+        "examples"
+      ],
+      "bytes": 25422
     }
   ],
   "texts": [
     "README.md",
     "LICENSE-rime-stroke-LGPL-3.0.txt",
     "LICENSE-GPL-3.0.txt",
-    "AUTHORS-rime-stroke.txt"
+    "AUTHORS-rime-stroke.txt",
+    "LICENSE-kanjivg-CC-BY-SA-3.0.txt",
+    "LICENSE-yi-bai-ids-MIT.txt"
   ]
 }

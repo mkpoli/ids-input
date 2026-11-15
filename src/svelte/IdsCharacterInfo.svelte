@@ -7,8 +7,12 @@
   import { loadJurchenStrokes, loadKanaStrokes, loadStrokeRecords, loadTangutStrokes } from './strokes.js'
   import { watchFallback } from './fallback-font.js'
 
-  /** @type {{ root: HTMLElement | null, adapter: import('../adapter/types.js').IdsAdapter, messages?: Record<string, string>, locale?: string, disabled?: boolean, onpick?: (part: string, path?: number[]) => void }} */
-  let { root, adapter, messages, locale = 'en', disabled = false, onpick } = $props()
+  // A part in the sequence field opens the card when its text is selected: the field sends an
+  // `idscharacter` event from the part's painted span, and from the input itself when the selection
+  // moves off it. `extra` adds a section under a separator for the part the card describes, at
+  // `path` in the sequence when it has one; `close` puts the reader back where the card was opened.
+  /** @type {{ root: HTMLElement | null, adapter: import('../adapter/types.js').IdsAdapter, messages?: Record<string, string>, locale?: string, disabled?: boolean, onpick?: (part: string, path?: number[]) => void, extra?: import('svelte').Snippet<[{ path: number[] | undefined, close: () => void }]> }} */
+  let { root, adapter, messages, locale = 'en', disabled = false, onpick, extra } = $props()
   const t = $derived(translator(messages, locale))
   /** A reading system's name for the card's locale; the CJK names are the ones readers know it by.
    *  @param {import('../adapter/character-info.js').InfoReading} reading */
@@ -19,6 +23,15 @@
   /** @type {import('../adapter/character-info.js').CharacterInfo | null} */ let info = $state.raw(null)
   let char = $state(''), status = $state('idle'), open = $state(false), x = $state(0), y = $state(0)
   /** @type {HTMLElement | null} */ let anchor = null
+  /** Where the anchor's part sits in the sequence, if it is one of its parts. */
+  let anchorPath = $state.raw(/** @type {number[] | undefined} */ (undefined))
+  /** Whether the field's text selection opened the card, so a selection elsewhere closes it. */
+  let selected = false
+  /** @param {Element | null} element */
+  const pathOf = element => {
+    const written = element?.getAttribute('data-path')
+    return written == null ? undefined : written === '' ? [] : written.split('.').map(Number)
+  }
   /** @type {ReturnType<typeof setTimeout> | undefined} */ let showTimer
   /** @type {ReturnType<typeof setTimeout> | undefined} */ let hideTimer
   /** @type {AbortController | null} */ let controller = null
@@ -128,7 +141,7 @@
       if (savedDetails !== null) anchor.setAttribute('aria-details', savedDetails)
       else anchor.removeAttribute('aria-details')
     }
-    anchor = null; savedTitle = null; savedDetails = null; pinned = false
+    anchor = null; anchorPath = undefined; selected = false; savedTitle = null; savedDetails = null; pinned = false
     open = false; char = ''; info = null; status = 'idle'
     panel?.hidePopover()
   }
@@ -253,15 +266,16 @@
   }
   // While a part is dragged the card stays shut: as a popover it would sit over the part the pointer aims at.
   let dragging = false
-  /** @param {HTMLElement} element @param {string} value @param {number} delay */
-  function schedule(element, value, delay) {
+  /** `always` opens the card with nothing known of the part but its code point, for a section the host adds.
+   * @param {HTMLElement} element @param {string} value @param {number} delay @param {boolean} [always] */
+  function schedule(element, value, delay, always = false) {
     if (dragging) return
     // A mark records strokes but no script and no Unicode identity (々, 〡), and the panel is the
     // only place its strokes are laid out; it opens for the stroke record too.
-    if (!componentIdentity(value) && !(adapter.characterInfo && characterScript(value)) && !strokeRecords?.has(value) && !(isJurchen(value) && jurchenStrokes?.has(value))) { leave(); return }
+    if (!always && !componentIdentity(value) && !(adapter.characterInfo && characterScript(value)) && !strokeRecords?.has(value) && !(isJurchen(value) && jurchenStrokes?.has(value))) { leave(); return }
     keep()
     if (anchor === element && char === value && (open || showTimer !== undefined)) return
-    close(); anchor = element; char = value
+    close(); anchor = element; anchorPath = pathOf(element); char = value
     const count = element.dataset.partUses
     uses = count !== undefined && Number.isFinite(Number(count)) ? Number(count) : null
     savedTitle = element.getAttribute('title'); savedDetails = element.getAttribute('aria-details')
@@ -300,6 +314,11 @@
   function pointer(event) {
     if (dragging || event.pointerType === 'touch') return
     pointerX = event.clientX; pointerY = event.clientY
+    // Over selected text in the field, the selection says which card shows.
+    if (event.target instanceof HTMLInputElement && event.target.selectionStart !== event.target.selectionEnd) {
+      if (open && (pinned || nearAnchor())) keep(); else leave()
+      return
+    }
     const element = target(event) ?? spanUnder(event, event.clientX, event.clientY)
     if (!(element instanceof HTMLElement) || !root?.contains(element)) { if (nearAnchor()) keep(); else leave(); return }
     // On the way to the card the pointer passes over other parts; a pinned card stays until it
@@ -316,6 +335,8 @@
    * @param {MouseEvent} event */
   function pin(event) {
     if (dragging) return
+    // A click that ends a text selection leaves the card to the selection.
+    if (event.target instanceof HTMLInputElement && event.target.selectionStart !== event.target.selectionEnd) return
     const element = target(event) ?? spanUnder(event, event.clientX || pointerX, event.clientY || pointerY)
     if (!(element instanceof HTMLElement) || !root?.contains(element)) return
     const value = element.dataset.character ?? ''
@@ -326,6 +347,24 @@
       schedule(element, value, 0)
     }
     pinned = anchor === element
+    keep()
+  }
+  /** The field's selection took in a part (from its span), or moved off one or took in a whole
+   * description (from the input, with `all` closing any card on the field's parts).
+   * @param {Event} event */
+  function chosen(event) {
+    if (dragging) return
+    const element = target(event)
+    if (!(element instanceof HTMLElement) || !root?.contains(element)) {
+      const all = /** @type {CustomEvent<{ all?: boolean } | null>} */ (event).detail?.all
+      const field = /** @type {Element} */ (event.target).closest('.sequence-wrap')
+      if (selected || (all && anchor && field?.contains(anchor))) close()
+      return
+    }
+    const value = element.dataset.character ?? ''
+    if (!value) return
+    if (!open || anchor !== element) { clearTimeout(showTimer); showTimer = undefined; schedule(element, value, 0, Boolean(extra)) }
+    pinned = selected = anchor === element
     keep()
   }
   /** @param {FocusEvent} event */
@@ -359,11 +398,16 @@
   async function pick(part) {
     if (disabled || !onpick) return
     const element = anchor?.closest('.sequence-wrap')?.querySelector('input') ?? anchor
-    const writtenPath = anchor?.getAttribute('data-path')
-    const path = writtenPath == null ? undefined : writtenPath === '' ? [] : writtenPath.split('.').map(Number)
+    const path = pathOf(anchor)
     close()
     onpick(part, path)
     await tick()
+    restoreFocus(element?.isConnected ? element : root?.querySelector('input') ?? null)
+  }
+  /** Close the card and put the reader back where it was opened. */
+  function finish() {
+    const element = anchor?.closest('.sequence-wrap')?.querySelector('input') ?? anchor
+    close()
     restoreFocus(element?.isConnected ? element : root?.querySelector('input') ?? null)
   }
   /** @param {Event} event */
@@ -446,6 +490,7 @@
     window.addEventListener('pointermove', pointer)
     window.addEventListener('pointerout', gone)
     node.addEventListener('click', pin, true)
+    node.addEventListener('idscharacter', chosen)
     node.addEventListener('pointerleave', leave)
     node.addEventListener('focusin', focus)
     node.addEventListener('focusout', leave)
@@ -467,7 +512,7 @@
     return () => {
       changed.disconnect(); resized.disconnect(); close()
       window.removeEventListener('pointermove', pointer); window.removeEventListener('pointerout', gone)
-      node.removeEventListener('click', pin, true); node.removeEventListener('pointerleave', leave)
+      node.removeEventListener('click', pin, true); node.removeEventListener('pointerleave', leave); node.removeEventListener('idscharacter', chosen)
       node.removeEventListener('focusin', focus); node.removeEventListener('focusout', leave)
       window.removeEventListener('dragstart', dragStart, true); window.removeEventListener('dragend', dragStop, true)
       window.removeEventListener('drop', dragStop, true); window.removeEventListener('keydown', key, true)
@@ -557,6 +602,7 @@
     {#if sources.length}
       <p class="sources">{#each sources as source, index (source.key)}{#if index > 0}<span class="sep" aria-hidden="true">·</span>{/if}<a href={source.url} target="_blank" rel="noopener noreferrer" title={source.what}>{source.site}</a>{/each}</p>
     {/if}
+    {#if extra}<div class="extra">{@render extra({ path: anchorPath, close: finish })}</div>{/if}
   {/if}
 </div>
 
@@ -574,4 +620,6 @@
   .sources a:hover{color:var(--ids-accent,light-dark(#2944c7,#8ea8ff));text-decoration-color:currentColor}
   .sources a:focus-visible{outline:2px solid var(--ids-focus,light-dark(#2944c7,#8ea8ff));outline-offset:2px;border-radius:2px}
   .sep{color:var(--ids-line,#d6d6de)}
+  .extra{margin-top:12px;padding-top:12px;border-top:1px solid var(--ids-line,light-dark(#e1e1e8,#3a3a43))}
+  .extra:not(:has(*)){display:none}
 </style>

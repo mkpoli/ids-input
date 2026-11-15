@@ -15,6 +15,8 @@ const DOTTED = '者\u{E0101}'
 try {
   for (const scheme of /** @type {const} */ (['light', 'dark'])) {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2, colorScheme: scheme })
+    // The first drawing waits behind the faces' samples on a slow connection.
+    page.setDefaultTimeout(180000)
     const errors = []
     page.on('pageerror', error => errors.push(error.message))
     const field = page.locator('.ids-field input')

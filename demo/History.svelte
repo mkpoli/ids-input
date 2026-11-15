@@ -36,7 +36,7 @@
 {/snippet}
 
 <div class="page">
-  <PageHeader title={t('history.title')} {t} bind:locale links={[{ href: `./unencoded.html?lang=${locale}`, label: t('appendix.title') }, { href: `./normalization.html?lang=${locale}`, label: t('normalization.title') }]} />
+  <PageHeader page="history" title={t('history.title')} {t} bind:locale links={[{ href: `./unencoded.html?lang=${locale}`, label: t('appendix.title') }, { href: `./normalization.html?lang=${locale}`, label: t('normalization.title') }]} />
   <main>
     <ol class="line">
       {#each HISTORY as entry (entry.year + entry.title)}

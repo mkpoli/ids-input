@@ -10,6 +10,7 @@
   import { replacementQuery } from '../core/replacement.js'
   import { replacementExpression } from '../core/replacement-expression.js'
   import { createEditor } from './editor.svelte.js'
+  import IdsAlternatives from './IdsAlternatives.svelte'
   import IdsCharacterInfo from './IdsCharacterInfo.svelte'
   import IdsOperators from './IdsOperators.svelte'
   import IdsPartTools from './IdsPartTools.svelte'
@@ -77,7 +78,12 @@
   </div>
 </div>
 
-<IdsCharacterInfo {root} {adapter} {messages} {locale} {disabled} onpick={(part, path) => editor.take(part, path)} />
+<IdsCharacterInfo {root} {adapter} {messages} {locale} {disabled} onpick={(part, path) => editor.take(part, path)}>
+  <!-- A part chosen by selecting its text lists what can stand in its place under its card. -->
+  {#snippet extra({ path, close })}
+    {#if path && editor.chosenInField && path.join('.') === editor.chosen?.join('.')}<IdsAlternatives {editor} onchoose={close} />{/if}
+  {/snippet}
+</IdsCharacterInfo>
 
 <style>
   .ids-input{
