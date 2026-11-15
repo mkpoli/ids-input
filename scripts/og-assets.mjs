@@ -114,6 +114,14 @@ for (const name of DATA) {
   copyFileSync(join(ENGINE, `sources/${name}/outlines.json.gz`), join(out, `data/${name}-outlines.json.gz`))
   console.log(`data ${name}`)
 }
+// The Sans cuts of the numbered components, which the palette lays over its own outlines.
+copyFileSync(join(ENGINE, NUMBERED), join(out, `data/${NUMBERED}`))
+console.log(`data ${NUMBERED}`)
+// The component variation lists, and the outlines of their forms no code point names: a card draws
+// a component written with a variant identifier (壬q0012) as the form it names.
+writeFileSync(join(out, 'data/ucv.json.gz'), gzipSync(readFileSync(join(import.meta.dirname, '../data/ucv.json'))))
+copyFileSync(join(import.meta.dirname, '../data/ucv-outlines.json.gz'), join(out, 'data/ucv-outlines.json.gz'))
+console.log('data ucv.json.gz, ucv-outlines.json.gz')
 const shards = join(ENGINE, 'unicode/outlines')
 for (const file of (await Array.fromAsync(new Bun.Glob('*.json.gz').scan(shards)))) {
   copyFileSync(join(shards, file), join(out, 'data/unicode-outlines', file))
