@@ -487,7 +487,11 @@ export function writeDraft(tree) {
     const parts = part.parts.slice(0, end).map((kid, i) => step(kid, tail && i === end - 1))
     return part.op + (part.note && isModifier(part.note) ? `[${part.note}]` : '') + parts.join('') + (part.marks ?? '')
   }
-  return step(tree, true)
+  const text = step(tree, true), whole = write(tree)
+  // A variant identifier that ends a shortened text would read as the part of the slot left out
+  // (⿰𢎘z as ⿰, 𢎘 and z), so such a text keeps its slots.
+  const cut = text !== whole && leaves(tree).some(leaf => leaf.char !== null && variantOf(leaf.char).variant !== '' && text.endsWith(leaf.char))
+  return cut ? whole : text
 }
 
 

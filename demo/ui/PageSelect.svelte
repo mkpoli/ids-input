@@ -7,9 +7,9 @@
   let { title, page, t, home, query } = $props()
   /** @type {import('./LinkSelect.svelte').Link[]} */
   const links = $derived([
-    { href: `${home}${query}`, label: t('sources.back') },
+    { href: `${home}${query}`, label: t('sources.back'), icon: 'pencil' },
     { separator: true },
-    ...pages(t).map(entry => ({ href: `./${entry.id}.html${query}`, label: entry.label, current: entry.id === page ? 'page' : undefined })),
+    ...pages(t).map(entry => ({ href: `./${entry.id}.html${query}`, label: entry.label, icon: entry.icon, current: entry.id === page ? 'page' : undefined })),
   ])
 </script>
 

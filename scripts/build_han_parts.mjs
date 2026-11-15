@@ -46,29 +46,34 @@ function unzipEntry(archive, name) {
 }
 
 const root = COMPOSER_BASE, manifest = await (await fetch(root + 'manifest.json')).json()
-if (![5, 6].includes(manifest.format) || manifest.files.records.files !== 4096) throw Error('Unexpected composer export')
-const keys = new Set(), errors = []; let next = 0, done = 0
+// A record shard is named by four hex digits of its keys' hash and holds its records by key; the
+// export writes no file where no key falls.
+const SHARDS = 65536
+if (manifest.format !== 7) throw Error('Unexpected composer export')
+const keys = new Set(), errors = []; let next = 0, done = 0, held = 0
 async function worker() {
-  while (next < 4096) {
-    const shard = (next++).toString(16).padStart(3, '0')
+  while (next < SHARDS) {
+    const shard = (next++).toString(16).padStart(4, '0')
     let rows
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        const response = await fetch(`${root}g/${shard}.json`)
+        const response = await fetch(`${root}g/${shard.slice(0, 2)}/${shard}.json`)
+        if (response.status === 404) { rows = {}; break }
         if (!response.ok) throw Error(`${response.status}`)
         rows = JSON.parse(gunzipSync(Buffer.from(await response.arrayBuffer())))
+        held++
         break
       } catch (error) { if (attempt === 2) errors.push(`${shard}: ${error}`) }
     }
-    for (const record of Object.values(rows ?? {})) {
-      const key = record.k
-      if (typeof key !== 'string' || !record.G && !record.s && !record.e) continue
+    for (const [key, record] of Object.entries(rows ?? {})) {
+      if (!record.G && !record.s && !record.e) continue
       if ([...key].length === 1 && characterScript(key) === 'han') keys.add(key)
     }
-    if (++done % 512 === 0) console.log(`${done}/4096 shards`)
+    if (++done % 8192 === 0) console.log(`${done}/${SHARDS} shards`)
   }
 }
-await Promise.all(Array.from({ length: 10 }, worker))
+await Promise.all(Array.from({ length: 32 }, worker))
+if (held !== manifest.files.records.files) errors.push(`${held} record shards read, the manifest counts ${manifest.files.records.files}`)
 if (errors.length) throw Error(errors.join('\n'))
 
 const archive = process.argv[2] ? readFileSync(process.argv[2]) : Buffer.from(await (await fetch(UNIHAN.url)).arrayBuffer())
