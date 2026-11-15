@@ -240,6 +240,15 @@ export function readStructuralForms(text) {
   }).join('\n'))
 }
 
+/** A turn of the event loop, so whatever else waits on this thread runs. A message channel's turn
+ * is not held back as a timer's is. @returns {Promise<void>} */
+export const turn = () => new Promise(resolve => {
+  if (typeof MessageChannel === 'undefined') { setTimeout(resolve); return }
+  const channel = new MessageChannel()
+  channel.port1.onmessage = () => { channel.port1.close(); resolve() }
+  channel.port2.postMessage(0)
+})
+
 /**
  * A search over `table` (char → its descriptions, region tags dropped) folding components by `forms`
  * (from `readForms`). The index of what each character holds is built on the first query.
@@ -348,6 +357,22 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
     trees.clear()
     holders = { chars, of }
     return holders
+  }
+
+  /**
+   * The index built in slices of about `slice` milliseconds with a turn of the event loop between
+   * them, for a thread with other callers to answer. It reads the characters in the order `index`
+   * does, so the index is the same one.
+   * @param {{ slice?: number, pause?: () => Promise<void> }} [options]
+   */
+  async function prepare({ slice = 40, pause = turn } = {}) {
+    let since = performance.now()
+    for (const char of table.keys()) {
+      if (holders) return
+      holdingsOf(char, new Set())
+      if (performance.now() - since >= slice) { await pause(); since = performance.now() }
+    }
+    index()
   }
 
   /**
@@ -1040,5 +1065,5 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
     return { hits, total: all.size, characters }
   }
 
-  return { search, similar, structure: structural.search, unknownStructure, index: () => { index() }, fold }
+  return { search, similar, structure: structural.search, unknownStructure, index: () => { index() }, prepare, fold }
 }

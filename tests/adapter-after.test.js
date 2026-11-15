@@ -1,5 +1,5 @@
 // A page with something to show first holds the description tables back: `after` is the promise
-// they and the search worker wait for.
+// they and the worker that reads them wait for.
 import { expect, it } from 'bun:test'
 import { babelStoneAdapter } from '../src/adapter/index.js'
 
@@ -48,21 +48,21 @@ it('reads the tables once the promise rejects, and not before', async () => {
   expect(await found).toEqual(['林'])
 })
 
-it('starts the search worker once the promise settles', async () => {
+it('starts the table worker once the promise settles', async () => {
   const posted = []
   /** @type {any} */
   const worker = { postMessage: message => posted.push(message), terminate() {} }
   let started = 0, release
   const after = new Promise(resolve => { release = resolve })
-  const adapter = babelStoneAdapter({ ids: 'https://example.test/ids', after, worker: () => { started++; return worker },
-    fetch: async () => new Response(TABLE) })
+  const adapter = babelStoneAdapter({ ids: 'https://example.test/ids', after, worker: () => { started++; return worker } })
   const found = adapter.findByIds('⿰木木')
   await pause()
   expect(started).toBe(0)
   release()
   await pause()
   expect(started).toBe(1)
-  expect(posted).toHaveLength(1)
-  worker.onmessage({ data: { id: posted[0].id, result: [] } })
+  // Its files, then the question.
+  expect(posted).toHaveLength(2)
+  worker.onmessage({ data: { id: posted[1].id, result: [] } })
   expect(await found).toEqual([])
 })

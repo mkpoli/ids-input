@@ -7,7 +7,7 @@ import { sealTable, sealNames, sealForms, isSmallSeal } from './seal-data.js'
 import { shuishuNames, shuishuSequences, shuishuTable } from './shuishu-data.js'
 import { jurchenNames, jurchenSequences, jurchenTable } from './jurchen-data.js'
 import { componentIndex } from './containing.js'
-import { createSearch, readForms, readStructuralForms } from '../core/search.js'
+import { createSearch, readForms, readStructuralForms, turn } from '../core/search.js'
 import { createNameSearch, readFolds, readNames } from '../core/names.js'
 import { unicodeProperty } from '../core/unicode.js'
 import { isComponent, isCustom, isSequence, parse, write } from '../core/ids.js'
@@ -63,6 +63,9 @@ const withSources = (row, sources) => {
   for (const source of sources ?? []) if (!next.includes(source)) next.push(source)
   return next.length === (row.sources ?? []).length ? row : { ...row, sources: next }
 }
+
+/** The adapter's methods that read the description tables. */
+const TABLE_METHODS = ['table', 'characterInfo', 'structure', 'search', 'encoded', 'findByStructure', 'findByUnknownStructure', 'findByIds', 'findSimilar', 'containing']
 
 /** The Japanese-tagged description leads, as in the corpus (`scripts/build_ids_corpus.mjs`): the
  * face draws the Japanese positional forms, and a source's base-form row would otherwise come first.
@@ -227,11 +230,17 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  * component forms together before a name is compared. `layers` (or `layersText`)
  * reads a table of descriptions computed from other characters, such as Tangut's largest character
  * split, and offers each where it differs from the character's own descriptions; a layer is marked
- * `derived` so a reader knows it is not a source record. The description search (`findByIds`) runs in
- * a Web Worker made by `worker` where there is one, its index built there once; elsewhere it runs
- * on the caller's thread. `after` is a promise the description tables (`ids`, `zitools`, `chise`,
- * `project`) and the search worker wait for before they load, for a page with something to show
- * first. `smallSeal` adds the compiled CHISE Small Seal document to the
+ * `derived` so a reader knows it is not a source record. What reads the description tables (`table`,
+ * `structure`, `encoded`, `search`, `containing`, `characterInfo` and the `find` methods) is answered
+ * by a Web Worker made by `worker` where there is one: it builds an adapter of its own over the same
+ * files, with its own downloads, so the tables are parsed and indexed once and off the caller's
+ * thread. Elsewhere, and for a host that passes its own `table` or `fetch`, neither of which a
+ * worker can use, they are answered on the caller's thread, as they are once a worker could not
+ * be built. `after` is a promise the description tables (`ids`, `zitools`, `chise`, `project`) and
+ * the methods that read them wait for, for a page with something to show first; `characterInfo`
+ * reads them for a component only and does not wait. The search index
+ * is built in slices with `pause` awaited between them, a turn of the event loop unless one is
+ * passed, so a thread with other callers answers them meanwhile. `smallSeal` adds the compiled CHISE Small Seal document to the
  * same table and palette; its modern correspondences supply search labels and character information.
  * `sketches` is the URL of `data/sketch-parts.json.gz` (or its decoded document), the prepared
  * glyph masks the Find tab's drawing search compares with; without it the tab builds them from
@@ -254,14 +263,14 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  *   sketches?: string | URL | import('../core/sketch-data.js').SketchData,
  *   shuishu?: string | URL | import('./shuishu-data.js').ShuishuData,
  *   jurchen?: string | URL | import('./jurchen-data.js').JurchenData,
- *   worker?: (() => Worker) | null, after?: Promise<unknown> }} options
+ *   worker?: (() => Worker) | null, after?: Promise<unknown>, pause?: () => Promise<void> }} options
  * @returns {IdsAdapter & { table: () => Promise<Map<string, Sequence[]>> }}
  */
-export function babelStoneAdapter({ ids, zitools, chise, project, components, componentsText, overwrite, overwriteText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, chains, custom, customOutlines, variations, characterInfo, layers, layersText, smallSeal, sketches, shuishu, jurchen, table: given, palette: givenPalette, fetch: get = download, after,
+export function babelStoneAdapter({ ids, zitools, chise, project, components, componentsText, overwrite, overwriteText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, chains, custom, customOutlines, variations, characterInfo, layers, layersText, smallSeal, sketches, shuishu, jurchen, table: given, palette: givenPalette, fetch: get = download, after, pause,
 
-  worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./search-worker.js', import.meta.url), { type: 'module' }) } = {}) {
-  // A page with something to show first passes `after`: the description tables and the search worker,
-  // which reads them itself, wait for it, however it settles. Every other file loads when asked for.
+  worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./table-worker.js', import.meta.url), { type: 'module' }) } = {}) {
+  // A page with something to show first passes `after`: the description tables and the worker that
+  // reads them wait for it, however it settles. Every other file loads when asked for.
   const held = after ? Promise.resolve(after).then(() => {}, () => {}) : null
   const tables = new Set([ids, zitools, chise, project])
   /** @type {Promise<Map<string, Sequence[]>> | null} */
@@ -307,42 +316,79 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
     localGeneration = generation
     return building
   }
-  /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit @param {'ids' | 'structure' | 'unknown' | 'similar'} [mode] @param {boolean} [componentLookup] */
-  async function inWorker(query, limit, mode = 'ids', componentLookup = true) {
-    await held
-    if (!searcher && worker) {
-      searcher = worker()
-      searcher.onmessage = ({ data }) => {
-        const waiting = asked.get(data.id)
-        asked.delete(data.id)
-        if (data.error === undefined) waiting?.resolve(data.result); else waiting?.reject(new Error(data.error))
-      }
-      // A worker that cannot start or answer fails everything asked of it, and the next ask starts another.
-      /** @param {Event} event */
-      const failed = event => {
-        event.preventDefault()
-        searcher?.terminate()
-        searcher = null
-        for (const waiting of asked.values()) waiting.reject(new Error('The search worker failed.'))
-        asked.clear()
-      }
-      searcher.onerror = failed
-      searcher.onmessageerror = failed
+  /** Whether the worker answers what reads the description tables. It downloads the files itself, so
+   * a host that hands over its own table or its own `fetch` is answered on this thread, and so is
+   * everyone once a worker could not be built or failed before it answered anything. */
+  let remote = Boolean(worker && !given && get === download)
+  /** The options that name files or carry their contents, for the worker's own adapter. It resolves
+   * no address against the page, so each goes absolute. */
+  const files = () => {
+    const base = globalThis.document?.baseURI ?? globalThis.location?.href
+    /** @template T @param {T} value @returns {T | string} */
+    const at = value => typeof value === 'string' || value instanceof URL ? new URL(String(value), base).href : value
+    return { ids: at(ids), zitools: at(zitools), chise: at(chise), project: at(project), components: at(components), componentsText,
+      overwrite: at(overwrite), overwriteText, parts: at(parts), forms: at(forms), formsText, names: at(names), namesText,
+      folds: at(folds), foldsText, characters: at(characters), charactersText, chains: at(chains), custom: at(custom),
+      customOutlines: at(customOutlines), variations: at(variations), characterInfo: at(characterInfo), layers: at(layers), layersText,
+      smallSeal: at(smallSeal), sketches: at(sketches), shuishu: at(shuishu), jurchen: at(jurchen), palette: givenPalette }
+  }
+  /** The worker, built and told its files when first needed. @returns {boolean} whether there is one */
+  const start = () => {
+    if (searcher) return true
+    if (!remote || !worker) return false
+    /** @type {Worker | undefined} */
+    let made
+    try {
+      made = worker()
+      made.postMessage({ files: files() })
+    } catch {
+      // A worker that cannot be built (its module on another origin) or told of its files (an
+      // address with nothing to resolve it against): this thread answers.
+      made?.terminate()
+      remote = false
+      return false
     }
-    const id = ++asks, base = globalThis.location?.href
-    return new Promise((resolve, reject) => {
+    const built = made
+    let answered = false
+    built.onmessage = ({ data }) => {
+      answered = true
+      const waiting = asked.get(data.id)
+      asked.delete(data.id)
+      // Outside a browser a worker with nothing to answer does not keep the program running.
+      if (!asked.size) /** @type {any} */ (built).unref?.()
+      if (data.error === undefined) waiting?.resolve(data.result); else waiting?.reject(new Error(data.error))
+    }
+    // A worker that fails fails everything asked of it, and the next question starts another; one
+    // that never answered is not tried again.
+    /** @param {Event} event */
+    const failed = event => {
+      event.preventDefault()
+      built.terminate()
+      if (searcher === built) searcher = null
+      if (!answered) remote = false
+      for (const waiting of asked.values()) waiting.reject(new Error('The table worker failed.'))
+      asked.clear()
+    }
+    built.onerror = failed
+    built.onmessageerror = failed
+    searcher = built
+    return true
+  }
+  /**
+   * A method of the worker's adapter, called there. The signal stays on this thread: an answer
+   * nobody waits for any more is dropped.
+   * @param {string} method @param {AbortSignal | undefined} signal @param {unknown[]} args
+   * @returns {Promise<any>}
+   */
+  async function inWorker(method, signal, args) {
+    const id = ++asks
+    const result = await new Promise((resolve, reject) => {
       asked.set(id, { resolve, reject })
-      searcher?.postMessage({ id, query, limit, mode, componentLookup, ids: new URL(String(ids), base).href,
-        zitools: zitools ? new URL(String(zitools), base).href : undefined,
-        chise: chise ? new URL(String(chise), base).href : undefined,
-        project: project ? new URL(String(project), base).href : undefined,
-        components: components ? new URL(String(components), base).href : undefined, componentsText,
-        forms: forms ? new URL(String(forms), base).href : undefined, formsText,
-        layers: layers ? new URL(String(layers), base).href : undefined, layersText,
-        smallSeal: smallSeal instanceof URL || typeof smallSeal === 'string' ? new URL(String(smallSeal), base).href : smallSeal,
-        shuishu: shuishu instanceof URL || typeof shuishu === 'string' ? new URL(String(shuishu), base).href : shuishu,
-        jurchen: jurchen instanceof URL || typeof jurchen === 'string' ? new URL(String(jurchen), base).href : jurchen })
+      ;/** @type {any} */ (searcher)?.ref?.()
+      searcher?.postMessage({ id, method, args })
     })
+    signal?.throwIfAborted()
+    return result
   }
 
   /** @param {string | URL} url */
@@ -749,7 +795,8 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
     return building
   }
 
-  return {
+  /** @type {IdsAdapter & { table: () => Promise<Map<string, Sequence[]>> }} */
+  const here = {
     async table() {
       const { table } = await readSearch()
       const sorted = new Map()
@@ -1010,20 +1057,24 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
     /** @param {string} query @param {import('./types.js').Options} [options] */
     async findByStructure(query, { limit = 60, signal } = {}) {
       signal?.throwIfAborted()
-      const result = worker && !given ? await inWorker(query, limit, 'structure') : (await localSearch()).structure(query, { limit })
+      const result = (await localSearch()).structure(query, { limit })
       signal?.throwIfAborted()
       return result
     },
     /** @param {string} query @param {import('./types.js').Options} [options] */
     async findByUnknownStructure(query, { limit = 60, signal } = {}) {
       signal?.throwIfAborted()
-      const result = worker && !given ? await inWorker(query, limit, 'unknown') : (await localSearch()).unknownStructure(query, { limit })
+      const search = await localSearch()
+      await search.prepare({ pause })
+      const result = search.unknownStructure(query, { limit })
       signal?.throwIfAborted()
       return result
     },
     /** @param {string} query @param {import('./types.js').Options & { componentLookup?: boolean }} [options] */
     async findByIds(query, { limit = 60, signal, componentLookup = true } = {}) {
-      const result = worker && !given ? await inWorker(query, limit, 'ids', componentLookup) : (await localSearch()).search(query, { limit, componentLookup })
+      const search = await localSearch()
+      await search.prepare({ pause })
+      const result = search.search(query, { limit, componentLookup })
       signal?.throwIfAborted()
       return result
     },
@@ -1035,7 +1086,11 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
     },
     /** @param {string} query @param {import('./types.js').Options} [options] */
     async findSimilar(query, { limit = 60, signal } = {}) {
-      const result = worker && !given ? await inWorker(query, limit, 'similar') : (await localSearch()).similar(query, { limit })
+      const search = await localSearch()
+      await search.prepare({ pause })
+      // A similar search is several searches: whoever else waited for the index is answered first.
+      await turn()
+      const result = search.similar(query, { limit })
       signal?.throwIfAborted()
       return result
     },
@@ -1050,4 +1105,27 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
     parts: readPalette,
     ...(sketches !== undefined ? { sketchTemplates: readSketches } : {}),
   }
+  if (!remote) return here
+  // What reads the description tables is asked of the worker; this thread answers the rest, a custom
+  // component's description, which no table holds, and everything once there is no worker.
+  /** @type {Record<string, (...args: any[]) => Promise<any>>} */
+  const forwarded = {}
+  for (const method of TABLE_METHODS) {
+    const local = /** @type {Record<string, ((...args: any[]) => Promise<any>) | undefined>} */ (/** @type {unknown} */ (here))[method]
+    if (!local) continue
+    forwarded[method] = async (...args) => {
+      const last = args.at(-1), options = last && typeof last === 'object' ? last : null
+      /** @type {AbortSignal | undefined} */
+      const signal = options?.signal
+      if (method === 'structure' && custom && isCustom(args[0])) return local(...args)
+      signal?.throwIfAborted()
+      // Character information reads the tables for a component only, so it does not wait with them.
+      if (method !== 'characterInfo') await held
+      if (!start()) return local(...args)
+      if (!options) return inWorker(method, signal, args)
+      const { signal: _, ...rest } = options
+      return inWorker(method, signal, [...args.slice(0, -1), rest])
+    }
+  }
+  return /** @type {typeof here} */ ({ ...here, ...forwarded })
 }
