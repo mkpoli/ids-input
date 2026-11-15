@@ -13,13 +13,14 @@ const plain = name => readFileSync(at(name), 'utf8').replace(/\n$/, '').split('\
 const entered = plain('entered.tsv'), wanted = plain('wanted.tsv')
 const orders = rows => new Map(rows.slice(1).map(row => [row[0], row[2].split(' ')]))
 const digits = code => [...code].map(letter => ({ h: '1', s: '2', p: '3', n: '4', z: '5' })[letter]).join('')
+const twins = new Map(readFileSync(new URL('../data/component-forms.tsv', import.meta.url), 'utf8').split('\n').map(line => line.split('\t')).filter(row => row[2] === 'unicode-ucd' && row[3] === 'EquivalentUnifiedIdeograph').map(row => [row[0], row[1]]))
 const point = char => `U+${char.codePointAt(0).toString(16).toUpperCase().padStart(4, '0')}`
 
 describe('the open stroke-order release', () => {
   it('names its format, sources and their terms', () => {
     expect(manifest.format).toBe('ids-input/open-strokes')
     expect(manifest.version).toBe(3)
-    expect(manifest.sources.map(source => source.key)).toEqual(['cns11643', 'rime-stroke', 'kanjivg', 'babelstone-ids', 'yi-bai-ids'])
+    expect(manifest.sources.map(source => source.key)).toEqual(['cns11643', 'rime-stroke', 'kanjivg', 'babelstone-ids', 'unicode-ucd', 'yi-bai-ids'])
     for (const source of manifest.sources) {
       expect(source.url).toMatch(/^https:/)
       expect(source.licence.spdx ?? source.licence.name).toBeTruthy()
@@ -155,6 +156,12 @@ describe('the open stroke-order release', () => {
     }
   })
 
+  it('reads ⺛ as the characters with 旡 write it', () => {
+    const row = wanted.find(entry => entry[0] === '⺛' && entry[2] === 'cns11643')
+    expect(row?.slice(6, 9)).toEqual(['旡', '33', '1535×33'])
+    expect([...row[9]]).toContain('旣')
+  })
+
   it('keeps entered orders apart and says what is still wanted', () => {
     const tables = { 'rime-stroke': orders(rime), cns11643: orders(cns), kanjivg: orders(kanjivg) }
     const symbols = { cns11643: /^[1-5]+( [1-5]+)*$/, 'rime-stroke': /^[hspnz]+( [hspnz]+)*$/, kanjivg: /^[1-5]+( [1-5]+)*$/ }
@@ -174,6 +181,25 @@ describe('the open stroke-order release', () => {
       expect(rows.every(entry => Object.values(tables).every(table => !table.has(entry[0])) && Number(entry[4]) <= Number(entry[3]))).toBe(true)
       // A character left without an order is wanted itself.
       expect(rows.length).toBeGreaterThanOrEqual(row.none)
+      // What the source's characters write a wanted component as: orders in the source's symbols,
+      // most characters first, none counted more often than characters were read.
+      for (const [char, , , , , , named, found, read, within] of rows) {
+        const ways = read ? read.split(' ').map(way => way.split('×')) : []
+        expect(Boolean(named)).toBe(Number(found) > 0)
+        expect(ways.length > 0).toBe(Number(found) > 0)
+        expect(ways.length).toBeLessThanOrEqual(3)
+        for (const [order, count] of ways) {
+          expect(order).toMatch(symbols[row.source])
+          expect(Number(count)).toBeGreaterThan(0)
+          expect(Number(count)).toBeLessThanOrEqual(Number(found))
+        }
+        expect(ways.every((way, index) => !index || Number(ways[index - 1][1]) >= Number(way[1]))).toBe(true)
+        // The characters it is read in are the source's own records.
+        expect([...within].every(example => tables[row.source].has(example))).toBe(true)
+        expect([...within].length).toBeLessThanOrEqual(Math.min(8, Number(found)))
+        // A form no description names is searched under the ideograph Unicode pairs it with.
+        if (named && named !== char) expect(twins.get(char)).toBe(named)
+      }
       expect(rows.every((entry, index) => !index || Number(rows[index - 1][4]) >= Number(entry[4]))).toBe(true)
     }
     expect(readme).toContain('data/stroke-orders-entered.tsv')

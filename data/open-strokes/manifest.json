@@ -95,6 +95,16 @@
       }
     },
     {
+      "key": "unicode-ucd",
+      "name": "Unicode Character Database 18.0.0, EquivalentUnifiedIdeograph.txt: the ideograph a wanted radical form is searched under",
+      "authors": "Unicode, Inc.",
+      "url": "https://www.unicode.org/Public/18.0.0/ucd/EquivalentUnifiedIdeograph.txt",
+      "licence": {
+        "spdx": "Unicode-3.0",
+        "url": "https://www.unicode.org/license.txt"
+      }
+    },
+    {
       "key": "yi-bai-ids",
       "name": "Yi Bai IDS, level 1: the descriptions used where BabelStone has none",
       "authors": "Yi Bai",
@@ -1923,9 +1933,13 @@
         "source",
         "blocks",
         "alone",
-        "examples"
+        "examples",
+        "named",
+        "found",
+        "read",
+        "within"
       ],
-      "bytes": 6104
+      "bytes": 14205
     }
   ],
   "texts": [

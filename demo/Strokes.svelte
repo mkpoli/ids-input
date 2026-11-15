@@ -40,10 +40,17 @@
   const KEYS = STROKE_KEYS.map((key, index) => ({ digit: String(index + 1), stroke: key.stroke, name: `parts.first.${key.letter === 'n' ? 'd' : key.letter}` }))
   const DIGIT = /** @type {Record<string, string>} */ ({ h: '1', s: '2', p: '3', n: '4', z: '5' })
 
-  /** @type {{ char: string, source: string, blocks: number, alone: number, examples: string[] }[]} */
+  /**
+   * A wanted character: what it keeps back, and what the source's characters write it as. `named` is
+   * the name its descriptions give it, `found` the characters read, `read` the orders they leave.
+   * @type {{ char: string, source: string, blocks: number, alone: number, examples: string[], named: string, found: number, read: { order: string, count: number }[], within: string[] }[]}
+   */
   const wanted = wantedText.replace(/\n$/, '').split('\n').slice(1).map(line => {
-    const [char, , source, blocks, alone, examples] = line.split('\t')
-    return { char, source, blocks: Number(blocks), alone: Number(alone), examples: [...examples] }
+    const [char, , source, blocks, alone, examples, named, found, read, within] = line.split('\t')
+    return {
+      char, source, blocks: Number(blocks), alone: Number(alone), examples: [...examples], named, found: Number(found), within: [...within],
+      read: read ? read.split(' ').map(way => { const [order, count] = way.split('×'); return { order, count: Number(count) } }) : [],
+    }
   })
 
   let source = $state(SOURCES.includes(load('strokes.source', '')) ? load('strokes.source', '') : 'cns11643')
@@ -186,6 +193,20 @@
               <div class="wide"><dt>{t('strokes.examples')}</dt>
                 <dd class="examples" lang="ja">{#each item.examples as example (example)}<a href={`./#${encodeURIComponent(example)}`}>{example}</a>{/each}</dd></div>
             {/if}
+            {#if item?.found}
+              <div class="wide"><dt>{t('strokes.within')}{#if item.named !== current} <span class="char" lang="ja">{item.named}</span>{/if} <span class="count">{item.found}</span></dt>
+                <dd class="examples" lang="ja">{#each item.within as example (example)}<a href={`./#${encodeURIComponent(example)}`}>{example}<span class="n">{recorded[source]?.get(example)?.[0].length ?? ''}</span></a>{/each}</dd></div>
+              <div class="wide"><dt>{t('strokes.read')}</dt>
+                <dd class="ways">
+                  {#each item.read as way (way.order)}
+                    <span class="known">
+                      <span class="written">{strokes(way.order)}</span><span class="mono">{way.order}</span><span class="n">×{way.count}</span>
+                      <button type="button" class="ui-button" data-size="xs" aria-label={`${t('strokes.use')} ${way.order}`}
+                        onclick={() => { orders = way.order; basis = `${way.count} of ${item.found} characters with ${item.named}, ${source}` }}>{t('strokes.use')}</button>
+                    </span>
+                  {/each}
+                </dd></div>
+            {/if}
             {#each elsewhere as known (known.key)}
               <div class="wide"><dt>{t(SOURCE_NAMES[known.key])}</dt>
                 <dd class="known">
@@ -269,6 +290,9 @@
   .facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 20px;margin:0}
   .facts .wide{grid-column:1/-1}
   dt{font-size:11.5px;color:var(--ui-color-ink-muted)}
+  dt .char{margin-inline:4px 2px;font-size:14px;color:var(--ui-color-ink)}
+  .examples .n{margin-left:2px;vertical-align:baseline}
+  .ways{display:flex;flex-wrap:wrap;gap:6px 28px}
   dd{margin:2px 0 0;font-size:15px;font-variant-numeric:tabular-nums}
   .examples{display:flex;flex-wrap:wrap;gap:2px 8px;font-size:24px;line-height:1.3}
   .examples a{color:inherit;text-decoration:none;border-radius:var(--ui-radius-xs)}

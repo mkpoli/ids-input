@@ -15,7 +15,7 @@ The format is `ids-input/open-strokes`, version 3.
 | `kanjivg.tsv.gz` | 6,728 | Japanese order, from KanjiVG: `char`, `codepoint`, `orders`, `strokes` (KanjiVG's type of each stroke, as it writes them). CC BY-SA 3.0. |
 | `induced.tsv.gz` | 124,231 | Induced and borrowed orders: `char`, `codepoint`, `orders`, `basis`, `from`, `source`, `ids`, `lent`. Each row keeps the terms of its `source` and of the sources in `lent`. |
 | `entered.tsv` | 1 | Orders entered by hand: `char`, `codepoint`, `orders`, `basis`, `by`, `source`, `date`. CC0 1.0. |
-| `wanted.tsv` | 234 | Characters and components no source has an order for: `char`, `codepoint`, `source`, `blocks`, `alone`, `examples`. CC0 1.0. |
+| `wanted.tsv` | 234 | Characters and components no source has an order for, with what the source's characters write them as: `char`, `codepoint`, `source`, `blocks`, `alone`, `examples`, `named`, `found`, `read`, `within`. CC0 1.0. |
 | `manifest.json` | | Sources with checksums, licences, coverage and the tables below. |
 | `LICENSE-rime-stroke-LGPL-3.0.txt`, `LICENSE-GPL-3.0.txt`, `AUTHORS-rime-stroke.txt` | | The terms and authors of the Rime dictionary. |
 | `LICENSE-kanjivg-CC-BY-SA-3.0.txt` | | The terms of KanjiVG. |
@@ -211,6 +211,18 @@ records. `blocks` counts the characters a component keeps back and `alone` the o
 only obstacle to, most first.
 To add an order, append a row to `data/stroke-orders-entered.tsv` in the repository and rebuild.
 
+The last four columns read a wanted component inside the characters the source records. `found`
+counts the characters whose description names it, down to three descriptions deep, where the
+operators on the way to it are ⿰ ⿱ ⿲ ⿳ and every other part has an order: taking those off the
+front and the back of the character's own order leaves the component's. `read` gives up to three
+such orders, each with the number of characters that write it (`1535×32`), and `within` up to
+eight of the characters. `named` is the name it was found under. The descriptions never name a
+form of the CJK Radicals Supplement itself: they name the unified ideograph Unicode's
+`EquivalentUnifiedIdeograph.txt` pairs it with (旡 for ⺛), so a form is searched under that
+ideograph. The reading is of the ideograph as those characters write it, which is the form's only
+where the characters draw the form. It is evidence for a person entering the order, and no row is
+written from it.
+
 ## Coverage
 
 | Source | Recorded | Entered | By equivalence | From IDS | Borrowed | Without an order |
@@ -253,6 +265,10 @@ numbered component BabelStone gives no fragment for.
   carries its terms beside those of its own `source`.
 - BabelStone IDS, `IDS.TXT`, Andrew West (魏安), <https://www.babelstone.co.uk/CJK/IDS.TXT>, public
   domain: the descriptions induced rows are written from.
+- Unicode Character Database 18.0.0, `EquivalentUnifiedIdeograph.txt`,
+  <https://www.unicode.org/Public/18.0.0/ucd/EquivalentUnifiedIdeograph.txt>, Unicode License v3,
+  Copyright Unicode, Inc.: the ideograph a wanted radical form is searched under in `wanted.tsv`,
+  read from `data/component-forms.tsv`.
 
 - Yi Bai IDS, level 1, <https://github.com/yi-bai/ids>, MIT, Copyright (c) 2021 Yi Bai: the
   descriptions used where BabelStone has none. The licence text is beside this file.
