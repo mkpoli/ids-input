@@ -16,7 +16,9 @@
   import { COMPOSER_BASE, readFrom } from './lib/composer.js'
   import { createIconDrawings } from './lib/icons.js'
   import { SvelteSet } from 'svelte/reactivity'
+  import { onMount } from 'svelte'
   import RailroadCanvas from './ui/RailroadCanvas.svelte'
+  import { CHEATSHEET_SECTIONS, ruleId, sectionHref } from './lib/baishi-sections.js'
   import { railroad, readGrammar } from './lib/railroad.js'
   import {
     ANGLES, CELLS, CHANGES, COMPOUNDS, CORRECTIONS, DATABASE, DATA_DIFFERENCES, DOCUMENTS, EBNF, EXAMPLES, EXAMPLE_DIFFERENCES, KINDS,
@@ -106,13 +108,23 @@
   }))
 
   const TOC = /** @type {const} */ ([
-    ['row', []], ['operators', ['angles']], ['variants', ['sources', 'ucv', 'imaginary', 'alternate', 'other']],
-    ['chains', ['letters', 'modifiers', 'characters', 'compounds', 'reverse', 'cross', 'break', 'closed', 'curves']],
-    ['overlap', ['slice', 'matrix', 'reverseMatrix', 'curveCase']], ['index', []], ['subtract', []], ['unique', []],
-    ['replace', []], ['levels', []], ['changes', []], ['data', []], ['unsettled', []], ['ebnf', []], ['documents', []],
+    ['rows', []], ['operators', ['angles']], ['variants', ['source-letters', 'ucv-position', 'imaginary-ucv', 'alternate', 'other']],
+    ['chains', ['letters', 'modifiers', 'characters', 'compounds', 'reverse', 'cross', 'break-mark', 'closing', 'curves']],
+    ['overlap', ['quick-slice', 'matrix', 'reverse-matrix', 'curveCase']], ['index', []], ['subtract', []], ['prefix', []],
+    ['replace', []], ['levels', []], ['history', []], ['differences', []], ['unsettled', []], ['ebnf', []], ['sources', []],
   ])
-    /** @param {string} id */
-  const titleOf = id => t(`baishi.heading.${id}`)
+  /** The message that names a section, where its id is not its key. */
+  const TITLE = /** @type {Record<string, string>} */ ({ 'source-letters': 'sources', 'ucv-position': 'ucv', 'imaginary-ucv': 'imaginary',
+    'break-mark': 'break', closing: 'closed', 'quick-slice': 'slice', 'reverse-matrix': 'reverseMatrix', history: 'changes', differences: 'data', sources: 'documents' })
+  /** @param {string} id */
+  const titleOf = id => t(`baishi.heading.${TITLE[id] ?? id}`)
+  const cheatsheet = new Set(/** @type {readonly string[]} */ (CHEATSHEET_SECTIONS))
+  // A link to a section lands on it: the page is drawn after the browser looks for the anchor.
+  onMount(() => {
+    let id = ''
+    try { id = decodeURIComponent(location.hash.slice(1)) } catch { id = '' }
+    if (id) document.getElementById(id)?.scrollIntoView()
+  })
 </script>
 
 <svelte:head>
@@ -134,10 +146,17 @@
 {#snippet grammar(/** @type {string[]} */ names)}
   <div class="rules" aria-label={t('baishi.grammar')}>
     {#each names as name (name)}
-      <a class="rule" href="#grammar-view" onclick={() => { chosen = name }}><pre>{grammarRules.get(name)?.text}</pre></a>
-      <div class="railroad">{@html railroad(grammarRules, name).svg}</div>
+      <div class="rule-block anchor" id={ruleId(name)}>
+        {@render cheat(ruleId(name))}
+        <a class="rule" href="#grammar-view" onclick={() => { chosen = name }}><pre>{grammarRules.get(name)?.text}</pre></a>
+        <div class="railroad">{@html railroad(grammarRules, name).svg}</div>
+      </div>
     {/each}
   </div>
+{/snippet}
+
+{#snippet cheat(/** @type {string} */ id)}
+  {#if cheatsheet.has(id)}<a class="cheat" href={sectionHref('cheatsheet', id)}>{t('baishi.toCheatsheet')}</a>{/if}
 {/snippet}
 
 {#snippet badge(/** @type {string} */ kind)}
@@ -185,7 +204,7 @@
 {/snippet}
 
 <div class="page">
-  <PageHeader page="baishi" title={t('baishi.title')} {t} bind:locale />
+  <PageHeader page="baishi" title={t('baishi.title')} {t} bind:locale links={[{ href: `./baishi-cheatsheet.html?lang=${locale}`, label: t('cheatsheet.title') }]} />
 
   <div class="body">
     <nav class="toc" aria-label={t('baishi.contents')}>
@@ -201,12 +220,12 @@
     <main>
       <p class="lead">{t('baishi.lead')}</p>
 
-      <section id="row" aria-labelledby="row-title">
-        <h2 id="row-title">{t('baishi.heading.row')}</h2>
+      <section id="rows" aria-labelledby="rows-title">
+        <h2 id="rows-title">{t('baishi.heading.rows')}</h2>
         <p>{t('baishi.row.body')}</p>
-        {@render grammar(['row', 'primary group', 'alternative group', 'entry'])}
+        {@render grammar(['row', 'headword', 'tab', 'primary group', 'alternative group', 'entry'])}
         {@render said('rowGroups', ['I26', 'p.4 §3.1'])}
-        {@render said('rowVariants', ['I26', 'p.6 §4.2'])}
+        <div id="entry-separator" class="anchor">{@render cheat('entry-separator')}{@render said('rowVariants', ['I26', 'p.6 §4.2'])}</div>
         {@render examples('row')}
       </section>
 
@@ -229,7 +248,7 @@
           </table>
         </div>
         <p>{t('baishi.operators.arity')}</p>
-        {@render grammar(['ids', 'component'])}
+        {@render grammar(['ids', 'component', 'unary operator', 'binary operator', 'overlap operator', 'indexed operator', 'ternary operator'])}
         {@render said('nest', ['I26', 'p.3 §2.3'])}
         {@render said('u31ef', ['I26', 'p.3 §2.1'])}
 
@@ -258,7 +277,7 @@
         {@render examples('tags')}
         {@render examples('lists')}
         <p>{t('baishi.variants.kinds')}</p>
-        {@render grammar(['variant id', 'style tag'])}
+        {@render grammar(['variant id', 'style tag', 'tag char', 'lower letter'])}
         <div class="scroll">
           <table class="compact">
             <thead><tr><th>{t('baishi.kind.name')}</th><th>{t('baishi.kind.pattern')} {@render at(['DB', '2597437b'])}</th></tr></thead>
@@ -266,8 +285,8 @@
           </table>
         </div>
 
-        <section id="sources" aria-labelledby="sources-title">
-          <h3 id="sources-title">{t('baishi.heading.sources')}</h3>
+        <section id="source-letters" aria-labelledby="source-letters-title">
+          <h3 id="source-letters-title">{t('baishi.heading.sources')}</h3>
           {@render grammar(['source letter'])}
           <div class="scroll">
             <table>
@@ -285,14 +304,14 @@
           {@render examples('precedence')}
         </section>
 
-        <section id="ucv" aria-labelledby="ucv-title">
-          <h3 id="ucv-title">{t('baishi.heading.ucv')}</h3>
+        <section id="ucv-position" aria-labelledby="ucv-position-title">
+          <h3 id="ucv-position-title">{t('baishi.heading.ucv')}{@render cheat('ucv-position')}</h3>
           {@render said('ucv', ['I26', 'pp.9–10 §4.3.2'])}
           {@render examples('ucv')}
         </section>
 
-        <section id="imaginary" aria-labelledby="imaginary-title">
-          <h3 id="imaginary-title">{t('baishi.heading.imaginary')}</h3>
+        <section id="imaginary-ucv" aria-labelledby="imaginary-ucv-title">
+          <h3 id="imaginary-ucv-title">{t('baishi.heading.imaginary')}{@render cheat('imaginary-ucv')}</h3>
           {@render said('imaginary', ['I26', 'p.11 §4.3.3'])}
           {@render examples('imaginary')}
         </section>
@@ -349,8 +368,8 @@
         <section id="characters" aria-labelledby="characters-title">
           <h3 id="characters-title">{t('baishi.heading.characters')}</h3>
           <p>{t('baishi.characters.body')} {@render at(['I26', 'p.32'])}</p>
-          {@render grammar(['ideograph char', 'taggable char', 'cjk stroke', 'curve'])}
-          {@render examples('katakana')}
+          {@render grammar(['ideograph char', 'taggable char', 'hanzi', 'cjk stroke', 'curve'])}
+          <div id="katakana" class="anchor">{@render cheat('katakana')}{@render examples('katakana')}</div>
         </section>
 
         <section id="compounds" aria-labelledby="compounds-title">
@@ -376,15 +395,15 @@
           {@render examples('cross')}
         </section>
 
-        <section id="break" aria-labelledby="break-title">
-          <h3 id="break-title"><code>b</code>{t('baishi.heading.break')}</h3>
+        <section id="break-mark" aria-labelledby="break-mark-title">
+          <h3 id="break-mark-title"><code>b</code>{t('baishi.heading.break')}</h3>
           {@render grammar(['break'])}
           {@render said('break', ['I26', 'p.15 §5.4'])}
           {@render examples('break')}
         </section>
 
-        <section id="closed" aria-labelledby="closed-title">
-          <h3 id="closed-title"><code>z</code>{t('baishi.heading.closed')}</h3>
+        <section id="closing" aria-labelledby="closing-title">
+          <h3 id="closing-title"><code>z</code>{t('baishi.heading.closed')}{@render cheat('closing')}</h3>
           {@render said('closed', ['I26', 'p.15 §5.4'])}
           {@render examples('closed')}
         </section>
@@ -415,9 +434,9 @@
         <p>{t('baishi.overlap.body')}</p>
         {@render grammar(['overlap modifier', 'overlap spec'])}
 
-        <section id="slice" aria-labelledby="slice-title">
-          <h3 id="slice-title">{t('baishi.heading.slice')}</h3>
-          {@render grammar(['slice', 'slice bound'])}
+        <section id="quick-slice" aria-labelledby="quick-slice-title">
+          <h3 id="quick-slice-title">{t('baishi.heading.slice')}</h3>
+          {@render grammar(['slice', 'slice bound', 'number', 'negative number', 'nonzero digit', 'digit'])}
           {@render said('slice', ['I26', 'p.17 §6.2'])}
           {@render said('sliceTouch', ['I26', 'p.18 §6.2.1'])}
           {@render said('virtual', ['I26', 'p.19 §6.2.5'])}
@@ -462,8 +481,8 @@
           {@render examples('matrix')}
         </section>
 
-        <section id="reverseMatrix" aria-labelledby="reverseMatrix-title">
-          <h3 id="reverseMatrix-title">{t('baishi.heading.reverseMatrix')}</h3>
+        <section id="reverse-matrix" aria-labelledby="reverse-matrix-title">
+          <h3 id="reverse-matrix-title">{t('baishi.heading.reverseMatrix')}{@render cheat('reverse-matrix')}</h3>
           <p>{t('baishi.reverseMatrix.body')}</p>
           {@render said('reverseMatrix', ['I26', 'p.23 §6.4'])}
           {@render examples('reverseMatrix')}
@@ -508,8 +527,8 @@
         {@render said('subtractChain', ['I26', 'p.26'])}
       </section>
 
-      <section id="unique" aria-labelledby="unique-title">
-        <h2 id="unique-title">{t('baishi.heading.unique')}</h2>
+      <section id="prefix" aria-labelledby="prefix-title">
+        <h2 id="prefix-title">{t('baishi.heading.prefix')}</h2>
         {@render grammar(['uniqueness prefix'])}
         {@render said('unique', ['I26', 'pp.26–27 §7.1'])}
         {@render said('uniqueRare', ['I26', 'p.27 §7.1'])}
@@ -539,8 +558,8 @@
         {@render examples('levels')}
       </section>
 
-      <section id="changes" aria-labelledby="changes-title">
-        <h2 id="changes-title">{t('baishi.heading.changes')}</h2>
+      <section id="history" aria-labelledby="history-title">
+        <h2 id="history-title">{t('baishi.heading.changes')}</h2>
         <ol class="changes">
           {#each CHANGES as [id, cites, inferred] (id)}
             <li id={`change-${id}`}>{#if inferred}{@render badge('inference')} {/if}{t(`baishi.change.${id}`)} <span class="cites">{#each cites as cite, i (i)}{@render at(cite)}{/each}</span></li>
@@ -548,8 +567,8 @@
         </ol>
       </section>
 
-      <section id="data" aria-labelledby="data-title">
-        <h2 id="data-title">{t('baishi.heading.data')}</h2>
+      <section id="differences" aria-labelledby="differences-title">
+        <h2 id="differences-title">{t('baishi.heading.data')}</h2>
         <p>{t('baishi.data.body', { commit: DATABASE.checked.commit.slice(0, 8), date: DATABASE.checked.date, rows: DATABASE.checked.rows, rejected: DATABASE.checked.rejected })} <a class="at" href={DATABASE.checked.url} target="_blank" rel="noreferrer">yi-bai/ids@{DATABASE.checked.commit.slice(0, 8)}</a></p>
         <h3>{t('baishi.heading.corrections')}</h3>
         <div class="scroll">
@@ -615,8 +634,8 @@
         </details>
       </section>
 
-      <section id="documents" aria-labelledby="documents-title">
-        <h2 id="documents-title">{t('baishi.heading.documents')}</h2>
+      <section id="sources" aria-labelledby="sources-title">
+        <h2 id="sources-title">{t('baishi.heading.documents')}</h2>
         <ol class="documents">
           {#each DOCUMENTS as doc (doc.key)}
             <li id={`doc-${doc.key}`}>
@@ -700,6 +719,11 @@
   .railroad :global(text){font:12.5px var(--ui-font-mono),var(--cjk-sans);text-anchor:middle;fill:var(--ui-color-ink)}
   .railroad :global(.non-terminal text){fill:var(--ui-color-accent)}
   #data h3,#ebnf h3{margin-top:24px}
+  .cheat{margin-left:auto;font-size:12px;font-weight:400;color:var(--ui-color-accent);text-decoration:none;white-space:nowrap}
+  .cheat:hover{text-decoration:underline}
+  .anchor{scroll-margin-top:74px;display:flex;flex-direction:column}
+  .anchor > .cheat{align-self:flex-end;margin:0 0 4px}
+  .rule-block{gap:6px}
   .download{margin-left:auto;font-size:13px;font-weight:400}
   .ebnf summary{cursor:pointer;font-size:13px;color:var(--ui-color-accent);margin:0 0 8px}
   .ebnf pre{max-height:70dvh}

@@ -10,13 +10,13 @@ try {
     const page = await browser.newPage({ viewport: { width: 1100, height: 700 }, deviceScaleFactor: 2, colorScheme: scheme })
     const errors = []
     page.on('pageerror', error => errors.push(error.message))
-    for (const id of ['sources', 'unencoded', 'ucv', 'normalization', 'baishi', 'open-data', 'compare', 'engines']) {
+    for (const id of ['sources', 'unencoded', 'component-atlas', 'ucv', 'normalization', 'baishi', 'baishi-cheatsheet', 'open-data', 'compare', 'engines']) {
       await page.goto(`${base}/${id}.html?lang=ja`, { waitUntil: 'domcontentloaded' })
       const trigger = page.locator('h1 button[aria-haspopup="menu"]')
       await trigger.click()
       const menu = page.getByRole('menu')
       const items = menu.getByRole('menuitem')
-      assert.equal(await items.count(), 10, `${id}: the workshop and nine pages`)
+      assert.equal(await items.count(), 11, `${id}: the workshop and ten pages`)
       const english = id === 'open-data' || id === 'engines'
       assert.equal(await menu.locator('[aria-current="page"]').getAttribute('href'), `./${id}.html${english ? '' : '?lang=ja'}`, `${id}: its own row is ticked`)
       assert.equal(await page.evaluate(() => document.activeElement?.getAttribute('aria-current')), 'page', `${id}: opening focuses the current row`)
