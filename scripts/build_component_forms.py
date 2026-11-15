@@ -571,7 +571,7 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     forms['#(-𠃍㇉)'] = chain_from(cs, '马', '一')
     forms['⿱田⿵冂山'] = globals()['WAN_WITHOUT_CAO']
     forms['⿱龷由'] = [group(huang_body(cs))]
-    forms['⿱⿰丿㇏⿻王丷'] = jin_with_ba(cs, style)
+    forms['⿱八⿻王丷'] = jin_with_ba(cs, style)
     # The top of the KRM vulgar 處 (K07097330): ⺊'s dot as a bar, the stem centred on the cover
     # and joined to it. One component, reused as the top of ⿳⺊冖人 and its relatives.
     forms['⿱⺊冖'] = seal_dot_top(cs, style)
