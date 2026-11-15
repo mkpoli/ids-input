@@ -7,25 +7,45 @@ const TABLE = '林\t⿰木木(GHTJKPV)\n'
 const OVERWRITE = '⿰𦚏𳳳\t龍\ttest\n'
 const pause = () => new Promise(resolve => setTimeout(resolve, 20))
 
-it('holds the description tables until the promise settles, and no other file', async () => {
+it('holds the four description tables until the promise settles, and no other file', async () => {
   const asked = []
   let release
   const after = new Promise(resolve => { release = resolve })
-  const adapter = babelStoneAdapter({ ids: 'ids', overwrite: 'overwrite', after, worker: null,
-    fetch: async url => { asked.push(url); return new Response(url === 'overwrite' ? OVERWRITE : TABLE) } })
+  const adapter = babelStoneAdapter({ ids: 'ids', zitools: 'zitools', project: 'project', overwrite: 'overwrite', after, worker: null,
+    fetch: async url => { asked.push(url); return new Response(url === 'overwrite' ? OVERWRITE : url === 'ids' ? TABLE : '') } })
   expect(await adapter.overwrite('⿰𦚏𳳳')).toEqual(['龍'])
   const found = adapter.encoded('⿰木木')
   await pause()
   expect(asked).toEqual(['overwrite'])
   release()
   expect(await found).toEqual(['林'])
-  expect(asked).toEqual(['overwrite', 'ids'])
+  expect(asked.sort()).toEqual(['ids', 'overwrite', 'project', 'zitools'])
 })
 
-it('reads the tables after a promise that rejects', async () => {
-  const adapter = babelStoneAdapter({ ids: 'ids', after: Promise.reject(new Error('nothing was drawn')), worker: null,
-    fetch: async () => new Response(TABLE) })
-  expect(await adapter.encoded('⿰木木')).toEqual(['林'])
+it('holds the merged catalogue with them', async () => {
+  const asked = []
+  let release
+  const after = new Promise(resolve => { release = resolve })
+  const adapter = babelStoneAdapter({ ids: 'ids', chise: 'chise', after, worker: null,
+    fetch: async url => { asked.push(url); return new Response(url === 'ids' ? TABLE : '', { status: url === 'ids' ? 200 : 404 }) } })
+  const found = adapter.encoded('⿰木木').catch(() => 'failed')
+  await pause()
+  expect(asked).toEqual([])
+  release()
+  await found
+  expect(asked.sort()).toEqual(['chise', 'ids'])
+})
+
+it('reads the tables once the promise rejects, and not before', async () => {
+  const asked = []
+  let refuse
+  const after = new Promise((_, reject) => { refuse = reject })
+  const adapter = babelStoneAdapter({ ids: 'ids', after, worker: null, fetch: async url => { asked.push(url); return new Response(TABLE) } })
+  const found = adapter.encoded('⿰木木')
+  await pause()
+  expect(asked).toEqual([])
+  refuse(new Error('nothing was drawn'))
+  expect(await found).toEqual(['林'])
 })
 
 it('starts the search worker once the promise settles', async () => {
