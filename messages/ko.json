@@ -169,7 +169,7 @@
   "ids.unwrap": "단계 없애기",
   "ids.unwrapHint": "이 단계를 없애고 비어 있지 않은 첫 구성 요소를 그 자리에 남깁니다",
   "ids.unwrapNode": "{what} 없애기",
-  "ids.variants.label": "{part}의 이체자 시퀀스",
+  "ids.variants.label": "{part}의 자형",
   "ids.view.label": "보기",
   "ids.view.shape": "도형",
   "ids.view.tree": "트리",
