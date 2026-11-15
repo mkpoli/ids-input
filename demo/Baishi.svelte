@@ -724,8 +724,8 @@
   .anchor{scroll-margin-top:74px;display:flex;flex-direction:column}
   .anchor > .cheat{align-self:flex-end;margin:0 0 4px}
   .rule-block{gap:6px}
-  .diagram-head{display:flex;align-items:baseline;gap:12px}
-  .diagram-head h3{flex:1}
+  .diagram-head{display:flex;align-items:baseline;gap:12px;margin-top:24px}
+  #ebnf .diagram-head h3{flex:1;margin-top:0}
   .heading-row{display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid var(--ui-color-border);margin:0 0 12px}
   .heading-row h2{flex:1;border-bottom:none;margin:0}
   .download{margin-left:auto;font-size:13px;font-weight:400;padding-bottom:6px}

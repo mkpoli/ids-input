@@ -47,7 +47,7 @@
   }
   /** Actual size, the start of the top rule's track halfway down the canvas. */
   function reset() { scale = 1; x = 0; y = (viewport?.clientHeight ?? 0) / 2 - tree.y }
-  onMount(() => { reset(); if (reveal) tick().then(showSelected) })
+  onMount(() => { reset(); if (reveal) tick().then(show) })
 
   // Full screen: the whole diagram with its tools, panel and index, while the browser allows it.
   /** @type {HTMLElement | undefined} */
@@ -121,8 +121,9 @@
       focusRule(after)
     }
   }
-  /** Bring a path into view at a readable size, opening what holds it. @param {string} path */
-  async function locate(path) {
+  /** Bring a path into view at a readable size, opening what holds it, and focus it unless told not to.
+   * @param {string} path @param {boolean} [focus] */
+  async function locate(path, focus = true) {
     const parts = path.split('/').slice(1)
     for (let n = 1; n < parts.length; n++) open.add(`/${parts.slice(0, n).join('/')}`)
     await tick()
@@ -134,12 +135,15 @@
     x += view.left + view.width / 3 - box.left
     y += view.top + view.height / 2 - box.top
     await tick()
-    focusRule(element)
+    if (focus) focusRule(element)
   }
-  function showSelected() {
+  /** @param {boolean} [focus] */
+  function showSelected(focus = true) {
     const path = pickedFor === selected && pickedAt !== null ? pickedAt : placeOf(rules, top, selected)
-    if (path !== null) locate(path)
+    if (path !== null) locate(path, focus)
   }
+  /** Bring the chosen rule into view without taking the focus, as an address that names it does. */
+  export function show() { showSelected(false) }
 
   async function expandAll() { for (const path of openable(rules, top)) open.add(path); await tick(); fit() }
   async function expandLevel() { for (const path of openable(rules, top, open)) open.add(path); await tick(); fit() }
@@ -207,7 +211,8 @@
     if (element) act(element)
   }
   /** Ctrl or ⌘ with the wheel (and a trackpad pinch) zooms; a sideways scroll pans; the rest
-   * scrolls the page. @param {WheelEvent} event */
+   * scrolls the page, or pans where the canvas fills the window or the screen and there is no page
+   * to scroll. @param {WheelEvent} event */
   function wheel(event) {
     const box = viewport?.getBoundingClientRect()
     if (!box) return
@@ -215,6 +220,10 @@
     if (event.ctrlKey || event.metaKey) {
       event.preventDefault()
       zoom(Math.exp(-event.deltaY * unit * 0.0015), event.clientX - box.left, event.clientY - box.top)
+    } else if (fill || full) {
+      event.preventDefault()
+      x -= event.deltaX * unit
+      y -= event.deltaY * unit
     } else if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
       event.preventDefault()
       x -= event.deltaX * unit
@@ -265,7 +274,7 @@
       <button type="button" class="ui-button" onclick={fit}>{t('baishi.grand.fit')}</button>
       <button type="button" class="ui-button" onclick={reset}>1:1</button>
       {#if canFull}
-        <button type="button" class="ui-button" aria-pressed={full} onclick={toggleFull}>
+        <button type="button" class="ui-button" onclick={toggleFull}>
           <Icon name={full ? 'shrink' : 'expand'} size={15} />{full ? t('baishi.grand.exitFullscreen') : t('baishi.grand.fullscreen')}
         </button>
       {/if}
@@ -286,7 +295,7 @@
     <aside class="panel">
       {#if single}
         <h4><code>{selected}</code></h4>
-        <button type="button" class="ui-button" onclick={showSelected}>{t('baishi.grand.locate')}</button>
+        <button type="button" class="ui-button" onclick={() => showSelected()}>{t('baishi.grand.locate')}</button>
         <pre>{rules.get(selected)?.text}</pre>
         <div class="single">{@html single.svg}</div>
       {/if}

@@ -2,6 +2,7 @@
   // The grammar of the zi.tools IDS Extension as one railroad diagram filling the window, with a
   // full-screen mode. The rule chosen in it is the address's fragment (its anchor on the
   // specification page), so a link opens the diagram at that rule.
+  import { tick } from 'svelte'
   import PageHeader from './ui/PageHeader.svelte'
   import RailroadCanvas from './ui/RailroadCanvas.svelte'
   import { translator } from '../src/svelte/index.js'
@@ -28,13 +29,15 @@
   const named = () => { const id = decodeURIComponent(location.hash.slice(1)); return [...rules.keys()].find(name => ruleId(name) === id) }
   const first = named()
   let chosen = $state(first ?? TOP)
+  /** @type {{ show: () => void } | undefined} */
+  let canvas = $state()
   $effect(() => { history.replaceState(history.state, '', `${location.pathname}${location.search}#${ruleId(chosen)}`) })
 </script>
 
 <svelte:head>
   <title>{t('railroad.title')} — {t('app.title')}</title>
 </svelte:head>
-<svelte:window onhashchange={() => { const name = named(); if (name) chosen = name }} />
+<svelte:window onhashchange={() => { const name = named(); if (name && name !== chosen) { chosen = name; tick().then(() => canvas?.show()) } }} />
 
 <div class="page">
   <PageHeader page="baishi-railroad" title={t('railroad.title')} {t} bind:locale links={[
@@ -42,8 +45,7 @@
     { href: `./baishi-cheatsheet.html?lang=${locale}`, label: t('cheatsheet.title') },
   ]} />
   <main>
-    <h1 class="ui-visually-hidden">{t('railroad.title')}</h1>
-    <RailroadCanvas {rules} top={TOP} {t} bind:selected={chosen} fill reveal={Boolean(first && first !== TOP)} />
+    <RailroadCanvas bind:this={canvas} {rules} top={TOP} {t} bind:selected={chosen} fill reveal={Boolean(first && first !== TOP)} />
   </main>
 </div>
 
