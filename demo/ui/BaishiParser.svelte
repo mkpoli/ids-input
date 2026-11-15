@@ -51,6 +51,7 @@
   /** @param {string} char */
   function read(char) {
     input = char
+    ask()
     document.getElementById('parser')?.scrollIntoView({ block: 'start' })
   }
 
@@ -65,7 +66,7 @@
     const chars = [...text]
     if (chars.length === 1 && !text.includes('\t')) {
       const found = rows?.get(text)
-      return { kind: /** @type {const} */ ('char'), char: text, rows: found?.map(row => ({ row, read: parsed(row.text) })) ?? null }
+      return { kind: /** @type {const} */ ('char'), char: text, rows: found ? found.map(row => ({ row, read: parsed(row.text) })) : rows ? [] : null }
     }
     if (text.includes('\t')) return { kind: /** @type {const} */ ('row'), read: parsed(text) }
     const got = parser.parse('primary group', text)
@@ -105,7 +106,7 @@
       {#if input}<button type="button" class="clear" aria-label={t('baishi.parser.clear')} onclick={() => { input = '' }}>×</button>{/if}
     </div>
     <p class="credit"><a href={`https://github.com/yi-bai/ids/tree/${REVISION}`} target="_blank" rel="noreferrer">yi-bai/ids {REVISION.slice(0, 8)}</a> · MIT © 2021 Yi Bai</p>
-    <div class="samples">{#each SAMPLES as char (char)}<button type="button" lang="zh-Hans" class:on={input === char} onclick={() => { input = char; ask() }}>{char}</button>{/each}</div>
+    <div class="samples">{#each SAMPLES as char (char)}<button type="button" lang="zh-Hans" class:on={input === char} aria-pressed={input === char} onclick={() => { input = char; ask() }}>{char}</button>{/each}</div>
   </form>
 
   <div aria-live="polite">
