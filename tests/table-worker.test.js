@@ -79,3 +79,14 @@ it('reports what the worker could not do, and gives the next worker its files', 
   expect(made).toHaveLength(2)
   expect(made[1].posted[0]).toEqual({ files: expect.objectContaining(FILES) })
 })
+
+it('answers a description search that waited for the index before the similar search asked ahead of it', async () => {
+  const page = babelStoneAdapter({ ...FILES, worker: loopback })
+  /** @type {string[]} */
+  const answered = []
+  await Promise.all([
+    page.findSimilar('⿰木目', { limit: 9 }).then(() => answered.push('similar')),
+    page.findByIds('木 目', { limit: 9 }).then(() => answered.push('ids')),
+  ])
+  expect(answered).toEqual(['ids', 'similar'])
+})

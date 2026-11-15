@@ -7,7 +7,7 @@ import { sealTable, sealNames, sealForms, isSmallSeal } from './seal-data.js'
 import { shuishuNames, shuishuSequences, shuishuTable } from './shuishu-data.js'
 import { jurchenNames, jurchenSequences, jurchenTable } from './jurchen-data.js'
 import { componentIndex } from './containing.js'
-import { createSearch, readForms, readStructuralForms } from '../core/search.js'
+import { createSearch, readForms, readStructuralForms, turn } from '../core/search.js'
 import { createNameSearch, readFolds, readNames } from '../core/names.js'
 import { unicodeProperty } from '../core/unicode.js'
 import { isComponent, isCustom, isSequence, parse, write } from '../core/ids.js'
@@ -1065,6 +1065,8 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
       if (remote) return inWorker('findSimilar', signal, query, { limit })
       const search = await localSearch()
       await search.prepare()
+      // A similar search is several searches: whoever else waited for the index is answered first.
+      await turn()
       const result = search.similar(query, { limit })
       signal?.throwIfAborted()
       return result
