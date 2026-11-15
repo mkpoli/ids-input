@@ -87,8 +87,9 @@
     drawing = null
     if (wanted?.kind !== 'composed') return
     let alive = true
-    void draw(wanted.sequence).then(got => { if (alive) drawing = got }, () => {})
-    return () => { alive = false }
+    // Asked once the text has settled, so typing does not queue a drawing for every keystroke.
+    const timer = setTimeout(() => { void draw(wanted.sequence).then(got => { if (alive) drawing = got }, () => {}) }, 500)
+    return () => { alive = false; clearTimeout(timer) }
   })
   /**
    * The path of the component a drawn part stands for: the leaf the composer names, or, where it

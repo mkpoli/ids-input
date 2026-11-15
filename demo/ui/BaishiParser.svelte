@@ -37,13 +37,19 @@
     status = 'loading'
     loadRows().then(got => { rows = got; status = 'idle' }, () => { status = 'failed' })
   }
-  onMount(() => { if (input.trim()) ask() })
+  /** What is read: the input without surrounding space and line breaks; a TAB inside or at the end
+   * of a row is kept. */
+  const text = $derived(input.replace(/^[\s\n]+|[ \n\r]+$/gu, ''))
+  onMount(() => { if (text) ask() })
+  // The address names what is read, so a link opens the parser on it; it follows once typing pauses.
   $effect(() => {
-    // The address names what is read, so a link can open the parser on it.
-    const url = new URL(location.href)
-    const text = input.trim()
-    if (text) url.searchParams.set('char', text); else url.searchParams.delete('char')
-    if (url.href !== location.href) history.replaceState(history.state, '', url)
+    const now = text
+    const timer = setTimeout(() => {
+      const url = new URL(location.href)
+      if (now) url.searchParams.set('char', now); else url.searchParams.delete('char')
+      try { if (url.href !== location.href) history.replaceState(history.state, '', url) } catch { /* the browser limits how often the address changes */ }
+    }, 400)
+    return () => clearTimeout(timer)
   })
 
   /** @param {string} char */
@@ -61,7 +67,6 @@
     return got.ok ? { ok: /** @type {const} */ (true), row: readRow(got.tree, got.chars), chars: got.chars } : { ...got, ok: /** @type {const} */ (false) }
   }
   const result = $derived.by(() => {
-    const text = input.replace(/^[\s\n]+|[ \n\r]+$/gu, '')
     if (!text) return null
     const chars = [...text]
     if (chars.length === 1 && !text.includes('\t')) {
@@ -71,6 +76,13 @@
     if (text.includes('\t')) return { kind: /** @type {const} */ ('row'), read: parsed(text) }
     const got = parser.parse('primary group', text)
     return { kind: /** @type {const} */ ('text'), read: got.ok ? { ok: /** @type {const} */ (true), entries: readGroup(got.tree, got.chars), chars: got.chars } : got }
+  })
+  /** What a screen reader hears: where the text fails, once typing pauses. */
+  let announced = $state('')
+  $effect(() => {
+    const failing = result && result.kind !== 'char' && !result.read.ok ? t('baishi.parser.error', { n: result.read.at + 1 }) : ''
+    const timer = setTimeout(() => { announced = failing }, 800)
+    return () => clearTimeout(timer)
   })
   /** The levels after `level` that write the character as it does: those left out of the table.
    * @param {{ row: { level: number } }[]} list @param {number} level */
@@ -82,7 +94,7 @@
 </script>
 
 {#snippet failure(/** @type {{ at: number, expected: string[], chars: string[] }} */ got)}
-  <div class="error" role="alert">
+  <div class="error">
     <p class="where" lang="zh-Hans">{#each got.chars as char, i (i)}<span class:at={i === got.at}>{char === '\t' ? '⇥' : char}</span>{/each}{#if got.at >= got.chars.length}<span class="at end"> </span>{/if}</p>
     <p>{t('baishi.parser.error', { n: got.at + 1 })}
       {#each got.expected as one, i (i)}{#if i}{', '}{/if}{#if one === 'end'}{t('baishi.parser.end')}{:else if /^[a-z]/u.test(one)}<a class="rule" href={`#${ruleId(one)}`}>{one}</a>{:else}<code>{one}</code>{/if}{/each}</p>
@@ -109,8 +121,9 @@
     <div class="samples">{#each SAMPLES as char (char)}<button type="button" lang="zh-Hans" class:on={input === char} aria-pressed={input === char} onclick={() => { input = char; ask() }}>{char}</button>{/each}</div>
   </form>
 
-  <div aria-live="polite">
-    {#if status === 'failed'}<p class="error" role="alert">{t('baishi.parser.loadFailed')}</p>{/if}
+  <p class="ui-visually-hidden" aria-live="polite">{announced}</p>
+  {#if status === 'failed'}<p class="error" role="alert">{t('baishi.parser.loadFailed')}</p>{/if}
+  <div>
     {#if result?.kind === 'char'}
       {#if result.rows === null}
         {#if status === 'loading'}<p class="muted">{t('baishi.parser.loading')}</p>{/if}
