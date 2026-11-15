@@ -69,7 +69,7 @@ describe('data/custom-components.json.gz', () => {
     expect(outside.find(item => item.in === 'chise')).toMatchObject({ text: '&CDP-8964;', status: 'verified' })
     expect(outside.find(item => item.in === 'zi-tools')).toMatchObject({ text: '⿱丿⿴#(-𠃌㇉)丶', status: 'verified', basis: 'difference' })
     expect(component('#(-𠃌㇉)').equivalents.find(item => item.in === 'babelstone')).toMatchObject({ text: '㇯㇯{53}丿丶', basis: 'inverse' })
-    expect(component('{53}').subtraction).toMatch(/^㇯.[^{]$/u)
+    expect(component('{53}').subtractions).toContain('㇯鸟一')
   })
 
   it('carries the descriptions of characters that follow', () => {
