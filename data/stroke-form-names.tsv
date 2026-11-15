@@ -4,5 +4,6 @@
 # form<TAB>name<TAB>basis
 # Every form of the CJK Radicals Supplement left without a stroke order was drawn beside its Unicode
 # pair and beside each component BabelStone IDS names three times or more, in Noto Sans CJK JP 2.004
-# (2026-11-15). The font draws all but the forms below with their pair's outline or nearest to it.
+# (2026-11-15). 52 have their pair's exact outline and six are nearest to it (⻁ ⻆ ⻝ ⻣ ⻤ ⻱). ⻀ and ⻔
+# are close to their pairs 艹 and 门 and slightly nearer 卝 and 冂; they stay under their pairs.
 ⺫	罒	Unicode pairs ⺫ (U+2EAB, CJK RADICAL EYE) with 目, but it is drawn lying on its side with the outline of 罒 (U+7F52); the descriptions write that shape 罒
