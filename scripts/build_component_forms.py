@@ -315,18 +315,22 @@ def hooked_shou_top(cs, style):
     # left end, which no other stroke reaches.
     bar_bottom = pathops.op(long_bar, rect_path(0, 0, 150, 1000), pathops.PathOp.INTERSECTION).bounds[1]
     long_bar = pathops.op(long_bar, rect_path(0, bar_bottom, 1000, 1000), pathops.PathOp.INTERSECTION)
-    # 工's stem, between its bars, gives the stem's column; the hooked bar's underside at that
-    # column is the room's top.
+    # 工's stem, between its bars, gives the stem's column. The room between the bars is measured
+    # in that column: Serif's long bar rises to a serif at its right end.
     g0, g1 = gong.bounds[1], gong.bounds[3]
     stem = pathops.op(gong, rect_path(0, (g0 + g1) / 2 - 5, 1000, (g0 + g1) / 2 + 5), pathops.PathOp.INTERSECTION).bounds
-    room_top = pathops.op(hooked, rect_path(stem[0], 0, stem[2], 1000), pathops.PathOp.INTERSECTION).bounds[1]
-    room_bottom = long_bar.bounds[3]
+    column = lambda path: pathops.op(path, rect_path(stem[0], 0, stem[2], 1000), pathops.PathOp.INTERSECTION).bounds
+    room_top, room_bottom = column(hooked)[1], column(long_bar)[3]
     # The stem is cut at the hooked bar's middle: above it belongs to the bars, below to the dots.
-    middle = (room_top + pathops.op(hooked, rect_path(stem[0], 0, stem[2], 1000), pathops.PathOp.INTERSECTION).bounds[3]) / 2
-    # 丷 fills 工's place: as wide as 工, a sixth of the room clear of each bar.
+    middle = (room_top + column(hooked)[3]) / 2
+    # 丷 fills 工's place, a sixth of the room clear of each bar, centred on the stem and as wide
+    # as 工 or as the hook allows: the hook bends back under the bar, inside 工's reach.
     gap = (room_top - room_bottom) / 6
+    hook = pathops.op(hooked, rect_path((stem[0] + stem[2]) / 2, 0, 1000, room_top), pathops.PathOp.INTERSECTION).bounds
+    centre = (stem[0] + stem[2]) / 2
+    half = min(gong.bounds[2], hook[0] - gap / 2) - centre
     sx0, sy0, sx1, sy1 = outline_path(cs('丷')).bounds
-    left, bottom, right, top = gong.bounds[0], room_bottom + gap, gong.bounds[2], room_top - gap
+    left, bottom, right, top = max(gong.bounds[0], centre - half), room_bottom + gap, centre + half, room_top - gap
     kx, ky = (right - left) / (sx1 - sx0), (top - bottom) / (sy1 - sy0)
     strokes = {
         'shi': shi, 'hooked': hooked, 'bar': long_bar,
