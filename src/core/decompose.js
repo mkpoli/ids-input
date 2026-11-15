@@ -22,6 +22,8 @@ export const DEPTH = 8
 export const SEARCH_PARTS = 8
 
 const SELECTOR = /^[︀-️\u{E0100}-\u{E01EF}]$/u
+/** A text of description operators, CJK radicals, strokes and ideographs only. */
+const PLAIN = /^[\u2E80-\u2FDF\u2FF0-\u2FFF\u31C0-\u31EF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\u{20000}-\u{323AF}]+$/u
 
 /**
  * A description's tokens: an unencoded component written `{n}` (as BabelStone IDS writes them) is
@@ -30,6 +32,9 @@ const SELECTOR = /^[︀-️\u{E0100}-\u{E01EF}]$/u
  * @returns {string[]}
  */
 export function tokens(text) {
+  // Operators, radicals, strokes and ideographs alone: no selector, brace, mark or letter can join
+  // two of them, so each code point is a token, however the description reads.
+  if (text && PLAIN.test(text)) return [...text]
   // A complete description can use braces and digits as literal graphic operands.
   // Otherwise retain BabelStone's unresolved {n} notation as one token.
   const draft = isSequence(text) ? parse(text, { open: true }) : null
