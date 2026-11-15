@@ -8,7 +8,6 @@ export const pages = t => [
   { id: 'ucv', label: t('ucv.title') },
   { id: 'normalization', label: t('normalization.title') },
   { id: 'baishi-cheatsheet', label: t('cheatsheet.title') },
-  { id: 'strokes', label: t('strokes.title') },
   { id: 'open-data', label: t('app.openData') },
   { id: 'compare', label: t('app.compare') },
   { id: 'engines', label: t('app.engines') },

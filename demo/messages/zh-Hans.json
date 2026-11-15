@@ -610,20 +610,12 @@
   "strokes.way": "另一种写法",
   "strokes.basis": "依据",
   "strokes.basisPlaceholder": "笔顺的出处",
-  "strokes.by": "录入者",
   "strokes.save": "保存",
   "strokes.skip": "跳过",
-  "strokes.where.repository": "仓库",
-  "strokes.where.browser": "此浏览器",
   "strokes.entered": "已录入",
-  "strokes.copy": "复制各行",
-  "strokes.copied": "已复制",
-  "strokes.download": "下载 TSV",
   "strokes.character": "字",
-  "strokes.kept": "保存于",
   "strokes.remove": "移除",
   "strokes.empty": "尚未录入",
   "strokes.error.orders": "请用数字1至5，不同写法之间以空格分隔",
-  "strokes.error.char": "只能输入一个字",
-  "strokes.error.by": "请填写录入者"
+  "strokes.error.char": "只能输入一个字"
 }

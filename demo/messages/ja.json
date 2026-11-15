@@ -610,20 +610,12 @@
   "strokes.way": "別の書き方",
   "strokes.basis": "根拠",
   "strokes.basisPlaceholder": "筆順を確かめた資料",
-  "strokes.by": "入力者",
   "strokes.save": "保存",
   "strokes.skip": "とばす",
-  "strokes.where.repository": "リポジトリ",
-  "strokes.where.browser": "このブラウザー",
   "strokes.entered": "入力済み",
-  "strokes.copy": "行をコピー",
-  "strokes.copied": "コピーしました",
-  "strokes.download": "TSVをダウンロード",
   "strokes.character": "字",
-  "strokes.kept": "保存先",
   "strokes.remove": "削除",
   "strokes.empty": "まだ入力がありません",
   "strokes.error.orders": "1〜5の数字で、書き方ごとに空白で区切ります",
-  "strokes.error.char": "一字だけ",
-  "strokes.error.by": "入力者を書いてください"
+  "strokes.error.char": "一字だけ"
 }

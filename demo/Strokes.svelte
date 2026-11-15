@@ -1,8 +1,8 @@
 <script>
   // Entering the stroke orders no source records. The queue is `data/open-strokes/wanted.tsv`, the
   // components that keep the most characters from being written; a row saved here is a row of
-  // `data/stroke-orders-entered.tsv`. A dev server writes the file itself; a published page keeps
-  // the rows in the browser and hands them over as text.
+  // `data/stroke-orders-entered.tsv`, which the dev server serving this page reads and writes. The
+  // page is a maintainer's tool: no build publishes it.
   import { onMount, untrack } from 'svelte'
   import PageHeader from './ui/PageHeader.svelte'
   import Segmented from './ui/controls/Segmented.svelte'
@@ -12,10 +12,9 @@
   import { LOCALES, appMessages } from './lib/locales.js'
   import { load, save } from './lib/storage.js'
   import { STROKE_KEYS } from '../src/core/stroke-order.js'
-  import { entryLine, entryProblem, parseEntries, withEntry } from '../src/core/stroke-entry.js'
+  import { entryProblem, parseEntries } from '../src/core/stroke-entry.js'
   import { unpack } from '@han-compose/composer'
   import wantedText from '../data/open-strokes/wanted.tsv?raw'
-  import enteredText from '../data/stroke-orders-entered.tsv?raw'
 
   /** @typedef {import('../src/core/stroke-entry.js').StrokeEntry} StrokeEntry */
 
@@ -32,11 +31,11 @@
 
   /** The sources an order is entered for, and the files that record what they do have. */
   const SOURCES = /** @type {const} */ (['cns11643', 'kanjivg'])
-  // The message naming each source, and each place a row is kept.
+  // The message naming each source.
   /** @type {Record<string, string>} */
   const SOURCE_NAMES = { cns11643: 'strokes.source.cns11643', kanjivg: 'strokes.source.kanjivg', 'rime-stroke': 'strokes.source.rime-stroke' }
-  /** @type {Record<string, string>} */
-  const PLACES = { repository: 'strokes.where.repository', browser: 'strokes.where.browser' }
+  /** Who enters the rows: the maintainer, by the handle the project is published under. */
+  const BY = 'mkpoli'
   /** Each stroke key's name in the components' catalogue; the digit is what the sources write. */
   const KEYS = STROKE_KEYS.map((key, index) => ({ digit: String(index + 1), stroke: key.stroke, name: `parts.first.${key.letter === 'n' ? 'd' : key.letter}` }))
   const DIGIT = /** @type {Record<string, string>} */ ({ h: '1', s: '2', p: '3', n: '4', z: '5' })
@@ -46,23 +45,14 @@
     const [char, , source, blocks, alone, examples] = line.split('\t')
     return { char, source, blocks: Number(blocks), alone: Number(alone), examples: [...examples] }
   })
-  const committed = parseEntries(enteredText)
 
   let source = $state(SOURCES.includes(load('strokes.source', '')) ? load('strokes.source', '') : 'cns11643')
   $effect(() => save('strokes.source', source))
 
-  // Where the rows live: the repository's file through the dev server, else this browser.
-  let writable = $state(false)
+  // The rows of the repository's file, as the dev server last gave them.
   /** @type {StrokeEntry[]} */
-  let inFile = $state.raw(committed)
-  /** @type {StrokeEntry[]} */
-  let inBrowser = $state.raw(Array.isArray(load('strokes.entries', [])) ? load('strokes.entries', []).filter((/** @type {StrokeEntry} */ entry) => !entryProblem(entry)) : [])
-  $effect(() => save('strokes.entries', inBrowser))
-  /** Every row, a browser row standing in front of the repository's for the same character and source. */
-  const rows = $derived([
-    ...inFile.filter(entry => !inBrowser.some(other => other.char === entry.char && other.source === entry.source)).map(entry => ({ ...entry, where: /** @type {const} */ ('repository') })),
-    ...inBrowser.map(entry => ({ ...entry, where: /** @type {const} */ ('browser') })),
-  ])
+  let rows = $state.raw([])
+  let loaded = $state(false), failed = $state('')
   /** @param {string} char @param {string} from */
   const entryOf = (char, from) => rows.find(entry => entry.char === char && entry.source === from)
 
@@ -85,10 +75,10 @@
   let root = $state(null)
   onMount(() => {
     fetch('/api/stroke-entries').then(async response => {
-      if (!response.ok || !/tab-separated/.test(response.headers.get('content-type') ?? '')) return
-      inFile = parseEntries(await response.text())
-      writable = true
-    }).catch(() => { /* A published page: the rows stay in the browser. */ })
+      if (!response.ok || !/tab-separated/.test(response.headers.get('content-type') ?? '')) throw Error(`/api/stroke-entries ${response.status}`)
+      rows = parseEntries(await response.text())
+      loaded = true
+    }).catch(error => { failed = String(error) })
     const same = (/** @type {string} */ code) => code
     for (const [key, url, read] of /** @type {[string, URL, (code: string) => string][]} */ ([
       ['cns11643', new URL('../data/open-strokes/cns11643.tsv.gz', import.meta.url), same],
@@ -102,13 +92,12 @@
   /** The first component of the queue still without an order. */
   const firstOpen = () => queue.find(item => !entryOf(item.char, source))?.char ?? queue[0]?.char ?? ''
   let current = $state('')
-  $effect(() => { if (!current) current = firstOpen() })
+  $effect(() => { if (loaded && !current) current = firstOpen() })
   const item = $derived(queue.find(entry => entry.char === current))
   const point = $derived(current ? `U+${(current.codePointAt(0) ?? 0).toString(16).toUpperCase().padStart(4, '0')}` : '')
   const elsewhere = $derived(current ? Object.entries(recorded).filter(([key]) => key !== source).flatMap(([key, found]) => found.get(current) ? [{ key, orders: /** @type {string[]} */ (found.get(current)) }] : []) : [])
 
-  let orders = $state(''), basis = $state(''), by = $state(String(load('strokes.by', '')))
-  $effect(() => save('strokes.by', by))
+  let orders = $state(''), basis = $state('')
   /** @type {ReturnType<typeof entryProblem>} */
   let problem = $state(null)
   // Choosing a component shows what is entered for it, or an empty form. Only the choice resets the
@@ -138,46 +127,30 @@
   async function send(method, body) {
     const response = await fetch('/api/stroke-entries', { method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
     if (!response.ok) throw Error(await response.text())
-    inFile = parseEntries(await response.text())
+    rows = parseEntries(await response.text())
   }
-  let failed = $state('')
   async function saveEntry() {
     const today = new Date()
     /** @type {StrokeEntry} */
     const entry = {
-      char: current, source, orders: orders.trim().replace(/\s+/g, ' '), basis: basis.trim().replace(/\s+/g, ' '), by: by.trim(),
+      char: current, source, orders: orders.trim().replace(/\s+/g, ' '), basis: basis.trim().replace(/\s+/g, ' '), by: BY,
       date: `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`,
     }
     problem = entryProblem(entry)
     if (problem) return
     failed = ''
-    try {
-      const others = inBrowser.filter(row => row.char !== entry.char || row.source !== entry.source)
-      // A row saved to the file leaves no older copy in the browser standing in front of it.
-      if (writable) { await send('POST', entry); inBrowser = others } else inBrowser = [...others, entry]
-      skip()
-    } catch (error) { failed = String(error) }
+    try { await send('POST', entry); skip() } catch (error) { failed = String(error) }
   }
-  /** @param {{ char: string, source: string, where: 'repository' | 'browser' }} row */
+  /** @param {StrokeEntry} row */
   async function remove(row) {
     failed = ''
-    try {
-      if (row.where === 'browser') inBrowser = inBrowser.filter(entry => entry.char !== row.char || entry.source !== row.source)
-      else await send('DELETE', { char: row.char, source: row.source })
-    } catch (error) { failed = String(error) }
+    try { await send('DELETE', { char: row.char, source: row.source }) } catch (error) { failed = String(error) }
   }
-  const pending = $derived(inBrowser.map(entryLine).join('\n'))
-  let copied = $state(false)
-  async function copy() {
-    try { await navigator.clipboard.writeText(`${pending}\n`); copied = true; setTimeout(() => { copied = false }, 1600) } catch { /* The download says the same. */ }
-  }
-  // The download is the whole file with the browser's rows in it, each in place of the row it
-  // changes, so it replaces the repository's file without entering a character twice.
-  const download = $derived(`data:text/tab-separated-values;charset=utf-8,${encodeURIComponent(inBrowser.reduce(withEntry, enteredText))}`)
 </script>
 
 <div class="page" bind:this={root}>
   <PageHeader page="strokes" title={t('strokes.title')} {t} bind:locale links={[{ href: './open-data.html#strokes', label: t('app.openData') }]} />
+  {#if failed && !current}<p class="ui-error lost" role="alert">{failed}</p>{/if}
 
   <div class="body">
     <nav class="queue" aria-label={t('strokes.queue')}>
@@ -235,12 +208,10 @@
             <TextField label={t('strokes.order')} bind:value={orders} mono placeholder="12345" autocomplete="off" spellcheck={false}
               error={problem === 'orders' ? t('strokes.error.orders') : problem === 'char' ? t('strokes.error.char') : undefined} />
             <TextField label={t('strokes.basis')} bind:value={basis} placeholder={t('strokes.basisPlaceholder')} autocomplete="off" />
-            <TextField label={t('strokes.by')} bind:value={by} autocomplete="nickname" spellcheck={false}
-              error={problem === 'by' ? t('strokes.error.by') : undefined} />
             <div class="actions">
               <button type="submit" class="ui-button" data-variant="primary">{t('strokes.save')}</button>
               <button type="button" class="ui-button" data-variant="quiet" onclick={skip}>{t('strokes.skip')}</button>
-              <span class="where" title={writable ? 'data/stroke-orders-entered.tsv' : undefined}>{t(PLACES[writable ? 'repository' : 'browser'])}</span>
+              <span class="where mono">data/stroke-orders-entered.tsv</span>
             </div>
             {#if failed}<p class="ui-error" role="alert">{failed}</p>{/if}
           </form>
@@ -248,18 +219,11 @@
       {/if}
 
       <section class="rows" aria-labelledby="rows-title">
-        <h2 id="rows-title">{t('strokes.entered')} <span class="count">{rows.length}</span>
-          {#if inBrowser.length}
-            <span class="hand">
-              <button type="button" class="ui-button" data-size="sm" onclick={copy}>{t(copied ? 'strokes.copied' : 'strokes.copy')}</button>
-              <a class="ui-button" data-size="sm" href={download} download="stroke-orders-entered.tsv">{t('strokes.download')}</a>
-            </span>
-          {/if}
-        </h2>
+        <h2 id="rows-title">{t('strokes.entered')} <span class="count">{rows.length}</span></h2>
         {#if rows.length}
           <div class="scroll">
             <table>
-              <thead><tr><th scope="col">{t('strokes.character')}</th><th scope="col">{t('strokes.sourceLabel')}</th><th scope="col">{t('strokes.order')}</th><th scope="col">{t('strokes.basis')}</th><th scope="col">{t('strokes.by')}</th><th scope="col">{t('strokes.kept')}</th><th scope="col"><span class="ui-visually-hidden">{t('strokes.remove')}</span></th></tr></thead>
+              <thead><tr><th scope="col">{t('strokes.character')}</th><th scope="col">{t('strokes.sourceLabel')}</th><th scope="col">{t('strokes.order')}</th><th scope="col">{t('strokes.basis')}</th><th scope="col"><span class="ui-visually-hidden">{t('strokes.remove')}</span></th></tr></thead>
               <tbody>
                 {#each rows as row (row.char + row.source)}
                   <tr>
@@ -267,9 +231,7 @@
                     <td>{t(SOURCE_NAMES[row.source])}</td>
                     <td class="mono">{row.orders}</td>
                     <td class="basis">{row.basis}</td>
-                    <td>{row.by}</td>
-                    <td><span class="tag" data-where={row.where}>{t(PLACES[row.where])}</span></td>
-                    <td>{#if row.where === 'browser' || writable}<button type="button" class="ui-button" data-variant="quiet" data-size="xs" aria-label={`${t('strokes.remove')} ${row.char}`} onclick={() => remove(row)}>{t('strokes.remove')}</button>{/if}</td>
+                    <td><button type="button" class="ui-button" data-variant="quiet" data-size="xs" aria-label={`${t('strokes.remove')} ${row.char}`} onclick={() => remove(row)}>{t('strokes.remove')}</button></td>
                   </tr>
                 {/each}
               </tbody>
@@ -325,7 +287,6 @@
 
   h2{display:flex;align-items:center;gap:8px;margin:0 0 10px;padding-top:16px;border-top:1px solid var(--ui-color-border);font-size:14px}
   .count{padding:0 6px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-xs);font-size:10px;font-weight:500;line-height:1.7;color:var(--ui-color-ink-muted);font-variant-numeric:tabular-nums}
-  .hand{display:flex;gap:6px;margin-left:auto}
   /* Positioned, so the visually hidden heading inside is clipped with the table. */
   .scroll{position:relative;overflow-x:auto}
   table{width:100%;border-collapse:collapse;font-size:13px}
@@ -334,8 +295,7 @@
   .basis{min-width:200px;overflow-wrap:anywhere}
   .pick{border:0;background:none;padding:0 4px;border-radius:var(--ui-radius-xs);color:inherit;font-size:20px;line-height:1.2;cursor:pointer}
   .pick:hover{background:var(--ui-color-surface-hover)}
-  .tag{padding:1px 6px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-pill);font-size:11px;color:var(--ui-color-ink-muted);white-space:nowrap}
-  .tag[data-where="browser"]{border-color:var(--ui-color-accent);color:var(--ui-color-accent)}
+  .lost{margin:16px max(18px,env(safe-area-inset-right)) 0 max(18px,env(safe-area-inset-left))}
   .empty{margin:0;font-size:12.5px;color:var(--ui-color-ink-muted)}
 
   @media (max-width:760px) {

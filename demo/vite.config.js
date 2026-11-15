@@ -105,15 +105,13 @@ const OPEN_DATA_TYPES = { '.json': 'application/json; charset=utf-8', '.tsv': 't
 // The stroke-order release sits beside it under data/open-strokes/, served at /data/open-strokes/.
 const OPEN_STROKES = fileURLToPath(new URL('../data/open-strokes/', import.meta.url))
 
-// The stroke-order entry page saves into `data/stroke-orders-entered.tsv` while developing: the
-// file is the store, and the build reads it. A published site has no such address, so the page
-// keeps its rows in the browser there.
+// The stroke-order entry page (`strokes.html`) is served while developing only, and saves into
+// `data/stroke-orders-entered.tsv`: the file is the store, and the data build reads it. No build
+// publishes the page.
 const ENTERED = fileURLToPath(new URL('../data/stroke-orders-entered.tsv', import.meta.url))
 function strokeEntries() {
   return {
     name: 'stroke-entries',
-    // The page reads the file through the address below, so a save does not reload the page that made it.
-    handleHotUpdate({ file }) { if (file === ENTERED) return [] },
     configureServer(server) {
       server.middlewares.use('/api/stroke-entries', (request, response) => {
         const answer = (status, body) => { response.statusCode = status; response.setHeader('Content-Type', 'text/tab-separated-values; charset=utf-8'); response.end(body) }
@@ -196,7 +194,7 @@ export default defineConfig({
     // A fallback shard is fetched when a character needs it; inlined, the small ones would ride in
     // the first scripts as base64, which hardly compresses.
     assetsInlineLimit: file => file.endsWith('.woff2') ? false : undefined,
-    rollupOptions: { input: { index: `${import.meta.dirname}/index.html`, compare: `${import.meta.dirname}/compare.html`, engines: `${import.meta.dirname}/engines.html`, sources: `${import.meta.dirname}/sources.html`, embed: `${import.meta.dirname}/embed.html`, editor: `${import.meta.dirname}/editor.html`, design: `${import.meta.dirname}/design.html`, 'open-data': `${import.meta.dirname}/open-data.html`, unencoded: `${import.meta.dirname}/unencoded.html`, ucv: `${import.meta.dirname}/ucv.html`, normalization: `${import.meta.dirname}/normalization.html`, 'baishi-cheatsheet': `${import.meta.dirname}/baishi-cheatsheet.html`, 'component-atlas': `${import.meta.dirname}/component-atlas.html`, strokes: `${import.meta.dirname}/strokes.html` } } },
+    rollupOptions: { input: { index: `${import.meta.dirname}/index.html`, compare: `${import.meta.dirname}/compare.html`, engines: `${import.meta.dirname}/engines.html`, sources: `${import.meta.dirname}/sources.html`, embed: `${import.meta.dirname}/embed.html`, editor: `${import.meta.dirname}/editor.html`, design: `${import.meta.dirname}/design.html`, 'open-data': `${import.meta.dirname}/open-data.html`, unencoded: `${import.meta.dirname}/unencoded.html`, ucv: `${import.meta.dirname}/ucv.html`, normalization: `${import.meta.dirname}/normalization.html`, 'baishi-cheatsheet': `${import.meta.dirname}/baishi-cheatsheet.html`, 'component-atlas': `${import.meta.dirname}/component-atlas.html` } } },
   // The drawing engine's files, outside this checkout's root: a dependency that is a directory is
   // read where it stands, and its Worker is a `file:` module the page asks for by that path.
   server: { fs: { strict: false, allow: ['..', join(import.meta.dirname, '..', 'node_modules', '@han-compose', 'composer')] } },

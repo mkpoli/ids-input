@@ -11,7 +11,7 @@ try {
   page.setDefaultNavigationTimeout(120000)
   await page.goto(`${process.env.IDS_URL ?? 'http://localhost:5173'}/strokes.html?lang=en`, { waitUntil: 'networkidle' })
   await page.locator('.wanted').first().waitFor()
-  await page.locator('.where', { hasText: 'Repository' }).waitFor()
+  await page.locator('tbody tr').first().waitFor()
 
   // 龹 is wanted for CNS; Rime records it, and its order can be taken as a start.
   await page.locator('.wanted', { hasText: '龹' }).click()
@@ -27,23 +27,23 @@ try {
   await page.locator('.keys button[title="Backspace"]').click()
   assert.equal(await order.inputValue(), '431134')
 
-  // A row with nobody named is refused, and nothing is written.
-  await page.getByLabel('Entered by').fill('')
+  // An order in other symbols is refused, and nothing is written.
+  await order.fill('hs')
   await page.getByRole('button', { name: 'Save' }).click()
-  await page.locator('.ui-error', { hasText: 'Say who entered it' }).waitFor()
+  await page.locator('.ui-error', { hasText: 'Digits 1–5' }).waitFor()
   assert.equal(readFileSync(file, 'utf8'), before)
+  await order.fill('431134')
 
-  // The basis may be left out.
-  await page.getByLabel('Entered by').fill('check')
+  // The basis may be left out, and the row is the maintainer's.
   await page.getByRole('button', { name: 'Save' }).click()
   await page.locator('tbody tr', { hasText: '龹' }).waitFor()
-  assert.match(readFileSync(file, 'utf8'), /\n龹\tcns11643\t431134\t\tcheck\t\d{4}-\d{2}-\d{2}\n$/)
+  assert.match(readFileSync(file, 'utf8'), /\n龹\tcns11643\t431134\t\tmkpoli\t\d{4}-\d{2}-\d{2}\n$/)
   await page.locator('.wanted', { hasText: '龹' }).first().click()
 
   await page.getByLabel('Basis', { exact: true }).fill('browser check')
   await page.getByRole('button', { name: 'Save' }).click()
   await page.locator('tbody tr', { hasText: 'browser check' }).waitFor()
-  assert.match(readFileSync(file, 'utf8'), /\n龹\tcns11643\t431134\tbrowser check\tcheck\t\d{4}-\d{2}-\d{2}\n$/)
+  assert.match(readFileSync(file, 'utf8'), /\n龹\tcns11643\t431134\tbrowser check\tmkpoli\t\d{4}-\d{2}-\d{2}\n$/)
   // The queue marks it done and moves on to a component still open.
   assert.equal(await page.locator('.wanted.done', { hasText: '龹' }).count(), 1)
   assert.notEqual(await page.locator('.glyph').innerText(), '龹')

@@ -1340,11 +1340,10 @@ record: `char`, `source`, `orders`, `basis`, `by`, `date`, tab-separated, one ro
 source. `basis` may be left empty. The build publishes the rows as `open-strokes/entered.tsv`;
 `open-strokes/wanted.tsv` ranks the components worth entering next.
 
-The workshop's Stroke orders page (`demo/Strokes.svelte`, <https://ids.mkpo.li/strokes>) enters them: it
-lists the wanted components with what the other sources record for each, and its keys write the
-order. Served by `bun run dev`, it saves into this file; published, it keeps the rows in the browser
-and hands them over as text. `src/core/stroke-entry.js` holds the rules the page, the dev server and
-the build share.
+The Stroke orders page (`demo/Strokes.svelte`) enters them: it lists the wanted components with what
+the other sources record for each, and its keys write the order. It is served by `bun run dev` at
+`/strokes.html` only, saves into this file, and is not part of the published site.
+`src/core/stroke-entry.js` holds the rules the page, the dev server and the build share.
 
 ## `han-parts.json.gz`
 

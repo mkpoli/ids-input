@@ -610,20 +610,12 @@
   "strokes.way": "Cách viết khác",
   "strokes.basis": "Căn cứ",
   "strokes.basisPlaceholder": "Nơi tra thứ tự nét",
-  "strokes.by": "Người nhập",
   "strokes.save": "Lưu",
   "strokes.skip": "Bỏ qua",
-  "strokes.where.repository": "Kho mã",
-  "strokes.where.browser": "Trình duyệt này",
   "strokes.entered": "Đã nhập",
-  "strokes.copy": "Sao chép các dòng",
-  "strokes.copied": "Đã sao chép",
-  "strokes.download": "Tải TSV",
   "strokes.character": "Chữ",
-  "strokes.kept": "Lưu tại",
   "strokes.remove": "Xoá",
   "strokes.empty": "Chưa nhập gì",
   "strokes.error.orders": "Dùng chữ số 1–5, cách nhau bằng dấu cách giữa các cách viết",
-  "strokes.error.char": "Chỉ một chữ",
-  "strokes.error.by": "Hãy ghi người nhập"
+  "strokes.error.char": "Chỉ một chữ"
 }

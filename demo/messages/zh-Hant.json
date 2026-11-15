@@ -610,20 +610,12 @@
   "strokes.way": "另一種寫法",
   "strokes.basis": "依據",
   "strokes.basisPlaceholder": "筆順的出處",
-  "strokes.by": "輸入者",
   "strokes.save": "儲存",
   "strokes.skip": "跳過",
-  "strokes.where.repository": "儲存庫",
-  "strokes.where.browser": "此瀏覽器",
   "strokes.entered": "已輸入",
-  "strokes.copy": "複製各列",
-  "strokes.copied": "已複製",
-  "strokes.download": "下載 TSV",
   "strokes.character": "字",
-  "strokes.kept": "儲存於",
   "strokes.remove": "移除",
   "strokes.empty": "尚未輸入",
   "strokes.error.orders": "請用數字1至5，不同寫法之間以空格分隔",
-  "strokes.error.char": "只能輸入一個字",
-  "strokes.error.by": "請填寫輸入者"
+  "strokes.error.char": "只能輸入一個字"
 }

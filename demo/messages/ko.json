@@ -610,20 +610,12 @@
   "strokes.way": "다른 쓰기 방법",
   "strokes.basis": "근거",
   "strokes.basisPlaceholder": "필순을 확인한 자료",
-  "strokes.by": "입력자",
   "strokes.save": "저장",
   "strokes.skip": "건너뛰기",
-  "strokes.where.repository": "저장소",
-  "strokes.where.browser": "이 브라우저",
   "strokes.entered": "입력됨",
-  "strokes.copy": "행 복사",
-  "strokes.copied": "복사했습니다",
-  "strokes.download": "TSV 내려받기",
   "strokes.character": "글자",
-  "strokes.kept": "저장 위치",
   "strokes.remove": "삭제",
   "strokes.empty": "아직 입력한 것이 없습니다",
   "strokes.error.orders": "1~5의 숫자로 쓰고, 쓰는 방법 사이는 띄어 씁니다",
-  "strokes.error.char": "한 글자만",
-  "strokes.error.by": "입력자를 적어 주세요"
+  "strokes.error.char": "한 글자만"
 }

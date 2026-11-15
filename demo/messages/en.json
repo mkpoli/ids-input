@@ -613,20 +613,12 @@
   "strokes.way": "Another way",
   "strokes.basis": "Basis",
   "strokes.basisPlaceholder": "Where the order was read",
-  "strokes.by": "Entered by",
   "strokes.save": "Save",
   "strokes.skip": "Skip",
-  "strokes.where.repository": "Repository",
-  "strokes.where.browser": "This browser",
   "strokes.entered": "Entered",
-  "strokes.copy": "Copy rows",
-  "strokes.copied": "Copied",
-  "strokes.download": "Download TSV",
   "strokes.character": "Character",
-  "strokes.kept": "Kept in",
   "strokes.remove": "Remove",
   "strokes.empty": "Nothing entered yet",
   "strokes.error.orders": "Digits 1–5, with a space between ways",
-  "strokes.error.char": "One character",
-  "strokes.error.by": "Say who entered it"
+  "strokes.error.char": "One character"
 }
