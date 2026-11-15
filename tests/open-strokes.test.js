@@ -97,7 +97,7 @@ describe('the open stroke-order release', () => {
       expect(tables[key].has(char)).toBe(false)
       expect(['equivalent', 'ids', 'borrowed', 'within']).toContain(basis)
       // The sources a row borrows from are other than its own.
-      expect(lent).toMatch(/^$|^(cns11643|rime-stroke|kanjivg)( (cns11643|rime-stroke|kanjivg))?$/)
+      expect(lent).toMatch(/^$|^(cns11643|rime-stroke|kanjivg|entered)( (cns11643|rime-stroke|kanjivg|entered))*$/)
       expect(lent.split(' ')).not.toContain(key)
       if (basis === 'equivalent') {
         expect(char.normalize('NFKC')).toBe(from)
@@ -112,7 +112,8 @@ describe('the open stroke-order release', () => {
         expect(own[key].has(char)).toBe(false)
       } else if (basis === 'borrowed') {
         // A borrowed row repeats what its lender has, in the borrower's symbols.
-        expect(lent).toBe(from)
+        // What it repeats is the lender's record, or an order entered for the lender, which `lent` says.
+        expect(lent).toBe(tables[from].has(char) ? from : 'entered')
         expect(written.split(' ')).toEqual([...new Set(own[from].get(char).map(code => inSymbols(code, key)))])
         expect(own[key].has(char)).toBe(false)
       } else {
@@ -198,6 +199,22 @@ describe('the open stroke-order release', () => {
     }
     // Nothing wanted is also written.
     for (const [char, , key] of wanted.slice(1)) expect(induced.some(row => row[0] === char && row[5] === key)).toBe(false)
+  })
+
+  it('writes a character from its own parts where only one of them is borrowed', () => {
+    // CNS has no 冫 and no order for its ㇀, so 冫 is borrowed; 鿑 is then 冫 and CNS's own 玉.
+    const row = (char, key) => induced.find(entry => entry[0] === char && entry[5] === key)
+    expect(row('冫', 'cns11643')?.slice(3, 5)).toEqual(['borrowed', 'rime-stroke'])
+    expect(row('鿑', 'cns11643')?.slice(3, 8)).toEqual(['ids', '⿰冫玉', 'cns11643', 'babelstone-ids', 'rime-stroke'])
+    // No character is borrowed whole whose one description is two parts side by side or stacked, both written for the source.
+    const one = new Map(gunzipSync(readFileSync(new URL('../data/babelstone-ids.tsv.gz', import.meta.url))).toString().split('\n')
+      .filter(line => line && !line.startsWith('#')).map(line => line.split('\t')).filter(row => row[1] && !row[1].includes(' ')).map(row => [row[0], [...row[1].replace(/\([A-Z]+\)$/, '')]]))
+    for (const key of ['cns11643', 'rime-stroke', 'kanjivg']) {
+      const has = new Set([...orders(key === 'cns11643' ? cns : key === 'kanjivg' ? kanjivg : rime).keys(), ...induced.filter(entry => entry[5] === key).map(entry => entry[0]), ...entered.filter(entry => entry[5] === key).map(entry => entry[0])])
+      const whole = induced.filter(entry => entry[5] === key && entry[3] === 'borrowed').map(entry => entry[0])
+        .filter(char => { const parts = one.get(char); return parts?.length === 3 && '⿰⿱'.includes(parts[0]) && parts[1] !== parts[2] && has.has(parts[1]) && has.has(parts[2]) })
+      expect(whole).toEqual([])
+    }
   })
 
   it('keeps entered orders apart and says what is still wanted', () => {

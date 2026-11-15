@@ -1821,8 +1821,8 @@
       "recorded": 76282,
       "entered": 22,
       "equivalent": 722,
-      "ids": 25031,
-      "borrowed": 1239,
+      "ids": 25173,
+      "borrowed": 1097,
       "within": 61,
       "none": 0,
       "reasons": {
@@ -1852,9 +1852,9 @@
       "source": "kanjivg",
       "recorded": 6728,
       "entered": 0,
-      "equivalent": 1126,
-      "ids": 91746,
-      "borrowed": 3696,
+      "equivalent": 1127,
+      "ids": 91908,
+      "borrowed": 3533,
       "within": 61,
       "none": 0,
       "reasons": {
@@ -1911,7 +1911,7 @@
         "ids",
         "lent"
       ],
-      "bytes": 1928878
+      "bytes": 1933990
     },
     {
       "name": "entered.tsv",

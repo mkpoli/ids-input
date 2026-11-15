@@ -78,30 +78,33 @@ convention they follow.
   unified ideograph it normalizes to (NFKC). The row repeats that character's orders: the recorded
   ones, or where the source does not record it the ones induced or borrowed for it here, with the
   lenders in `lent`.
-  722 rows from `cns11643`, 681 from `rime-stroke`, 1,126 from `kanjivg`.
+  722 rows from `cns11643`, 681 from `rime-stroke`, 1,127 from `kanjivg`.
 - `ids`: `from` is the character's description and the order joins the recorded orders of
   its components. The description is BabelStone's (the sequence its T source gives, or its J
   source for `kanjivg`, else the first) or, where BabelStone has none, Yi Bai's. The `ids` column names the dataset of the
   character's description, then that of any component read by its own description.
-  25,031 rows from `cns11643` (4,439 of them through one of Yi Bai's descriptions), 3 from `rime-stroke`, 91,746 from `kanjivg`. Up to 8 ways are kept.
+  25,173 rows from `cns11643` (4,461 of them through one of Yi Bai's descriptions), 3 from `rime-stroke`, 91,908 from `kanjivg`. Up to 8 ways are kept.
 - `borrowed`: the source has no order for the character and none can be written from its
   components, and `from` is the other source whose order the row repeats, in this source's
-  symbols. 1,239 rows in `cns11643`, 25 in `rime-stroke`, 3,696 in `kanjivg`.
+  symbols. 1,097 rows in `cns11643`, 25 in `rime-stroke`, 3,533 in `kanjivg`.
 
-- `within`: the character is a form of the CJK Radicals Supplement that no source records,
-  `from` is the component the descriptions write it as, and the order is what most of the
+- `within`: no source records the character and it keeps no other back, `from` is the
+  component the descriptions write it as, and the order is what most of the
   source's characters write that component as: each character whose description names it, with the
   other parts' orders taken off the front and the back of its own. `lent` names the source whose
   characters were read where the row's own has none. 61 rows in `cns11643`, 61 in
-  `rime-stroke`, 61 in `kanjivg`. `within.tsv` gives what each rests on.
+  `rime-stroke`, 61 in `kanjivg`, all of them forms of the CJK Radicals Supplement.
+  `within.tsv` gives what each rests on.
 
 A source borrows from the nearest convention first: `cns11643` from `rime-stroke` then
 `kanjivg`, `rime-stroke` from `cns11643` then `kanjivg`, `kanjivg` from `cns11643` then
-`rime-stroke`; an order entered for the lender counts as its own. A component is borrowed before
-a whole character, so a character is written from its source's own components wherever they
-exist. `lent` names the sources a row borrows from: the lender of a `borrowed` row, and for an
-`ids` row the lenders of the components it is written with (21,778 rows). A borrowed order follows
-its lender's convention, which can differ from the borrowing source's.
+`rime-stroke`. A component is borrowed before a whole character, and a character other
+characters are written with before those characters, so each is written from its source's own
+components as far down as they go. `lent` names the sources a row borrows from: the lender of
+a `borrowed` row, and for an `ids` row the lenders of the components it is written with (22,082 rows).
+An order entered by hand for the lender is lent like a record; `lent` then reads `entered`,
+since the order is this project's and carries the entered rows' terms, not the lender's. A
+borrowed order follows its lender's convention, which can differ from the borrowing source's.
 
 The components of ⿰ ⿱ ⿲ ⿳ are joined in the order the description names them. In the other
 operators the first component encloses, crosses or carries the second, and the second is written at
@@ -215,14 +218,16 @@ writes its own character and lets the characters it is a component of be induced
 
 `wanted.tsv` lists, per source, what is left to enter: the characters that end without an
 order and the components that keep characters from being written, none of which any source
-records or any recorded character is written with. `blocks` counts the characters a component keeps back and `alone` the ones it is the
+records. A character that keeps no other back is listed only where no recorded character is
+written with it. `blocks` counts the characters a component keeps back and `alone` the ones it is the
 only obstacle to, most first.
 To add an order, append a row to `data/stroke-orders-entered.tsv` in the repository and rebuild.
 
 ## Orders read inside characters
 
 `within.tsv` holds the evidence of each `within` row. `found` counts the characters whose
-description names the component, down to three descriptions deep, where the operators on the way
+description names the component, itself or through up to three characters the source does not
+record, where the operators on the way
 to it are ⿰ ⿱ ⿲ ⿳ and every other part has an order: taking those off the front and the back of
 the character's own order leaves the component's. `read` gives up to three such orders, each
 with the number of characters that leave it (`1521×73 1512×11`); the row takes the first.
@@ -243,9 +248,9 @@ disagree, or under a `variant` shape is weaker than the rest, and `within.tsv` s
 
 | Source | Recorded | Entered | By equivalence | From IDS | Borrowed | Read in characters | Without an order |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| `cns11643` | 76,282 | 22 | 722 | 25,031 | 1,239 | 61 | 0 |
+| `cns11643` | 76,282 | 22 | 722 | 25,173 | 1,097 | 61 | 0 |
 | `rime-stroke` | 102,582 | 0 | 681 | 3 | 25 | 61 | 0 |
-| `kanjivg` | 6,728 | 0 | 1,126 | 91,746 | 3,696 | 61 | 0 |
+| `kanjivg` | 6,728 | 0 | 1,127 | 91,908 | 3,533 | 61 | 0 |
 
 "Without an order" counts the Han characters the workshop's composer draws or either IDS source
 describes that end with no row for that source, borrowed ones included. Why, for each:
@@ -283,7 +288,7 @@ numbered component BabelStone gives no fragment for.
   domain: the descriptions induced rows are written from.
 - Unicode Character Database 18.0.0, `EquivalentUnifiedIdeograph.txt`,
   <https://www.unicode.org/Public/18.0.0/ucd/EquivalentUnifiedIdeograph.txt>, Unicode License v3,
-  Copyright Unicode, Inc.: the ideograph a wanted radical form is searched under in `wanted.tsv`,
+  Copyright Unicode, Inc.: the ideograph a radical form is read under for its `within` row,
   read from `data/component-forms.tsv`.
 
 - Yi Bai IDS, level 1, <https://github.com/yi-bai/ids>, MIT, Copyright (c) 2021 Yi Bai: the
