@@ -359,7 +359,7 @@
 {/snippet}
 
 <div class="page" bind:this={page}>
-  <PageHeader page="baishi-cheatsheet" title={t('cheatsheet.title')} {t} bind:locale links={[{ href: `./baishi.html?lang=${locale}`, label: t('baishi.title') }]}>
+  <PageHeader page="baishi-cheatsheet" title={t('cheatsheet.title')} {t} bind:locale links={[{ href: `./baishi.html?lang=${locale}`, label: t('baishi.title') }, { href: `./baishi.html?lang=${locale}#parser`, label: t('baishi.heading.parser') }]}>
     <button type="button" class="ui-button" data-size="icon" data-variant="quiet" aria-label={t('cheatsheet.help.title')} title={t('cheatsheet.help.title')} onclick={() => { helpOpen = true }}><Icon name="info" /></button>
   </PageHeader>
 
