@@ -10,7 +10,7 @@ import { files, shards } from './fixtures/composer-export.js'
 const int16 = values => Buffer.from(Int16Array.from(values).buffer).toString('base64')
 const outline = ([x0, y0, x1, y1]) => ['MLLL', int16([x0, y0, x1, y0, x1, y1, x0, y1].map(value => value * 4)), int16(Array(8).fill(0))]
 const glyph = (box, outlines) => ({ v: 1, b: box, p: outlines })
-const record = (key, box, outlines) => ({ k: key, G: glyph(box, outlines), ink: 8573, nl: outlines.length, o: outlines.length })
+const record = (key, box, outlines) => ({ G: glyph(box, outlines), ink: 8573, nl: outlines.length, o: outlines.length })
 
 /** 丑 as the fonts draw it: the middle bar reaches past the right vertical (to 950 here). */
 const CHOU = [
@@ -32,8 +32,8 @@ const sourceOf = extra => createSource(async name => {
 
 const fixture = () => sourceOf({
   ...shards('g', [['丑', record('丑', [52, -49, 950, 775], CHOU)], ['峱', record('峱', [52, -49, 990, 775], SHAN)]]),
-  ...shards('p', [['T\t丑', { hosts: [{ h: '峱', d: '⿰犭⿱丑山', op: '⿱', ok: ['丑'], r: 0, si: 1, v: 1, j: 1,
-    c: { k: [0, 1, 2, 3, 4], b: [52, -49, 990, 775], g: 0 } }] }]]),
+  ...shards('p', [['T\t丑', [{ h: '峱', d: '⿰犭⿱丑山', op: '⿱', ok: ['丑'], r: 0, si: 1, v: 1, j: 1,
+    c: { k: [0, 1, 2, 3, 4], b: [52, -49, 990, 775], g: 0 } }]]]),
 })
 
 /** The bar boxes of a 丑 piece, bottom first, and the outer edge of its right vertical. */

@@ -5,7 +5,7 @@ import { constants, layout, shards } from './fixtures/composer-export.js'
 
 // Deliberately unequal outline lengths expose spelling-dependent row allocation.
 const int16 = values => Buffer.from(Int16Array.from(values).buffer).toString('base64')
-const glyph = (key, box, ink) => ({ k: key, ink, nl: 1, o: 1, G: { v: 1, b: box,
+const glyph = (key, box, ink) => ({ ink, nl: 1, o: 1, G: { v: 1, b: box,
   p: [['MLLL', int16([box[0], box[1], box[2], box[1], box[2], box[3], box[0], box[3]].map(n => n * 4)), int16(Array(8).fill(0))]] } })
 const records = {
   木: glyph('木', [100, 0, 900, 800], 3000),
@@ -13,11 +13,11 @@ const records = {
   寸: glyph('寸', [100, 0, 900, 800], 6000),
   吋: { ...glyph('吋', [100, 0, 900, 800], 7000), s: '⿰口寸' },
   永: glyph('永', [100, 0, 900, 800], 3200),
-  '⿰口寸': { k: '⿰口寸', e: '吋' },
+  '⿰口寸': { e: '吋' },
 }
 const fixture = () => {
   const input = {
-    'manifest.json': JSON.stringify({ format: 6, weighted: false, constants, spelled: [], files: { layout: { path: 'layout.json' }, hosts: { bytes: 0 } } }),
+    'manifest.json': JSON.stringify({ format: 7, weighted: false, constants, spelled: [], files: { layout: { path: 'layout.json' }, identity: { path: 'identity.json' }, hosts: { bytes: 0 } } }),
     'layout.json': JSON.stringify(layout),
     ...shards('g', Object.entries(records)),
   }
@@ -26,7 +26,7 @@ const fixture = () => {
 const readyComposer = async options => {
   const source = fixture()
   await source.ready()
-  await source.load(source.filesOf(Object.keys(records)))
+  await source.load([...source.modelFiles(), ...source.filesOf(Object.keys(records))])
   return new Composer(source.store(), options)
 }
 
@@ -97,7 +97,7 @@ it('draws a left 身 from 射, 躬 or 躭 rather than a denser neighbour', () =>
     { ...base, h: '躬', si: 6772, b: [32, -80, 474, 841] },
     { ...base, h: '射', si: 5134, b: [23, -80, 508, 841] },
   ]
-  const evidence = { 牚: { k: '牚', ink: 11000, o: 10, nl: 10 } }
+  const evidence = { 牚: { ink: 11000, o: 10, nl: 10 } }
   const c = new Composer({ manifest: { constants, spelled: [], files: { hosts: { bytes: 1 } } }, layout,
     rec: key => evidence[key] ?? null, hosts: (key, place) => key === '身' && place === 'L' ? hosts : [], places: () => [] })
   const ranked = c.ranked('⿰', 0, '身', ['牚'], [0, 0, 1000, 1000])

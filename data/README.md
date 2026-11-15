@@ -168,6 +168,34 @@ The descriptions are this project's, not a copy of CHISE's or BabelStone's. The 
 downloadable at <https://github.com/mkpoli/ids-input/raw/main/data/ids-project.tsv.gz>, and its
 source at <https://github.com/mkpoli/ids-input/raw/main/data/ids-project.tsv>.
 
+## `glyph-ids.tsv`
+
+Reviewed descriptions of the printed glyphs [han-input](https://github.com/mkpoli/han-input) keeps
+as images: IRG proposal and withdrawal glyphs, and GlyphWiki's `ebag_` glyphs. One line per glyph,
+`key<TAB>ids<TAB>verdict<TAB>by<TAB>judged<TAB>at`. The key is han-input's record:
+`<records file id>:<serial or source>`, e.g. `ext_d_removals:00225`.
+
+| Verdict | `ids` | `by` |
+| --- | --- | --- |
+| `known` | another source's description, accepted for the glyph | `zi.tools <page>` or `babelstone <char>` |
+| `model` | a han2ids reading the reviewer kept | `han2ids c0`, `c1` or `c2`, the reading's beam rank |
+| `written` | the reviewer's own description | |
+| `wrong` | empty: the reading is wrong and no description was written | |
+| `unclear` | empty: the reviewer could not tell | |
+
+`judged` is the han2ids reading shown for the glyph, and `at` the time of the answer. Every
+description except `known` is editorial: a reviewer read it from the printed glyph, and no source
+states it. zi.tools gives a sequence for glyphs that later became encoded characters and for many
+IRG N891 glyphs; the review accepts those unread. A glyph with only a BabelStone description is
+reviewed.
+
+Answers are given in the review desk of [han2ids](https://github.com/mkpoli/han2ids) and imported
+with `bun scripts/import_glyph_ids.mjs <answers.json>`.
+
+Licence: the editorial rows are CC0 1.0. BabelStone's descriptions are public domain (see
+`babelstone-ids.tsv.gz`). The zi.tools sequences come from its pages, which state no licence for
+them; their terms are uncertain.
+
 ## `ids-characters.tsv`
 
 Characters this project draws from their own outline rather than an IDS composition. One line per
@@ -1356,8 +1384,8 @@ The Components tab offers the list as **All characters**, beside the curated com
 stroke-count groups, paged at 120, searchable by character or `U+` code point and filterable by
 stroke count: single counts up to 22, then one 23+ group.
 
-Rebuild with `node scripts/build_han_parts.mjs [Unihan.zip] [stroke.dict.yaml]`. It reads all 4,096
-record shards from the export, the bundled outline index and palette outlines, and the pinned Unihan
+Rebuild with `node scripts/build_han_parts.mjs [Unihan.zip] [stroke.dict.yaml]`. It reads every
+record shard of the export, the bundled outline index and palette outlines, and the pinned Unihan
 archive (`https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip`, SHA-256
 `4c93ea9c1f636451729a840978f1667a53886af37ba854fdcce109721c63d43e`) and the Rime five-stroke
 dictionary (`https://raw.githubusercontent.com/rime/rime-stroke/1e8fff9b9494ddec23b0cbc526bcfd8171a6fd48/stroke.dict.yaml`,
@@ -1414,7 +1442,7 @@ through a CHISE entity that is still unresolved is not counted. Built 2026-11-04
 
 `bun scripts/audit_render_coverage.mjs CACHE_DIR OUTPUT_JSON [sans|serif|fangsong|klee]` renders every
 accepted non-private Unicode scalar through the actual preview worker. It preloads the selected
-export's record shards four at a time, caches bytes and missing-shard responses, and leaves later
+export's record shards sixteen at a time, caches bytes and missing-shard responses, and leaves later
 shard requests to the worker's loader. It stops on transport errors instead of treating them as
 glyph gaps. Run it under the project's batch resource limits. A warm cache avoids repeating the
 download.
