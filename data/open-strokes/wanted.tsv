@@ -1,88 +1,52 @@
-char	codepoint	source	blocks	alone	examples	named	found	read	within
-⺏	U+2E8F	cns11643	0	0		尣	2	3435×2	𡰇𪏍
-⺺	U+2EBA	cns11643	0	0		肀	4	5112×4	𢗱𣌦𤞍𦘡
-⻀	U+2EC0	cns11643	0	0		⻀	1	2112×1	𬈜
-⻁	U+2EC1	cns11643	0	0		虎	104	21531535×103 12531535×1	㙈䖊䖋䖌䖎䖐䖓䖔
-⻆	U+2EC6	cns11643	0	0		角	244	3535121×214 3535112×26 3525112×2	㓩䇶䚗䚘䚙䚚䚛䚜
-⻋	U+2ECB	cns11643	0	0		车	84	1521×73 1512×11	䢀䢁䢂伡军斩毂砗
-⻔	U+2ED4	cns11643	0	0		门	5	245×3 425×2	们扪钔𡭜𪡯
-⻝	U+2EDD	cns11643	0	0		食	84	341511534×80 344511534×4	䉵䓹䬥䬩䬭䬸䭁䭆
-⻣	U+2EE3	cns11643	0	0		骨	275	2512453544×216 255453511×46 2512453511×12	䮩䯆䯇䯈䯉䯊䯋䯌
-⻤	U+2EE4	cns11643	0	0		鬼	133	3251213554×132 43251213554×1	㟴㱱䁛䈭䌆䫥䰟䰤
-⻨	U+2EE8	cns11643	0	0		麦	21	1121354×16 111354×4 113154×1	唛麸麺𥟀𥪣𧵷𨀱𨅫
-⻰	U+2EF0	cns11643	0	0		龙	32	13543×22 13534×8 13435×2	䶮咙垄垅宠拢昽栊
-⻱	U+2EF1	cns11643	0	0		龜	23	3525112555151134×21 32511525115115134×1 32511551151125341×1	䶯䶰䶱䶲櫷龝龞𤒅
-〡	U+3021	cns11643	0	0			0		
-〤	U+3024	cns11643	0	0			0		
-〥	U+3025	cns11643	0	0			0		
-〦	U+3026	cns11643	0	0			0		
-〧	U+3027	cns11643	0	0			0		
-〨	U+3028	cns11643	0	0			0		
-〩	U+3029	cns11643	0	0			0		
-〻	U+303B	cns11643	0	0			0		
-𖿢	U+16FE2	cns11643	0	0			0		
-𖿣	U+16FE3	cns11643	0	0			0		
-𖿰	U+16FF0	cns11643	0	0			0		
-𖿱	U+16FF1	cns11643	0	0			0		
-𖿲	U+16FF2	cns11643	0	0			0		
-𖿳	U+16FF3	cns11643	0	0			0		
-𖿴	U+16FF4	cns11643	0	0			0		
-𖿵	U+16FF5	cns11643	0	0			0		
-𖿶	U+16FF6	cns11643	0	0			0		
-⺏	U+2E8F	rime-stroke	0	0		尣	2	pnpz×2	𡰇𪏍
-⺺	U+2EBA	rime-stroke	0	0		肀	4	zhhs×4	𢗱𣌦𤞍𦘡
-⻀	U+2EC0	rime-stroke	0	0		⻀	1	hss×1 shsh×1	𬈜
-⻁	U+2EC1	rime-stroke	0	0		虎	142	shzphzpz×142 hszphzpz×1 shzphzp×1	㙈䖊䖋䖌䖎䖐䖓䖔
-⻆	U+2EC6	rime-stroke	0	0		角	319	pzpzhhs×312 pzpzhsh×280 pzszhhs×3	㓩䇶䚗䚘䚙䚚䚛䚜
-⻋	U+2ECB	rime-stroke	0	0		车	196	hzsh×164 hzhs×32	䢀䢁䢂伡军斩毂砗
-⻔	U+2ED4	rime-stroke	0	0		门	23	nsz×23 snz×3	们扪钔𡭜𪡯𫔬𫔸𫩖
-⻝	U+2EDD	rime-stroke	0	0		食	111	pnnzhhzpn×107 pnhzhhzpn×102 pnnzhhzn×2	䉵䓹䬥䬩䬭䬸䭁䭆
-⻣	U+2EE3	rime-stroke	0	0		骨	345	szznzszhh×338 szhsnzpznh×265 szhsnzpznn×217	䮩䯆䯇䯈䯉䯊䯋䯌
-⻤	U+2EE4	rime-stroke	0	0		鬼	166	pszhhpzzn×158 pszhshpzzn×157 npszhshpzzn×2	㟴㱱䁛䈭䌆䫥䰟䰤
-⻱	U+2EF1	rime-stroke	0	0		龜	29	pszhhszzhhzhhzpnh×28 pzszhhszzzhzhhpn×26 pzszhhszzhhzhhzpnh×20	䶯䶰䶱䶲櫷龝龞𤒅
-〡	U+3021	rime-stroke	0	0			0		
-〤	U+3024	rime-stroke	0	0			0		
-〥	U+3025	rime-stroke	0	0			0		
-〦	U+3026	rime-stroke	0	0			0		
-〧	U+3027	rime-stroke	0	0			0		
-〨	U+3028	rime-stroke	0	0			0		
-〩	U+3029	rime-stroke	0	0			0		
-〻	U+303B	rime-stroke	0	0			0		
-𖿢	U+16FE2	rime-stroke	0	0			0		
-𖿣	U+16FE3	rime-stroke	0	0			0		
-𖿰	U+16FF0	rime-stroke	0	0			0		
-𖿱	U+16FF1	rime-stroke	0	0			0		
-𖿲	U+16FF2	rime-stroke	0	0			0		
-𖿳	U+16FF3	rime-stroke	0	0			0		
-𖿴	U+16FF4	rime-stroke	0	0			0		
-𖿵	U+16FF5	rime-stroke	0	0			0		
-𖿶	U+16FF6	rime-stroke	0	0			0		
-⺏	U+2E8F	kanjivg	0	0			0		
-⺺	U+2EBA	kanjivg	0	0			0		
-⻀	U+2EC0	kanjivg	0	0		艹	247	122×247	夢寛満甍舊艾芋芍
-⻁	U+2EC1	kanjivg	0	0		虎	2	21351535×2	號鯱
-⻆	U+2EC6	kanjivg	0	0		角	11	3535211×11	埆斛桷觚觜解觥触
-⻋	U+2ECB	kanjivg	0	0			0		
-⻔	U+2ED4	kanjivg	0	0			0		
-⻘	U+2ED8	kanjivg	0	0		青	5	12112511×4 12112521×1	情精菁靖静
-⻝	U+2EDD	kanjivg	0	0		食	4	341511534×3 342511534×1	喰餮饕饗
-⻣	U+2EE3	kanjivg	0	0		骨	13	2521452511×13	榾滑猾磆骭骰骸骼
-⻤	U+2EE4	kanjivg	0	0		鬼	11	3252113554×11	傀塊嵬愧槐蒐醜隗
-⻱	U+2EF1	kanjivg	0	0		龜	1	3525112555151134×1	龝
-〡	U+3021	kanjivg	0	0			0		
-〤	U+3024	kanjivg	0	0			0		
-〥	U+3025	kanjivg	0	0			0		
-〦	U+3026	kanjivg	0	0			0		
-〧	U+3027	kanjivg	0	0			0		
-〨	U+3028	kanjivg	0	0			0		
-〩	U+3029	kanjivg	0	0			0		
-〻	U+303B	kanjivg	0	0			0		
-𖿢	U+16FE2	kanjivg	0	0			0		
-𖿣	U+16FE3	kanjivg	0	0			0		
-𖿰	U+16FF0	kanjivg	0	0			0		
-𖿱	U+16FF1	kanjivg	0	0			0		
-𖿲	U+16FF2	kanjivg	0	0			0		
-𖿳	U+16FF3	kanjivg	0	0			0		
-𖿴	U+16FF4	kanjivg	0	0			0		
-𖿵	U+16FF5	kanjivg	0	0			0		
-𖿶	U+16FF6	kanjivg	0	0			0		
+char	codepoint	source	blocks	alone	examples
+〡	U+3021	cns11643	0	0	
+〤	U+3024	cns11643	0	0	
+〥	U+3025	cns11643	0	0	
+〦	U+3026	cns11643	0	0	
+〧	U+3027	cns11643	0	0	
+〨	U+3028	cns11643	0	0	
+〩	U+3029	cns11643	0	0	
+〻	U+303B	cns11643	0	0	
+𖿢	U+16FE2	cns11643	0	0	
+𖿣	U+16FE3	cns11643	0	0	
+𖿰	U+16FF0	cns11643	0	0	
+𖿱	U+16FF1	cns11643	0	0	
+𖿲	U+16FF2	cns11643	0	0	
+𖿳	U+16FF3	cns11643	0	0	
+𖿴	U+16FF4	cns11643	0	0	
+𖿵	U+16FF5	cns11643	0	0	
+𖿶	U+16FF6	cns11643	0	0	
+〡	U+3021	rime-stroke	0	0	
+〤	U+3024	rime-stroke	0	0	
+〥	U+3025	rime-stroke	0	0	
+〦	U+3026	rime-stroke	0	0	
+〧	U+3027	rime-stroke	0	0	
+〨	U+3028	rime-stroke	0	0	
+〩	U+3029	rime-stroke	0	0	
+〻	U+303B	rime-stroke	0	0	
+𖿢	U+16FE2	rime-stroke	0	0	
+𖿣	U+16FE3	rime-stroke	0	0	
+𖿰	U+16FF0	rime-stroke	0	0	
+𖿱	U+16FF1	rime-stroke	0	0	
+𖿲	U+16FF2	rime-stroke	0	0	
+𖿳	U+16FF3	rime-stroke	0	0	
+𖿴	U+16FF4	rime-stroke	0	0	
+𖿵	U+16FF5	rime-stroke	0	0	
+𖿶	U+16FF6	rime-stroke	0	0	
+〡	U+3021	kanjivg	0	0	
+〤	U+3024	kanjivg	0	0	
+〥	U+3025	kanjivg	0	0	
+〦	U+3026	kanjivg	0	0	
+〧	U+3027	kanjivg	0	0	
+〨	U+3028	kanjivg	0	0	
+〩	U+3029	kanjivg	0	0	
+〻	U+303B	kanjivg	0	0	
+𖿢	U+16FE2	kanjivg	0	0	
+𖿣	U+16FE3	kanjivg	0	0	
+𖿰	U+16FF0	kanjivg	0	0	
+𖿱	U+16FF1	kanjivg	0	0	
+𖿲	U+16FF2	kanjivg	0	0	
+𖿳	U+16FF3	kanjivg	0	0	
+𖿴	U+16FF4	kanjivg	0	0	
+𖿵	U+16FF5	kanjivg	0	0	
+𖿶	U+16FF6	kanjivg	0	0	

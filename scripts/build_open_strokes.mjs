@@ -448,15 +448,15 @@ for (const line of readFileSync(new URL('../data/component-forms.tsv', import.me
 }
 // A pair of nearly the same appearance is not always the same shape: ⺫ is paired with 目 and drawn
 // as 罒. `data/stroke-form-names.tsv` names the component each form is drawn as and says whether it
-// has that component's outline; only then is what the component is written as the form's order.
-/** @type {Set<string>} The forms drawn with the outline of the component they are read under. */
-const SAME_SHAPE = new Set()
+// has that component's outline, which the evidence of a row read under it repeats.
+/** @type {Map<string, string>} Whether each form has the outline of the component it is read under. */
+const SHAPES = new Map()
 for (const line of readFileSync(new URL('../data/stroke-form-names.tsv', import.meta.url), 'utf8').split('\n')) {
   if (!line || line.startsWith('#')) continue
   const [form, name, shape, basis] = line.split('\t')
   if ([...form].length !== 1 || [...(name ?? '')].length !== 1 || !['same', 'variant'].includes(shape) || !basis?.trim()) throw Error(`data/stroke-form-names.tsv: ${line}`)
   PAIRS.set(form, name)
-  if (shape === 'same') SAME_SHAPE.add(form)
+  SHAPES.set(form, shape)
 }
 /** @type {string[][]} */
 const induced = []
@@ -555,38 +555,40 @@ const passes = SOURCES.map(({ source, table, region }) => {
   const readings = new Map()
   for (const component of new Set(none.flatMap(entry => [entry.char, ...entry.blockers]))) {
     let named = component, within = readWithin(component, mine, region, places)
-    if (!within.found.length && PAIRS.has(component)) { named = PAIRS.get(component); within = readWithin(named, mine, region, places) }
+    // Under whichever name more characters are written with.
+    const paired = PAIRS.has(component) ? readWithin(PAIRS.get(component), mine, region, places) : null
+    if (paired && paired.found.length > within.found.length) { named = PAIRS.get(component); within = paired }
     readings.set(component, { named, within })
   }
   const count = basis => result.rows.filter(row => row[3] === basis).length
   return { source, recorded: table.size, entered: entered.size, equivalent: count('equivalent') + equal.size, ids: count('ids'), borrowed: borrowed.size, left: none, readings }
 })
 /**
- * The order a source's characters agree a form is written as: the form has the outline of the
- * component it is read under, enough characters were read, and nearly all leave one order.
+ * What a source's characters write a form as most often, with the reading it comes from.
  * @param {string} source @param {string} char
  */
-function agreed(source, char) {
+function most(source, char) {
   const reading = passes.find(pass => pass.source === source).readings.get(char)
-  if (!reading || !SAME_SHAPE.has(char) || reading.within.found.length < SUPPORT) return null
-  const [order, count] = reading.within.votes[0]
-  return count / reading.within.found.length >= AGREEMENT ? { order, named: reading.named } : null
+  return reading?.within.found.length ? { order: reading.within.votes[0][0], ...reading } : null
 }
+/** @type {string[][]} What each row read inside characters rests on. */
+const evidence = []
 const left = passes.map(({ left: without, readings, ...row }) => {
   const { source } = row
-  // A form takes the order its own source's characters agree on, else the one another source's do.
+  // A form takes the order most of its own source's characters leave, else most of another source's.
   // Only a character that keeps no other back is taken: nothing is read again after it.
   const taken = new Set()
-  for (const { char, blockers } of without) {
+  for (const { char } of without) {
     if (without.some(other => other.blockers.includes(char))) continue
-    let found = agreed(source, char), lender = ''
-    // Another source's characters are read only where this one's are too few, not where they disagree.
-    if (!found && (readings.get(char)?.within.found.length ?? 0) < SUPPORT) for (const other of LENDERS[source]) {
-      const theirs = agreed(other, char)
-      if (theirs) { found = { order: inSymbols(theirs.order, source), named: theirs.named }; lender = other; break }
+    let found = most(source, char), lender = ''
+    if (!found) for (const other of LENDERS[source]) {
+      found = most(other, char)
+      if (found) { found = { ...found, order: inSymbols(found.order, source) }; lender = other; break }
     }
     if (!found) continue
     induced.push([char, point(char), found.order, 'within', found.named, source, '', lender])
+    evidence.push([char, point(char), source, found.named, SHAPES.get(char) ?? '', String(found.within.found.length),
+      found.within.votes.slice(0, 3).map(([order, count]) => `${inSymbols(order, source)}×${count}`).join(' '), found.within.found.slice(0, 8).join(''), lender])
     taken.add(char)
   }
   const none = without.filter(entry => !taken.has(entry.char))
@@ -604,9 +606,7 @@ const left = passes.map(({ left: without, readings, ...row }) => {
     }
   }
   for (const [component, entry] of [...blocking].sort((a, b) => b[1].alone - a[1].alone || b[1].blocks.length - a[1].blocks.length || byCodePoint(a[0], b[0]))) {
-    const { named, within } = readings.get(component)
-    wanted.push([component, point(component), source, String(entry.blocks.length), String(entry.alone), entry.blocks.slice(0, 8).join(''),
-      within.found.length ? named : '', String(within.found.length), within.votes.slice(0, 3).map(([order, count]) => `${order}×${count}`).join(' '), within.found.slice(0, 8).join('')])
+    wanted.push([component, point(component), source, String(entry.blocks.length), String(entry.alone), entry.blocks.slice(0, 8).join('')])
   }
   return { ...row, within: taken.size, none: none.length, reasons }
 })
@@ -644,7 +644,8 @@ const files = [
     [...kanjivg.keys()].sort(byCodePoint).map(char => [char, point(char), kanjivg.get(char).join(' '), kanjivgTypes.get(char).join(' ')])),
   write('induced.tsv.gz', ['char', 'codepoint', 'orders', 'basis', 'from', 'source', 'ids', 'lent'], induced),
   write('entered.tsv', ['char', 'codepoint', 'orders', 'basis', 'by', 'source', 'date'], enteredRows),
-  write('wanted.tsv', ['char', 'codepoint', 'source', 'blocks', 'alone', 'examples', 'named', 'found', 'read', 'within'], wanted),
+  write('wanted.tsv', ['char', 'codepoint', 'source', 'blocks', 'alone', 'examples'], wanted),
+  write('within.tsv', ['char', 'codepoint', 'source', 'named', 'shape', 'found', 'read', 'within', 'lent'], evidence),
 ]
 // The LGPL asks that its text, and the GPL's it builds on, travel with the data.
 const LICENCES = { 'rime-stroke-LGPL-3.0.txt': 'LICENSE-rime-stroke-LGPL-3.0.txt', 'GPL-3.0.txt': 'LICENSE-GPL-3.0.txt', 'rime-stroke-AUTHORS.txt': 'AUTHORS-rime-stroke.txt' }
@@ -748,7 +749,8 @@ The format is \`ids-input/open-strokes\`, version 3.
 | \`kanjivg.tsv.gz\` | ${n(file('kanjivg.tsv.gz').rows)} | Japanese order, from KanjiVG: \`char\`, \`codepoint\`, \`orders\`, \`strokes\` (KanjiVG's type of each stroke, as it writes them). CC BY-SA 3.0. |
 | \`induced.tsv.gz\` | ${n(file('induced.tsv.gz').rows)} | Induced and borrowed orders: \`char\`, \`codepoint\`, \`orders\`, \`basis\`, \`from\`, \`source\`, \`ids\`, \`lent\`. Each row keeps the terms of its \`source\` and of the sources in \`lent\`. |
 | \`entered.tsv\` | ${n(file('entered.tsv').rows)} | Orders entered by hand: \`char\`, \`codepoint\`, \`orders\`, \`basis\`, \`by\`, \`source\`, \`date\`. CC0 1.0. |
-| \`wanted.tsv\` | ${n(file('wanted.tsv').rows)} | Characters and components no source has an order for, with what the source's characters write them as: \`char\`, \`codepoint\`, \`source\`, \`blocks\`, \`alone\`, \`examples\`, \`named\`, \`found\`, \`read\`, \`within\`. CC0 1.0. |
+| \`wanted.tsv\` | ${n(file('wanted.tsv').rows)} | Characters and components no source has an order for: \`char\`, \`codepoint\`, \`source\`, \`blocks\`, \`alone\`, \`examples\`. CC0 1.0. |
+| \`within.tsv\` | ${n(file('within.tsv').rows)} | What each \`within\` row of \`induced.tsv.gz\` rests on: \`char\`, \`codepoint\`, \`source\`, \`named\`, \`shape\`, \`found\`, \`read\`, \`within\`, \`lent\`. Each row keeps the terms of the source whose characters were read. |
 | \`manifest.json\` | | Sources with checksums, licences, coverage and the tables below. |
 | \`LICENSE-rime-stroke-LGPL-3.0.txt\`, \`LICENSE-GPL-3.0.txt\`, \`AUTHORS-rime-stroke.txt\` | | The terms and authors of the Rime dictionary. |
 | \`LICENSE-kanjivg-CC-BY-SA-3.0.txt\` | | The terms of KanjiVG. |
@@ -815,13 +817,12 @@ convention they follow.
   components, and \`from\` is the other source whose order the row repeats, in this source's
   symbols. ${n(cover('cns11643').borrowed)} rows in \`cns11643\`, ${n(cover('rime-stroke').borrowed)} in \`rime-stroke\`, ${n(cover('kanjivg').borrowed)} in \`kanjivg\`.
 
-- \`within\`: the character is a form of the CJK Radicals Supplement with the outline of a
-  component the descriptions name, \`from\` is that component, and the order is what the source's
-  characters write the component as: each character whose description names it, with the other
-  parts' orders taken off the front and the back of its own. It is taken where at least ${SUPPORT}
-  characters were read and ${Math.round(AGREEMENT * 100)}% or more leave the same order; \`lent\` names the source whose
-  characters were read where the row's own had too few. ${n(cover('cns11643').within)} rows in \`cns11643\`, ${n(cover('rime-stroke').within)} in
-  \`rime-stroke\`, ${n(cover('kanjivg').within)} in \`kanjivg\`.
+- \`within\`: the character is a form of the CJK Radicals Supplement that no source records,
+  \`from\` is the component the descriptions write it as, and the order is what most of the
+  source's characters write that component as: each character whose description names it, with the
+  other parts' orders taken off the front and the back of its own. \`lent\` names the source whose
+  characters were read where the row's own has none. ${n(cover('cns11643').within)} rows in \`cns11643\`, ${n(cover('rime-stroke').within)} in
+  \`rime-stroke\`, ${n(cover('kanjivg').within)} in \`kanjivg\`. \`within.tsv\` gives what each rests on.
 
 A source borrows from the nearest convention first: \`cns11643\` from \`rime-stroke\` then
 \`kanjivg\`, \`rime-stroke\` from \`cns11643\` then \`kanjivg\`, \`kanjivg\` from \`cns11643\` then
@@ -893,24 +894,29 @@ writes its own character and lets the characters it is a component of be induced
 
 \`wanted.tsv\` lists, per source, what is left to enter: the characters that end without an
 order and the components that keep characters from being written, none of which any source
-records. \`blocks\` counts the characters a component keeps back and \`alone\` the ones it is the
+records or any recorded character is written with. \`blocks\` counts the characters a component keeps back and \`alone\` the ones it is the
 only obstacle to, most first.
 To add an order, append a row to \`data/stroke-orders-entered.tsv\` in the repository and rebuild.
 
-The last four columns read a wanted component inside the characters the source records. \`found\`
-counts the characters whose description names it, down to three descriptions deep, where the
-operators on the way to it are ⿰ ⿱ ⿲ ⿳ and every other part has an order: taking those off the
-front and the back of the character's own order leaves the component's. \`read\` gives up to three
-such orders, each with the number of characters that write it (\`1535×32\`), and \`within\` up to
-eight of the characters. \`named\` is the name it was found under. The descriptions never name a
-form of the CJK Radicals Supplement itself: they name the unified ideograph Unicode's
-\`EquivalentUnifiedIdeograph.txt\` pairs it with (旡 for ⺛), so a form is searched under that
-ideograph. Where the pair is not the shape the form is drawn as, \`data/stroke-form-names.tsv\` in
-the repository names the component that is: ⺫ is paired with 目 and searched under 罒. That file
-also says whether each form has its component's outline. A form that does, with a reading enough
-characters agree on, gets a \`within\` row in \`induced.tsv.gz\` and leaves this list. What stays
-here is read from too few characters, in rival orders, or under a component the form is only drawn
-close to: there the reading is evidence for a person entering the order.
+## Orders read inside characters
+
+\`within.tsv\` holds the evidence of each \`within\` row. \`found\` counts the characters whose
+description names the component, down to three descriptions deep, where the operators on the way
+to it are ⿰ ⿱ ⿲ ⿳ and every other part has an order: taking those off the front and the back of
+the character's own order leaves the component's. \`read\` gives up to three such orders, each
+with the number of characters that leave it (\`1521×73 1512×11\`); the row takes the first.
+\`within\` lists up to eight of the characters and \`lent\` the source they are from where it is
+not the row's own.
+
+\`named\` is the component the form was read under. The descriptions never name a form of the
+CJK Radicals Supplement itself: they name the unified ideograph Unicode's
+\`EquivalentUnifiedIdeograph.txt\` pairs it with (旡 for ⺛). Where that pair is not the shape the
+form is drawn as, \`data/stroke-form-names.tsv\` in the repository names the component that is:
+⺫ is paired with 目 and read under 罒. \`shape\` repeats that file's verdict: \`same\` where the
+form has the component's outline, \`variant\` where it is only drawn close to it.
+
+A \`within\` row is a reading, not a record. One read from few characters, from characters that
+disagree, or under a \`variant\` shape is weaker than the rest, and \`within.tsv\` says which.
 
 ## Coverage
 

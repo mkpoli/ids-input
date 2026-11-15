@@ -10,7 +10,7 @@ const readme = readFileSync(at('README.md'), 'utf8')
 const table = name => gunzipSync(readFileSync(at(name))).toString().replace(/\n$/, '').split('\n').map(line => line.split('\t'))
 const rime = table('rime-stroke.tsv.gz'), cns = table('cns11643.tsv.gz'), induced = table('induced.tsv.gz'), kanjivg = table('kanjivg.tsv.gz')
 const plain = name => readFileSync(at(name), 'utf8').replace(/\n$/, '').split('\n').map(line => line.split('\t'))
-const entered = plain('entered.tsv'), wanted = plain('wanted.tsv')
+const entered = plain('entered.tsv'), wanted = plain('wanted.tsv'), evidence = plain('within.tsv')
 const orders = rows => new Map(rows.slice(1).map(row => [row[0], row[2].split(' ')]))
 const digits = code => [...code].map(letter => ({ h: '1', s: '2', p: '3', n: '4', z: '5' })[letter]).join('')
 const twins = new Map(readFileSync(new URL('../data/component-forms.tsv', import.meta.url), 'utf8').split('\n').map(line => line.split('\t')).filter(row => row[2] === 'unicode-ucd' && row[3] === 'EquivalentUnifiedIdeograph').map(row => [row[0], row[1]]))
@@ -106,8 +106,8 @@ describe('the open stroke-order release', () => {
         expect(written.split(' ')).toEqual(own[key].get(from) ?? given?.[2].split(' '))
         expect(lent).toBe(own[key].has(from) ? '' : given?.[7])
       } else if (basis === 'within') {
-        // A form read inside characters has the outline of the component it is read under.
-        expect(shapes.get(char)).toEqual({ name: from, shape: 'same' })
+        // A form read inside characters is read under the component it is drawn as.
+        expect(shapes.get(char)?.name).toBe(from)
         expect(written).toMatch(key === 'rime-stroke' ? /^[hspnz]+$/ : /^[1-5]+$/)
         expect(own[key].has(char)).toBe(false)
       } else if (basis === 'borrowed') {
@@ -164,21 +164,38 @@ describe('the open stroke-order release', () => {
     }
   })
 
-  it('writes a radical form as the characters with its component agree, and leaves the unsure ones', () => {
+  it('writes a radical form as most of the characters with its component do, and says what that rests on', () => {
     const within = (char, key) => induced.find(row => row[0] === char && row[5] === key && row[3] === 'within')
+    const rests = (char, key) => evidence.find(row => row[0] === char && row[2] === key)
+    const tables = { 'rime-stroke': orders(rime), cns11643: orders(cns), kanjivg: orders(kanjivg) }
     // All 33 CNS characters with 旡 leave 1535 for it.
     expect(within('⺛', 'cns11643')?.slice(2)).toEqual(['1535', 'within', '旡', 'cns11643', '', ''])
-    // KanjiVG records one such character, so CNS's are read and named.
-    expect(within('⺛', 'kanjivg')?.slice(2)).toEqual(['1535', 'within', '旡', 'kanjivg', '', 'cns11643'])
+    expect(rests('⺛', 'cns11643')?.slice(3, 7)).toEqual(['旡', 'same', '33', '1535×33'])
     // ⺫ is paired with 目 by Unicode and drawn as 罒: it is read under 罒.
     expect(twins.get('⺫')).toBe('目')
-    expect(within('⺫', 'cns11643')?.slice(2, 5)).toEqual([orders(cns).get('罒')[0], 'within', '罒'])
-    // ⻋ is read in rival orders and ⻤ is only drawn close to 鬼: both stay wanted, with their readings.
-    for (const char of ['⻋', '⻤']) {
-      expect(within(char, 'cns11643')).toBeUndefined()
-      expect(Number(wanted.find(entry => entry[0] === char && entry[2] === 'cns11643')?.[7])).toBeGreaterThan(0)
+    expect(within('⺫', 'cns11643')?.slice(2, 5)).toEqual([tables.cns11643.get('罒')[0], 'within', '罒'])
+    // ⻋ is read in two orders and takes the commoner; ⻤ is only drawn close to 鬼, which its evidence says.
+    expect(within('⻋', 'cns11643')?.[2]).toBe('1521')
+    expect(rests('⻋', 'cns11643')?.[6]).toBe('1521×73 1512×11')
+    expect(rests('⻤', 'cns11643')?.[4]).toBe('variant')
+    // Every row read inside characters has its evidence, in its own symbols, the order taken first.
+    const rows = induced.slice(1).filter(row => row[3] === 'within')
+    expect(evidence.length - 1).toBe(rows.length)
+    for (const [char, , written, , from, key, , lent] of rows) {
+      const [, , , named, shape, found, read, chars, lender] = rests(char, key)
+      const ways = read.split(' ').map(way => way.split('×'))
+      expect([named, lender, ways[0][0]]).toEqual([from, lent, written])
+      expect(shape).toBe(shapes.get(char).shape)
+      expect(ways.length).toBeLessThanOrEqual(3)
+      for (const [order, count] of ways) {
+        expect(order).toMatch(key === 'rime-stroke' ? /^[hspnz]+$/ : /^[1-5]+$/)
+        expect(Number(count)).toBeGreaterThan(0)
+        expect(Number(count)).toBeLessThanOrEqual(Number(found))
+      }
+      expect(ways.every((way, index) => !index || Number(ways[index - 1][1]) >= Number(way[1]))).toBe(true)
+      // The characters read are records of the source they are read from.
+      expect([...chars].every(example => tables[lender || key].has(example))).toBe(true)
     }
-    expect(wanted.find(entry => entry[0] === '⻋' && entry[2] === 'cns11643')?.[8]).toBe('1521×73 1512×11')
     // Nothing wanted is also written.
     for (const [char, , key] of wanted.slice(1)) expect(induced.some(row => row[0] === char && row[5] === key)).toBe(false)
   })
@@ -202,26 +219,6 @@ describe('the open stroke-order release', () => {
       expect(rows.every(entry => Object.values(tables).every(table => !table.has(entry[0])) && Number(entry[4]) <= Number(entry[3]))).toBe(true)
       // A character left without an order is wanted itself.
       expect(rows.length).toBeGreaterThanOrEqual(row.none)
-      // What the source's characters write a wanted component as: orders in the source's symbols,
-      // most characters first, none counted more often than characters were read.
-      for (const [char, , , , , , named, found, read, within] of rows) {
-        const ways = read ? read.split(' ').map(way => way.split('×')) : []
-        expect(Boolean(named)).toBe(Number(found) > 0)
-        expect(ways.length > 0).toBe(Number(found) > 0)
-        expect(ways.length).toBeLessThanOrEqual(3)
-        for (const [order, count] of ways) {
-          expect(order).toMatch(symbols[row.source])
-          expect(Number(count)).toBeGreaterThan(0)
-          expect(Number(count)).toBeLessThanOrEqual(Number(found))
-        }
-        expect(ways.every((way, index) => !index || Number(ways[index - 1][1]) >= Number(way[1]))).toBe(true)
-        // The characters it is read in are the source's own records.
-        expect([...within].every(example => tables[row.source].has(example))).toBe(true)
-        expect([...within].length).toBeLessThanOrEqual(Math.min(8, Number(found)))
-        // A form no description names is searched under the ideograph Unicode pairs it with.
-        if (named && named !== char) expect(shapes.get(char)?.name ?? twins.get(char)).toBe(named)
-      }
-      expect(rows.every((entry, index) => !index || Number(rows[index - 1][4]) >= Number(entry[4]))).toBe(true)
     }
     expect(readme).toContain('data/stroke-orders-entered.tsv')
   })

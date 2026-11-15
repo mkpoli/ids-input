@@ -25,6 +25,7 @@ Each file keeps its source's terms; this release is not CC0.
 - [kanjivg.tsv.gz](https://ids.mkpo.li/data/open-strokes/kanjivg.tsv.gz): Japanese stroke order with each stroke's type, from KanjiVG (CC BY-SA 3.0).
 - [induced.tsv.gz](https://ids.mkpo.li/data/open-strokes/induced.tsv.gz): orders written from an equivalent character or from IDS components, borrowed from another source, or read inside the characters a radical form is written in, for characters a source lacks.
 - [entered.tsv](https://ids.mkpo.li/data/open-strokes/entered.tsv): orders entered by hand.
+- [within.tsv](https://ids.mkpo.li/data/open-strokes/within.tsv): what each order read inside characters rests on: the component, how many characters, the orders they leave.
 - [wanted.tsv](https://ids.mkpo.li/data/open-strokes/wanted.tsv): the characters and components no source has an order for.
 - [README.md](https://ids.mkpo.li/data/open-strokes/README.md): fields, rules and limits.
 
