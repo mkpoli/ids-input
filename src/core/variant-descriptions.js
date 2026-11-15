@@ -7,12 +7,13 @@
 /**
  * @typedef {object} VariantDescription
  * @property {string} description The sequence's description. A component's form is written as
- *   another character (⻌ for the 辶 of one dot), a variation sequence, a source letter after the
- *   component (平K) or a reference to a GlyphWiki glyph (`&GW-u66f7-var-002;`).
+ *   another character (⻌ for the 辶 of one dot), a variation sequence, a UCV form (曽q1874), a
+ *   source letter after the component (曷J) or a reference to a GlyphWiki glyph (`&GW-…;`).
  * @property {'named' | 'composed' | 'placed' | 'drawn'} how `named`: GlyphWiki names the glyph by
  *   the description. `composed`: the glyph's components are the parts of a description the tables
  *   give the character. `placed`: they stand where such parts stand and differ from them. `drawn`:
- *   the glyph is drawn from strokes, and the description is the character's, not the sequence's own.
+ *   the glyph is drawn from strokes or its components fit no description, and the description is
+ *   the character's, not the sequence's own.
  * @property {string} glyph The GlyphWiki glyph the description was read from.
  */
 

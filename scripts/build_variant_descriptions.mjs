@@ -14,7 +14,7 @@ import { join } from 'node:path'
 import { createInterface } from 'node:readline'
 import { parseArgs } from 'node:util'
 import { gunzipSync, gzipSync } from 'node:zlib'
-import { createDescriber, glyphName, rowsOf } from './lib/variant-descriptions.mjs'
+import { comparedWith, createDescriber, glyphName, rowsOf } from './lib/variant-descriptions.mjs'
 
 const { values } = parseArgs({ options: { ivd: { type: 'string' }, standardized: { type: 'string' }, dump: { type: 'string' }, out: { type: 'string' } } })
 for (const flag of ['ivd', 'standardized', 'dump']) if (!values[/** @type {'ivd'} */ (flag)]) throw Error(`Missing --${flag}`)
@@ -57,7 +57,7 @@ for (let pass = 0; wanted.size || !pass; pass++) {
     const [name, related, row] = line.split('|').map(field => field.trim())
     if (row === undefined || glyphs.has(name) || !wanted.has(name) && (pass || !PLAIN.test(name))) continue
     glyphs.set(name, { related, data: row })
-    for (const { name: inner } of rowsOf(row).placed) if (!glyphs.has(inner) && !wanted.has(inner)) next.add(inner)
+    for (const inner of [...rowsOf(row).placed.map(placed => placed.name), ...comparedWith(name)]) if (!glyphs.has(inner) && !wanted.has(inner)) next.add(inner)
   }
   wanted = next
 }
@@ -71,7 +71,9 @@ for (const name of ['babelstone-ids.tsv.gz', 'yi-bai-ids.tsv.gz']) {
     if (!written || line.startsWith('#')) continue
     const held = tables.get(char) ?? []
     for (const entry of written.split(' ').filter(Boolean)) {
-      const [, text, sources = ''] = /^(.*?)(?:\(([^)]*)\))?$/.exec(entry) ?? []
+      // The sources a description is of: BabelStone's letters, without its bracketed virtual ones.
+      const [, text, tag = ''] = /^(.*?)(?:\(([^)]*)\))?$/.exec(entry) ?? []
+      const sources = /^[A-Z[\]]+$/.test(tag) ? tag.replace(/\[[^\]]*\]/g, '') : ''
       if (text && !held.some(found => found.text === text)) held.push({ text, sources })
     }
     tables.set(char, held)
@@ -98,7 +100,7 @@ const modified = (await stat(dump)).mtime.toISOString().slice(0, 10)
 const header = [
   `# Descriptions of variation sequences: ${registered} of the Ideographic Variation Database and ${sequences.size - registered} standardized ones of CJK compatibility ideographs.`,
   `# IVD_Sequences.txt sha256:${sha256(ivd)}; StandardizedVariants.txt sha256:${sha256(standardized)}; GlyphWiki dump_newest_only.txt of ${modified}.`,
-  '# sequence<TAB>description<TAB>how<TAB>glyph. how: named, composed, placed (the description is the sequence\'s own); drawn (the character\'s, since the glyph is drawn from strokes).',
+  '# sequence<TAB>description<TAB>how<TAB>glyph. how: named, composed, placed (the description is the sequence\'s own); drawn (the character\'s: the glyph is drawn from strokes or its components fit no description).',
 ]
 const out = values.out ?? data('variant-descriptions.tsv.gz')
 await writeFile(out, gzipSync([...header, ...rows].join('\n') + '\n', { level: 9 }))

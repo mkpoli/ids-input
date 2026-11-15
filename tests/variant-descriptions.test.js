@@ -4,13 +4,15 @@ import { readFile } from 'node:fs/promises'
 import { gunzipSync } from 'node:zlib'
 import { createDescriber, glyphName, rowsOf } from '../scripts/lib/variant-descriptions.mjs'
 import { isOwnDescription, readVariantDescriptions } from '../src/core/variant-descriptions.js'
-import { parse } from '../src/core/ids.js'
+import { parse, write } from '../src/core/ids.js'
 
-// Rows of GlyphWiki's dump of 2026-11-15: the glyphs of a few sequences and every glyph they place.
+// Rows of GlyphWiki's dump of 2026-11-14: the glyphs of a few sequences and every glyph they place.
 const rows = JSON.parse(await readFile(new URL('./fixtures/variant-glyphs.json', import.meta.url), 'utf8'))
 const glyphs = new Map(Object.entries(rows).map(([name, [related, data]]) => [name, { related: /** @type {string} */ (related), data: /** @type {string} */ (data) }]))
-const tables = { '突': ['⿱穴犬', '⿱⿱宀儿犬', '⿱⿱宀儿大'], '辻': ['⿺辶十'], '坪': ['⿰土平'], '旲': ['⿱日大'], '臭': ['⿱自犬', '⿱自大'], '葛': ['⿱艹曷'], '穴': ['⿱宀八'] }
-const describe = createDescriber(glyphs, char => tables[/** @type {keyof typeof tables} */ (char)] ?? [], null, new Map([['\u{FA5E}', '艹\u{FE00}']]))
+const tables = { '突': ['⿱穴犬', '⿱⿱宀儿犬', '⿱⿱宀儿大'], '辻': ['⿺辶十'], '坪': ['⿰土平'], '旲': ['⿱日大'], '臭': ['⿱自犬', '⿱自大'], '葛': ['⿱艹曷'], '穴': ['⿱宀八'],
+  '僧': ['⿰亻曾', '⿰亻曽'], '亨': ['⿳亠口了'], '㷭': ['⿱逢火'], '裒': ['⿳亠臼𧘇', '⿳亠𦥑𧘇', '⿱亠𮍦'], '蓬': ['⿱艹逢'], '卅': ['⿻一川', '⿻廾丨'] }
+const ucv = JSON.parse(await readFile(new URL('../data/ucv.json', import.meta.url), 'utf8'))
+const describe = createDescriber(glyphs, char => tables[/** @type {keyof typeof tables} */ (char)] ?? [], ucv, new Map([['\u{FA5E}', '艹\u{FE00}'], ['\u{FA66}', '辶\u{FE00}']]))
 const sequence = (/** @type {number[]} */ ...points) => String.fromCodePoint(...points)
 
 it('names the glyph of a sequence as GlyphWiki does', () => {
@@ -61,8 +63,37 @@ it('writes a source\'s form of a component with the source\'s letter', () => {
   expect(describe(sequence(0x845b, 0xe0101))?.description).toBe('⿱艹曷J')
 })
 
+it('writes a form of a component variation entry with its identifier', () => {
+  // 僧 with the fourth form of UCV #187, 曽.
+  expect(describe(sequence(0x50e7, 0xe0103))?.description).toBe('⿰亻曽q1874')
+})
+
+it('writes a component under its own character where two characters share a glyph', () => {
+  // GlyphWiki draws 了 and 𠄏 U+2010F as one glyph.
+  expect(describe(sequence(0x4ea8, 0xe0100))?.description).toBe('⿳亠口了')
+})
+
+it('reads a glyph of another glyph set as the glyph it is another name of', () => {
+  // `j78-3029` is the plain glyph of 逢.
+  expect(describe(sequence(0x3ded, 0xe0100))).toEqual({ description: '⿱逢火', how: 'composed', glyph: 'u3ded-j' })
+})
+
+it('places no component that lies outside the part it would stand for', () => {
+  // 裒: 衣 encloses 𦥑 and fills the square, so it is no third of ⿳亠𦥑𧘇 nor half of ⿱亠𮍦.
+  expect(describe(sequence(0x88d2, 0xe0100))).toEqual({ description: '⿳亠臼𧘇', how: 'drawn', glyph: 'u88d2' })
+  // 卅: three 十 side by side are not the overlaid parts of ⿻一川.
+  expect(describe(sequence(0x5345, 0xe0102))?.how).toBe('drawn')
+})
+
+it('writes no compatibility ideograph in a description GlyphWiki names a glyph by', () => {
+  expect(describe(sequence(0x84ec, 0xe0105))).toEqual({ description: '⿺\u{2ECC}莑', how: 'named', glyph: 'u2ffa-ufa66-u8391' })
+})
+
 it('refers to the glyph of a form no notation writes', () => {
-  expect(describe(sequence(0x845b, 0xe0100))?.description).toBe('⿱艹&GW-u66f7-var-002;')
+  // 葛 with the second form of UCV #323; without the list, only the glyph's name tells it.
+  expect(describe(sequence(0x845b, 0xe0100))?.description).toBe('⿱艹曷q3232')
+  const unlisted = createDescriber(glyphs, char => tables[/** @type {keyof typeof tables} */ (char)] ?? [])
+  expect(unlisted(sequence(0x845b, 0xe0100))?.description).toBe('⿱艹&GW-u66f7-var-002;')
 })
 
 it('describes no sequence GlyphWiki registers no glyph for', () => {
@@ -78,9 +109,10 @@ it('holds a description for every sequence of the registry and every standardize
   const counts = { named: 0, composed: 0, placed: 0, drawn: 0 }
   for (const { description, how } of table.values()) {
     counts[how]++
-    // A reference names a glyph; the rest reads as a description or one character.
-    const plain = description.replace(/&GW-[^;]+;/g, '口')
-    expect([...plain].length === 1 || !parse(plain).problem || /[{？]/.test(plain)).toBe(true)
+    // Each reads as the parser writes it back, and holds no compatibility ideograph.
+    const read = parse(description)
+    expect([...description].length === 1 || !read.problem && write(read.tree) === description).toBe(true)
+    expect(description.normalize('NFC')).toBe(description)
   }
-  expect(counts).toEqual({ named: 20, composed: 23743, placed: 2055, drawn: 4826 })
+  expect(counts).toEqual({ named: 20, composed: 23890, placed: 1777, drawn: 4957 })
 })

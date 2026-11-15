@@ -16,7 +16,8 @@ import { ucvIdentifier } from '../../src/core/forms.js'
  * @typedef {'named' | 'composed' | 'placed' | 'drawn'} How `named`: the glyph is named by a
  *   description. `composed`: its components are the parts of a description the tables give.
  *   `placed`: its components stand where the parts of such a description stand, and differ from
- *   them. `drawn`: the glyph is drawn from strokes, and the description is the character's own.
+ *   them. `drawn`: the glyph is drawn from strokes, or its components fit no description, and the
+ *   description is the character's own.
  * @typedef {{ description: string, how: How, glyph: string }} Described
  */
 
@@ -24,6 +25,8 @@ const SQUARE = /** @type {Box} */ ([0, 0, 200, 200])
 /** A glyph name of a character: its code point, a variation selector, a source, a place in a
  * character (two digits) and a numbered variant, each optional. */
 const UCS = /^u([0-9a-f]{4,6})(?:-u(fe0[0-9a-f]|e01[0-9a-f]{2}))?(?:-([a-z]{1,2})?(\d{2})?)?(?:-(var|itaiji)-(\d{3}))?$/
+/** The longest reference a description may hold, in code points (`src/core/custom.js`). */
+const LONGEST = 48
 /** The sources a variant identifier names, by GlyphWiki's suffix. */
 const SOURCES = new Map([['g', 'G'], ['t', 'T'], ['j', 'J'], ['k', 'K'], ['v', 'V'], ['h', 'H'], ['u', 'U'], ['m', 'M'], ['s', 'S'], ['kp', 'P']])
 const char = (/** @type {string} */ hex) => String.fromCodePoint(parseInt(hex, 16))
@@ -33,6 +36,20 @@ export const glyphName = sequence => [...sequence].map(c => `u${/** @type {numbe
 
 /** The reference a description names a GlyphWiki glyph by. @param {string} name */
 const reference = name => `&GW-${name};`
+
+/**
+ * The glyphs a glyph's form is told against: its character's plain glyph, that glyph for the same
+ * place in a character, and the glyph itself without its place (`u5e73-k02` has `u5e73`,
+ * `u5e73-02` and `u5e73-k`). Empty for a name that is no character's.
+ * @param {string} name @returns {string[]}
+ */
+export function comparedWith(name) {
+  const read = UCS.exec(name)
+  if (!read || read[2]) return []
+  const [, point, , source, place, kind, number] = read
+  const base = `u${/** @type {number} */ (char(point).normalize('NFC').codePointAt(0)).toString(16)}`
+  return [...new Set([`u${point}`, base, ...(place ? [`u${point}-${place}`, `${base}-${place}`, `u${point}${source ? `-${source}` : ''}${kind ? `-${kind}-${number}` : ''}`] : [])])].filter(other => other !== name)
+}
 
 /**
  * A glyph's rows: the glyphs it places, and the points of its strokes.
@@ -69,26 +86,32 @@ export function createDescriber(glyphs, descriptionsOf, ucv = null, standardized
     })
   }
 
-  /** The glyph a name stands for: one glyph placed alone stands for that glyph. @param {string} name */
-  const resolve = name => {
+  /** The glyph a name stands for, wherever it is placed: one glyph placed alone stands for that
+   * glyph. With `whole`, only where it fills the square, which makes the name another name of it.
+   * @param {string} name @param {boolean} [whole] */
+  const resolve = (name, whole = false) => {
     const seen = new Set([name])
     for (;;) {
       const { placed, points } = rowsOf(glyphs.get(name)?.data ?? '')
       if (placed.length !== 1 || points.length || !glyphs.has(placed[0].name) || seen.has(placed[0].name)) return name
+      if (whole && placed[0].frame.some((value, at) => value !== SQUARE[at])) return name
       seen.add(name = placed[0].name)
     }
   }
+  /** The glyph a name is another name of. @param {string} name */
+  const alias = name => resolve(name, true)
 
   /** @type {Map<string, string>} The character each glyph is the plain glyph of: a unified
-   * ideograph before a radical or a stroke, never a compatibility ideograph. */
+   * ideograph before a radical or a stroke, the lowest code point first, never a compatibility
+   * ideograph or a Kangxi radical. */
   const siblings = new Map()
   const unified = (/** @type {string} */ text) => /^\p{Unified_Ideograph}$/u.test(text)
-  for (const name of glyphs.keys()) {
-    const plain = /^u([0-9a-f]{4,6})$/.exec(name)
-    if (!plain) continue
-    const written = char(plain[1])
-    if (written.normalize('NFC') !== written || !/^[\p{Ideographic}\p{Radical}\u31C0-\u31EF]$/u.test(written)) continue
-    const glyph = resolve(name), held = siblings.get(glyph)
+  const plains = [...glyphs.keys()].flatMap(name => { const plain = /^u([0-9a-f]{4,6})$/.exec(name); return plain ? [parseInt(plain[1], 16)] : [] }).sort((a, b) => a - b)
+  for (const point of plains) {
+    const written = String.fromCodePoint(point)
+    // A Kangxi radical stands for its character as a compatibility ideograph does.
+    if (written.normalize('NFKC') !== written || !/^[\p{Ideographic}\p{Radical}\u31C0-\u31EF]$/u.test(written)) continue
+    const glyph = alias(`u${point.toString(16)}`), held = siblings.get(glyph)
     if (!held || unified(written) && !unified(held)) siblings.set(glyph, written)
   }
 
@@ -97,7 +120,7 @@ export function createDescriber(glyphs, descriptionsOf, ucv = null, standardized
   const registered = new Map()
   for (const name of [...glyphs.keys()].sort()) {
     const read = /^u([0-9a-f]{4,6})-u(fe0[0-9a-f]|e01[0-9a-f]{2})$/.exec(name)
-    if (read && !registered.has(resolve(name))) registered.set(resolve(name), char(read[1]) + char(read[2]))
+    if (read && !registered.has(alias(name))) registered.set(alias(name), char(read[1]) + char(read[2]))
   }
 
   /** @type {Map<string, Box | null>} */
@@ -173,13 +196,35 @@ export function createDescriber(glyphs, descriptionsOf, ucv = null, standardized
     return true
   }
 
+  /** A character as a description writes it: a compatibility ideograph as the character that has
+   * its glyph, else as its standardized sequence. @param {string} point A code point, in hex. */
+  const written = point => {
+    const own = char(point)
+    return own.normalize('NFC') === own ? own : siblings.get(alias(`u${point}`)) ?? standardized.get(own) ?? own.normalize('NFC')
+  }
+
   /** A description GlyphWiki names a glyph by (`u2ff1-u7a74-u72ac`), or null. @param {string} name @returns {Part | null} */
   const named = name => {
     if (!/^u2ff[0-9a-f]-/.test(name)) return null
     const parts = name.match(/u[0-9a-f]{4,6}|cdp-[0-9a-f]{4}/g) ?? []
     if (parts.join('-') !== name) return null
-    const read = parse(parts.map(part => part.startsWith('cdp-') ? `&CDP-${part.slice(4).toUpperCase()};` : char(part.slice(1))).join(''))
+    const read = parse(parts.map(part => part.startsWith('cdp-') ? `&CDP-${part.slice(4).toUpperCase()};` : written(part.slice(1))).join(''))
     return read.problem ? null : read.tree
+  }
+
+  /** A reference to a glyph, or `instead` where the name is longer than a description may hold.
+   * @param {string} name @param {string | null} instead */
+  const referred = (name, instead) => [...reference(name)].length <= LONGEST ? reference(name) : instead ?? '？'
+
+  /**
+   * A glyph of `base` against the character's plain glyph: its own description where it is built
+   * of other parts, the character where it is the same form, else null.
+   * @param {string} base @param {string} name @param {string} plain @param {number} depth @returns {Part | null}
+   */
+  const formOf = (base, name, plain, depth) => {
+    const [made, usual] = depth < 3 ? [built(base, resolve(name), depth + 1), glyphs.has(plain) ? built(base, resolve(plain), depth + 1) : null] : [null, null]
+    if (made && made.description !== usual?.description) return made.tree
+    return !glyphs.has(plain) || sameForm(resolve(name), resolve(plain)) ? base : null
   }
 
   /**
@@ -189,45 +234,52 @@ export function createDescriber(glyphs, descriptionsOf, ucv = null, standardized
    * @returns {{ char: string | null, tree: Part | null, text: Part }}
    */
   const component = (name, depth = 0) => {
-    const tree = named(name)
+    // A glyph named by a description, as placed or as a numbered variant of it.
+    const tree = named(name.replace(/(?:-\d{2})?(?:-(?:var|itaiji)-\d{3})?$/, ''))
     if (tree) return { char: null, tree, text: tree }
     const read = UCS.exec(name)
     if (!read) {
       const cdp = /^cdp-([0-9a-f]{4})(?:-\d{2})?$/.exec(name)
+      if (cdp) return { char: null, tree: null, text: `&CDP-${cdp[1].toUpperCase()};` }
+      // A glyph of another glyph set: the glyph it is another name of, else a form of the
+      // character GlyphWiki relates it to.
+      if (alias(name) !== name) return component(alias(name), depth)
       const related = glyphs.get(name)?.related ?? ''
-      return { char: /^u[0-9a-f]{4,6}$/.test(related) && related !== 'u3013' ? char(related.slice(1)) : null, tree: null, text: cdp ? `&CDP-${cdp[1].toUpperCase()};` : reference(name) }
+      const of = /^u[0-9a-f]{4,6}$/.test(related) && related !== 'u3013' ? char(related.slice(1)).normalize('NFC') : null
+      const form = of ? formOf(of, name, `u${/** @type {number} */ (of.codePointAt(0)).toString(16)}`, depth) : null
+      return { char: of, tree: isNode(form) ? form : null, text: form ?? referred(name, of) }
     }
-    const [, point, selector, source, place, kind] = read
+    const [, point, selector, source, place, kind, number] = read
     // A compatibility ideograph is a form of the character it stands for.
-    const base = char(point).normalize('NFC')
-    if (selector) return { char: base, tree: null, text: kind ? reference(name) : base + char(selector) }
-    if (!source && !kind && base === char(point)) return { char: base, tree: null, text: base }
-    // The glyph of another character, where it is placed whole: that character writes the form.
-    const sibling = siblings.get(resolve(place && !source && !kind ? `u${point}` : name))
-    if (sibling && (!place || !source && !kind)) return { char: base, tree: null, text: sibling }
+    const own = char(point), base = own.normalize('NFC')
+    if (selector) return { char: base, tree: null, text: kind ? referred(name, base) : base + char(selector) }
+    // The character's plain glyph, under whatever name.
+    const usual = place && glyphs.has(`u${point}-${place}`) ? `u${point}-${place}` : `u${point}`
+    if (own === base && (!source && !kind || alias(name) === alias(usual))) return { char: base, tree: null, text: base }
+    // The plain glyph of another character: that character writes the form.
+    const sibling = siblings.get(alias(name)) ?? (place && !source && !kind ? siblings.get(alias(`u${point}`)) : undefined)
+    if (sibling) return { char: base, tree: null, text: sibling }
     // A compatibility ideograph's own glyph is written as its standardized sequence.
-    const sequence = standardized.get(char(point))
-    if (sequence && !kind && (!source || resolve(name) === resolve(`u${point}`))) return { char: base, tree: null, text: sequence }
+    const sequence = standardized.get(own)
+    if (sequence && !kind && (!source || alias(name) === alias(`u${point}`))) return { char: base, tree: null, text: sequence }
     // A glyph registered for a variation sequence of the character: that sequence writes the form.
-    const whole = resolve(place ? name.replace(new RegExp(`${place}(?=$|-)`), '').replace(/-$/, '') : name)
-    const sequenced = registered.get(whole)
+    const whole = `u${point}${source ? `-${source}` : ''}${kind ? `-${kind}-${number}` : ''}`
+    const sequenced = registered.get(alias(place ? whole : name))
     if (sequenced && [...sequenced][0] === base) return { char: base, tree: null, text: sequenced }
     // A form of a component variation entry, as placed or as the entry names it.
-    const listed = forms.get(name) ?? forms.get(`u${point}${source ? `-${source}` : ''}${kind ? name.slice(name.lastIndexOf(`-${kind}-`)) : ''}`)
-    if (listed && (listed.text ?? listed.of) && (listed.text || listed.id)) {
-      const text = listed.text ?? `${listed.of}${listed.id}`
-      const form = parse(text)
-      if (!form.problem && !text.includes('⬚')) return { char: base, tree: null, text: isNode(form.tree) ? form.tree : text }
+    const listed = forms.get(name) ?? forms.get(whole)
+    if (listed?.text && !listed.text.includes('⬚')) {
+      const form = parse(listed.text)
+      if ([...listed.text].length === 1 || !form.problem && !isNode(form.tree)) return { char: base, tree: null, text: listed.text }
+      if (!form.problem) return { char: base, tree: form.tree ?? null, text: form.tree ?? base }
     }
+    if (listed?.of === base && listed.id) return { char: base, tree: null, text: base + listed.id }
     // A source's form or a numbered variant, against the plain glyph of the same place.
-    const usualName = `u${base.codePointAt(0)?.toString(16)}`
-    const plain = place && glyphs.has(`${usualName}-${place}`) ? `${usualName}-${place}` : usualName
-    const [made, usual] = depth < 3 ? [built(base, resolve(name), depth + 1), built(base, resolve(plain), depth + 1)] : [null, null]
-    // Built of other parts than the plain glyph: the form is that description.
-    if (made && made.description !== usual?.description) return { char: base, tree: made.tree, text: made.tree }
-    if (!glyphs.has(plain) || sameForm(resolve(name), resolve(plain))) return { char: base, tree: null, text: base }
-    const letter = kind || base !== char(point) ? undefined : SOURCES.get(/** @type {string} */ (source))
-    return { char: base, tree: null, text: letter ? base + letter : reference(name) }
+    const plainName = `u${/** @type {number} */ (base.codePointAt(0)).toString(16)}`
+    const form = formOf(base, name, place && glyphs.has(`${plainName}-${place}`) ? `${plainName}-${place}` : plainName, depth)
+    if (form !== null) return { char: base, tree: isNode(form) ? form : null, text: form }
+    const letter = kind || own !== base ? undefined : SOURCES.get(/** @type {string} */ (source))
+    return { char: base, tree: null, text: letter ? base + letter : referred(name, base) }
   }
 
   /** A component's character, without its variant identifier or selector. @param {string} part */
@@ -255,7 +307,7 @@ export function createDescriber(glyphs, descriptionsOf, ucv = null, standardized
     if (op === '⿳') return cut(0, at / 3, 1, (at + 1) / 3)
     if (!at || arity(op) < 2) return cut(0, 0, 1, 1)
     const inner = { '⿴': [0.25, 0.25, 0.75, 0.75], '⿵': [0.2, 0.35, 0.8, 1], '⿶': [0.2, 0, 0.8, 0.65], '⿷': [0.35, 0.2, 1, 0.8], '⿼': [0, 0.2, 0.65, 0.8],
-      '⿸': [0.3, 0.3, 1, 1], '⿹': [0, 0.3, 0.7, 1], '⿺': [0.3, 0, 1, 0.7], '⿽': [0.3, 0, 1, 0.7] }[op]
+      '⿸': [0.3, 0.3, 1, 1], '⿹': [0, 0.3, 0.7, 1], '⿺': [0.3, 0, 1, 0.7], '⿽': [0, 0, 0.7, 0.7] }[op]
     return inner ? cut(inner[0], inner[1], inner[2], inner[3]) : cut(0, 0, 1, 1)
   }
 
@@ -326,28 +378,36 @@ export function createDescriber(glyphs, descriptionsOf, ucv = null, standardized
     const same = (part, piece) => typeof part === 'string'
       ? piece.char === plainOf(part)
       : piece.tree ? write(piece.tree) === write(part) : piece.char !== null && treesOf(piece.char).some(found => write(found) === write(part))
-    /** @type {{ tree: Part, score: number, exact: boolean, margin: number } | null} */
-    let best = null
+    /** How much of `box` lies in `slot`, from 0 to 1. @param {Box} slot @param {Box} box */
+    const inside = (slot, box) => {
+      const w = Math.min(slot[2], box[2]) - Math.max(slot[0], box[0]), h = Math.min(slot[3], box[3]) - Math.max(slot[1], box[1])
+      return w <= 0 || h <= 0 ? 0 : w * h / Math.max((box[2] - box[0]) * (box[3] - box[1]), 1)
+    }
+    // The best reading of each description the components could write: 2 where they are its
+    // parts, 1 where they only stand where its parts stand.
+    /** @type {Map<string, { tree: Part, score: number, rank: number }>} */
+    const readings = new Map()
     const every = orders(parts.length)
     for (const candidate of candidates) {
       for (const way of divisions(candidate, whole, parts.length)) {
         if (way.length !== parts.length) continue
-        const scored = every.map(order => ({ order,
-          exact: order.every((piece, at) => same(way[at].part, parts[piece])),
-          score: order.reduce((sum, piece, at) => sum + shared(way[at].box, parts[piece].box), 0) / parts.length }))
-          .sort((a, b) => Number(b.exact) - Number(a.exact) || b.score - a.score)
-        const [first, ...others] = scored
-        // The next order that would write another description.
-        const written = (/** @type {number[]} */ order) => order.map(piece => write(parts[piece].text)).join(' ')
-        const next = others.find(other => written(other.order) !== written(first.order))
-        const margin = next && next.exact === first.exact ? first.score - next.score : 1
-        if (best && (Number(best.exact) > Number(first.exact) || best.exact === first.exact && best.score >= first.score)) continue
-        best = { tree: first.order.reduce((made, piece, at) => put(made, way[at].path, parts[piece].text), /** @type {Part} */ (candidate)), score: first.score, exact: first.exact, margin }
+        // Parts that share one place, as those of ⿻ do, cannot be told apart by where they lie.
+        const apart = new Set(way.map(piece => piece.box.join())).size === way.length
+        for (const order of every) {
+          const exact = order.every((piece, at) => same(way[at].part, parts[piece]))
+          if (!exact && !(apart && order.every((piece, at) => inside(way[at].box, parts[piece].box) >= 0.6))) continue
+          const score = order.reduce((sum, piece, at) => sum + shared(way[at].box, parts[piece].box), 0) / parts.length
+          const tree = order.reduce((made, piece, at) => put(made, way[at].path, parts[piece].text), /** @type {Part} */ (candidate))
+          const text = write(tree), held = readings.get(text), rank = exact ? 2 : 1
+          if (!held || held.rank < rank || held.rank === rank && held.score < score) readings.set(text, { tree, score, rank })
+        }
       }
     }
+    const [best, next] = [...readings.values()].sort((a, b) => b.rank - a.rank || b.score - a.score)
     if (!best) return null
-    if (best.exact) return { description: write(best.tree), tree: best.tree, how: 'composed' }
-    return best.score >= 0.3 && best.margin >= 0.1 ? { description: write(best.tree), tree: best.tree, how: 'placed' } : null
+    if (best.rank === 2) return { description: write(best.tree), tree: best.tree, how: 'composed' }
+    // Placed: the components lie in the parts' places, and no other description fits nearly as well.
+    return best.score >= 0.3 && (!next || best.score - next.score >= 0.1) ? { description: write(best.tree), tree: best.tree, how: 'placed' } : null
   }
 
   /**
@@ -366,6 +426,7 @@ export function createDescriber(glyphs, descriptionsOf, ucv = null, standardized
     const of = other && !other[2] && char(other[1]) !== base && descriptionsOf(char(other[1])).length ? char(other[1]) : base
     // A source's glyph of the character is described as that source writes it.
     const source = other && char(other[1]) === base && !other[4] && !other[5] ? SOURCES.get(other[3] ?? '') : undefined
-    return { description: descriptionsOf(of, source)[0] ?? of, how: 'drawn', glyph }
+    const description = descriptionsOf(of, source).find(text => { const read = parse(text); return !read.problem && isNode(read.tree) })
+    return { description: description ?? of, how: 'drawn', glyph }
   }
 }
