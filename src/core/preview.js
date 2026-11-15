@@ -1,5 +1,6 @@
 // @ts-nocheck: geometry over plain arrays, as in a drawing.
-import { entryDescription, isDescription as isWhole, parse, withoutVariants, write } from './ids.js'
+import { entryDescription, isDescription as isWhole, parse, variantOf, withoutVariants, write } from './ids.js'
+import { variationBase } from './variation.js'
 
 // What the editor's preview shows around a drawing: its badge, and the boxes where nothing is drawn
 // yet (a fast layout before the engine's has loaded). The drawing itself — its file, its parts by
@@ -88,29 +89,67 @@ export function roughLayout(tree, box = [0, 0, 1, 1], flip = [false, false], cut
  * preview's data cannot be read at all, `unavailable`, which shows placeholders with no badge. Nothing
  * is handed over once `signal` aborts.
  * @param {string} text
- * @param {{ preview?: Function, drawing?: Function, signal: AbortSignal }} asking
+ * @param {{ preview?: Function, drawing?: Function, formed?: (text: string, options?: { signal?: AbortSignal }) => Promise<string | null>, signal: AbortSignal }} asking
+ *   `formed` answers the description with each form a variant identifier names written as what
+ *   draws it, or null where it names none; such a description has no final image.
  * @param {(patch: { step?: string, url?: string, drawn?: object, sketch?: object[] }) => void} update
  */
-export function runPreview(text, { preview, drawing, signal }, update) {
-  // A zi.tools entry draws its description; its notes are not part of the text asked for.
-  // A variant identifier says which form of a component is meant; one glyph is drawn for each.
+export function runPreview(text, { preview, drawing, formed, signal }, update) {
   const read = /[.0-9A-Za-z]/.test(text) ? parse(text, { open: true }) : null
-  const asked = read && !read.problem && read.tree !== null ? write(withoutVariants(read.tree)) : entryDescription(text)
-  const whole = isWhole(asked)
-  let final = false
-  const none = () => { if (!signal.aborted && !preview && !final) update({ step: 'idle' }) }
-  if (drawing && whole) drawing(asked, { signal }).then(url => {
+  const plain = plainText(text)
+  /** @param {string} asked @param {Function | undefined} drawing */
+  const run = (asked, drawing) => {
+    const whole = isWhole(asked)
+    let final = false
+    const none = () => { if (!signal.aborted && !preview && !final) update({ step: 'idle' }) }
+    if (drawing && whole) drawing(asked, { signal }).then(url => {
+      if (signal.aborted) return
+      if (!url) { none(); return }
+      final = true
+      update({ step: 'final', url })
+    }, none)
+    if (!preview) { if (!drawing || !whole) none(); return }
+    preview(asked, { signal, onSketch: sketch => { if (!signal.aborted) update({ sketch }) } }).then(drawn => {
+      if (!signal.aborted && !final) update({ step: 'composed', drawn })
+    }, error => {
+      if (!signal.aborted && !final) update({ step: error?.name === 'TooLargeError' ? 'capped' : error?.name === 'UnavailableError' ? 'unavailable' : 'failed' })
+    })
+  }
+  // Only a text that may carry an identifier is asked about; the rest draw as they always did. One
+  // component with its identifier is no description, and is asked about all the same.
+  if (!formed || !preview || !read || (!read.problem && plain === entryDescription(text))) { run(plain, drawing); return }
+  formed(text, { signal }).then(shaped => shaped, () => null).then(shaped => {
     if (signal.aborted) return
-    if (!url) { none(); return }
-    final = true
-    update({ step: 'final', url })
-  }, none)
-  if (!preview) { if (!drawing || !whole) none(); return }
-  preview(asked, { signal, onSketch: sketch => { if (!signal.aborted) update({ sketch }) } }).then(drawn => {
-    if (!signal.aborted && !final) update({ step: 'composed', drawn })
-  }, error => {
-    if (!signal.aborted && !final) update({ step: error?.name === 'TooLargeError' ? 'capped' : error?.name === 'UnavailableError' ? 'unavailable' : 'failed' })
+    if (shaped) run(shaped, undefined)
+    else run(plain, drawing)
   })
+}
+
+/**
+ * A text as a composer reads it when no form of it is known: a zi.tools entry is its description,
+ * without its notes, and every variant identifier is dropped, since one glyph is drawn for each
+ * component. One component with an identifier (壬q0012, which is no description) is its component.
+ * @param {string} text
+ */
+export function plainText(text) {
+  if (!/[.0-9A-Za-z]/.test(text)) return entryDescription(text)
+  const read = parse(text, { open: true })
+  if (!read.problem && read.tree !== null && read.tree !== undefined) return write(withoutVariants(read.tree))
+  const alone = variantOf(text)
+  return alone.variant && variationBase(alone.base) !== null ? alone.base : entryDescription(text)
+}
+
+/**
+ * A text as a composer is to draw it: `formed`'s answer where it names forms (see `runPreview`),
+ * else `plainText`. For a drawing asked for outside `runPreview`: a tab's icon, a layer's part.
+ * @param {string} text
+ * @param {((text: string, options?: { signal?: AbortSignal }) => Promise<string | null>) | undefined} formed
+ * @param {{ signal?: AbortSignal }} [options]
+ */
+export async function drawnText(text, formed, options) {
+  if (!/[.0-9A-Za-z]/.test(text)) return plainText(text)
+  const shaped = formed ? await formed(text, options).then(answer => answer, () => null) : null
+  return shaped ?? plainText(text)
 }
 
 /**
@@ -124,7 +163,7 @@ export function runPreview(text, { preview, drawing, signal }, update) {
 export function askDrawable(ask, drawable) {
   if (!ask || !drawable) return ask
   const wrapped = async (text, options) => {
-    const swap = /[{&#]/.test(text) ? await drawable(text, { signal: options?.signal }).catch(() => null) : null
+    const swap = /[{&#㇯]/.test(text) ? await drawable(text, { signal: options?.signal }).catch(() => null) : null
     if (!swap || swap.text === text) return ask(text, options)
     const place = index => swap.leaves[index] ?? index
     const onSketch = options?.onSketch && (sketch => options.onSketch(ownSketch(sketch, place)))
@@ -132,7 +171,9 @@ export function askDrawable(ask, drawable) {
     if (!drawn) return drawn
     /** @param {{ leaf?: number }} item */
     const own = item => item.leaf === undefined ? item : { ...item, leaf: place(item.leaf) }
-    return { ...drawn, ...(drawn.parts ? { parts: drawn.parts.map(own) } : {}), ...(drawn.emoji ? { emoji: drawn.emoji.map(own) } : {}) }
+    // A component drawn by a stand-in for its shape makes the drawing approximate, as an operator does.
+    const approximate = swap.approximate?.length ? [...new Set([...(drawn.approximate ?? []), ...swap.approximate])] : drawn.approximate
+    return { ...drawn, ...(approximate ? { approximate } : {}), ...(drawn.parts ? { parts: drawn.parts.map(own) } : {}), ...(drawn.emoji ? { emoji: drawn.emoji.map(own) } : {}) }
   }
   if (ask.warm) wrapped.warm = ask.warm
   return wrapped

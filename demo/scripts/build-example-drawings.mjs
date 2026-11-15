@@ -39,63 +39,68 @@ const loadBopomofo = async () => bundledOutlines('sources/bopomofo/outlines.json
 const bopomofoSources = new Map()
 await source.ready()
 
-// 黃金萬兩 sets 黃 above 金, and 黃 ends in two dots that sit in the gap between them.
-// The print the example follows joins the two: 金's roof takes the dots' place. Drop the
-// dots from 黃's own outline and let the roof meet the body it belongs to.
-const JOINED_DOTS = '⿱⿱龷由⿱金⿱田⿵冂山'
+// 黃金萬兩 as the photographed 揮春 writes it: 金's 八 hangs from the foot of 黄's 由, and 萬's
+// band stands under 金. The composer gives each operand of a stack its own row, so the three parts
+// are set here, in em units (y down), with 八 just overlapping 由 so the strokes join.
+const HUANG_JIN_WAN = '⿱⿱龷由⿱⿱⿰丿㇏⿻王丷⿱田⿵冂山'
+const HUANG_JIN_WAN_BOXES = [
+  ['Noto Sans CJK: ⿱龷由', [185, 40, 815, 320]],
+  ['Noto Sans CJK: ⿱⿰丿㇏⿻王丷', [60, 312, 940, 665]],
+  ['Noto Sans CJK: ⿱田⿵冂山', [120, 688, 880, 958]],
+]
 
-// The stored drawings run y down, and a viewer that flips y shows them upside down.
-function inkBox(d) {
-  const nums = (String(d).match(/-?\d+\.?\d*/g) || []).map(Number)
-  const xs = nums.filter((_, i) => i % 2 === 0)
-  const ys = nums.filter((_, i) => i % 2 === 1)
-  return [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)]
-}
-
-function inkExtent(d) {
-  const nums = (String(d).match(/-?\d+\.?\d*/g) || []).map(Number)
-  const ys = nums.filter((_, i) => i % 2 === 1)
-  return [Math.min(...ys), Math.max(...ys)]
-}
-
-// 黃金萬兩 sets 黃 above 金, and 黃 ends in two dots that sit in the gap between them. The
-// print the example follows joins the two: 金's roof takes the dots' place. Drop the dots
-// from 黃's own outline, then lift 金 and 萬 until the roof meets 黃's body.
-// The approved arrangement, in em units: 黄's body at the top, 金 under it, 萬's band
-// under that. The composer allocates heights from the operands it is given, and the body
-// is shorter than 黄, so the parts are set here and the stack reads as one column.
-const STACK = { body: 34, jinTop: 362, jinBottom: 601, bandTop: 621 };
-
-function place(body, jin, band) {
-  return [[body, 34, 362], [jin, STACK.jinTop, STACK.jinBottom], [band, STACK.bandTop, 921]];
-}
-
-function joinHuangToJin(drawn) {
-  const body = drawn?.parts?.find(p => String(p.origin).startsWith('Noto Sans CJK: ⿱龷由'))
-  const jin = drawn?.parts?.find(p => String(p.origin).startsWith('host 鑫'))
-  if (!body || !jin) return drawn
-  const fit = (part, left, right, top, bottom) => {
-    const box = inkBox(part.d)
-    const kx = (right - left) / (box[1] - box[0])
-    const ky = (bottom - top) / (box[3] - box[2])
-    part.d = transformPath(part.d, (x, y) => [
-      left + (x - box[0]) * kx, top + (y - box[2]) * ky])
+/** Where a quadratic or cubic Bézier coordinate turns, as parameters in (0, 1). */
+function turns(values) {
+  if (values.length === 3) {
+    const [a, b, c] = values, den = a - 2 * b + c
+    return den ? [(a - b) / den] : []
   }
-  fit(body, 194, 812, 34, 362)
-  fit(jin, 116, 889, STACK.jinTop, STACK.jinBottom)
-  drawn.d = drawn.parts.map(p => p.d).join('')
-  return drawn
+  const [a, b, c, d] = values
+  const qa = -a + 3 * b - 3 * c + d, qb = 2 * (a - 2 * b + c), qc = b - a
+  if (Math.abs(qa) < 1e-9) return qb ? [-qc / qb] : []
+  const disc = qb * qb - 4 * qa * qc
+  if (disc < 0) return []
+  return [(-qb + Math.sqrt(disc)) / (2 * qa), (-qb - Math.sqrt(disc)) / (2 * qa)]
 }
 
-// 萬 is the base of the stack. Give it the height the stack needs, keep a gap under 金, and
-// narrow it to 金's width so it does not stand wider than the components above it. The paths
-// are absolute, so each command's points can be transformed without touching the letters.
+function bezier(values, t) {
+  const u = 1 - t
+  return values.length === 3
+    ? u * u * values[0] + 2 * u * t * values[1] + t * t * values[2]
+    : u * u * u * values[0] + 3 * u * u * t * values[1] + 3 * u * t * t * values[2] + t * t * t * values[3]
+}
+
+/** The ink box of an absolute M/L/Q/C/Z path, as [left, top, right, bottom]. */
+function inkBox(d) {
+  const box = [Infinity, Infinity, -Infinity, -Infinity]
+  const add = (x, y) => { box[0] = Math.min(box[0], x); box[1] = Math.min(box[1], y); box[2] = Math.max(box[2], x); box[3] = Math.max(box[3], y) }
+  let at = [0, 0]
+  for (const [, cmd, args] of String(d).matchAll(/([MLQCZ])([^MLQCZ]*)/g)) {
+    if (cmd === 'Z') continue
+    const nums = (args.match(/-?\d+\.?\d*/g) || []).map(Number)
+    const step = cmd === 'Q' ? 4 : cmd === 'C' ? 6 : 2
+    for (let i = 0; i + step <= nums.length; i += step) {
+      const points = [at]
+      for (let k = 0; k < step; k += 2) points.push([nums[i + k], nums[i + k + 1]])
+      const end = points[points.length - 1]
+      add(...end)
+      if (step > 2) for (const axis of [0, 1]) {
+        const values = points.map(point => point[axis])
+        for (const t of turns(values)) if (t > 0 && t < 1) {
+          const v = bezier(values, t)
+          add(axis ? bezier(points.map(point => point[0]), t) : v, axis ? v : bezier(points.map(point => point[1]), t))
+        }
+      }
+      at = end
+    }
+  }
+  return box
+}
+
+/** Maps every point of an absolute path; Z passes through. */
 function transformPath(d, map) {
   let out = ''
-  const re = /([MLQCZ])([^MLQCZ]*)/g
-  let m
-  while ((m = re.exec(d))) {
-    const [cmd, args] = [m[1], m[2]]
+  for (const [, cmd, args] of String(d).matchAll(/([MLQCZ])([^MLQCZ]*)/g)) {
     if (cmd === 'Z') { out += 'Z'; continue }
     const nums = (args.match(/-?\d+\.?\d*/g) || []).map(Number)
     const pts = []
@@ -108,26 +113,14 @@ function transformPath(d, map) {
   return out
 }
 
-function fitWanToStack(drawn) {
-  const jin = drawn?.parts?.find(p => String(p.origin).startsWith('host 鑫'))
-  const wans = (drawn?.parts ?? []).filter(p => String(p.origin).startsWith('Noto Sans CJK: ⿱田⿵冂山'))
-  if (!jin || wans.length === 0) return drawn
-  const boxes = wans.map(p => inkBox(p.d))
-  const jinBox = inkBox(jin.d)
-  const top = Math.min(...boxes.map(b => b[2]))
-  const bottom = Math.max(...boxes.map(b => b[3]))
-  const left = Math.min(...boxes.map(b => b[0]))
-  const right = Math.max(...boxes.map(b => b[1]))
-  const height = bottom - top
-  const width = right - left
-  if (!(height > 0 && width > 0)) return drawn
-  const GAP = 20
-  const ky = (STACK.bandTop ? 300 : 300) / height
-  const kx = (jinBox[1] - jinBox[0]) / width
-  const cx = (left + right) / 2
-  const jx = (jinBox[0] + jinBox[1]) / 2
-  for (const part of wans) {
-    part.d = transformPath(part.d, (x, y) => [jx + (x - cx) * kx, jinBox[3] + GAP + (y - top) * ky])
+function stackHuangJinWan(drawn) {
+  const groups = HUANG_JIN_WAN_BOXES.map(([origin, target]) => [drawn?.parts?.filter(p => String(p.origin).startsWith(origin)) ?? [], target])
+  if (groups.some(([parts]) => parts.length === 0)) return drawn
+  for (const [parts, [left, top, right, bottom]] of groups) {
+    const boxes = parts.map(p => inkBox(p.d))
+    const [x0, y0, x1, y1] = [0, 1, 2, 3].map(i => (i < 2 ? Math.min : Math.max)(...boxes.map(b => b[i])))
+    const kx = (right - left) / (x1 - x0), ky = (bottom - top) / (y1 - y0)
+    for (const part of parts) part.d = transformPath(part.d, (x, y) => [left + (x - x0) * kx, top + (y - y0) * ky])
   }
   drawn.d = drawn.parts.map(p => p.d).join('')
   return drawn
@@ -150,7 +143,7 @@ for (const example of EXAMPLES) {
     // the sign and the 二简字 group are drawn from the description, so the thumbnail matches the editor.
     const drafted = (DRAFTED.get(example.sequence) ?? null) !== null
     const drawn = await compose(selected, drafted ? example.sequence : example.char || example.sequence)
-    if (example.sequence === JOINED_DOTS) { joinHuangToJin(drawn); fitWanToStack(drawn) }
+    if (example.sequence === HUANG_JIN_WAN) stackHuangJinWan(drawn)
     drawings[example.sequence] = { char: example.char, drawn }
     console.log(`drew ${example.char || example.sequence}`)
   } catch (error) {

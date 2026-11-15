@@ -70,6 +70,46 @@ start. `strokeLetters` in the data file gives the chain for each CJK stroke, fro
 from 黒丿乀's table (<https://note.com/midzchi_/n/n21737ee18736>), whose author warns that it
 contains mistakes.
 
+### The three files
+
+The README of <https://github.com/yi-bai/ids> (revision `2597437`) describes them:
+
+| file | README | 马 | 㽕 |
+| --- | --- | --- | --- |
+| `ids_lv0.txt` | "All differences in strokes are differentiated." | `⿹𢎘z一.(.);⿹𢎘z一t(t)` | `⿱由𢎘.(.);⿳由乛㇉(K);⿱由𢎘z(T)` |
+| `ids_lv1.txt` | "Stroke-level differences (e.g. 丶 and 乀 in certain position) are merged." | `⿹𢎘一` | `⿱由𢎘(.,T);⿳由乛㇉(K)` |
+| `ids_lv2.txt` | "Part of variants defined in UCV list, which considered as \"must unifiable\" are merged." | `⿹𢎘一` | `⿱由𢎘(.,T);⿳由乛㇉(K)` |
+
+Only level 0 writes an identifier after each component. Level 1 drops them and joins the
+descriptions that then read alike: the two of 㽕 become one, for `.` and `T`.
+
+### Reading a variant identifier
+
+A row lists the forms of a character, each followed by the identifier of that form:
+
+```
+𢎘   ⿱𠃌㇉(.);⿱𠃍㇉(z)
+```
+
+| written | form | first stroke |
+| --- | --- | --- |
+| `𢎘.` | default | 𠃌 (U+200CC), a turn with a hook |
+| `𢎘z` | `z`, turn | 𠃍 (U+200CD), a turn without one |
+
+Inside a description the identifier follows the component it belongs to. 马 is `⿹𢎘z一.`: 𢎘 in
+its `z` form and 一 in its default one. Its second form, `⿹𢎘z一t`, changes 一 to the rising
+stroke and keeps `𢎘z`.
+
+`z` means two things. After a component it is the stroke-style letter for a turn. As the last
+letter of a chain, `#(…z)`, it joins the end of the line to its start.
+
+### One shape, two spellings
+
+The tables write the hookless frame of 马 as the character, `𢎘z`, and the same two strokes as a
+chain, `#(-𠃍㇉)`, in 𠀟, 𱶉 and 𲍥. They never say the two are one shape. This project reads them
+as one and marks the reading editorial (`scripts/data/custom-characters.json`). The hooked chain
+`#(-𠃌㇉)` of 乌 has no such reading: the tables write 乌 with the chain and nowhere with 𢎘.
+
 ## Earlier and proposed notation
 
 Four documents on zi.tools' notation predate or extend the grammar above. None of what they add
@@ -113,18 +153,27 @@ zi.tools' `ids_lv1.txt` at the pinned revision. GPL-2.0-or-later, since CHISE's 
 
 - `components`: one row per custom component — `text`, `kind`, `source`, BabelStone's
   `description` and `fragment`, `uses` (characters described with it), `examples`, `usedIn` (all
-  of those characters, as one string), `subtraction`
+  of those characters, as one string), `subtractions`
   (the component as a character less one part, `㇯凫几`), `draw` and `equivalents`.
 - `draw`: what a composer draws in the component's place — BabelStone's fragment, the private-use
   glyph of BabelStone Han PUA, or the best equivalent made of characters only. 972 have one.
+- `subtractions`: the component as a character less its other parts, `㇯馬灬` for `{51}`,
+  `㇯㇯𠙖冫几` where two are taken. Every character one of the form's sources describes with the
+  component beside one or two characters gives one; a spelling two forms would both claim is
+  dropped. `createCustomComponents(data).normalize(text)` writes such a subtraction as the form's
+  identifier, and `drawable` draws it as the form.
+- `character`: the encoded character a component is read as a form of, `{ text, char, variant, in,
+  basis }` — `#(-𠃍㇉)` as `𢎘z`. `basis` is `editorial`: no table states it. The rows and their
+  sources are `editorial`, from `scripts/data/custom-characters.json`.
 - `equivalents`: what the component is in another table, `{ in, text, count, characters, status,
   basis, id, arrangements }`; `id` is the form the text is, and `arrangements` the same parts
   bracketed another way, each a form of its own. A component carries its form's `id` and `char`,
   and a character row the `ids` of the forms it names. `difference` rows are solved; `inverse` rows turn a solved row round.
   `verified` means two or more characters give the same spelling, `candidate` that none does;
   `count` is the characters that give the same parts in any arrangement.
-- `characters`: a description of a character in a notation its source did not write, `{ char,
-  text, in, from, basis, of, status }`.
+- `characters`: a description of a character reached from another table's, `{ char, text, in,
+  from, basis, of, status, ids, attested }`. `attested` is set where the table named by `in` writes
+  that description itself; the rest are in a notation whose table did not write them.
 - `forms`: one row per form, `{ id, char, names }`; `retired` lists numbers no longer given out.
 - `strokeLetters`, `chainNames`, `sources`, `counts`.
 

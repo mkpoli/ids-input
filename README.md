@@ -198,6 +198,19 @@ remains in the field. Resolution is bounded to eight opened components and 128 c
 and non-unifiable component variations from `data/ucv.json`, each form drawn from
 `data/ucv-forms.json.gz`; the workshop shows it as its `/ucv` page.
 
+With `variations`, the menu of a component's forms in `IdsTree` also lists the other characters and
+descriptions of the IRG component variation entries the component is a form of (王 and 𡈼 for 壬 in
+UCV #1, 間 for 閒 in NUCV #325), each under its entry; choosing one writes it in the component's
+place. `componentForms(part, { sequences, ucv })` in the core gives that list.
+
+A form of an entry that no code point names is written with zi.tools' variant identifier after the
+component: `壬q0012` is the second form of UCV #1. An adapter that answers `formed(sequence)`
+(`babelStoneAdapter({ variations })` over `data/ucv.json`) has the menu offer those forms too, and
+the preview draws each from `data/ucv-outlines.json.gz`, which a host lists for the composer as
+`host/outlines.json.gz`; `data/ucv-outlines-sans.json.gz` holds the same forms in Gothic, for a
+Sans face. Without them the identifier is kept in the description and the plain
+component is drawn.
+
 With `variations`, `IdsPartTools` also offers the forms the IRG unifies with the chosen component
 (its UCV entries, read from `data/ucv.json` when a component is first chosen); `variationsHref(entry)`
 gives each entry number a link.
@@ -918,7 +931,7 @@ which are laid out as equal cells. Under Vite, keep both packages out of depende
 (`optimizeDeps: { exclude: ['ids-input', '@han-compose/composer'] }`) so the Worker's URL resolves;
 `composerPreview({ base, worker })` takes a function making the Worker for other bundlers.
 
-The demo draws Sans from `https://ids-input-composer.mkpoli.workers.dev/a83fc941166b-sans-compose-layout-v4-f6+variants/`,
+The demo draws Sans from `https://ids-input-composer.mkpoli.workers.dev/a83fc941166b-sans-compose-layout-v4-f7+variants/`,
 Serif from the serif export, Fangsong from the Zhuque Fangsong export, and Kaisho from the Kureedo export; `?composer=<url>` or
 `VITE_COMPOSER_BASE` points every face at another copy of one export. A face that cannot draw a
 description draws the encoded character it names in that face, else the Sans export's drawing.
