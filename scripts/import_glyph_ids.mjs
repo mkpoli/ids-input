@@ -27,12 +27,13 @@ for (const [key, answer] of Object.entries(answers)) {
   // The desk's benchmark deck reviews han2ids' own renders, not han-input glyphs.
   if (key.startsWith('han2ids-clean:')) continue
   if (!KEY.test(key)) throw new Error(`${key}: not a han-input record key`)
-  const verdict = VERDICTS[answer.c]
-  if (!verdict) throw new Error(`${key}: unknown answer ${answer.c}`)
+  if (!Object.hasOwn(VERDICTS, answer.c)) throw new Error(`${key}: unknown answer ${answer.c}`)
+  const verdict = VERDICTS[/** @type {keyof typeof VERDICTS} */ (answer.c)]
+  if (verdict === 'known' && (!['zi.tools', 'babelstone'].includes(answer.by ?? '') || !answer.page?.trim())) throw new Error(`${key}: known without a source page`)
   const ids = (answer.ids ?? '').trim()
   if (Boolean(ids) !== !['wrong', 'unclear'].includes(verdict)) throw new Error(`${key}: ${verdict} with ids "${ids}"`)
   if (ids && [...ids].length > 1 && !isDescription(ids)) unread.push(`${key}\t${ids}`)
-  const by = verdict === 'known' ? `${answer.by ?? ''} ${answer.page ?? ''}`.trim() : verdict === 'model' ? `han2ids ${answer.c}` : ''
+  const by = verdict === 'known' ? `${answer.by} ${answer.page?.trim()}` : verdict === 'model' ? `han2ids ${answer.c}` : ''
   rows.push([key, ids, verdict, by, answer.judged ?? '', answer.at ?? ''])
 }
 rows.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))
