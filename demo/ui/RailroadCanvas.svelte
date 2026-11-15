@@ -314,7 +314,7 @@
   .zoom{display:flex;gap:4px;align-items:center;margin-left:auto}
   .zoom output{min-width:44px;text-align:center;font-family:var(--ui-font-mono);font-size:12px;color:var(--ui-color-ink-soft)}
   .body{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:8px}
-  .canvas{position:relative;height:min(70dvh,640px);overflow:clip;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-sm);background:var(--ui-color-surface);touch-action:none;cursor:grab;outline-offset:2px}
+  .canvas{position:relative;height:min(70dvh,640px);overflow:clip;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-sm);background:var(--ui-color-surface);touch-action:none;-webkit-user-select:none;user-select:none;cursor:grab;outline-offset:2px}
   .canvas:active{cursor:grabbing}
   .plane{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
   .panel{min-width:0;display:flex;flex-direction:column;gap:8px;padding:10px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-sm);background:var(--ui-color-surface);max-height:min(70dvh,640px);overflow:auto}
