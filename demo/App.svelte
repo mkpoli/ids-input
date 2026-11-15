@@ -140,10 +140,44 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const sealAdapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, jurchen: jurchenData, ids, layers, zitools, chise: corpus, project: projectIds, overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains, custom })
+  // The description tables are three megabytes a drawing rarely reads, and on a slow line they share
+  // it with the layout the drawing waits for. They load once the first drawing is shown, at once
+  // when that drawing reads them or none is coming, and after ten seconds whatever happened.
+  let releaseTables = () => {}
+  /** @type {Promise<void>} */
+  const firstDrawing = new Promise(resolve => { releaseTables = resolve })
+  onMount(() => {
+    const bound = setTimeout(releaseTables, 10_000)
+    return () => clearTimeout(bound)
+  })
+  const sealAdapter = smallSealAdapter({ after: firstDrawing, data: sealData, shuishu: shuishuData, jurchen: jurchenData, ids, layers, zitools, chise: corpus, project: projectIds, overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains, custom })
 
   const operatorSet = new Set(OPERATORS.map(([op]) => op))
-  const babel = { ...sealAdapter, recognizeDrawing, parts: async () => {
+  /** The tables for a drawing that reads them: they stop waiting for it. */
+  const tables = {
+    encoded: (/** @type {Parameters<typeof sealAdapter.encoded>} */ ...asked) => { releaseTables(); return sealAdapter.encoded(...asked) },
+    structure: (/** @type {Parameters<typeof sealAdapter.structure>} */ ...asked) => { releaseTables(); return sealAdapter.structure(...asked) },
+  }
+  // The first search reads the description tables, and the other faces' samples read six megabytes
+  // of layout models: the samples wait for a first search under way, so the two do not share the line.
+  let searching = 0, searched = false
+  /** @type {(() => void)[]} */
+  const afterSearch = []
+  /** @template {(...asked: any[]) => Promise<any>} Search @param {Search} search @returns {Search} */
+  const counted = search => /** @type {Search} */ (async (...asked) => {
+    searching++
+    try { return await search(...asked) } finally {
+      searching--
+      searched = true
+      for (const start of afterSearch.splice(0)) start()
+    }
+  })
+  /** @returns {Promise<void>} */
+  const firstSearch = () => searched || !searching ? Promise.resolve() : new Promise(resolve => afterSearch.push(resolve))
+  const babel = { ...sealAdapter, recognizeDrawing,
+    findByIds: counted(sealAdapter.findByIds), findByStructure: counted(sealAdapter.findByStructure),
+    findByUnknownStructure: counted(sealAdapter.findByUnknownStructure), findSimilar: counted(sealAdapter.findSimilar),
+    parts: async () => {
     const curated = await sealAdapter.parts()
     const seen = new Set(curated.map(part => part.part))
     return [...curated, ...sealExtraParts.filter(part => !seen.has(part)).map(part => ({ part, kind: /** @type {const} */ ('seal'), sealGroup: /** @type {const} */ ('other') }))]
@@ -268,7 +302,7 @@
       // A description whose operator modifier narrows it to one character draws that character: the
       // layout ignores the crossing the modifier names.
       if (sequence.includes('[')) {
-        const exact = await babel.encoded(sequence, { exact: true, signal: options?.signal }).catch(() => [])
+        const exact = await tables.encoded(sequence, { exact: true, signal: options?.signal }).catch(() => [])
         const [char] = exact
         if (exact.length === 1 && char !== undefined) return composed(char, { signal: options?.signal })
       }
@@ -284,7 +318,7 @@
       if (!sequence.includes('[') && APPROXIMATE.some(operator => sequence.includes(operator))) {
         // An example states the character it names, so it draws without waiting for the corpus.
         const [named] = EXAMPLE_CHARACTERS.has(sequence) ? [EXAMPLE_CHARACTERS.get(sequence) || undefined]
-          : await babel.encoded(sequence).catch(() => [])
+          : await tables.encoded(sequence).catch(() => [])
         if (named !== undefined && [...named].length === 1 && named !== sequence) {
           try { return await draw(named, options) } catch { /* compose it */ }
         }
@@ -303,7 +337,7 @@
       } catch (error) {
         if (options?.signal?.aborted || stopping(error)) throw error
         // A description of an encoded character draws that character when the face has its glyph.
-        const found = split ? [] : await babel.encoded(sequence).catch(() => [])
+        const found = split ? [] : await tables.encoded(sequence).catch(() => [])
         for (const char of found) {
           if ([...char].length !== 1 || char === sequence) continue
           try { return await composed(char) } catch { /* the default export draws the sequence */ }
@@ -312,7 +346,7 @@
         // by, when every operator in it places its operands predictably. The drawing is marked so a
         // reader can see it was assembled rather than drawn.
         if ([...sequence].length === 1) {
-          const described = await babel.structure(sequence).catch(() => [])
+          const described = await tables.structure(sequence).catch(() => [])
           for (const { text } of described) {
             if (text === sequence || !composableDescription(text)) continue
             try { return { ...(await composed(text, options)), composed: true } } catch { /* the default export draws it */ }
@@ -335,6 +369,7 @@
   let previewStep = $state(/** @type {'idle' | 'loading' | 'composed' | 'final' | 'failed' | 'capped' | 'unavailable'} */ ('idle'))
   const order = createDrawingOrder()
   $effect(() => order.hold(previewStep === 'loading'))
+  $effect(() => { if (previewStep !== 'loading') releaseTables() })
   // Tab icons need their own drawer so their requests cannot cancel the main preview.
   /** @type {Map<string, ReturnType<typeof createIconDrawings>>} */
   const iconDrawings = new Map()
@@ -389,7 +424,12 @@
       sampleDrawings.delete(oldKey)
     }
     if (!sampleDrawings.has(key)) {
-      const preview = order.after(previewAt(at, separate, option.style, `switch-${option.key}`))
+      const face = previewAt(at, separate, option.style, `switch-${option.key}`)
+      const preview = order.after(async (/** @type {string} */ sequence, /** @type {{ signal?: AbortSignal }} */ options) => {
+        await firstSearch()
+        options?.signal?.throwIfAborted()
+        return face(sequence, options)
+      })
       sampleDrawings.set(key, createSampleDrawings((sequence, { signal }) => preview(sequence, { signal })))
     }
     return /** @type {ReturnType<typeof createSampleDrawings>} */ (sampleDrawings.get(key))
