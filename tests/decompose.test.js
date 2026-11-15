@@ -108,3 +108,15 @@ describe('keys in the tree', () => {
     expect(treeKey([], 0, 'ArrowDown')).toBeNull()
   })
 })
+
+describe('the tokens of operators and ideographs alone', () => {
+  it('are the code points, whether or not the text is one whole description', () => {
+    for (const text of ['⿰亻哥', '⿱艹⿰氵母', '木林', '⿰木', '⿰木林森', '⿰𠀀𪜀', '⿺⻌⼈', '㇯木㇀', '木'])
+      expect(tokens(text)).toEqual([...text])
+  })
+  it('stay whole where a selector, a brace or a mark joins two code points', () => {
+    expect(tokens('⿰木︀林')).toEqual(['⿰', '木︀', '林'])
+    expect(tokens('⿰木{1}')).toEqual(['⿰', '木', '{1}'])
+    expect(tokens('⿰木#(㇐㇑)')).not.toEqual([...'⿰木#(㇐㇑)'])
+  })
+})
