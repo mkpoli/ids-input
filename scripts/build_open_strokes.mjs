@@ -6,10 +6,12 @@
 //                       added, through Extension J (LGPL-3.0)
 //   kanjivg.tsv.gz      Japanese order, as KanjiVG draws it stroke by stroke (CC BY-SA 3.0)
 //   entered.tsv         orders entered by hand in `data/stroke-orders-entered.tsv`
-//   wanted.tsv          the components whose order would let the most characters be written
+//   wanted.tsv          the characters no source has an order for, and the components whose
+//                       order would let the most characters be written
 //   induced.tsv.gz      characters a source lacks, written from a character the source has:
 //                       the unified ideograph a compatibility form or radical is equivalent to, or
-//                       the components of its ideographic description sequence
+//                       the components of its ideographic description sequence; and, where that
+//                       fails, the order another source records, borrowed and marked so
 //
 // An induced order joins the orders of a description's components. The side-by-side and stacked
 // operators join them in order. An enclosure is written around what it holds at a place learned,
@@ -227,20 +229,22 @@ const usualPlace = tree => tree.op === '⿶' || tree.op === '⿺' && 'leaf' in t
  * @param {Map<string, string>} learned The place of each enclosure, keyed operator then enclosure.
  * @param {string[]} [within] The components being read, so none is read inside itself.
  * @param {Set<string>} [read] Collects the dataset of every component description read on the way.
+ * @param {{ by: Map<string, string>, used: Set<string> }} [lent] The components whose order is another source's, by that source; collects the sources read.
  * @returns {string[] | null}
  */
-function ordersOf(tree, table, region, learned, within = [], read) {
+function ordersOf(tree, table, region, learned, within = [], read, lent) {
   if ('leaf' in tree) {
     const recorded = table.get(tree.leaf)
-    if (recorded || within.includes(tree.leaf)) return recorded ?? null
+    if (recorded) { const lender = lent?.by.get(tree.leaf); if (lender) lent.used.add(lender); return recorded }
+    if (within.includes(tree.leaf)) return null
     const sequence = described(tree.leaf, region), inner = sequence ? parse(sequence) : null
     if (!inner || 'leaf' in inner) return null
     read?.add(describedBy(tree.leaf))
-    return ordersOf(inner, table, region, learned, [...within, tree.leaf], read)
+    return ordersOf(inner, table, region, learned, [...within, tree.leaf], read, lent)
   }
   const place = ENCLOSING.has(tree.op) && 'leaf' in tree.parts[0] ? learned.get(tree.op + tree.parts[0].leaf) : undefined
   if (!place && !RELIABLE.includes(tree.op)) return null
-  const parts = tree.parts.map(part => ordersOf(part, table, region, learned, within, read))
+  const parts = tree.parts.map(part => ordersOf(part, table, region, learned, within, read, lent))
   if (parts.some(part => !part)) return null
   if (!ENCLOSING.has(tree.op)) return joined(/** @type {string[][]} */ (parts))
   const [outer, inner] = /** @type {string[][]} */ (parts), name = place ?? usualPlace(tree)
@@ -362,46 +366,95 @@ function blockersOf(tree, table, region, places, within = []) {
 const induced = []
 /** @type {string[][]} */
 const wanted = []
+// What each source can write by itself: its records, and the orders entered for it where it has none.
+const own = new Map(SOURCES.map(({ source, table }) => {
+  const entered = new Map(enteredRows.filter(row => row[5] === source).map(row => [row[0], row[2].split(' ')]))
+  return [source, { entered, orders: new Map([...table, ...[...entered].filter(([char]) => !table.has(char))]) }]
+}))
+// A source without an order for a character borrows another's, the nearest convention first: Rime's
+// table derives from CNS, and KanjiVG's Japanese order stands furthest from both.
+const LENDERS = { cns11643: ['rime-stroke', 'kanjivg'], 'rime-stroke': ['cns11643', 'kanjivg'], kanjivg: ['cns11643', 'rime-stroke'] }
+const CLASS_LETTER = { 1: 'h', 2: 's', 3: 'p', 4: 'n', 5: 'z' }
+/** A code in the symbols of the source it is borrowed for. @param {string} code @param {string} to */
+const inSymbols = (code, to) => [...code].map(symbol => to === 'rime-stroke' ? CLASS_LETTER[symbol] ?? symbol : LETTER[symbol] ?? symbol).join('')
+/** The order another source has for a character, in `source`'s symbols. @param {string} char @param {string} source */
+function lend(char, source) {
+  for (const lender of LENDERS[source]) {
+    const orders = own.get(lender).orders.get(char)
+    if (orders) return { lender, orders: [...new Set(orders.map(code => inSymbols(code, source)))] }
+  }
+  return null
+}
 const left = SOURCES.map(({ source, table, region }) => {
   // An entered order stands beside the source's: it writes its character and the characters it is a component of.
-  const entered = new Map(enteredRows.filter(row => row[5] === source).map(row => [row[0], row[2].split(' ')]))
-  const known = new Map([...table, ...[...entered].filter(([char]) => !table.has(char))])
+  const entered = own.get(source).entered
+  const known = new Map(own.get(source).orders)
   const places = learned.get(source).places
-  let equivalent = 0, fromIds = 0, none = 0
+  /** @type {Map<string, string>} The characters whose order is borrowed, by the source it is borrowed from. */
+  const borrowed = new Map()
+  /** Every candidate the source does not record, written or with what keeps it from being written. */
+  function read() {
+    /** @type {string[][]} */
+    const rows = []
+    /** @type {{ char: string, reason: 'undescribed' | 'unreadable' | 'operator' | 'component', blockers: string[] }[]} */
+    const failed = []
+    for (const char of candidates) {
+      if (known.has(char)) continue
+      // A compatibility ideograph or a Kangxi radical is the unified ideograph it normalizes to.
+      const unified = char.normalize('NFKC')
+      if (unified !== char && [...unified].length === 1 && table.has(unified)) {
+        rows.push([char, point(char), table.get(unified).join(' '), 'equivalent', unified, source, '', ''])
+        continue
+      }
+      const sequence = described(char, region), tree = sequence ? parse(sequence) : null
+      // The datasets whose descriptions the order is read from: the character's own first, then its components'.
+      const datasets = new Set([describedBy(char)]), lent = { by: borrowed, used: /** @type {Set<string>} */ (new Set()) }
+      const written = tree && !('leaf' in tree) ? ordersOf(tree, known, region, places, [], datasets, lent) : null
+      if (written) { rows.push([char, point(char), written.slice(0, WAYS).join(' '), 'ids', sequence, source, [...datasets].join(' '), [...lent.used].join(' ')]); continue }
+      if (!sequence) { failed.push({ char, reason: 'undescribed', blockers: [] }); continue }
+      if (!tree || 'leaf' in tree) { failed.push({ char, reason: 'unreadable', blockers: [] }); continue }
+      const blockers = blockersOf(tree, known, region, places)
+      if (blockers.has(OPERATOR) || !blockers.size) failed.push({ char, reason: 'operator', blockers: [] })
+      else failed.push({ char, reason: 'component', blockers: [...blockers] })
+    }
+    return { rows, failed }
+  }
+  // A component that keeps characters from being written is borrowed where another source has it,
+  // and the characters are read again: what stood behind it may be borrowed in turn.
+  let result = read()
+  for (;;) {
+    const lendable = [...new Set(result.failed.flatMap(entry => entry.blockers))].filter(component => lend(component, source))
+    if (!lendable.length) break
+    for (const component of lendable) { const { lender, orders } = lend(component, source); known.set(component, orders); borrowed.set(component, lender) }
+    result = read()
+  }
+  // A character that still cannot be written from its own components is borrowed whole.
+  const none = result.failed.filter(entry => !lend(entry.char, source))
+  for (const entry of result.failed) {
+    const found = lend(entry.char, source)
+    if (found) { known.set(entry.char, found.orders); borrowed.set(entry.char, found.lender) }
+  }
+  induced.push(...result.rows, ...[...borrowed].map(([char, lender]) => [char, point(char), known.get(char).join(' '), 'borrowed', lender, source, '', lender]))
   const reasons = { undescribed: 0, unreadable: 0, operator: 0, component: 0 }
   /** @type {Map<string, { blocks: string[], alone: number }>} */
   const blocking = new Map()
-  for (const char of candidates) {
-    if (known.has(char)) continue
-    // A compatibility ideograph or a Kangxi radical is the unified ideograph it normalizes to.
-    const unified = char.normalize('NFKC')
-    if (unified !== char && [...unified].length === 1 && table.has(unified)) {
-      induced.push([char, point(char), table.get(unified).join(' '), 'equivalent', unified, source, ''])
-      equivalent++
-      continue
-    }
-    const sequence = described(char, region), tree = sequence ? parse(sequence) : null
-    // The datasets whose descriptions the order is read from: the character's own first, then its components'.
-    const read = new Set([describedBy(char)])
-    const written = tree && !('leaf' in tree) ? ordersOf(tree, known, region, places, [], read) : null
-    if (written) { induced.push([char, point(char), written.slice(0, WAYS).join(' '), 'ids', sequence, source, [...read].join(' ')]); fromIds++; continue }
-    none++
-    if (!sequence) { reasons.undescribed++; continue }
-    if (!tree || 'leaf' in tree) { reasons.unreadable++; continue }
-    const blockers = blockersOf(tree, known, region, places)
-    if (blockers.has(OPERATOR) || !blockers.size) { reasons.operator++; continue }
-    reasons.component++
+  for (const { char, reason, blockers } of none) {
+    reasons[reason]++
+    // A character left without an order is wanted itself, beside the components it waits on.
+    if (!blocking.has(char)) blocking.set(char, { blocks: [], alone: 0 })
     for (const component of blockers) {
       const entry = blocking.get(component) ?? blocking.set(component, { blocks: [], alone: 0 }).get(component)
       entry.blocks.push(char)
-      if (blockers.size === 1) entry.alone++
+      if (blockers.length === 1) entry.alone++
     }
   }
   for (const [component, entry] of [...blocking].sort((a, b) => b[1].alone - a[1].alone || b[1].blocks.length - a[1].blocks.length || byCodePoint(a[0], b[0]))) {
     wanted.push([component, point(component), source, String(entry.blocks.length), String(entry.alone), entry.blocks.slice(0, 8).join('')])
   }
-  return { source, recorded: table.size, entered: entered.size, equivalent, ids: fromIds, none, reasons }
+  const count = basis => result.rows.filter(row => row[3] === basis).length
+  return { source, recorded: table.size, entered: entered.size, equivalent: count('equivalent'), ids: count('ids'), borrowed: borrowed.size, none: none.length, reasons }
 })
+induced.sort((a, b) => SOURCES.findIndex(entry => entry.source === a[5]) - SOURCES.findIndex(entry => entry.source === b[5]) || byCodePoint(a[0], b[0]))
 // The two sources on the characters both record, and the orders induced from CNS against what Rime
 // records for the same characters: rows neither the rules nor the CNS table had seen.
 const shared = [...cns.keys()].filter(char => rime.has(char))
@@ -413,7 +466,8 @@ const agreement = {
   sameOrder: shared.filter(same).length,
   blocks: BLOCKS.map(([block]) => { const chars = shared.filter(char => blockOf(char) === block); return { block, shared: chars.length, sameOrder: chars.filter(same).length } }),
 }
-const heldOut = induced.filter(row => row[5] === 'cns11643' && row[3] === 'ids' && rime.has(row[0]))
+// Rows written with an order borrowed from Rime are left out: they are no test of it.
+const heldOut = induced.filter(row => row[5] === 'cns11643' && row[3] === 'ids' && !row[7] && rime.has(row[0]))
 const heldOutAgree = heldOut.filter(row => rime.get(row[0]).some(code => row[2].split(' ').includes(digits(code)))).length
 
 // --- The files -----------------------------------------------------------------------------------
@@ -432,7 +486,7 @@ const files = [
     [...rime.keys()].sort(byCodePoint).map(char => [char, point(char), rime.get(char).join(' ')])),
   write('kanjivg.tsv.gz', ['char', 'codepoint', 'orders', 'strokes'],
     [...kanjivg.keys()].sort(byCodePoint).map(char => [char, point(char), kanjivg.get(char).join(' '), kanjivgTypes.get(char).join(' ')])),
-  write('induced.tsv.gz', ['char', 'codepoint', 'orders', 'basis', 'from', 'source', 'ids'], induced),
+  write('induced.tsv.gz', ['char', 'codepoint', 'orders', 'basis', 'from', 'source', 'ids', 'lent'], induced),
   write('entered.tsv', ['char', 'codepoint', 'orders', 'basis', 'by', 'source', 'date'], enteredRows),
   write('wanted.tsv', ['char', 'codepoint', 'source', 'blocks', 'alone', 'examples'], wanted),
 ]
@@ -466,7 +520,7 @@ copyFileSync(new URL('../data/licences/yi-bai-ids-MIT.txt', import.meta.url), ne
 for (const [from, to] of Object.entries(LICENCES)) copyFileSync(new URL(`../data/licences/${from}`, import.meta.url), new URL(to, OUT))
 const manifest = {
   format: 'ids-input/open-strokes',
-  version: 2,
+  version: 3,
   strokes: { 横: { cns11643: '1', 'rime-stroke': 'h', kanjivg: '1' }, 豎: { cns11643: '2', 'rime-stroke': 's', kanjivg: '2' }, 撇: { cns11643: '3', 'rime-stroke': 'p', kanjivg: '3' }, 點: { cns11643: '4', 'rime-stroke': 'n', kanjivg: '4' }, 折: { cns11643: '5', 'rime-stroke': 'z', kanjivg: '5' } },
   sources: [
     {
@@ -518,11 +572,11 @@ const crossing = key => rulesOf(key).filter(rule => !RELIABLE.includes(rule.oper
 const keptRate = (100 * kept.reduce((sum, row) => sum + row.agree, 0) / kept.reduce((sum, row) => sum + row.written, 0)).toFixed(1)
 writeFileSync(new URL('README.md', OUT), `# Open stroke orders
 
-The stroke order of Han characters, from three sources, with orders induced for the characters a
-source lacks. Every row names where it comes from; an induced row is never mixed into a source's
-file.
+The stroke order of Han characters, from three sources, with orders induced or borrowed for the
+characters a source lacks. Every row names where it comes from; an induced or borrowed row is never
+mixed into a source's file.
 
-The format is \`ids-input/open-strokes\`, version 2.
+The format is \`ids-input/open-strokes\`, version 3.
 
 ## Files
 
@@ -531,9 +585,9 @@ The format is \`ids-input/open-strokes\`, version 2.
 | \`cns11643.tsv.gz\` | ${n(file('cns11643.tsv.gz').rows)} | Taiwan's standard order, from CNS 全字庫: \`char\`, \`codepoint\`, \`orders\`, \`cns\` (the CNS plane-codes mapped to the character). Open Government Data License 1.0. |
 | \`rime-stroke.tsv.gz\` | ${n(file('rime-stroke.tsv.gz').rows)} | Rime's five-stroke dictionary: \`char\`, \`codepoint\`, \`orders\`. LGPL-3.0. |
 | \`kanjivg.tsv.gz\` | ${n(file('kanjivg.tsv.gz').rows)} | Japanese order, from KanjiVG: \`char\`, \`codepoint\`, \`orders\`, \`strokes\` (KanjiVG's type of each stroke, as it writes them). CC BY-SA 3.0. |
-| \`induced.tsv.gz\` | ${n(file('induced.tsv.gz').rows)} | Induced orders: \`char\`, \`codepoint\`, \`orders\`, \`basis\`, \`from\`, \`source\`, \`ids\`. Each row keeps the terms of its \`source\`. |
+| \`induced.tsv.gz\` | ${n(file('induced.tsv.gz').rows)} | Induced and borrowed orders: \`char\`, \`codepoint\`, \`orders\`, \`basis\`, \`from\`, \`source\`, \`ids\`, \`lent\`. Each row keeps the terms of its \`source\` and of the sources in \`lent\`. |
 | \`entered.tsv\` | ${n(file('entered.tsv').rows)} | Orders entered by hand: \`char\`, \`codepoint\`, \`orders\`, \`basis\`, \`by\`, \`source\`, \`date\`. CC0 1.0. |
-| \`wanted.tsv\` | ${n(file('wanted.tsv').rows)} | Components without an order that keep characters from being written: \`char\`, \`codepoint\`, \`source\`, \`blocks\`, \`alone\`, \`examples\`. CC0 1.0. |
+| \`wanted.tsv\` | ${n(file('wanted.tsv').rows)} | Characters and components no source has an order for: \`char\`, \`codepoint\`, \`source\`, \`blocks\`, \`alone\`, \`examples\`. CC0 1.0. |
 | \`manifest.json\` | | Sources with checksums, licences, coverage and the tables below. |
 | \`LICENSE-rime-stroke-LGPL-3.0.txt\`, \`LICENSE-GPL-3.0.txt\`, \`AUTHORS-rime-stroke.txt\` | | The terms and authors of the Rime dictionary. |
 | \`LICENSE-kanjivg-CC-BY-SA-3.0.txt\` | | The terms of KanjiVG. |
@@ -594,6 +648,17 @@ convention they follow.
   source for \`kanjivg\`, else the first) or, where BabelStone has none, Yi Bai's. The \`ids\` column names the dataset of the
   character's description, then that of any component read by its own description.
   ${n(cover('cns11643').ids)} rows from \`cns11643\` (${n(induced.filter(row => row[5] === 'cns11643' && row[6].includes('yi-bai-ids')).length)} of them through one of Yi Bai's descriptions), ${n(cover('rime-stroke').ids)} from \`rime-stroke\`, ${n(cover('kanjivg').ids)} from \`kanjivg\`. Up to ${WAYS} ways are kept.
+- \`borrowed\`: the source has no order for the character and none can be written from its
+  components, and \`from\` is the other source whose order the row repeats, in this source's
+  symbols. ${n(cover('cns11643').borrowed)} rows in \`cns11643\`, ${n(cover('rime-stroke').borrowed)} in \`rime-stroke\`, ${n(cover('kanjivg').borrowed)} in \`kanjivg\`.
+
+A source borrows from the nearest convention first: \`cns11643\` from \`rime-stroke\` then
+\`kanjivg\`, \`rime-stroke\` from \`cns11643\` then \`kanjivg\`, \`kanjivg\` from \`cns11643\` then
+\`rime-stroke\`; an order entered for the lender counts as its own. A component is borrowed before
+a whole character, so a character is written from its source's own components wherever they
+exist. \`lent\` names the sources a row borrows from: the lender of a \`borrowed\` row, and for an
+\`ids\` row the lenders of the components it is written with (${n(induced.filter(row => row[3] === 'ids' && row[7]).length)} rows). A borrowed order follows
+its lender's convention, which can differ from the borrowing source's.
 
 The components of ⿰ ⿱ ⿲ ⿳ are joined in the order the description names them. In the other
 operators the first component encloses, crosses or carries the second, and the second is written at
@@ -655,18 +720,20 @@ record, in that source's symbols. \`basis\` gives the citation or the reasoning 
 who entered it. An entered order is this project's reading and never enters a source's file; it
 writes its own character and lets the characters it is a component of be induced.
 
-\`wanted.tsv\` lists, per source, the components that keep characters from being written:
-\`blocks\` counts those characters and \`alone\` the ones it is the only obstacle to, most first.
+\`wanted.tsv\` lists, per source, what is left to enter: the characters that end without an
+order and the components that keep characters from being written, none of which any source
+records. \`blocks\` counts the characters a component keeps back and \`alone\` the ones it is the
+only obstacle to, most first.
 To add an order, append a row to \`data/stroke-orders-entered.tsv\` in the repository and rebuild.
 
 ## Coverage
 
-| Source | Recorded | Entered | By equivalence | From IDS | Without an order |
-| --- | ---: | ---: | ---: | ---: | ---: |
-${left.map(row => `| \`${row.source}\` | ${n(row.recorded)} | ${n(row.entered)} | ${n(row.equivalent)} | ${n(row.ids)} | ${n(row.none)} |`).join('\n')}
+| Source | Recorded | Entered | By equivalence | From IDS | Borrowed | Without an order |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+${left.map(row => `| \`${row.source}\` | ${n(row.recorded)} | ${n(row.entered)} | ${n(row.equivalent)} | ${n(row.ids)} | ${n(row.borrowed)} | ${n(row.none)} |`).join('\n')}
 
 "Without an order" counts the Han characters the workshop's composer draws or either IDS source
-describes that end with no row from that source. Why, for each:
+describes that end with no row for that source, borrowed ones included. Why, for each:
 
 | Source | No description | Unreadable description | Operator not induced through | Component without an order |
 | --- | ---: | ---: | ---: | ---: |
@@ -693,6 +760,8 @@ numbered component BabelStone gives no fragment for.
   <https://creativecommons.org/licenses/by-sa/3.0/>; the licence note is beside this file.
   \`kanjivg.tsv.gz\` and the rows induced from it are adapted from KanjiVG and carry the same
   licence: the kanji files reduced to their stroke types, with this project's five-class code.
+- A row of \`induced.tsv.gz\` that names a source in \`lent\` is adapted from that source as well and
+  carries its terms beside those of its own \`source\`.
 - BabelStone IDS, \`IDS.TXT\`, Andrew West (魏安), <https://www.babelstone.co.uk/CJK/IDS.TXT>, public
   domain: the descriptions induced rows are written from.
 
@@ -704,6 +773,6 @@ numbered component BabelStone gives no fragment for.
 \`bun scripts/build_open_strokes.mjs\` fetches the sources and writes the files, this one included.
 `)
 writeFileSync(new URL('manifest.json', OUT), JSON.stringify(manifest, null, 2) + '\n')
-for (const row of left) console.log(`${row.source}: ${row.recorded} recorded, ${row.equivalent} by equivalence, ${row.ids} from descriptions, ${row.none} without an order`)
+for (const row of left) console.log(`${row.source}: ${row.recorded} recorded, ${row.equivalent} by equivalence, ${row.ids} from descriptions, ${row.borrowed} borrowed, ${row.none} without an order`)
 console.log(`same order in both sources: ${agreement.sameOrder} of ${agreement.shared}`)
 console.log(`induced from CNS, against Rime: ${heldOutAgree} of ${heldOut.length} (${(100 * heldOutAgree / heldOut.length).toFixed(1)}%)`)
