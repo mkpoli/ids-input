@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
-import { chainPath } from '../src/core/chain-shape.js'
+import { chainPath, chainStrokes } from '../src/core/chain-shape.js'
 import { glyphWikiName } from '../scripts/build_custom_outlines.mjs'
 
 describe('a stroke chain as a line', () => {
@@ -29,6 +29,40 @@ describe('a stroke chain as a line', () => {
       expect(d).not.toBeNull()
       for (const n of d.match(/-?\d+/g).map(Number)) { expect(n).toBeGreaterThanOrEqual(0); expect(n).toBeLessThanOrEqual(1000) }
     }
+  })
+  it('draws the quarter circle whose second letter is b', () => {
+    expect(chainPath('#(Qb)')).toBe('M880 120Q880 880 120 880')
+  })
+})
+
+describe('a stroke chain stroke by stroke', () => {
+  it('gives each stroke as written, with its own path in the line\'s square', () => {
+    const read = chainStrokes('#(-丨𠃍-一z)')
+    expect(read?.closed).toBe(true)
+    expect(read?.strokes.map(({ back, stroke, mark }) => [back, stroke, mark])).toEqual([[true, '丨', ''], [false, '𠃍', ''], [true, '一', '']])
+    expect(read?.strokes.map(stroke => stroke.d)).toEqual(['M120 880L120 120', 'M120 120L880 120L880 880', 'M880 880L120 880'])
+    expect(read?.strokes.map(stroke => stroke.from)).toEqual([[120, 880], [120, 120], [880, 880]])
+    expect(read?.strokes.at(-1)?.to).toEqual([120, 880])
+  })
+  it('keeps a crossing and a break with the stroke they follow', () => {
+    expect(chainStrokes('#(-乀x1㇇)')?.strokes.map(stroke => stroke.mark)).toEqual(['x1', ''])
+    expect(chainStrokes('#(丨b一-丨)')?.strokes.map(stroke => [stroke.back, stroke.mark])).toEqual([[false, 'b'], [false, ''], [true, '']])
+  })
+  it('takes letters one stroke of the grammar at a time', () => {
+    expect(chainStrokes('#(HPHwg)')?.strokes.map(stroke => stroke.stroke)).toEqual(['H', 'PHwg'])
+    expect(chainStrokes('#(HSHwg)')?.strokes.map(stroke => stroke.stroke)).toEqual(['H', 'SHwg'])
+    expect(chainStrokes('#(SZ)')?.strokes.map(stroke => stroke.stroke)).toEqual(['S', 'Z'])
+    expect(chainStrokes('#(Qa)')?.strokes.map(stroke => stroke.stroke)).toEqual(['Qa'])
+  })
+  it('joins to the same line as the whole chain', () => {
+    for (const chain of ['#(𠃍-一乚)', '#(一-𠃍丨b一-𠃍丨b一)', '#(◟◜◝◞z)', '#(HPHwg)']) {
+      const strokes = chainStrokes(chain)?.strokes ?? []
+      for (const [index, stroke] of strokes.entries()) if (index) expect(stroke.from).toEqual(strokes[index - 1].to)
+      expect(chainPath(chain)?.startsWith(strokes[0].d)).toBe(true)
+    }
+  })
+  it('answers null where the line does', () => {
+    for (const text of ['#(木)', '#(-)', '']) expect(chainStrokes(text)).toBeNull()
   })
 })
 

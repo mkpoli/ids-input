@@ -37,6 +37,9 @@ const tier = char => { const cp = /** @type {number} */ (char.codePointAt(0)); r
 export const OPEN_DEPTH = 6
 /** The most terms a query takes. */
 export const TERMS = 8
+/** What a whole-description match takes off a hit's score, and what each written shape matched only
+ * through a lookalike adds: exact matches first, then hits holding the shape as written. */
+const EXACT = 1_000_000_000, LOOKALIKE = 1_000_000
 
 /** zi.tools' two wildcard expressions for looking up components.
  * @param {string} text @returns {{ kind: 'parts' | 'containing', char: string } | null} */
@@ -247,7 +250,7 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
   /** @param {string} c */
   const fold = c => forms.get(c) ?? forms.get([...c][0]) ?? c
   /** @param {QueryLeaf} leaf */
-  const choices = leaf => [...new Set((typeof leaf === 'string' ? [leaf] : leaf.anyOf).map(fold))]
+  const choices = leaf => [...new Set((typeof leaf === 'string' ? [leaf] : [leaf.shape, ...leaf.anyOf]).map(fold))]
   /** @type {Map<string, Tree[]>} */
   const trees = new Map()
   /** @param {string} char @returns {Tree[]} */
@@ -776,7 +779,8 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
    * @param {string} part @param {number} limit @returns {{ hits: Hit[], total: number }} */
   function containingPart(part, limit) {
     const firstLeaf = parseQuery(part).terms[0]?.leaves[0]
-    const excludeSelf = !firstLeaf || choices(firstLeaf).includes(fold(part))
+    // A part never contains itself, though a kana may contain a lookalike of its own shape.
+    const excludeSelf = !firstLeaf || (typeof firstLeaf === 'string' ? [firstLeaf] : firstLeaf.anyOf).map(fold).includes(fold(part))
     /** @type {Map<string, string[]>} */
     const aliases = new Map()
     for (const [char, descriptions] of table) for (const text of descriptions) {
@@ -852,6 +856,22 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
     const rarest = [...groups.values()].sort((a, b) =>
       a.reduce((n, id) => n + (by.of.get(id)?.length ?? 0), 0) - b.reduce((n, id) => n + (by.of.get(id)?.length ?? 0), 0))[0]
     if (!rarest) return { hits: [], total: 0 }
+    // A kana or Hangul shape finds the descriptions written with it first; its lookalikes are the
+    // fallback. Only shapes some description holds are counted.
+    const shapes = terms.map(term => term.leaves.flatMap(leaf => typeof leaf === 'string' ? [] : [keyOf.get(fold(leaf.shape))])
+      .filter(id => id !== undefined))
+    /** How many leaves of `t` are the shape with key `id`. @param {Tree} t @param {number} id @returns {number} */
+    const bears = (t, id) => typeof t === 'string' ? Number(keyOf.get(fold(t)) === id) : t.parts.reduce((n, part) => n + bears(part, id), 0)
+    /** How many of `ids` are left over once each takes one of the `have` written copies of its shape.
+     * @param {number[]} ids @param {(id: number) => number} have */
+    const unwritten = (ids, have) => {
+      /** @type {Map<number, number>} */
+      const wanted = new Map()
+      for (const id of ids) wanted.set(id, (wanted.get(id) ?? 0) + 1)
+      let left = 0
+      for (const [id, n] of wanted) left += Math.max(0, n - have(id))
+      return left
+    }
     const first = new Set(rarest.flatMap(id => [...(by.of.get(id) ?? [])]))
     /** @type {{ char: string, tree: Tree, paths: number[][], score: number }[]} */
     const found = []
@@ -859,21 +879,23 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
       const char = by.chars[c], holds = /** @type {Int32Array} */ (held.get(char))
       if (required.some(needs => !allocate(needs, id => countIn(holds, id)))) continue
       // Every structure term placed in one of the character's descriptions; the closest wins.
-      /** @type {{ tree: Tree, paths: number[][], score: number } | null} */
+      /** @type {{ tree: Tree, paths: number[][], score: number, lookalikes: number } | null} */
       let best = null
       for (const tree of treesOf(char)) {
         /** @param {Tree} t @returns {number} */
         const count = t => typeof t === 'string' ? 1 : t.parts.reduce((n, p) => n + count(p), 0)
-        let root = tree, score = 0, ok = true
+        let root = tree, score = 0, lookalikes = 0, ok = true
         /** @type {number[][]} */
         const paths = []
-        for (const term of terms) {
+        for (const [i, term] of terms.entries()) {
           if (term.kind !== 'structure') continue
           const found = find(term.tree, root, 0)
           if (!found) { ok = false; break }
           root = found.tree
           paths.push(found.path)
           score += found.depth * 4 + found.opened * 2
+          const matched = /** @type {Tree} */ (partAt(root, found.path))
+          lookalikes += unwritten(shapes[i], id => bears(matched, id))
         }
         if (!ok) continue
         // Every components term held by this one description, not by several together. A component
@@ -883,6 +905,7 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
           const holds = holdingsIn(tree, char, new Set([char]))
           if (terms.some((term, i) => term.kind === 'components'
             && (!allocate(requested[i], id => holds.get(id) ?? 0) || consistent[i]?.(tree, char) === false))) continue
+          terms.forEach((term, i) => { if (term.kind === 'components') lookalikes += unwritten(shapes[i], id => holds.get(id) ?? 0) })
         }
         // Match top-level components with the same allocation used for counts. An ambiguous
         // alias cannot consume a component needed by a more specific request.
@@ -900,12 +923,12 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
           score += (assigned ?? []).filter(id => id === -1).length
         })
         score = score * 10 + count(tree)
-        if (best === null || score < best.score) best = { tree: root, paths, score }
+        if (best === null || lookalikes < best.lookalikes || lookalikes === best.lookalikes && score < best.score) best = { tree: root, paths, score, lookalikes }
       }
       if (!best) continue
       // The whole description matched exactly comes first; a description with more parts, later.
       const exact = terms.length === 1 && terms[0].kind === 'structure' && best.paths[0]?.length === 0 && !EMPTY_MARKS.some(mark => terms[0].text.includes(mark)) && !terms[0].text.includes(UNKNOWN)
-      found.push({ char, tree: best.tree, paths: best.paths, score: (exact ? -1000 : 0) + best.score + tier(char) * 15 })
+      found.push({ char, tree: best.tree, paths: best.paths, score: (exact ? -EXACT : 0) + best.lookalikes * LOOKALIKE + best.score + tier(char) * 15 })
     }
     found.sort((a, b) => a.score - b.score || tier(a.char) - tier(b.char) || /** @type {number} */ (a.char.codePointAt(0)) - /** @type {number} */ (b.char.codePointAt(0)))
     // Only the hits handed back are written out, with their spans.

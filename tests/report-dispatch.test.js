@@ -2,7 +2,6 @@ import { describe, expect, it } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { LIMITS, fitToDispatch } from '../demo/lib/report.js'
 
-const ORIGIN = 'https://ids.mkpo.li'
 const TAB = (n, size = 1024) => ({ id: `t${n}`, sequence: '⿰木口', document: { layer: 'x'.repeat(size), n } })
 const CONTEXT = {
   appVersion: '0.1.3', commit: '3e0c0e0f', route: '/', viewport: '1409×831', locale: 'ja',
@@ -22,7 +21,7 @@ function dispatchSize({ symptom, sequence, link, contact, document, context }) {
   for (const [name, value] of Object.entries({ symptom, sequence, link, contact, document, context })) {
     if (value) carried[name] = value
   }
-  return Buffer.byteLength(JSON.stringify({ ...carried, origin: ORIGIN }))
+  return Buffer.byteLength(JSON.stringify(carried))
 }
 
 /** @param {{ workspace?: unknown, context?: Record<string, unknown>, entries?: unknown[], report?: typeof REPORT }} [source] */

@@ -6,8 +6,8 @@ account: the Worker takes what the browser collected and has it filed as an issu
 
 The issue is opened by `.github/workflows/file-report.yml`, the repository's own action, so the
 `github-actions[bot]` is its author and the report names the person behind it. The Worker dispatches
-the report to that run, which asks the site for the drawing the reporter saw, files the issue, and
-dispatches its answer back; the Worker hands the answer to the dialog waiting on it.
+the report to that run, which files the issue; the Worker finds the issue on GitHub and answers the
+dialog with it. A second job then photographs the drawing from the site and adds it to the issue.
 
 ## The endpoint
 
@@ -60,9 +60,9 @@ An error is `{"error": "<code>", "message": "<sentence>"}`:
 | 429 | `rate_limited` |
 | 502 | `upstream_error` |
 
-The answer takes as long as the action takes, usually half a minute while Chromium starts and the
-site composes its drawing. A reporter whose answer has not come after three minutes is told so and
-can try again.
+The answer takes as long as the action takes to file the issue, about ten seconds. A reporter whose
+issue has not appeared after eighty seconds gets a `502` and can try again; a report sent again
+within a quarter of an hour is answered with the issue its first run filed.
 
 ### `GET /health`
 
@@ -87,11 +87,11 @@ An issue body may hold 65536 characters, which a 200 KB document would overrun o
 part the reporter controls is cut to a share of that budget: 20000 characters of the document, 8000
 of console output, 500 per table cell. A cut part says it was cut.
 
-Images and the uploaded document go to the orphan branch `bug-attachments` under
-`reports/<yyyy>/<mm>/<uuid>.<ext>`, through the Git Data API, and the body points at
-`https://github.com/mkpoli/ids-input/raw/bug-attachments/<path>`. The extension comes from the
-file's magic bytes, never from what the client called it. When the upload fails the issue is still
-filed, with a line saying the attachment could not be stored.
+The drawing goes to the orphan branch `bug-attachments` under `reports/<yyyy>/<mm>/<uuid>.png`,
+through the Git Data API, and the body points at
+`https://github.com/mkpoli/ids-input/raw/bug-attachments/<path>`. When the page cannot be
+photographed or the picture stored, the issue gets a line saying so; a `draw` job that fails before
+that step leaves the issue without a drawing.
 
 Abuse control: the total body is capped at 8 MB, checked against `Content-Length` before any of it
 is read and counted off the stream as well, since a chunked body carries no length. Per
@@ -106,26 +106,29 @@ than charged to the reporter.
 
 ## Filing the report
 
-`repository_dispatch` with `event_type: report` carries the report's text fields and the origin the
-dialog was served from; the image does not travel, because the action photographs the drawing from
-the site itself. The Worker waits on the queue `ids-reports-answers` for the `report_answer` dispatch
-the run sends back.
+`repository_dispatch` with `event_type: report` carries the report's text fields, the report's key
+and whether there is a drawing to take: the reporter sent one and the report has a share link. The image itself does not travel, because the action
+photographs the drawing from the site.
 
 GitHub takes a payload under 64 KB, so a report whose fields come to more than 30 KB is answered
-`413` and never dispatched. The dialog fits the workspace and the context to that budget before it
-sends, so its reports do not meet this answer.
+`413` and never dispatched.
 
 | What | Where |
 | --- | --- |
-| The action that files and answers | `.github/workflows/file-report.yml` |
-| The run's work | `workers/reports/intake/` |
-| The queue that carries the answer | `wrangler.queue.jsonc`, consumed by this Worker |
+| The action | `.github/workflows/file-report.yml` |
+| Its `file` job | `workers/reports/intake/file.js` |
+| Its `draw` job | `workers/reports/intake/draw.js` |
 
 `ensureLabels` runs in the Worker before the dispatch, so the issue is labelled the moment it
-exists. The run asks the site in the report's `link` for the drawing and photographs the output
-panel once the composer has composed it; the picture waits in `.cache/report` until the browser has
-closed, and a later step commits it to `bug-attachments` with the checkout's token. The issue names
-the address it lands on.
+exists. The `file` job installs nothing and opens the issue with the run's token. The body ends in
+`<!-- report:<key> -->`, where the key is the dedupe key, and the Worker looks for that mark among
+the issues labelled `report`: once before dispatching, which is how a report sent again finds its
+issue, then six seconds after the dispatch and every four from there. Only the end of a body counts,
+since a reporter's text inside it may quote any mark.
+
+The `draw` job runs when the reporter sent a drawing. It opens the report's `link` in Chromium,
+photographs the output panel once the composer has composed it, commits the picture to
+`bug-attachments` and rewrites the issue's body to show it.
 
 ## Configuration
 
@@ -179,7 +182,7 @@ is enough. Two repository secrets have to exist first:
 | Secret | What it is |
 | --- | --- |
 | `CLOUDFLARE_API_TOKEN` | A token with **Workers Scripts: Edit**, **Workers KV Storage: Edit** and, for the custom domain, **Workers Routes: Edit** on the zone |
-| `REPORTS_GITHUB_TOKEN` | The Worker's own token: it labels the issue, dispatches the report and counts repeats. Needs **Contents: Write** (a repository dispatch asks for it) and **Issues: Write** (the labels), re-applied on every deploy |
+| `REPORTS_GITHUB_TOKEN` | The Worker's own token: it creates the labels, dispatches the report, finds the filed issue and comments on repeats. Needs **Contents: Write** (a repository dispatch asks for it) and **Issues: Write** (the labels), re-applied on every deploy |
 
 The action files with the `GITHUB_TOKEN` GitHub gives it, which on a dispatch is the workshop's own
 bot; no secret of the repository's stands behind the issue's author.

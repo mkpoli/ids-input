@@ -7,8 +7,10 @@ import { gunzipSync } from 'node:zlib'
 const at = name => new URL(`../data/open-strokes/${name}`, import.meta.url)
 const manifest = JSON.parse(readFileSync(at('manifest.json'), 'utf8'))
 const readme = readFileSync(at('README.md'), 'utf8')
-const table = name => gunzipSync(readFileSync(at(name))).toString().trimEnd().split('\n').map(line => line.split('\t'))
-const rime = table('rime-stroke.tsv.gz'), cns = table('cns11643.tsv.gz'), induced = table('induced.tsv.gz')
+const table = name => gunzipSync(readFileSync(at(name))).toString().replace(/\n$/, '').split('\n').map(line => line.split('\t'))
+const rime = table('rime-stroke.tsv.gz'), cns = table('cns11643.tsv.gz'), induced = table('induced.tsv.gz'), kanjivg = table('kanjivg.tsv.gz')
+const plain = name => readFileSync(at(name), 'utf8').replace(/\n$/, '').split('\n').map(line => line.split('\t'))
+const entered = plain('entered.tsv'), wanted = plain('wanted.tsv')
 const orders = rows => new Map(rows.slice(1).map(row => [row[0], row[2].split(' ')]))
 const digits = code => [...code].map(letter => ({ h: '1', s: '2', p: '3', n: '4', z: '5' })[letter]).join('')
 const point = char => `U+${char.codePointAt(0).toString(16).toUpperCase().padStart(4, '0')}`
@@ -16,8 +18,8 @@ const point = char => `U+${char.codePointAt(0).toString(16).toUpperCase().padSta
 describe('the open stroke-order release', () => {
   it('names its format, sources and their terms', () => {
     expect(manifest.format).toBe('ids-input/open-strokes')
-    expect(manifest.version).toBe(1)
-    expect(manifest.sources.map(source => source.key)).toEqual(['cns11643', 'rime-stroke', 'babelstone-ids'])
+    expect(manifest.version).toBe(2)
+    expect(manifest.sources.map(source => source.key)).toEqual(['cns11643', 'rime-stroke', 'kanjivg', 'babelstone-ids', 'yi-bai-ids'])
     for (const source of manifest.sources) {
       expect(source.url).toMatch(/^https:/)
       expect(source.licence.spdx ?? source.licence.name).toBeTruthy()
@@ -32,7 +34,7 @@ describe('the open stroke-order release', () => {
   })
 
   it('lists each file with its rows, columns and size', () => {
-    for (const [file, rows] of [['rime-stroke.tsv.gz', rime], ['cns11643.tsv.gz', cns], ['induced.tsv.gz', induced]]) {
+    for (const [file, rows] of [['rime-stroke.tsv.gz', rime], ['cns11643.tsv.gz', cns], ['induced.tsv.gz', induced], ['kanjivg.tsv.gz', kanjivg], ['entered.tsv', entered], ['wanted.tsv', wanted]]) {
       const entry = manifest.files.find(entry => entry.name === file)
       expect(rows[0]).toEqual(entry.columns)
       expect(rows.length - 1).toBe(entry.rows)
@@ -50,6 +52,24 @@ describe('the open stroke-order release', () => {
     expect(orders(cns).get('王')).toEqual(['1121'])
   })
 
+  it('keeps KanjiVG\'s stroke types beside the five-class reading of them', () => {
+    expect(kanjivg.length - 1).toBeGreaterThan(6500)
+    for (const [, , written, strokes] of kanjivg.slice(1)) {
+      expect(written).toMatch(/^[1-5]+$/)
+      // One type per stroke, each a CJK stroke character with KanjiVG's own marks after it.
+      const types = strokes.split(' ')
+      expect(types.length).toBe(written.length)
+      expect(types.every(type => /^[㇀-㇣]/u.test(type))).toBe(true)
+    }
+    const japanese = orders(kanjivg)
+    // Japanese order: 右 begins with the falling stroke, 王 writes its vertical second.
+    expect(japanese.get('右')).toEqual(['31251'])
+    expect(japanese.get('王')).toEqual(['1211'])
+    expect(orders(cns).get('王')).toEqual(['1121'])
+    expect(manifest.texts).toContain('LICENSE-kanjivg-CC-BY-SA-3.0.txt')
+    expect(readme).toContain('Ulrich Apel')
+  })
+
   it('says how far the two sources agree', () => {
     const a = orders(cns), b = orders(rime)
     const shared = [...a.keys()].filter(char => b.has(char))
@@ -62,8 +82,10 @@ describe('the open stroke-order release', () => {
   })
 
   it('marks every induced row with its basis and the source it is written from', () => {
-    const tables = { 'rime-stroke': orders(rime), cns11643: orders(cns) }
-    for (const [char, , written, basis, from, key] of induced.slice(1)) {
+    const tables = { 'rime-stroke': orders(rime), cns11643: orders(cns), kanjivg: orders(kanjivg) }
+    for (const [char, , written, basis, from, key, ids] of induced.slice(1)) {
+      // A row written from a description names the dataset the description comes from.
+      expect(ids).toMatch(basis === 'ids' ? /^(babelstone-ids|yi-bai-ids)( (babelstone-ids|yi-bai-ids))?$/ : /^$/)
       // An induced row never stands in for a character its source records.
       expect(tables[key].has(char)).toBe(false)
       expect(['equivalent', 'ids']).toContain(basis)
@@ -71,13 +93,27 @@ describe('the open stroke-order release', () => {
         expect(char.normalize('NFKC')).toBe(from)
         expect(written.split(' ')).toEqual(tables[key].get(from))
       } else {
-        expect([...from].some(part => manifest.induction.operators.includes(part))).toBe(true)
+        expect(/[⿰-⿿]/u.test(from)).toBe(true)
         expect(from.startsWith('〾')).toBe(false)
         expect(written.split(' ').length).toBeLessThanOrEqual(manifest.induction.ways)
       }
     }
+    // A numbered component is read by its fragment, and the row keeps BabelStone's spelling.
+    expect(induced.some(row => row[3] === 'ids' && /\{\d+\}/.test(row[4]))).toBe(true)
     const row = induced.find(row => row[0] === '⼀' && row[5] === 'cns11643')
-    expect(row?.slice(2)).toEqual(['1', 'equivalent', '一', 'cns11643'])
+    expect(row?.slice(2)).toEqual(['1', 'equivalent', '一', 'cns11643', ''])
+    expect(induced.some(row => row[6] === 'yi-bai-ids')).toBe(true)
+    // A BabelStone description whose component is read by one of Yi Bai's names both: 𫥎 is ⿱免⺀, and ⺀ is Yi Bai's ⿱丶丶.
+    expect(induced.find(row => row[0] === '𫥎' && row[5] === 'cns11643')?.[6]).toBe('babelstone-ids yi-bai-ids')
+    // A row under ⿹ or ⿻ is written only through an enclosure with a learned place.
+    for (const { source, rules } of manifest.induction.learned) {
+      const taught = new Set(rules.map(rule => rule.operator + rule.enclosure))
+      const crossing = induced.filter(row => row[5] === source && row[3] === 'ids' && /^[⿹⿻]/u.test(row[4]))
+      expect(crossing.every(row => taught.has([...row[4]].slice(0, 2).join('')))).toBe(true)
+    }
+    // The entered ㇒ lets the characters it is a component of be written.
+    expect(induced.some(row => row[5] === 'cns11643' && row[4].includes('㇒'))).toBe(true)
+    expect(manifest.texts).toContain('LICENSE-yi-bai-ids-MIT.txt')
   })
 
   it('counts its coverage and scores its rules on the recorded characters', () => {
@@ -89,15 +125,53 @@ describe('the open stroke-order release', () => {
     }
     expect(manifest.coverage.find(row => row.source === 'rime-stroke').recorded).toBe(rime.length - 1)
     expect(manifest.coverage.find(row => row.source === 'cns11643').recorded).toBe(cns.length - 1)
-    for (const { operators } of manifest.induction.validation) {
+    expect(manifest.coverage.find(row => row.source === 'kanjivg').recorded).toBe(kanjivg.length - 1)
+    for (const { source, operators } of manifest.induction.validation) {
+      const taught = new Set(manifest.induction.learned.find(entry => entry.source === source).rules.map(rule => rule.operator))
       for (const row of operators) {
         expect(row.agree).toBeLessThanOrEqual(row.written)
         expect(row.written).toBeLessThanOrEqual(row.described)
-        expect(row.induced).toBe(manifest.induction.operators.includes(row.operator))
+        expect(row.induced).toBe(manifest.induction.operators.includes(row.operator) ? 'always' : taught.has(row.operator) ? 'learned' : 'never')
+        if (row.induced === 'never') expect(row.written).toBe(0)
       }
-      // The operators induced through agree with the source on most of what it records.
-      const kept = operators.filter(row => row.induced)
-      expect(kept.reduce((sum, row) => sum + row.agree, 0) / kept.reduce((sum, row) => sum + row.written, 0)).toBeGreaterThan(0.85)
+      // Scored on characters the places were not learned from, the rules agree with the source on most of what they write.
+      expect(operators.reduce((sum, row) => sum + row.agree, 0) / operators.reduce((sum, row) => sum + row.written, 0)).toBeGreaterThan(0.85)
     }
+  })
+
+  it('keeps entered orders apart and says what is still wanted', () => {
+    const tables = { 'rime-stroke': orders(rime), cns11643: orders(cns), kanjivg: orders(kanjivg) }
+    const symbols = { cns11643: /^[1-5]+( [1-5]+)*$/, 'rime-stroke': /^[hspnz]+( [hspnz]+)*$/, kanjivg: /^[1-5]+( [1-5]+)*$/ }
+    for (const [char, , written, basis, by, source, date] of entered.slice(1)) {
+      expect(written).toMatch(symbols[source])
+      expect(basis && by).toBeTruthy()
+      expect(date).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+      // An entered order is never a second opinion on a recorded one.
+      expect(tables[source].has(char)).toBe(false)
+    }
+    for (const row of manifest.coverage) {
+      expect(row.entered).toBe(entered.slice(1).filter(entry => entry[5] === row.source).length)
+      expect(Object.values(row.reasons).reduce((sum, count) => sum + count, 0)).toBe(row.none)
+      const rows = wanted.slice(1).filter(entry => entry[2] === row.source)
+      // Every wanted component has no order from the source, and the list is ranked.
+      expect(rows.every(entry => !tables[row.source].has(entry[0]) && Number(entry[4]) <= Number(entry[3]))).toBe(true)
+      expect(rows.every((entry, index) => !index || Number(rows[index - 1][4]) >= Number(entry[4]))).toBe(true)
+    }
+    expect(readme).toContain('data/stroke-orders-entered.tsv')
+  })
+
+  it('learns where each enclosure is written from enough characters', () => {
+    for (const { rules } of manifest.induction.learned) {
+      expect(rules.length).toBeGreaterThan(5)
+      for (const rule of rules) {
+        expect(manifest.induction.places).toContain(rule.place)
+        expect(rule.support).toBeGreaterThanOrEqual(manifest.induction.support)
+        expect(rule.agree / rule.support).toBeGreaterThanOrEqual(manifest.induction.agreement)
+      }
+    }
+    const cns = manifest.induction.learned.find(entry => entry.source === 'cns11643').rules
+    // 廴 is written after what it carries, 气 before what it holds.
+    expect(cns.find(rule => rule.operator === '⿺' && rule.enclosure === '廴')?.place).toBe('inner-first')
+    expect(cns.find(rule => rule.operator === '⿹' && rule.enclosure === '气')?.place).toBe('outer-first')
   })
 })
