@@ -13,6 +13,7 @@ from fontTools.ttLib import TTFont
 from fontTools.pens.recordingPen import RecordingPen, replayRecording
 from fontTools.pens.basePen import BasePen
 from fontTools.pens.cu2quPen import Cu2QuPen
+from fontTools.pens.transformPen import TransformPen
 from xie_forms import xie_noto, register as register_xie, PROVENANCE as XIE_PROVENANCE
 from biang_forms import IDS as BIANG_IDS, biang_noto
 
@@ -158,13 +159,16 @@ def compress_chang(outlines, style):
 
 
 
-ROOF_CUT = 535         # 王's top bar in Sans: the roof lives above it
-APEX_CUT = 690         # the apex of 𠆢 sits above this: cutting it opens the roof into 八
+def rect_path(x0, y0, x1, y1):
+    path = pathops.Path()
+    path.moveTo(x0, y0); path.lineTo(x1, y0); path.lineTo(x1, y1); path.lineTo(x0, y1); path.close()
+    return path
 
-def move_recording(recordings, fn):
-    """The same contours with every point passed through fn."""
-    return [[(op, tuple(fn(*point) for point in args)) for op, args in recording]
-            for recording in recordings]
+def outline_path(recordings, transform=None):
+    path = pathops.Path()
+    pen = path.getPen()
+    for recording in recordings: replayRecording(recording, TransformPen(pen, transform) if transform else pen)
+    return path
 
 def huang_eight(cs):
     """黄's 八: the two wide, short strokes the character ends in."""
@@ -173,20 +177,47 @@ def huang_eight(cs):
             and max(p[0] for _, args in contour for p in args)
             - min(p[0] for _, args in contour for p in args) > 250]
 
-def jin_with_ba(cs, style='sans'):
-    """金 with its 𠆢 opened into 八.
+# 王's top bar under 金's roof, as (top edge, left end, right end), and the opening between the
+# legs of the 八 that replaces the roof.
+JIN_BAR = {'sans': (530, 249, 750), 'serif': (503, 247, 739)}
+JIN_APEX = 690
+JIN_OPENING = (455, 545)
 
-    金's roof is two strokes that meet at the apex and come down on 王's top bar. Removing
-    the apex leaves those strokes standing as 八, which is how this character shares 黄's
-    last two strokes: the legs keep the weight and the angles 金 draws them with.
+def jin_with_ba(cs, style='sans'):
+    """金 with its 𠆢 rebuilt as 八 from the face's own ㇒ and ㇏.
+
+    The roof comes off 金, and ㇒ (U+31D2) and ㇏ (U+31CF) are each fitted to the box one leg of
+    the roof filled, with an opening where the apex was. The strokes keep their own heads and
+    ends, so the top reads as 八 in the face's hand.
     """
-    shape = pathops.Path()
-    for contour in cs('金'): replayRecording(contour, shape.getPen())
-    apex = pathops.Path()
-    apex.moveTo(385, APEX_CUT); apex.lineTo(615, APEX_CUT)
-    apex.lineTo(615, 1000); apex.lineTo(385, 1000); apex.close()
+    recordings = cs('金')
+    bar_top, bar_left, bar_right = JIN_BAR[style]
+    if style == 'serif':
+        # The roof is a contour of its own; the top bar's serif rises above the bar's edge.
+        roof_index = next(i for i, c in enumerate(recordings) if outline_path([c]).bounds[3] > 800)
+        roof = outline_path([recordings[roof_index]])
+        body = outline_path([c for i, c in enumerate(recordings) if i != roof_index])
+    else:
+        # The roof runs into the bar: everything above the bar, and the leg tips past its ends.
+        region = rect_path(0, bar_top, 1000, 1000)
+        for box in ((0, 380, bar_left, bar_top), (bar_right, 380, 1000, bar_top)):
+            region = pathops.op(region, rect_path(*box), pathops.PathOp.UNION)
+        whole = outline_path(recordings)
+        roof = pathops.op(whole, region, pathops.PathOp.INTERSECTION)
+        body = pathops.op(whole, region, pathops.PathOp.DIFFERENCE)
+    legs = pathops.op(roof, rect_path(385, JIN_APEX, 615, 1000), pathops.PathOp.DIFFERENCE)
+    x0, y0, x0_end, y1 = pathops.op(legs, rect_path(0, 0, 500, 1000), pathops.PathOp.INTERSECTION).bounds
+    x1_start, v0, x1, v1 = pathops.op(legs, rect_path(500, 0, 1000, 1000), pathops.PathOp.INTERSECTION).bounds
+    drawn = body
+    for stroke, (left, bottom, right, top) in (('\u31d2', (x0, y0, min(x0_end, JIN_OPENING[0]), y1)),
+                                               ('\u31cf', (max(x1_start, JIN_OPENING[1]), v0, x1, v1))):
+        source = outline_path(cs(stroke))
+        sx0, sy0, sx1, sy1 = source.bounds
+        scale_x, scale_y = (right - left) / (sx1 - sx0), (top - bottom) / (sy1 - sy0)
+        placed = outline_path(cs(stroke), (scale_x, 0, 0, scale_y, left - sx0 * scale_x, bottom - sy0 * scale_y))
+        drawn = pathops.op(drawn, placed, pathops.PathOp.UNION)
     pen = RecordingPen()
-    pathops.op(shape, apex, pathops.PathOp.DIFFERENCE).draw(pen)
+    drawn.draw(pen)
     return [group([pen.value])]
 
 def huang_body(cs):
