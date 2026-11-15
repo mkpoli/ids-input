@@ -1,87 +1,123 @@
 <script>
   // One railroad diagram of a whole grammar, grown in place: every rule named on the line is a box
   // that opens into that rule's own diagram, spliced into the same track, and closes back. The
-  // diagram is laid out again from the grammar on every change (lib/railroad.js). The canvas pans
-  // and zooms; a rule clicked or focused shows on its own in the panel beside it.
+  // diagram is laid out again from the grammar on every change (lib/railroad.js), as nested nodes so
+  // only the rules that hold a change are redrawn. The canvas pans and zooms; the page scrolls past
+  // it with the wheel, and Ctrl or ⌘ with the wheel zooms. One rule at a time takes the Tab stop:
+  // the arrow keys move between rules, Enter or Space opens and closes. A rule shows on its own in
+  // the panel beside it.
   import { onMount, tick } from 'svelte'
   import { SvelteSet } from 'svelte/reactivity'
-  import { openable, placeOf, railroad } from '../lib/railroad.js'
+  import RailroadNode from './RailroadNode.svelte'
+  import { openable, placeOf, railroad, railTree } from '../lib/railroad.js'
 
   /** @type {{ rules: Map<string, { text: string, expr: import('../lib/railroad.js').Expr }>, top: string,
    *   t: (key: string, params?: Record<string, unknown>) => string, selected?: string }} */
   let { rules, top, t, selected = $bindable(top) } = $props()
 
   const open = new SvelteSet()
-  const diagram = $derived(railroad(rules, top, open))
+  const tree = $derived(railTree(rules, top, open))
   /** Where the selected rule was last picked in the diagram, and which rule that was. */
   let pickedAt = /** @type {string | null} */ (null), pickedFor = ''
   const single = $derived(rules.has(selected) ? railroad(rules, selected) : null)
+  /** What a screen reader hears: a rule chosen on purpose, not every focus change. */
+  let announced = $state('')
 
   let scale = $state(1), x = $state(0), y = $state(0)
   /** @type {HTMLElement | undefined} */
   let viewport = $state()
-  const MIN = 0.02, MAX = 3
-  /** Zoom by `factor` about a point of the viewport. @param {number} factor @param {number} [px] @param {number} [py] */
+  const MAX = 3
+  /** The scale that shows the whole diagram. */
+  const fitScale = () => viewport ? Math.min(viewport.clientWidth / tree.width, viewport.clientHeight / tree.height) * 0.96 : 1
+  /** Zoom by `factor` about a point of the viewport, no further out than the whole diagram.
+   * @param {number} factor @param {number} [px] @param {number} [py] */
   function zoom(factor, px = (viewport?.clientWidth ?? 0) / 2, py = (viewport?.clientHeight ?? 0) / 2) {
-    const next = Math.min(MAX, Math.max(MIN, scale * factor))
+    const next = Math.min(MAX, Math.max(Math.min(0.1, fitScale()), scale * factor))
     x = px - (px - x) * next / scale
     y = py - (py - y) * next / scale
     scale = next
   }
   function fit() {
     if (!viewport) return
-    const w = viewport.clientWidth, h = viewport.clientHeight
-    scale = Math.min(MAX, Math.max(MIN, Math.min(w / diagram.width, h / diagram.height) * 0.96))
-    x = (w - diagram.width * scale) / 2
-    y = (h - diagram.height * scale) / 2
+    scale = Math.min(MAX, fitScale())
+    x = (viewport.clientWidth - tree.width * scale) / 2
+    y = (viewport.clientHeight - tree.height * scale) / 2
   }
-  /** Actual size, the top rule's line halfway down the canvas. */
-  function reset() { scale = 1; x = 0; y = Math.max(0, ((viewport?.clientHeight ?? 0) - diagram.height) / 2) }
+  /** Actual size, the start of the top rule's track halfway down the canvas. */
+  function reset() { scale = 1; x = 0; y = (viewport?.clientHeight ?? 0) / 2 - tree.y }
   onMount(reset)
 
-  /** The element at a path: its box when closed, its frame when open. @param {string} path */
-  const at = path => /** @type {SVGGElement | null} */ (viewport?.querySelector(`.spliced[data-path="${path}"], .non-terminal[data-path="${path}"]`) ?? null)
-  /** The point of the line where an element starts, in the diagram's units. @param {Element} element */
-  const anchor = element => ({ ax: Number(element.getAttribute('data-x')), ay: Number(element.getAttribute('data-y')) })
+  /** The rule elements that take focus, in document order. */
+  const focusable = () => /** @type {SVGElement[]} */ ([...(viewport?.querySelectorAll('.non-terminal[data-path], .frame-label') ?? [])])
+  /** A rule's element: its box when closed, its label when open. @param {string} path */
+  const at = path => /** @type {SVGElement | null} */ (viewport?.querySelector(`.frame-label[data-path="${path}"], .non-terminal[data-path="${path}"]`) ?? null)
+  /** Where on screen a rule's track enters it: the box's middle, or the label's top plus the
+   * height above the track. @param {Element} element */
+  function entry(element) {
+    const box = element.getBoundingClientRect()
+    const up = Number(element.getAttribute('data-up'))
+    return { left: box.left, line: up ? box.top + up * scale : (box.top + box.bottom) / 2 }
+  }
 
-  /** Open or close a rule where it sits, keeping its place on screen and the focus on it. @param {string} path */
+  // One Tab stop in the diagram: the rule last moved to, else one in view.
+  let roving = $state('')
+  /** Keep one rule focusable, in view. @param {boolean} [visible] keep it only if it is in view */
+  function rove(visible = false) {
+    const all = focusable()
+    if (!all.length || !viewport) return
+    const view = viewport.getBoundingClientRect()
+    /** @param {Element} element */
+    const seen = element => { const box = element.getBoundingClientRect(); return box.right > view.left && box.left < view.right && box.bottom > view.top && box.top < view.bottom }
+    let current = all.find(element => element.getAttribute('data-path') === roving)
+    if (!current || (visible && document.activeElement !== current && !seen(current))) current = all.find(seen) ?? all[0]
+    roving = current.getAttribute('data-path') ?? ''
+    for (const element of all) element.setAttribute('tabindex', element === current ? '0' : '-1')
+  }
+  $effect(() => { void tree; tick().then(() => rove()) })
+  let settle = 0
+  $effect(() => { void x; void y; void scale; clearTimeout(settle); settle = window.setTimeout(() => rove(true), 150) })
+
+  /** Pan so an element is in view, then give it the focus without scrolling the page. @param {SVGElement} element */
+  function focusRule(element) {
+    if (!viewport) return
+    const box = element.getBoundingClientRect(), view = viewport.getBoundingClientRect()
+    if (box.left < view.left + 8 || box.right > view.right - 8) x += view.left + view.width / 3 - box.left
+    if (box.top < view.top + 8 || box.bottom > view.bottom - 8) y += view.top + view.height / 2 - box.top
+    roving = element.getAttribute('data-path') ?? ''
+    for (const one of focusable()) one.setAttribute('tabindex', one === element ? '0' : '-1')
+    element.focus({ preventScroll: true })
+  }
+
+  /** Open or close a rule where it sits, its track kept in place on screen and the focus on it. @param {string} path */
   async function toggle(path) {
     const before = at(path)
-    const was = before ? anchor(before) : null
+    const was = before ? entry(before) : null
     if (open.has(path)) { for (const one of open) if (one === path || one.startsWith(`${path}/`)) open.delete(one) }
     else open.add(path)
     await tick()
     const after = at(path)
     if (was && after) {
-      const now = anchor(after)
-      x += (was.ax - now.ax) * scale
-      y += (was.ay - now.ay) * scale
-      // An opened rule grows above its line too: its label stays in view.
+      const now = entry(after)
+      x += was.left - now.left
+      y += was.line - now.line
       await tick()
-      const box = after.getBoundingClientRect(), view = viewport?.getBoundingClientRect()
-      if (view && box.top < view.top + 8) y += view.top + 8 - box.top
-      if (view && box.left < view.left + 8) x += view.left + 8 - box.left
+      focusRule(after)
     }
-    await tick()
-    focusAt(path)
-  }
-  /** @param {string} path */
-  function focusAt(path) {
-    const target = viewport?.querySelector(`.frame-label[data-path="${path}"], .non-terminal[data-path="${path}"]`)
-    if (target instanceof SVGElement) target.focus({ preventScroll: true })
   }
   /** Bring a path into view at a readable size, opening what holds it. @param {string} path */
   async function locate(path) {
     const parts = path.split('/').slice(1)
     for (let n = 1; n < parts.length; n++) open.add(`/${parts.slice(0, n).join('/')}`)
     await tick()
-    const element = path === '' ? null : at(path)
-    const { ax, ay } = element ? anchor(element) : { ax: 30, ay: diagram.height / 2 }
     scale = Math.max(scale, 1)
-    x = (viewport?.clientWidth ?? 0) / 3 - ax * scale
-    y = (viewport?.clientHeight ?? 0) / 2 - ay * scale
     await tick()
-    if (path) focusAt(path)
+    const element = path === '' ? null : at(path)
+    if (!element || !viewport) { reset(); return }
+    const box = element.getBoundingClientRect(), view = viewport.getBoundingClientRect()
+    x += view.left + view.width / 3 - box.left
+    y += view.top + view.height / 2 - box.top
+    await tick()
+    focusRule(element)
   }
   function showSelected() {
     const path = pickedFor === selected && pickedAt !== null ? pickedAt : placeOf(rules, top, selected)
@@ -105,20 +141,22 @@
   /** What a click or a key does to a rule. @param {Element} element */
   function act(element) {
     pick(element)
+    announced = selected
     const link = element.getAttribute('data-link')
     if (link !== null) { locate(link); return }
     const path = element.getAttribute('data-path')
     if (path !== null) toggle(path)
   }
   /** The rule a pointer or key event is on: a box, a link or an open rule's label. @param {Event} event */
-  const ruleOf = event => /** @type {Element | null} */ (event.target instanceof Element ? event.target.closest('.non-terminal[data-path], .frame-label') : null)
+  const ruleOf = event => /** @type {SVGElement | null} */ (event.target instanceof Element ? event.target.closest('.non-terminal[data-path], .frame-label') : null)
 
-  // Panning by dragging and pinching; a press that does not move is a click.
+  // Panning by dragging with the main button or a finger, and pinching; a press that does not move is a click.
   /** @type {Map<number, { x: number, y: number }>} */
   const pointers = new Map()
   let moved = false, pinch = 0
   /** @param {PointerEvent} event */
   function down(event) {
+    if (event.pointerType === 'mouse' && event.button !== 0) return
     pointers.set(event.pointerId, { x: event.clientX, y: event.clientY })
     moved = false
     if (pointers.size === 2) { const [a, b] = [...pointers.values()]; pinch = Math.hypot(a.x - b.x, a.y - b.y) }
@@ -151,18 +189,31 @@
     const element = ruleOf(event)
     if (element) act(element)
   }
-  /** @param {WheelEvent} event */
+  /** Ctrl or ⌘ with the wheel (and a trackpad pinch) zooms; a sideways scroll pans; the rest
+   * scrolls the page. @param {WheelEvent} event */
   function wheel(event) {
-    event.preventDefault()
     const box = viewport?.getBoundingClientRect()
     if (!box) return
-    if (event.ctrlKey || !event.shiftKey) zoom(Math.exp(-event.deltaY * (event.deltaMode === 1 ? 0.05 : 0.0015)), event.clientX - box.left, event.clientY - box.top)
-    else x -= event.deltaY
+    const unit = event.deltaMode === 1 ? 16 : 1
+    if (event.ctrlKey || event.metaKey) {
+      event.preventDefault()
+      zoom(Math.exp(-event.deltaY * unit * 0.0015), event.clientX - box.left, event.clientY - box.top)
+    } else if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
+      event.preventDefault()
+      x -= event.deltaX * unit
+    }
   }
   /** @param {KeyboardEvent} event */
   function key(event) {
+    // The browser's own shortcuts, its zoom among them, stay its own.
+    if (event.ctrlKey || event.metaKey || event.altKey) return
     const element = ruleOf(event)
     if (element && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); act(element); return }
+    if (element && !event.shiftKey) {
+      const all = focusable(), at = all.indexOf(element)
+      const to = { ArrowRight: at + 1, ArrowDown: at + 1, ArrowLeft: at - 1, ArrowUp: at - 1, Home: 0, End: all.length - 1 }[event.key]
+      if (to !== undefined) { event.preventDefault(); const next = all[Math.max(0, Math.min(all.length - 1, to))]; if (next) focusRule(next); return }
+    }
     const step = 60
     const moves = /** @type {Record<string, () => void>} */ ({
       ArrowLeft: () => { x += step }, ArrowRight: () => { x -= step }, ArrowUp: () => { y += step }, ArrowDown: () => { y -= step },
@@ -170,22 +221,18 @@
     })
     if (moves[event.key]) { event.preventDefault(); moves[event.key]() }
   }
-  /** A rule focused shows in the panel, and comes into view. @param {FocusEvent} event */
+  /** A rule focused shows in the panel. @param {FocusEvent} event */
   function focused(event) {
     if (viewport) { viewport.scrollLeft = 0; viewport.scrollTop = 0 }
     const element = ruleOf(event)
-    if (!element || !viewport) return
-    pick(element)
-    const box = element.getBoundingClientRect(), view = viewport.getBoundingClientRect()
-    if (box.left < view.left || box.right > view.right) x += view.left + view.width / 3 - box.left
-    if (box.top < view.top || box.bottom > view.bottom) y += view.top + view.height / 2 - box.top
+    if (element) { pick(element); roving = element.getAttribute('data-path') ?? roving }
   }
 
   // The selected rule stands out wherever it is drawn.
   $effect(() => {
-    void diagram
+    void tree
     const name = selected
-    for (const element of viewport?.querySelectorAll('[data-rule]') ?? []) element.classList.toggle('selected', element.getAttribute('data-rule') === name)
+    tick().then(() => { for (const element of viewport?.querySelectorAll('[data-rule]') ?? []) element.classList.toggle('selected', element.getAttribute('data-rule') === name) })
   })
 </script>
 
@@ -207,9 +254,14 @@
     <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
     <div class="canvas" bind:this={viewport} tabindex="0" role="application" aria-label={t('baishi.grand.label')}
       onwheel={wheel} onpointerdown={down} onpointermove={move} onpointerup={up} onpointercancel={up} onclick={click} onkeydown={key} onfocusin={focused}>
-      <div class="plane" style:transform={`translate(${x}px, ${y}px) scale(${scale})`}>{@html diagram.svg}</div>
+      <div class="plane" style:transform={`translate(${x}px, ${y}px) scale(${scale})`}>
+        <svg class="railroad-diagram" role="group" aria-label={top} width={tree.width} height={tree.height} viewBox={`0 0 ${tree.width} ${tree.height}`} xmlns="http://www.w3.org/2000/svg">
+          <g transform={`translate(${tree.x} ${tree.y})`}><RailroadNode node={tree.root} /></g>
+        </svg>
+      </div>
     </div>
-    <aside class="panel" aria-live="polite">
+    <p class="ui-visually-hidden" aria-live="polite">{announced}</p>
+    <aside class="panel">
       {#if single}
         <h4><code>{selected}</code></h4>
         <button type="button" class="ui-button" onclick={showSelected}>{t('baishi.grand.locate')}</button>
@@ -220,7 +272,7 @@
   </div>
   <div class="index" role="group" aria-label={t('baishi.grand.rules')}>
     {#each [...rules.keys()] as name (name)}
-      <button type="button" class="ui-chip" aria-pressed={name === selected} onclick={() => { selected = name }}>{name}</button>
+      <button type="button" class="ui-chip" aria-pressed={name === selected} onclick={() => { selected = name; announced = name }}>{name}</button>
     {/each}
   </div>
 </div>
