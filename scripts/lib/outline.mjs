@@ -49,3 +49,80 @@ export function counters(polygons) {
     return Math.sign(areas[from]) !== Math.sign(areas[at])
   })
 }
+
+/** The side of the square a GlyphWiki drawing is made in. */
+export const SQUARE = 200
+
+/**
+ * The cells of the drawing square that polygons cover when they are filled as one shape: a cell is
+ * ink where the polygons around its centre do not cancel out.
+ * @param {[number, number][][]} polygons
+ */
+export function cells(polygons) {
+  const grid = new Uint8Array(SQUARE * SQUARE)
+  for (let row = 0; row < SQUARE; row++) {
+    const y = row + 0.5
+    /** @type {[number, number][]} */
+    const crossings = []
+    for (const points of polygons) points.forEach(([x1, y1], i) => {
+      const [x2, y2] = points[(i + 1) % points.length]
+      if ((y1 <= y) !== (y2 <= y)) crossings.push([x1 + (y - y1) * (x2 - x1) / (y2 - y1), y2 > y1 ? 1 : -1])
+    })
+    crossings.sort((a, b) => a[0] - b[0])
+    let winding = 0
+    for (let i = 0; i + 1 < crossings.length; i++) {
+      winding += crossings[i][1]
+      if (winding === 0) continue
+      for (let col = Math.max(0, Math.ceil(crossings[i][0] - 0.5)); col <= Math.min(SQUARE - 1, Math.floor(crossings[i + 1][0] - 0.5)); col++) grid[row * SQUARE + col] = 1
+    }
+  }
+  return grid
+}
+
+/** Polygons wound as a record winds them: with the shape, and a counter against it. @param {[number, number][][]} polygons */
+export function wound(polygons) {
+  const cut = counters(polygons)
+  return polygons.map((polygon, at) => (area(polygon) < 0) !== cut[at] ? [...polygon].reverse() : polygon)
+}
+
+/**
+ * How far two drawings are one: the lesser share of each one's ink that lies within `near` cells of
+ * the other's. @param {Uint8Array} a @param {Uint8Array} b @param {number} near
+ */
+export function alike(a, b, near) {
+  const widened = (/** @type {Uint8Array} */ grid) => {
+    const out = new Uint8Array(grid.length)
+    for (let row = 0; row < SQUARE; row++) for (let col = 0; col < SQUARE; col++) {
+      if (!grid[row * SQUARE + col]) continue
+      for (let y = Math.max(0, row - near); y <= Math.min(SQUARE - 1, row + near); y++) {
+        for (let x = Math.max(0, col - near); x <= Math.min(SQUARE - 1, col + near); x++) out[y * SQUARE + x] = 1
+      }
+    }
+    return out
+  }
+  const share = (/** @type {Uint8Array} */ ink, /** @type {Uint8Array} */ beside) => {
+    let all = 0, on = 0
+    for (let i = 0; i < ink.length; i++) { all += ink[i]; on += ink[i] & beside[i] }
+    return all ? on / all : 0
+  }
+  return Math.min(share(a, widened(b)), share(b, widened(a)))
+}
+
+/** How many separate regions of the drawing square are left blank: the ground around a drawing and each counter inside it. @param {Uint8Array} grid */
+export function blanks(grid) {
+  const seen = new Uint8Array(grid.length)
+  let regions = 0
+  for (let start = 0; start < grid.length; start++) {
+    if (grid[start] || seen[start]) continue
+    regions++
+    const stack = [start]
+    seen[start] = 1
+    while (stack.length) {
+      const at = /** @type {number} */ (stack.pop()), row = Math.floor(at / SQUARE), col = at % SQUARE
+      for (const next of [row > 0 ? at - SQUARE : -1, row < SQUARE - 1 ? at + SQUARE : -1, col > 0 ? at - 1 : -1, col < SQUARE - 1 ? at + 1 : -1]) {
+        if (next >= 0 && !grid[next] && !seen[next]) { seen[next] = 1; stack.push(next) }
+      }
+    }
+  }
+  return regions
+}
