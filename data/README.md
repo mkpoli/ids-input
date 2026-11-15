@@ -168,6 +168,34 @@ The descriptions are this project's, not a copy of CHISE's or BabelStone's. The 
 downloadable at <https://github.com/mkpoli/ids-input/raw/main/data/ids-project.tsv.gz>, and its
 source at <https://github.com/mkpoli/ids-input/raw/main/data/ids-project.tsv>.
 
+## `glyph-ids.tsv`
+
+Reviewed descriptions of the printed glyphs [han-input](https://github.com/mkpoli/han-input) keeps
+as images: IRG proposal and withdrawal glyphs, and GlyphWiki's `ebag_` glyphs. One line per glyph,
+`key<TAB>ids<TAB>verdict<TAB>by<TAB>judged<TAB>at`. The key is han-input's record:
+`<records file id>:<serial or source>`, e.g. `ext_d_removals:00225`.
+
+| Verdict | `ids` | `by` |
+| --- | --- | --- |
+| `known` | another source's description, accepted for the glyph | `zi.tools <page>` or `babelstone <char>` |
+| `model` | a han2ids reading the reviewer kept | `han2ids c0`, `c1` or `c2`, the reading's beam rank |
+| `written` | the reviewer's own description | |
+| `wrong` | empty: the reading is wrong and no description was written | |
+| `unclear` | empty: the reviewer could not tell | |
+
+`judged` is the han2ids reading shown for the glyph, and `at` the time of the answer. Every
+description except `known` is editorial: a reviewer read it from the printed glyph, and no source
+states it. zi.tools gives a sequence for glyphs that later became encoded characters and for many
+IRG N891 glyphs; the review accepts those unread. A glyph with only a BabelStone description is
+reviewed.
+
+Answers are given in the review desk of [han2ids](https://github.com/mkpoli/han2ids) and imported
+with `bun scripts/import_glyph_ids.mjs <answers.json>`.
+
+Licence: the editorial rows are CC0 1.0. BabelStone's descriptions are public domain (see
+`babelstone-ids.tsv.gz`). The zi.tools sequences come from its pages, which state no licence for
+them; their terms are uncertain.
+
 ## `ids-characters.tsv`
 
 Characters this project draws from their own outline rather than an IDS composition. One line per
