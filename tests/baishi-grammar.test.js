@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test'
+import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { openable, railroad, readGrammar, references, withoutComments } from '../demo/lib/railroad.js'
 
@@ -37,6 +38,33 @@ describe('the zi.tools IDS Extension grammar files', () => {
     const page = read('demo/Baishi.svelte')
     expect(page).toContain("from '../data/baishi-ids.ebnf?raw'")
     for (const file of FILES) expect(page).toContain(`from '../${file}?url'`)
+  })
+})
+
+// The rules as checked on every row of yi-bai/ids at 2597437b928e8d530b7ae09cf53fe5ec7868569c
+// (2026-10-31): the SHA-256 of their text with comments out and white space collapsed. A change to
+// the rules of all three files together still has to change this.
+const VERIFIED = '0de8aa750bc710b5c4c9e0f6e65d8789d2767aa609001463e6b814f25994c3c3'
+
+describe('reading ISO/IEC 14977 strictly', () => {
+  it('reads all three files, comments and all', () => {
+    for (const text of [english, ...translations]) expect(readGrammar(text).size).toBe(45)
+  })
+  it('keeps the rules that were checked on the data', () => {
+    expect(createHash('sha256').update(rules(english)).digest('hex')).toBe(VERIFIED)
+  })
+  it('refuses what it does not read', () => {
+    expect(() => readGrammar('a = 3 * "x" ;')).toThrow()
+    expect(() => readGrammar('a = "x" - "y" ;')).toThrow()
+    expect(() => readGrammar('a = "x" ; b = ;')).toThrow()
+    expect(() => readGrammar('a = "x" ; a = "y" ;')).toThrow()
+    expect(() => readGrammar("(* an unclosed ' in a comment *) a = 'x' ;")).toThrow()
+    expect(() => readGrammar('(* an unclosed ? in a comment *) a = "x" ;')).toThrow()
+    expect(() => readGrammar('(* unclosed a = "x" ;')).toThrow()
+  })
+  it('reads strings and comments as ISO/IEC 14977 does', () => {
+    expect(readGrammar('a = "(*", b ; b = \'*)\' ;').get('a')?.expr).toEqual({ t: 'seq', items: [{ t: 'term', text: '(*' }, { t: 'nt', text: 'b' }] })
+    expect([...readGrammar('(* outer (* inner *) "quoted *)" *) a = "x" ;').keys()]).toEqual(['a'])
   })
 })
 
