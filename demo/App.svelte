@@ -10,7 +10,7 @@
   import SiteSelect from './ui/SiteSelect.svelte'
   import { onMount, tick, untrack } from 'svelte'
   import { watchFallback } from '../src/svelte/fallback-font.js'
-  import { IdsCharacterInfo, IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, OperatorIcon, createEditor, shortcut, translator } from '../src/svelte/index.js'
+  import { IdsAlternatives, IdsCharacterInfo, IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, OperatorIcon, createEditor, shortcut, translator } from '../src/svelte/index.js'
   import { smallSealAdapter } from '../src/adapter/index.js'
   import { APPROXIMATE, composableDescription } from '@han-compose/composer/compose'
   import { hasTangut } from '@han-compose/composer/tangut'
@@ -46,6 +46,7 @@
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
   import { createIconDrawings } from './lib/icons.js'
   import { createSampleDrawings } from './lib/sample-drawings.js'
+  import { createDrawingOrder } from './lib/drawing-order.js'
   import { recognizeDrawing } from './lib/sketch-recognizer.js'
   import { COMPOSER_BASE, COMPOSER_BASES, readFrom } from './lib/composer.js'
   import { DESKTOP, SITE } from './lib/desktop.js'
@@ -194,6 +195,9 @@
   // At 2 MB they come as a chunk of their own, asked for at once and read when they arrive, so the
   // page draws without waiting for them.
   const EXAMPLE_SEQUENCES = new Set(EXAMPLES.map(example => example.sequence))
+  // The character each example names, or none: what the corpus answers for the example's sequence
+  // (tests/example-characters.test.js), known before the corpus has loaded.
+  const EXAMPLE_CHARACTERS = new Map(EXAMPLES.map(example => [example.sequence, example.char]))
   let prepared = $state.raw(/** @type {Map<string, import('../src/adapter/types.js').Drawing>} */ (new Map()))
   const preparedReady = import('./lib/example-drawings.json')
     .then(({ default: data }) => { prepared = new Map(Object.entries(data.drawings).map(([sequence, entry]) => [sequence, entry.drawn])) })
@@ -278,7 +282,9 @@
       // parts keep the layout, and a modifier is left to the exact answer above, since the
       // modifier-free reading is only a guess.
       if (!sequence.includes('[') && APPROXIMATE.some(operator => sequence.includes(operator))) {
-        const [named] = await babel.encoded(sequence).catch(() => [])
+        // An example states the character it names, so it draws without waiting for the corpus.
+        const [named] = EXAMPLE_CHARACTERS.has(sequence) ? [EXAMPLE_CHARACTERS.get(sequence) || undefined]
+          : await babel.encoded(sequence).catch(() => [])
         if (named !== undefined && [...named].length === 1 && named !== sequence) {
           try { return await draw(named, options) } catch { /* compose it */ }
         }
@@ -324,6 +330,11 @@
     previewsWithExamples.set(key, preview)
     return preview
   }
+  // The description being edited is drawn first: the tab icons and the font switch's samples wait
+  // while it loads, so the other faces' exports and the icons' parts do not share its connection.
+  let previewStep = $state(/** @type {'idle' | 'loading' | 'composed' | 'final' | 'failed' | 'capped' | 'unavailable'} */ ('idle'))
+  const order = createDrawingOrder()
+  $effect(() => order.hold(previewStep === 'loading'))
   // Tab icons need their own drawer so their requests cannot cancel the main preview.
   /** @type {Map<string, ReturnType<typeof createIconDrawings>>} */
   const iconDrawings = new Map()
@@ -348,9 +359,10 @@
   const iconsAt = (at, style) => {
     const key = `${at}\0${style}`
     if (!iconDrawings.has(key)) {
-      const draw = drawerAt(at, style)
-      iconDrawings.set(key, createIconDrawings(async sequence =>
-        (style === 'sans' && exportUrl(at) === preparedBase && !hasEmoji(sequence) ? await preparedFor(sequence) : null) ?? draw(sequence)))
+      // A prepared drawing needs no export: it is answered ahead of the composed icons' queue.
+      const composed = createIconDrawings(order.after(drawerAt(at, style)))
+      iconDrawings.set(key, async sequence =>
+        (style === 'sans' && exportUrl(at) === preparedBase && !hasEmoji(sequence) ? await preparedFor(sequence) : null) ?? composed(sequence))
     }
     return /** @type {ReturnType<typeof createIconDrawings>} */ (iconDrawings.get(key))
   }
@@ -377,7 +389,7 @@
       sampleDrawings.delete(oldKey)
     }
     if (!sampleDrawings.has(key)) {
-      const preview = previewAt(at, separate, option.style, `switch-${option.key}`)
+      const preview = order.after(previewAt(at, separate, option.style, `switch-${option.key}`))
       sampleDrawings.set(key, createSampleDrawings((sequence, { signal }) => preview(sequence, { signal })))
     }
     return /** @type {ReturnType<typeof createSampleDrawings>} */ (sampleDrawings.get(key))
@@ -1482,7 +1494,7 @@
           </div>
           {#if view === 'shape'}
             <div class="tree-stage" data-character-info-avoid role="tabpanel" id="shape-panel" aria-labelledby="shape-tab">
-              <div class="tree-box"><IdsTree {editor} {keyHints} /></div>
+              <div class="tree-box"><IdsTree {editor} {keyHints} variations /></div>
             </div>
           {:else}
             {#key activeId}
@@ -1534,7 +1546,7 @@
             {#key activeId}
               <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false}
                 document={currentSession()?.document} session={currentSession()} version={documentTick} bind:scopes bind:slots
-                editable={adjusting} onchoose={path => editor.choose(path, { toggle: false })} onedit={layerChanged} bind:drawing bind:emoji bind:cut bind:cutLeaf>
+                editable={adjusting} onchoose={path => editor.choose(path, { toggle: false })} onedit={layerChanged} bind:drawing bind:emoji bind:cut bind:cutLeaf bind:step={previewStep}>
                 {#snippet detailContent()}
                   {#if substituted}
                     <span class="encoded-character substituted-character" lang="ja" title={substituted.sequence}>
@@ -1611,7 +1623,7 @@
           </div>
           {#if large}
             <IdsPreview {adapter} tree={editor.tree} {messages} {locale} small={false} notes={false}
-              document={currentSession()?.document} session={currentSession()} version={documentTick} editable={false} />
+              document={currentSession()?.document} session={currentSession()} version={documentTick} editable={false} bind:step={previewStep} />
           {/if}
         </dialog>
         {#if !embed}
@@ -1622,7 +1634,12 @@
       </section>
     </div>
   </main>
-  <IdsCharacterInfo root={work} {adapter} {messages} {locale} disabled={editor.disabled} onpick={(part, path) => editor.take(part, path)} />
+  <IdsCharacterInfo root={work} {adapter} {messages} {locale} disabled={editor.disabled} onpick={(part, path) => editor.take(part, path)}>
+    <!-- A part chosen by selecting its text lists what can stand in its place under its card. -->
+    {#snippet extra({ path, close })}
+      {#if path && editor.chosenInField && path.join('.') === editor.chosen?.join('.')}<IdsAlternatives {editor} variations variationsHref={entry => `./ucv.html?lang=${locale}#ucv-${entry}`} onchoose={close} />{/if}
+    {/snippet}
+  </IdsCharacterInfo>
 
 </div>
 

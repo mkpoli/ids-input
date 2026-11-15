@@ -172,7 +172,7 @@
 </script>
 
 <div class="page" bind:this={root}>
-  <PageHeader title={t('strokes.title')} {t} bind:locale links={[{ href: './open-data.html#strokes', label: t('app.openData') }]} />
+  <PageHeader page="strokes" title={t('strokes.title')} {t} bind:locale links={[{ href: './open-data.html#strokes', label: t('app.openData') }]} />
 
   <div class="body">
     <nav class="queue" aria-label={t('strokes.queue')}>

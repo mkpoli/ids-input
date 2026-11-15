@@ -38,7 +38,8 @@ Yi Bai's table MIT.
 The glyph [GlyphWiki](https://glyphwiki.org/) draws for 1,162 of the 1,387 CHISE entities, each as
 one SVG path in a 200-unit square: `names` gives an entity's GlyphWiki name (`&CDP-8958;` is
 `cdp-8958`, `&U-i001+864D;` is `u864d-itaiji-001`) and `outlines` that name's path. The appendix at
-`/unencoded` shows them where nothing else draws a form. 137 entities have no name the two share
+`/unencoded` shows them where nothing else draws a form, and `/component-atlas` in place of an
+entity's private-use character. 137 entities have no name the two share
 (CNS planes, JIS supplements and others) and 88 have a name GlyphWiki draws nothing for. GlyphWiki's
 glyphs are edited by its users and may differ from the form CHISE means; fetched 2026-11-13. Rebuild
 with `bun scripts/build_custom_outlines.mjs`, which keeps each fetched glyph under `cache/`.
@@ -166,6 +167,34 @@ character that decomposes.
 The descriptions are this project's, not a copy of CHISE's or BabelStone's. The built table is
 downloadable at <https://github.com/mkpoli/ids-input/raw/main/data/ids-project.tsv.gz>, and its
 source at <https://github.com/mkpoli/ids-input/raw/main/data/ids-project.tsv>.
+
+## `glyph-ids.tsv`
+
+Reviewed descriptions of the printed glyphs [han-input](https://github.com/mkpoli/han-input) keeps
+as images: IRG proposal and withdrawal glyphs, and GlyphWiki's `ebag_` glyphs. One line per glyph,
+`key<TAB>ids<TAB>verdict<TAB>by<TAB>judged<TAB>at`. The key is han-input's record:
+`<records file id>:<serial or source>`, e.g. `ext_d_removals:00225`.
+
+| Verdict | `ids` | `by` |
+| --- | --- | --- |
+| `known` | another source's description, accepted for the glyph | `zi.tools <page>` or `babelstone <char>` |
+| `model` | a han2ids reading the reviewer kept | `han2ids c0`, `c1` or `c2`, the reading's beam rank |
+| `written` | the reviewer's own description | |
+| `wrong` | empty: the reading is wrong and no description was written | |
+| `unclear` | empty: the reviewer could not tell | |
+
+`judged` is the han2ids reading shown for the glyph, and `at` the time of the answer. Every
+description except `known` is editorial: a reviewer read it from the printed glyph, and no source
+states it. zi.tools gives a sequence for glyphs that later became encoded characters and for many
+IRG N891 glyphs; the review accepts those unread. A glyph with only a BabelStone description is
+reviewed.
+
+Answers are given in the review desk of [han2ids](https://github.com/mkpoli/han2ids) and imported
+with `bun scripts/import_glyph_ids.mjs <answers.json>`.
+
+Licence: the editorial rows are CC0 1.0. BabelStone's descriptions are public domain (see
+`babelstone-ids.tsv.gz`). The zi.tools sequences come from its pages, which state no licence for
+them; their terms are uncertain.
 
 ## `ids-characters.tsv`
 
@@ -1344,8 +1373,8 @@ The Components tab offers the list as **All characters**, beside the curated com
 stroke-count groups, paged at 120, searchable by character or `U+` code point and filterable by
 stroke count: single counts up to 22, then one 23+ group.
 
-Rebuild with `node scripts/build_han_parts.mjs [Unihan.zip] [stroke.dict.yaml]`. It reads all 4,096
-record shards from the export, the bundled outline index and palette outlines, and the pinned Unihan
+Rebuild with `node scripts/build_han_parts.mjs [Unihan.zip] [stroke.dict.yaml]`. It reads every
+record shard of the export, the bundled outline index and palette outlines, and the pinned Unihan
 archive (`https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip`, SHA-256
 `4c93ea9c1f636451729a840978f1667a53886af37ba854fdcce109721c63d43e`) and the Rime five-stroke
 dictionary (`https://raw.githubusercontent.com/rime/rime-stroke/1e8fff9b9494ddec23b0cbc526bcfd8171a6fd48/stroke.dict.yaml`,
@@ -1389,11 +1418,20 @@ The alignments in `ids-corpus.json.gz`, as one small table for the components pa
 status, the provenance indexes and the characters that attest it. Written by
 `scripts/build_ids_corpus.mjs`; the data is **GPL-2.0-or-later** like the corpus it comes from.
 
+## `component-atlas.json.gz`
+
+Every component a description in `ids-corpus.json.gz` uses, most used first, for the page at
+`/component-atlas`: 5,280 rows, the 4,000 most used and every unencoded part after them. Each row
+has the `cid`, its character (a private-use one for a CHISE entity), `uses` (the descriptions naming
+it), `encoded`, up to 60 characters it appears in (`subjects`) and the cid's `aliases`. A part named
+through a CHISE entity that is still unresolved is not counted. Built 2026-11-04; rebuild with
+`bun run build:component-atlas`. **GPL-2.0-or-later** like the corpus it comes from.
+
 ## Preview coverage audit
 
 `bun scripts/audit_render_coverage.mjs CACHE_DIR OUTPUT_JSON [sans|serif|fangsong|klee]` renders every
 accepted non-private Unicode scalar through the actual preview worker. It preloads the selected
-export's record shards four at a time, caches bytes and missing-shard responses, and leaves later
+export's record shards sixteen at a time, caches bytes and missing-shard responses, and leaves later
 shard requests to the worker's loader. It stops on transport errors instead of treating them as
 glyph gaps. Run it under the project's batch resource limits. A warm cache avoids repeating the
 download.
