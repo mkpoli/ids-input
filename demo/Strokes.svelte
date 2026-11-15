@@ -1,6 +1,6 @@
 <script>
-  // Entering the stroke orders no source records. The queue is `data/open-strokes/wanted.tsv`, the
-  // components that keep the most characters from being written; a row saved here is a row of
+  // Entering the stroke orders no source records. The queue is `data/open-strokes/wanted.tsv`: the
+  // characters left without an order and the components that keep others from being written; a row saved here is a row of
   // `data/stroke-orders-entered.tsv`, which the dev server serving this page reads and writes. The
   // page is a maintainer's tool: no build publishes it.
   import { onMount, untrack } from 'svelte'
@@ -165,9 +165,9 @@
           {@const done = Boolean(entryOf(entry.char, source))}
           <li>
             <button type="button" class="wanted" class:done aria-current={entry.char === current ? 'true' : undefined}
-              aria-label={done ? `${entry.char}, ${t('strokes.entered')}` : `${entry.char}, ${t('strokes.blocks')} ${entry.blocks}`} onclick={() => choose(entry.char)}>
+              aria-label={done ? `${entry.char}, ${t('strokes.entered')}` : entry.blocks ? `${entry.char}, ${t('strokes.blocks')} ${entry.blocks}` : entry.char} onclick={() => choose(entry.char)}>
               <span class="char" lang="ja">{entry.char}</span>
-              <span class="n">{done ? '✓' : entry.blocks}</span>
+              <span class="n">{done ? '✓' : entry.blocks || ''}</span>
             </button>
           </li>
         {/each}
@@ -180,7 +180,7 @@
           <div class="glyph" lang="ja">{current}</div>
           <dl class="facts">
             <div><dt>{t('strokes.codepoint')}</dt><dd class="mono">{point}</dd></div>
-            {#if item}
+            {#if item?.blocks}
               <div><dt>{t('strokes.blocks')}</dt><dd>{item.blocks}</dd></div>
               <div><dt>{t('strokes.alone')}</dt><dd>{item.alone}</dd></div>
               <div class="wide"><dt>{t('strokes.examples')}</dt>
