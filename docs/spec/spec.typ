@@ -36,20 +36,26 @@
     url: "https://github.com/alerque/libertinus",
   ),
   (
-    name: "Noto Serif CJK SC / TC",
+    // The region subsets of Noto CJK, named as their files name them; English and Simplified
+    // Chinese use SC only.
+    name: if edition == "zh-Hant" { "Noto Serif TC, Noto Serif SC" } else {
+      "Noto Serif SC"
+    },
     role: "serif",
     version: "2.003",
     by: "Adobe",
     licence: "SIL Open Font License 1.1",
-    url: "https://github.com/notofonts/noto-cjk/tree/Serif2.003",
+    url: "https://github.com/notofonts/noto-cjk/tree/Serif2.003/Serif/SubsetOTF",
   ),
   (
-    name: "Noto Sans CJK SC / TC",
+    name: if edition == "zh-Hant" { "Noto Sans TC, Noto Sans SC" } else {
+      "Noto Sans SC"
+    },
     role: "sans",
     version: "2.004",
     by: "Adobe",
     licence: "SIL Open Font License 1.1",
-    url: "https://github.com/notofonts/noto-cjk/tree/Sans2.004",
+    url: "https://github.com/notofonts/noto-cjk/tree/Sans2.004/Sans/SubsetOTF",
   ),
   (
     name: "Jigmo, Jigmo2, Jigmo3",
@@ -101,6 +107,13 @@
 
 /// Simplified Chinese as the documents write it, in every edition.
 #let hans(body) = text(lang: "zh", region: "CN", font: faces.hans-serif, body)
+/// A Simplified Chinese quotation in the edition's quotation marks.
+#let quoted(body) = {
+  let (open, close) = if edition == "zh-Hant" { ("「", "」") } else {
+    ("“", "”")
+  }
+  open + hans(body) + close
+}
 #let hans-sans(body) = text(
   lang: "zh",
   region: "CN",
@@ -997,8 +1010,13 @@
 == #t("spec.licences") <licences>
 #list(
   t("spec.licence.edition"),
-  [#t("spec.licence.i26") #at(("I26", "p.33"))],
-  [#t("spec.licence.drafts") #hans("Copyright © 2024 Losketch, Yi-Bai, 等")],
+  [#t("spec.licence.i26") #quoted("本文以 MIT 协议授权发布。") #at((
+      "I26",
+      "p.33",
+    ))],
+  [#t("spec.licence.drafts") #quoted(
+      "Copyright © 2024 Losketch, Yi-Bai, 等 | QQ群: 668364339",
+    ) #at(("D3", "pp.1–5"))],
   [#t("spec.licence.data") #link(
       "https://github.com/yi-bai/ids/blob/2597437b928e8d530b7ae09cf53fe5ec7868569c/LICENSE",
     )[LICENSE] #at(("I26", "p.2"))],
@@ -1020,7 +1038,7 @@
     .map(font => (
       text(weight: "bold", font.name),
       {
-        set par(spacing: 0.35em, justify: false)
+        set par(spacing: 0.45em, leading: 0.45em, justify: false)
         t("spec.font.role." + font.role)
         parbreak()
         text(fill: soft, font.version + " · " + font.by + " · " + font.licence)
