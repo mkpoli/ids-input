@@ -13,6 +13,7 @@ from fontTools.ttLib import TTFont
 from fontTools.pens.recordingPen import RecordingPen, replayRecording
 from fontTools.pens.basePen import BasePen
 from fontTools.pens.cu2quPen import Cu2QuPen
+from fontTools.pens.transformPen import TransformPen
 from xie_forms import xie_noto, register as register_xie, PROVENANCE as XIE_PROVENANCE
 from biang_forms import IDS as BIANG_IDS, biang_noto
 
@@ -178,6 +179,121 @@ def compress_chang(outlines, style):
     return [[ops, [ymap(v) if i % 2 else v for i,v in enumerate(points)]] for ops,points in outlines]
 
 
+
+def rect_path(x0, y0, x1, y1):
+    path = pathops.Path()
+    path.moveTo(x0, y0); path.lineTo(x1, y0); path.lineTo(x1, y1); path.lineTo(x0, y1); path.close()
+    return path
+
+def outline_path(recordings, transform=None):
+    path = pathops.Path()
+    pen = path.getPen()
+    for recording in recordings: replayRecording(recording, TransformPen(pen, transform) if transform else pen)
+    return path
+
+def huang_eight(cs):
+    """黄's 八: the two wide, short strokes the character ends in."""
+    return [contour for contour in cs('\u9ec4')
+            if max(p[1] for _, args in contour for p in args) < 120
+            and max(p[0] for _, args in contour for p in args)
+            - min(p[0] for _, args in contour for p in args) > 250]
+
+# 王's top bar under 金's roof, as (top edge, left end, right end), and the opening between the
+# heads of the 八 that replaces the roof.
+JIN_BAR = {'sans': (530, 249, 750), 'serif': (503, 247, 739)}
+JIN_OPENING = (455, 545)
+
+def jin_with_ba(cs, style='sans'):
+    """金 with its 𠆢 rebuilt as 八 from the face's own ㇒ and ㇏.
+
+    The roof comes off 金, and ㇒ (U+31D2) and ㇏ (U+31CF) each fill one leg's reach and the
+    roof's full height, with an opening where the apex was. The strokes keep their own heads and
+    ends, so the top reads as 八 in the face's hand.
+    """
+    recordings = cs('金')
+    bar_top, bar_left, bar_right = JIN_BAR[style]
+    if style == 'serif':
+        # The roof is a contour of its own; the top bar's serif rises above the bar's edge.
+        roof_index = next(i for i, c in enumerate(recordings) if outline_path([c]).bounds[3] > 800)
+        roof = outline_path([recordings[roof_index]])
+        body = outline_path([c for i, c in enumerate(recordings) if i != roof_index])
+    else:
+        # The roof runs into the bar: everything above the bar, and the leg tips past its ends.
+        region = rect_path(0, bar_top, 1000, 1000)
+        for box in ((0, 380, bar_left, bar_top), (bar_right, 380, 1000, bar_top)):
+            region = pathops.op(region, rect_path(*box), pathops.PathOp.UNION)
+        whole = outline_path(recordings)
+        roof = pathops.op(whole, region, pathops.PathOp.INTERSECTION)
+        body = pathops.op(whole, region, pathops.PathOp.DIFFERENCE)
+    # Each stroke spans one leg's reach and the roof's full height, so the 八 stands as tall as
+    # the roof it replaces and opens at the apex.
+    roof_top = roof.bounds[3]
+    left_leg = pathops.op(roof, rect_path(0, 0, 500, 1000), pathops.PathOp.INTERSECTION).bounds
+    right_leg = pathops.op(roof, rect_path(500, 0, 1000, 1000), pathops.PathOp.INTERSECTION).bounds
+    drawn = body
+    for stroke, (left, bottom, right, top) in (('\u31d2', (left_leg[0], left_leg[1], JIN_OPENING[0], roof_top)),
+                                               ('\u31cf', (JIN_OPENING[1], right_leg[1], right_leg[2], roof_top))):
+        source = outline_path(cs(stroke))
+        sx0, sy0, sx1, sy1 = source.bounds
+        scale_x, scale_y = (right - left) / (sx1 - sx0), (top - bottom) / (sy1 - sy0)
+        placed = outline_path(cs(stroke), (scale_x, 0, 0, scale_y, left - sx0 * scale_x, bottom - sy0 * scale_y))
+        drawn = pathops.op(drawn, placed, pathops.PathOp.UNION)
+    pen = RecordingPen()
+    drawn.draw(pen)
+    return [group([pen.value])]
+
+def groups_box(groups):
+    """The ink box of prepared groups, curve extrema included, as (left, bottom, right, top)."""
+    xs, ys = [], []
+    for contour in groups:
+        for ops, points in contour:
+            at, i, k = None, 0, 0
+            while k < len(ops):
+                if ops[k] == 'Q':
+                    control, end = points[i:i+2], points[i+2:i+4]
+                    for axis, out in ((0, xs), (1, ys)):
+                        a, b, c = at[axis], control[axis], end[axis]
+                        den = a - 2 * b + c
+                        t = (a - b) / den if den else -1
+                        if 0 < t < 1: out.append((1 - t) ** 2 * a + 2 * (1 - t) * t * b + t * t * c)
+                    at, i, k = end, i + 4, k + 2
+                else:
+                    at, i, k = points[i:i+2], i + 2, k + 1
+                xs.append(at[0]); ys.append(at[1])
+    return min(xs), min(ys), max(xs), max(ys)
+
+def fitted_groups(groups, box):
+    """Prepared groups scaled and moved so their ink fills `box`, (left, bottom, right, top)."""
+    x0, y0, x1, y1 = groups_box(groups)
+    left, bottom, right, top = box
+    kx, ky = (right - left) / (x1 - x0), (top - bottom) / (y1 - y0)
+    move = lambda v, i: round(left + (v - x0) * kx if i % 2 == 0 else bottom + (v - y0) * ky, 2)
+    return [[[ops, [move(v, i) for i, v in enumerate(points)]] for ops, points in contour] for contour in groups]
+
+def groups_path(groups):
+    path = pathops.Path()
+    for contour in groups:
+        for ops, points in contour:
+            i, k = 0, 0
+            while k < len(ops):
+                if ops[k] == 'M': path.moveTo(*points[i:i+2]); i += 2; k += 1
+                elif ops[k] == 'L': path.lineTo(*points[i:i+2]); i += 2; k += 1
+                else: path.quadTo(*points[i:i+4]); i += 4; k += 2
+            path.close()
+    return path
+
+# 黄金萬兩 as the 揮春 in the UHK 港生活 article writes it: 黄's body, then 金 with 八 for its roof
+# hanging from the foot of 由, then 萬's band, as ink boxes (left, bottom, right, top) in em units.
+# 金's top is set from 由's bottom bar, where its centre stem ends, 8 units into the bar so the
+# strokes join; Serif's 由 stands on feet below the bar. The composer would give each operand a row.
+HUANG_JIN_WAN = '⿳龷由⿳八⿻王丷⿱田⿵冂山'
+HUANG_BODY_BOX, JIN_BOX, WAN_BAND_BOX = (185, 560, 815, 840), (60, 215, 940), (120, -78, 880, 192)
+
+def huang_jin_wan(body, jin, band):
+    body = fitted_groups(body, HUANG_BODY_BOX)
+    bar = pathops.op(groups_path(body), rect_path(495, 0, 505, 1000), pathops.PathOp.INTERSECTION).bounds[1]
+    return body + fitted_groups(jin, (*JIN_BOX, bar + 8)) + fitted_groups(band, WAN_BAND_BOX)
+
 def huang_body(cs):
     """黄 without its last two strokes, which 金's top stands in for.
 
@@ -185,14 +301,11 @@ def huang_body(cs):
     sharing a stroke, so the example names the body and this form keeps it where 黄
     draws it, rather than letting the composer lay 龷 and 由 out afresh.
     """
-    body = []
-    for contour in cs('黄'):
-        ys = [p[1] for _, values in contour for p in values if p is not None]
-        xs = [p[0] for _, values in contour for p in values if p is not None]
-        if min(ys) > 330 and max(ys) < 460 and max(xs) - min(xs) > 180:
-            continue                      # the 八: two wide, short strokes along the bottom
-        body.append(contour)
-    return body
+    eight = huang_eight(cs)
+    return [contour for contour in cs('黄') if contour not in eight]
+
+# Each face's 萬 band without 艹, set aside by `wan_shan` for the description that leaves 艹 out.
+WAN_WITHOUT_CAO = {}
 
 def wan_shan(cs, style):
     if style in ('kaisho', 'fangsong'):
@@ -268,7 +381,7 @@ def wan_shan(cs, style):
     assert pathops.op(overlap, allowed, pathops.PathOp.DIFFERENCE).area < 0.1, '山 runs into 萬 outside the stem'
     # 田 over 冂 around 山: the same band with 艹 left out, for a description whose 金
     # bottom already draws the stroke 艹 would.
-    globals().setdefault('WAN_WITHOUT_CAO', [group([band] + counters), group(shan)])
+    WAN_WITHOUT_CAO[style] = [group([band] + counters), group(shan)]
     return [group([band] + cao + counters), group(shan)]
 
 def wan_shan_brush(cs, style):
@@ -511,8 +624,10 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     # zi.tools stroke chains. 马 is written 𠃍, ㇉ and 一, and its 一 stands apart in both faces, so
     # the frame of 马 is the rest of the glyph.
     forms['#(-𠃍㇉)'] = chain_from(cs, '马', '一')
-    forms['⿱田⿵冂山'] = globals()['WAN_WITHOUT_CAO']
+    forms['⿱田⿵冂山'] = WAN_WITHOUT_CAO[style]
     forms['⿱龷由'] = [group(huang_body(cs))]
+    forms['⿱八⿻王丷'] = jin_with_ba(cs, style)
+    forms[HUANG_JIN_WAN] = huang_jin_wan(forms['⿱龷由'], forms['⿱八⿻王丷'], forms['⿱田⿵冂山'])
     # The top of the KRM vulgar 處 (K07097330): ⺊'s dot as a bar, the stem centred on the cover
     # and joined to it. One component, reused as the top of ⿳⺊冖人 and its relatives.
     forms['⿱⺊冖'] = seal_dot_top(cs, style)
@@ -583,6 +698,14 @@ result['editorial'] = {
         'kaisho': 'Kureedo 上 without its baseline, with editorial stem spacing and an extended rightward bar, over native 冖.',
         'donors': {'sans': ['上', '冖'], 'serif': ['上', '冖'], 'kaisho': ['上', '冖']},
         'forms': ['⿱⺊冖'],
+    },
+    'UHK-HUANG-JIN-WAN-LIANG': {
+        'kind': 'editorial ligature from font-derived forms',
+        'reference': '揮春上的合體字　你看懂幾多？ (新春篇), UHK 港生活, 2015-02-12',
+        'url': 'https://hk.ulifestyle.com.hk/topic/detail/200474/',
+        'limitation': 'A photographed brush 揮春 sets the structure: 金 takes 黄\'s 八 for its roof, hanging from 由, over 萬\'s band. Outlines are the face\'s own 黄 body, 金 with ㇒ and ㇏ for its roof, and 萬 with 岡\'s 山 for 禸; the boxes are editorial.',
+        'donors': {'sans': ['黄', '金', '㇒', '㇏', '萬', '岡'], 'serif': ['黄', '金', '㇒', '㇏', '萬', '岡']},
+        'forms': [HUANG_JIN_WAN],
     },
 }
 # The table is the engine's: it is committed in a han-compose checkout, which `bun run data` copies
