@@ -116,7 +116,7 @@ try {
   }
   const formed = await cardOf('⿰氵壬q0012')
   const unlisted = await cardOf('⿰氵壬q0012', '/og/data/ucv.json.gz')
-  const unoutlined = await cardOf('⿰氵壬q0012', '/og/data/ucv-outlines.json.gz')
+  const unoutlined = await cardOf('⿰氵壬q0012', '/og/data/ucv-outlines-sans.json.gz')
   assert.deepEqual([formed.drawing, unlisted.drawing, unoutlined.drawing], ['drawn', 'drawn', 'drawn'])
   assert.notEqual(Buffer.compare(formed.png, unoutlined.png), 0, 'a form no code point names is drawn from its outline')
   assert.equal(Buffer.compare(unlisted.png, unoutlined.png), 0, 'without the outlines the card is the plain component, as without the lists')

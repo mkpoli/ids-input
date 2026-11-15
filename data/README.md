@@ -459,7 +459,7 @@ the least alike. The stroke data is drawn with `@kurgm/kage-engine` 0.7.0 (GPL-3
 build runs and the package does not ship.
 
 `ucv-outlines-sans.json.gz` is `ucv-outlines.json.gz` with every form drawn in Gothic from that
-stroke data, for the Sans face. No source shows these forms in a Gothic face: the strokes are
+stroke data, for the Sans face; the Worker that draws a share card reads it too. No source shows these forms in a Gothic face: the strokes are
 GlyphWiki's and the drawing is this build's. Each record has two masters, as the engine's exports
 do, so a form is weighted like the parts beside it. Their stroke widths follow the Sans export
 (`a83fc941166b-sans-compose-layout-v4-f7+variants`): over 62 characters from 一 to 鬱, ink divided
@@ -1377,15 +1377,29 @@ from `ids-parts.json`.
 
 The open stroke-order release served at <https://ids.mkpo.li/open-data#strokes>: Taiwan's standard order
 from CNS 全字庫, Rime's five-stroke dictionary, Japanese order from KanjiVG, and orders induced by equivalence or from
-BabelStone's and Yi Bai's IDS for characters a source lacks. Its own `README.md` gives the fields, rules, licences
+BabelStone's and Yi Bai's IDS, or borrowed from another of the three, for characters a source lacks. Its own `README.md` gives the fields, rules, licences
 and how often the rules agree with the sources. Built by `scripts/build_open_strokes.mjs`.
+
+## `stroke-form-names.tsv`
+
+The component each radical form without a stroke order is drawn as: `form`, `name`, `shape`
+(`same` where the form has the component's outline, `variant` where it is only drawn close to it)
+and `basis`, what a comparison of the two in Noto Sans CJK JP found. `scripts/build_open_strokes.mjs`
+reads a form inside the characters written with the named component, takes the commonest order as
+the form's, and repeats `shape` in `open-strokes/within.tsv`. ⺫ is paired with 目 by Unicode and
+drawn as 罒.
 
 ## `stroke-orders-entered.tsv`
 
 Stroke orders entered by hand for characters and components the sources of `open-strokes/` do not
 record: `char`, `source`, `orders`, `basis`, `by`, `date`, tab-separated, one row per character and
-source. The build refuses a row without a basis and publishes the rows as `open-strokes/entered.tsv`;
-`open-strokes/wanted.tsv` ranks the components worth entering next.
+source. `basis` may be left empty. The build publishes the rows as `open-strokes/entered.tsv`;
+`open-strokes/wanted.tsv` lists what no source has an order for.
+
+The Stroke orders page (`demo/Strokes.svelte`) enters them: it lists the wanted components with what
+the other sources record for each, and its keys write the order. It is served by `bun run dev` at
+`/strokes.html` only, saves into this file, and is not part of the published site.
+`src/core/stroke-entry.js` holds the rules the page, the dev server and the build share.
 
 ## `han-parts.json.gz`
 
