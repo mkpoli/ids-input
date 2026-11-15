@@ -186,7 +186,9 @@ function data() {
 
 function commit() {
   const git = (/** @type {string[]} */ args) => execFileSync('git', args, { cwd: ROOT, encoding: 'utf8' }).trim()
-  return { hash: git(['rev-parse', 'HEAD']), time: Number(git(['log', '-1', '--format=%ct'])), date: git(['log', '-1', '--format=%cs']) }
+  // A build from uncommitted changes names its commit as git describe does, with -dirty.
+  const dirty = git(['status', '--porcelain']) !== ''
+  return { hash: git(['rev-parse', 'HEAD']), dirty, time: Number(git(['log', '-1', '--format=%ct'])), date: git(['log', '-1', '--format=%cs']) }
 }
 
 const wanted = process.argv.slice(2)
@@ -197,12 +199,13 @@ const fontDir = await fonts()
 mkdirSync(CACHE, { recursive: true })
 writeFileSync(join(CACHE, 'data.json'), JSON.stringify(data()))
 mkdirSync(OUT, { recursive: true })
-const { hash, time, date } = commit()
+const { hash, dirty, time, date } = commit()
+if (dirty) console.warn('The working tree has uncommitted changes; the editions name the commit with -dirty.')
 for (const edition of wanted.length ? wanted : EDITIONS) {
   const pdf = join(OUT, `${NAME}.${edition}.pdf`)
   execFileSync(compiler, [
     'compile', '--root', ROOT, '--font-path', fontDir, '--ignore-system-fonts',
-    '--input', `lang=${edition}`, '--input', `commit=${hash}`, '--input', `typst=${TYPST.version}`, '--input', `date=${date}`,
+    '--input', `lang=${edition}`, '--input', `commit=${hash}`, '--input', `dirty=${dirty}`, '--input', `typst=${TYPST.version}`, '--input', `date=${date}`,
     '--creation-timestamp', String(time), '--pdf-standard', 'ua-1',
     join(ROOT, 'docs/spec/spec.typ'), pdf,
   ], { stdio: 'inherit', env: { ...process.env, SOURCE_DATE_EPOCH: String(time) } })

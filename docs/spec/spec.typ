@@ -16,6 +16,8 @@
   message: "lang is en, zh-Hans or zh-Hant, got " + edition,
 )
 #let commit = sys.inputs.at("commit", default: "")
+// Built from uncommitted changes: the commit is named as git describe names it, with -dirty.
+#let dirty = sys.inputs.at("dirty", default: "false") == "true"
 #let typst-version = sys.inputs.at("typst", default: "")
 #let zh = edition != "en"
 #let faces = fonts(if edition == "zh-Hant" { "TC" } else { "SC" }, zh)
@@ -337,7 +339,7 @@
     (
       t("spec.source"),
       link("https://github.com/mkpoli/ids-input/tree/" + commit, mono(
-        "mkpoli/ids-input " + commit,
+        "mkpoli/ids-input " + commit + if dirty { "-dirty" } else { "" },
       )),
     ),
   )
