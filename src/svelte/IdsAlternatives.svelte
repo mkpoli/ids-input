@@ -43,7 +43,7 @@
   const picked = $derived(editor.picked)
   const part = $derived(typeof picked === 'string' ? picked : '')
   const written = $derived(isNode(picked) ? write(picked) : '')
-  const unifiable = createUnifiable(() => variations ? part : '')
+  const unifiable = createUnifiable(() => editor, () => variations)
   $effect(() => { search.load() })
 
   /** @param {() => unknown} use */
@@ -80,10 +80,11 @@
           {:else}<span class="ids-unified-entry">UCV {entry.id}</span>{/if}
           {#each entry.forms as form, place (place)}
             {@const outline = unifiable.outlines?.[form.glyph]}
-            {#if form.text}
-              {@const text = form.text}
+            {#if form.write}
+              {@const text = form.write}
+              <!-- A component with an identifier is put as written: `take` would read its letters as typed operators. -->
               <button type="button" class="ids-swap ids-unified-form" data-form={form.glyph} disabled={editor.disabled} title={`${part} → ${text}`} aria-label={`${part} → ${text}`}
-                draggable="true" ondragstart={event => event.dataTransfer?.setData('text/plain', text)} onclick={() => choose(() => editor.take(text))}>
+                draggable="true" ondragstart={event => event.dataTransfer?.setData('text/plain', text)} onclick={() => choose(() => form.text ? editor.take(text) : editor.put(text, editor.chosen))}>
                 {#if outline}<svg viewBox="0 0 200 200" aria-hidden="true"><path d={outline} /></svg>{:else}{text}{/if}
               </button>
             {:else if outline}
