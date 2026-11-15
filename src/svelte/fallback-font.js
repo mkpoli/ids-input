@@ -94,12 +94,48 @@ export function loadFallback(char) {
 
 /**
  * Loads the shards of every character in `text`. With a `stack`, only the characters that stack
- * cannot draw: a page whose fonts cover the text pays for no shard at all.
+ * cannot draw, once the page is idle: a page whose fonts cover the text pays for no shard at all.
  * @param {string | null | undefined} text
  * @param {string} [stack]
  */
 export function loadFallbackText(text, stack) {
-  for (const char of stack ? uncovered(text ?? '', stack) : text ?? '') loadFallback(char)
+  if (!stack) {
+    for (const char of text ?? '') loadFallback(char)
+    return
+  }
+  for (const char of text ?? '') {
+    const drawn = COVERED.get(`${stack}\u0000${char}`)
+    if (drawn === false) loadFallback(char)
+    else if (drawn === undefined) waiting.push([char, stack])
+  }
+  if (!checking && waiting.length) {
+    checking = true
+    whenIdle(check)
+  }
+}
+
+// A check draws the character on a canvas, a few milliseconds for one the reader's fonts lack, and
+// a page mounts with hundreds of them. They wait here and are checked a slice at a time while the
+// page is idle, so a panel paints before its shards are asked for.
+/** @type {[char: string, stack: string][]} */
+let waiting = []
+let checking = false
+/** In the next idle period, or 50 ms from now on a page that is never idle. @param {() => void} run */
+const whenIdle = run => {
+  if (typeof requestIdleCallback === 'function') requestIdleCallback(() => run(), { timeout: 50 })
+  else setTimeout(run, 16)
+}
+/** One slice of the waiting checks, 16 ms at most, and the rest in the next. */
+function check() {
+  const until = performance.now() + 16
+  let at = 0
+  for (; at < waiting.length && performance.now() < until; at++) {
+    const [char, stack] = waiting[at]
+    for (const missing of uncovered(char, stack)) loadFallback(missing)
+  }
+  waiting = waiting.slice(at)
+  checking = waiting.length > 0
+  if (checking) whenIdle(check)
 }
 
 /** What the reader's own fonts drew, per stack and character, so a panel re-rendering asks once. */
