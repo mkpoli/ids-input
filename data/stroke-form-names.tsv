@@ -1,0 +1,73 @@
+# The component each wanted radical form is drawn as, and so the name it is read under in the
+# descriptions. `scripts/build_open_strokes.mjs` reads a form inside the characters written with the
+# component named here and takes the commonest order as the form's; `shape` travels with that row's
+# evidence in `data/open-strokes/within.tsv`.
+# form<TAB>name<TAB>shape<TAB>basis
+#   name   the component the descriptions write the form as
+#   shape  same: the form has the component's outline. variant: it is drawn close to it, not as it.
+#   basis  what the comparison found
+# Each form was drawn in Noto Sans CJK JP 2.004 beside the unified ideograph Unicode's
+# EquivalentUnifiedIdeograph.txt pairs it with and beside every component BabelStone IDS names three
+# times or more, each fitted to a 48 by 48 square and blurred (2026-11-15). `difference` is the mean
+# difference between two such squares, 0 for the same outline.
+⺂	乛	same	the outline of its Unicode pair 乛
+⺃	乚	same	the outline of its Unicode pair 乚
+⺅	亻	same	the outline of its Unicode pair 亻
+⺎	兀	same	the outline of its Unicode pair 兀
+⺏	尣	same	the outline of its Unicode pair 尣
+⺐	尢	same	the outline of its Unicode pair 尢
+⺒	巳	same	the outline of its Unicode pair 巳
+⺓	幺	same	the outline of its Unicode pair 幺
+⺔	彑	same	the outline of its Unicode pair 彑
+⺖	忄	same	the outline of its Unicode pair 忄
+⺘	扌	same	the outline of its Unicode pair 扌
+⺙	攵	same	the outline of its Unicode pair 攵
+⺛	旡	same	the outline of its Unicode pair 旡
+⺞	歺	same	the outline of its Unicode pair 歺
+⺠	民	same	the outline of its Unicode pair 民
+⺣	灬	same	the outline of its Unicode pair 灬
+⺫	罒	same	the outline of 罒 (U+7F52), not of its Unicode pair 目 (difference 0.396)
+⺯	糹	same	the outline of its Unicode pair 糹
+⺰	纟	same	the outline of its Unicode pair 纟
+⺱	罓	same	the outline of its Unicode pair 罓
+⺹	耂	same	the outline of its Unicode pair 耂
+⺺	肀	same	the outline of its Unicode pair 肀
+⻀	艹	variant	near its Unicode pair 艹 (difference 0.157) and nearer 卝 (0.135)
+⻁	虎	variant	nearest to its Unicode pair 虎, not its outline (difference 0.098)
+⻂	衤	same	the outline of its Unicode pair 衤
+⻄	西	same	the outline of its Unicode pair 西
+⻅	见	same	the outline of its Unicode pair 见
+⻆	角	variant	nearest to its Unicode pair 角, not its outline (difference 0.069)
+⻈	讠	same	the outline of its Unicode pair 讠
+⻉	贝	same	the outline of its Unicode pair 贝
+⻋	车	same	the outline of its Unicode pair 车
+⻐	钅	same	the outline of its Unicode pair 钅
+⻑	長	same	the outline of its Unicode pair 長
+⻒	镸	same	the outline of its Unicode pair 镸
+⻓	长	same	the outline of its Unicode pair 长
+⻔	门	variant	near its Unicode pair 门 (difference 0.133) and nearer 冂 (0.096)
+⻘	青	same	the outline of its Unicode pair 青
+⻙	韦	same	the outline of its Unicode pair 韦
+⻚	页	same	the outline of its Unicode pair 页
+⻛	风	same	the outline of its Unicode pair 风
+⻜	飞	same	the outline of its Unicode pair 飞
+⻝	食	variant	nearest to its Unicode pair 食, not its outline (difference 0.060)
+⻟	飠	same	the outline of its Unicode pair 飠
+⻠	饣	same	the outline of its Unicode pair 饣
+⻢	马	same	the outline of its Unicode pair 马
+⻣	骨	variant	nearest to its Unicode pair 骨, not its outline (difference 0.061)
+⻤	鬼	variant	nearest to its Unicode pair 鬼, not its outline (difference 0.067)
+⻥	鱼	same	the outline of its Unicode pair 鱼
+⻦	鸟	same	the outline of its Unicode pair 鸟
+⻧	卤	same	the outline of its Unicode pair 卤
+⻨	麦	same	the outline of its Unicode pair 麦
+⻩	黄	same	the outline of its Unicode pair 黄
+⻪	黾	same	the outline of its Unicode pair 黾
+⻫	斉	same	the outline of its Unicode pair 斉
+⻬	齐	same	the outline of its Unicode pair 齐
+⻭	歯	same	the outline of its Unicode pair 歯
+⻮	齿	same	the outline of its Unicode pair 齿
+⻯	竜	same	the outline of its Unicode pair 竜
+⻰	龙	same	the outline of its Unicode pair 龙
+⻱	龜	variant	nearest to its Unicode pair 龜, not its outline (difference 0.141)
+⻲	亀	same	the outline of its Unicode pair 亀

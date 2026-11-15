@@ -95,6 +95,16 @@
       }
     },
     {
+      "key": "unicode-ucd",
+      "name": "Unicode Character Database 18.0.0, EquivalentUnifiedIdeograph.txt: the ideograph a wanted radical form is searched under",
+      "authors": "Unicode, Inc.",
+      "url": "https://www.unicode.org/Public/18.0.0/ucd/EquivalentUnifiedIdeograph.txt",
+      "licence": {
+        "spdx": "Unicode-3.0",
+        "url": "https://www.unicode.org/license.txt"
+      }
+    },
+    {
       "key": "yi-bai-ids",
       "name": "Yi Bai IDS, level 1: the descriptions used where BabelStone has none",
       "authors": "Yi Bai",
@@ -145,8 +155,8 @@
       }
     ],
     "inducedAgainstRime": {
-      "rows": 24689,
-      "agree": 12148
+      "rows": 24731,
+      "agree": 12169
     }
   },
   "induction": {
@@ -1809,13 +1819,14 @@
     {
       "source": "cns11643",
       "recorded": 76282,
-      "entered": 1,
-      "equivalent": 719,
-      "ids": 24989,
-      "borrowed": 1281,
-      "none": 81,
+      "entered": 22,
+      "equivalent": 722,
+      "ids": 25173,
+      "borrowed": 1097,
+      "within": 61,
+      "none": 0,
       "reasons": {
-        "undescribed": 81,
+        "undescribed": 0,
         "unreadable": 0,
         "operator": 0,
         "component": 0
@@ -1827,10 +1838,11 @@
       "entered": 0,
       "equivalent": 681,
       "ids": 3,
-      "borrowed": 8,
-      "none": 78,
+      "borrowed": 25,
+      "within": 61,
+      "none": 0,
       "reasons": {
-        "undescribed": 78,
+        "undescribed": 0,
         "unreadable": 0,
         "operator": 0,
         "component": 0
@@ -1840,12 +1852,13 @@
       "source": "kanjivg",
       "recorded": 6728,
       "entered": 0,
-      "equivalent": 754,
-      "ids": 91242,
-      "borrowed": 4496,
-      "none": 133,
+      "equivalent": 1127,
+      "ids": 91908,
+      "borrowed": 3533,
+      "within": 61,
+      "none": 0,
       "reasons": {
-        "undescribed": 133,
+        "undescribed": 0,
         "unreadable": 0,
         "operator": 0,
         "component": 0
@@ -1887,7 +1900,7 @@
     },
     {
       "name": "induced.tsv.gz",
-      "rows": 124173,
+      "rows": 124452,
       "columns": [
         "char",
         "codepoint",
@@ -1898,11 +1911,11 @@
         "ids",
         "lent"
       ],
-      "bytes": 1922021
+      "bytes": 1933990
     },
     {
       "name": "entered.tsv",
-      "rows": 1,
+      "rows": 22,
       "columns": [
         "char",
         "codepoint",
@@ -1912,11 +1925,11 @@
         "source",
         "date"
       ],
-      "bytes": 179
+      "bytes": 1061
     },
     {
       "name": "wanted.tsv",
-      "rows": 292,
+      "rows": 0,
       "columns": [
         "char",
         "codepoint",
@@ -1925,7 +1938,23 @@
         "alone",
         "examples"
       ],
-      "bytes": 7509
+      "bytes": 44
+    },
+    {
+      "name": "within.tsv",
+      "rows": 183,
+      "columns": [
+        "char",
+        "codepoint",
+        "source",
+        "named",
+        "shape",
+        "found",
+        "read",
+        "within",
+        "lent"
+      ],
+      "bytes": 14168
     }
   ],
   "texts": [

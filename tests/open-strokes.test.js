@@ -10,16 +10,19 @@ const readme = readFileSync(at('README.md'), 'utf8')
 const table = name => gunzipSync(readFileSync(at(name))).toString().replace(/\n$/, '').split('\n').map(line => line.split('\t'))
 const rime = table('rime-stroke.tsv.gz'), cns = table('cns11643.tsv.gz'), induced = table('induced.tsv.gz'), kanjivg = table('kanjivg.tsv.gz')
 const plain = name => readFileSync(at(name), 'utf8').replace(/\n$/, '').split('\n').map(line => line.split('\t'))
-const entered = plain('entered.tsv'), wanted = plain('wanted.tsv')
+const entered = plain('entered.tsv'), wanted = plain('wanted.tsv'), evidence = plain('within.tsv')
 const orders = rows => new Map(rows.slice(1).map(row => [row[0], row[2].split(' ')]))
 const digits = code => [...code].map(letter => ({ h: '1', s: '2', p: '3', n: '4', z: '5' })[letter]).join('')
+const twins = new Map(readFileSync(new URL('../data/component-forms.tsv', import.meta.url), 'utf8').split('\n').map(line => line.split('\t')).filter(row => row[2] === 'unicode-ucd' && row[3] === 'EquivalentUnifiedIdeograph').map(row => [row[0], row[1]]))
+// The component each radical form is drawn as, and whether it has that component's outline.
+const shapes = new Map(readFileSync(new URL('../data/stroke-form-names.tsv', import.meta.url), 'utf8').split('\n').filter(line => line && !line.startsWith('#')).map(line => line.split('\t')).map(row => [row[0], { name: row[1], shape: row[2] }]))
 const point = char => `U+${char.codePointAt(0).toString(16).toUpperCase().padStart(4, '0')}`
 
 describe('the open stroke-order release', () => {
   it('names its format, sources and their terms', () => {
     expect(manifest.format).toBe('ids-input/open-strokes')
     expect(manifest.version).toBe(3)
-    expect(manifest.sources.map(source => source.key)).toEqual(['cns11643', 'rime-stroke', 'kanjivg', 'babelstone-ids', 'yi-bai-ids'])
+    expect(manifest.sources.map(source => source.key)).toEqual(['cns11643', 'rime-stroke', 'kanjivg', 'babelstone-ids', 'unicode-ucd', 'yi-bai-ids'])
     for (const source of manifest.sources) {
       expect(source.url).toMatch(/^https:/)
       expect(source.licence.spdx ?? source.licence.name).toBeTruthy()
@@ -86,22 +89,31 @@ describe('the open stroke-order release', () => {
     const enteredFor = key => new Map(entered.slice(1).filter(row => row[5] === key).map(row => [row[0], row[2].split(' ')]))
     const own = Object.fromEntries(Object.keys(tables).map(key => [key, new Map([...enteredFor(key), ...tables[key]])]))
     const inSymbols = (code, key) => key === 'rime-stroke' ? [...code].map(symbol => 'hspnz'['12345'.indexOf(symbol)] ?? symbol).join('') : /[hspnz]/.test(code) ? digits(code) : code
+    const givenIn = Object.fromEntries(Object.keys(tables).map(key => [key, new Map(induced.slice(1).filter(row => row[5] === key && row[3] !== 'equivalent').map(row => [row[0], row]))]))
     for (const [char, , written, basis, from, key, ids, lent] of induced.slice(1)) {
       // A row written from a description names the dataset the description comes from.
       expect(ids).toMatch(basis === 'ids' ? /^(babelstone-ids|yi-bai-ids)( (babelstone-ids|yi-bai-ids))?$/ : /^$/)
       // An induced row never stands in for a character its source records.
       expect(tables[key].has(char)).toBe(false)
-      expect(['equivalent', 'ids', 'borrowed']).toContain(basis)
+      expect(['equivalent', 'ids', 'borrowed', 'within']).toContain(basis)
       // The sources a row borrows from are other than its own.
-      expect(lent).toMatch(/^$|^(cns11643|rime-stroke|kanjivg)( (cns11643|rime-stroke|kanjivg))?$/)
+      expect(lent).toMatch(/^$|^(cns11643|rime-stroke|kanjivg|entered)( (cns11643|rime-stroke|kanjivg|entered))*$/)
       expect(lent.split(' ')).not.toContain(key)
       if (basis === 'equivalent') {
         expect(char.normalize('NFKC')).toBe(from)
-        expect(written.split(' ')).toEqual(tables[key].get(from))
-        expect(lent).toBe('')
+        // The unified ideograph's recorded orders, or the row it is given here where the source has none.
+        const given = givenIn[key].get(from)
+        expect(written.split(' ')).toEqual(own[key].get(from) ?? given?.[2].split(' '))
+        expect(lent).toBe(own[key].has(from) ? '' : given?.[7])
+      } else if (basis === 'within') {
+        // A form read inside characters is read under the component it is drawn as.
+        expect(shapes.get(char)?.name).toBe(from)
+        expect(written).toMatch(key === 'rime-stroke' ? /^[hspnz]+$/ : /^[1-5]+$/)
+        expect(own[key].has(char)).toBe(false)
       } else if (basis === 'borrowed') {
         // A borrowed row repeats what its lender has, in the borrower's symbols.
-        expect(lent).toBe(from)
+        // What it repeats is the lender's record, or an order entered for the lender, which `lent` says.
+        expect(lent).toBe(tables[from].has(char) ? from : 'entered')
         expect(written.split(' ')).toEqual([...new Set(own[from].get(char).map(code => inSymbols(code, key)))])
         expect(own[key].has(char)).toBe(false)
       } else {
@@ -134,6 +146,7 @@ describe('the open stroke-order release', () => {
       expect(rows.filter(entry => entry[3] === 'equivalent').length).toBe(row.equivalent)
       expect(rows.filter(entry => entry[3] === 'ids').length).toBe(row.ids)
       expect(rows.filter(entry => entry[3] === 'borrowed').length).toBe(row.borrowed)
+      expect(rows.filter(entry => entry[3] === 'within').length).toBe(row.within)
       expect(readme).toContain(row.recorded.toLocaleString('en'))
     }
     expect(manifest.coverage.find(row => row.source === 'rime-stroke').recorded).toBe(rime.length - 1)
@@ -149,6 +162,58 @@ describe('the open stroke-order release', () => {
       }
       // Scored on characters the places were not learned from, the rules agree with the source on most of what they write.
       expect(operators.reduce((sum, row) => sum + row.agree, 0) / operators.reduce((sum, row) => sum + row.written, 0)).toBeGreaterThan(0.85)
+    }
+  })
+
+  it('writes a radical form as most of the characters with its component do, and says what that rests on', () => {
+    const within = (char, key) => induced.find(row => row[0] === char && row[5] === key && row[3] === 'within')
+    const rests = (char, key) => evidence.find(row => row[0] === char && row[2] === key)
+    const tables = { 'rime-stroke': orders(rime), cns11643: orders(cns), kanjivg: orders(kanjivg) }
+    // All 33 CNS characters with 旡 leave 1535 for it.
+    expect(within('⺛', 'cns11643')?.slice(2)).toEqual(['1535', 'within', '旡', 'cns11643', '', ''])
+    expect(rests('⺛', 'cns11643')?.slice(3, 7)).toEqual(['旡', 'same', '33', '1535×33'])
+    // ⺫ is paired with 目 by Unicode and drawn as 罒: it is read under 罒.
+    expect(twins.get('⺫')).toBe('目')
+    expect(within('⺫', 'cns11643')?.slice(2, 5)).toEqual([tables.cns11643.get('罒')[0], 'within', '罒'])
+    // ⻋ is read in two orders and takes the commoner; ⻤ is only drawn close to 鬼, which its evidence says.
+    expect(within('⻋', 'cns11643')?.[2]).toBe('1521')
+    expect(rests('⻋', 'cns11643')?.[6]).toBe('1521×73 1512×11')
+    expect(rests('⻤', 'cns11643')?.[4]).toBe('variant')
+    // Every row read inside characters has its evidence, in its own symbols, the order taken first.
+    const rows = induced.slice(1).filter(row => row[3] === 'within')
+    expect(evidence.length - 1).toBe(rows.length)
+    for (const [char, , written, , from, key, , lent] of rows) {
+      const [, , , named, shape, found, read, chars, lender] = rests(char, key)
+      const ways = read.split(' ').map(way => way.split('×'))
+      expect([named, lender, ways[0][0]]).toEqual([from, lent, written])
+      expect(shape).toBe(shapes.get(char).shape)
+      expect(ways.length).toBeLessThanOrEqual(3)
+      for (const [order, count] of ways) {
+        expect(order).toMatch(key === 'rime-stroke' ? /^[hspnz]+$/ : /^[1-5]+$/)
+        expect(Number(count)).toBeGreaterThan(0)
+        expect(Number(count)).toBeLessThanOrEqual(Number(found))
+      }
+      expect(ways.every((way, index) => !index || Number(ways[index - 1][1]) >= Number(way[1]))).toBe(true)
+      // The characters read are records of the source they are read from.
+      expect([...chars].every(example => tables[lender || key].has(example))).toBe(true)
+    }
+    // Nothing wanted is also written.
+    for (const [char, , key] of wanted.slice(1)) expect(induced.some(row => row[0] === char && row[5] === key)).toBe(false)
+  })
+
+  it('writes a character from its own parts where only one of them is borrowed', () => {
+    // CNS has no 冫 and no order for its ㇀, so 冫 is borrowed; 鿑 is then 冫 and CNS's own 玉.
+    const row = (char, key) => induced.find(entry => entry[0] === char && entry[5] === key)
+    expect(row('冫', 'cns11643')?.slice(3, 5)).toEqual(['borrowed', 'rime-stroke'])
+    expect(row('鿑', 'cns11643')?.slice(3, 8)).toEqual(['ids', '⿰冫玉', 'cns11643', 'babelstone-ids', 'rime-stroke'])
+    // No character is borrowed whole whose one description is two parts side by side or stacked, both written for the source.
+    const one = new Map(gunzipSync(readFileSync(new URL('../data/babelstone-ids.tsv.gz', import.meta.url))).toString().split('\n')
+      .filter(line => line && !line.startsWith('#')).map(line => line.split('\t')).filter(row => row[1] && !row[1].includes(' ')).map(row => [row[0], [...row[1].replace(/\([A-Z]+\)$/, '')]]))
+    for (const key of ['cns11643', 'rime-stroke', 'kanjivg']) {
+      const has = new Set([...orders(key === 'cns11643' ? cns : key === 'kanjivg' ? kanjivg : rime).keys(), ...induced.filter(entry => entry[5] === key).map(entry => entry[0]), ...entered.filter(entry => entry[5] === key).map(entry => entry[0])])
+      const whole = induced.filter(entry => entry[5] === key && entry[3] === 'borrowed').map(entry => entry[0])
+        .filter(char => { const parts = one.get(char); return parts?.length === 3 && '⿰⿱'.includes(parts[0]) && parts[1] !== parts[2] && has.has(parts[1]) && has.has(parts[2]) })
+      expect(whole).toEqual([])
     }
   })
 
@@ -171,7 +236,6 @@ describe('the open stroke-order release', () => {
       expect(rows.every(entry => Object.values(tables).every(table => !table.has(entry[0])) && Number(entry[4]) <= Number(entry[3]))).toBe(true)
       // A character left without an order is wanted itself.
       expect(rows.length).toBeGreaterThanOrEqual(row.none)
-      expect(rows.every((entry, index) => !index || Number(rows[index - 1][4]) >= Number(entry[4]))).toBe(true)
     }
     expect(readme).toContain('data/stroke-orders-entered.tsv')
   })
