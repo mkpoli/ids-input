@@ -86,6 +86,7 @@ describe('the open stroke-order release', () => {
     const enteredFor = key => new Map(entered.slice(1).filter(row => row[5] === key).map(row => [row[0], row[2].split(' ')]))
     const own = Object.fromEntries(Object.keys(tables).map(key => [key, new Map([...enteredFor(key), ...tables[key]])]))
     const inSymbols = (code, key) => key === 'rime-stroke' ? [...code].map(symbol => 'hspnz'['12345'.indexOf(symbol)] ?? symbol).join('') : /[hspnz]/.test(code) ? digits(code) : code
+    const givenIn = Object.fromEntries(Object.keys(tables).map(key => [key, new Map(induced.slice(1).filter(row => row[5] === key && row[3] !== 'equivalent').map(row => [row[0], row]))]))
     for (const [char, , written, basis, from, key, ids, lent] of induced.slice(1)) {
       // A row written from a description names the dataset the description comes from.
       expect(ids).toMatch(basis === 'ids' ? /^(babelstone-ids|yi-bai-ids)( (babelstone-ids|yi-bai-ids))?$/ : /^$/)
@@ -97,8 +98,10 @@ describe('the open stroke-order release', () => {
       expect(lent.split(' ')).not.toContain(key)
       if (basis === 'equivalent') {
         expect(char.normalize('NFKC')).toBe(from)
-        expect(written.split(' ')).toEqual(tables[key].get(from))
-        expect(lent).toBe('')
+        // The unified ideograph's recorded orders, or the row it is given here where the source has none.
+        const given = givenIn[key].get(from)
+        expect(written.split(' ')).toEqual(own[key].get(from) ?? given?.[2].split(' '))
+        expect(lent).toBe(own[key].has(from) ? '' : given?.[7])
       } else if (basis === 'borrowed') {
         // A borrowed row repeats what its lender has, in the borrower's symbols.
         expect(lent).toBe(from)

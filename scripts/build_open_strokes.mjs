@@ -428,13 +428,30 @@ const left = SOURCES.map(({ source, table, region }) => {
     for (const component of lendable) { const { lender, orders } = lend(component, source); known.set(component, orders); borrowed.set(component, lender) }
     result = read()
   }
-  // A character that still cannot be written from its own components is borrowed whole.
-  const none = result.failed.filter(entry => !lend(entry.char, source))
-  for (const entry of result.failed) {
-    const found = lend(entry.char, source)
-    if (found) { known.set(entry.char, found.orders); borrowed.set(entry.char, found.lender) }
+  // A compatibility form whose unified ideograph the source does not record takes the order that
+  // ideograph is given here, induced or borrowed, and names its lenders in `lent`.
+  /** @type {Map<string, string[]>} */
+  const equal = new Map()
+  const written = new Map(result.rows.map(row => [row[0], row]))
+  function equate() {
+    for (const { char } of result.failed) {
+      const unified = char.normalize('NFKC')
+      if (unified === char || [...unified].length !== 1 || equal.has(char) || borrowed.has(char)) continue
+      const row = written.get(unified)
+      if (row) equal.set(char, [char, point(char), row[2], 'equivalent', unified, source, '', row[7]])
+      else if (known.has(unified)) equal.set(char, [char, point(char), known.get(unified).join(' '), 'equivalent', unified, source, '', borrowed.get(unified) ?? ''])
+    }
   }
-  induced.push(...result.rows, ...[...borrowed].map(([char, lender]) => [char, point(char), known.get(char).join(' '), 'borrowed', lender, source, '', lender]))
+  equate()
+  // A character that still cannot be written from its own components is borrowed whole.
+  for (const { char } of result.failed) {
+    const found = equal.has(char) ? null : lend(char, source)
+    if (found) { known.set(char, found.orders); borrowed.set(char, found.lender) }
+  }
+  // An ideograph borrowed whole is the unified form of others in turn.
+  equate()
+  const none = result.failed.filter(entry => !equal.has(entry.char) && !borrowed.has(entry.char))
+  induced.push(...result.rows, ...equal.values(), ...[...borrowed].map(([char, lender]) => [char, point(char), known.get(char).join(' '), 'borrowed', lender, source, '', lender]))
   const reasons = { undescribed: 0, unreadable: 0, operator: 0, component: 0 }
   /** @type {Map<string, { blocks: string[], alone: number }>} */
   const blocking = new Map()
@@ -452,7 +469,7 @@ const left = SOURCES.map(({ source, table, region }) => {
     wanted.push([component, point(component), source, String(entry.blocks.length), String(entry.alone), entry.blocks.slice(0, 8).join('')])
   }
   const count = basis => result.rows.filter(row => row[3] === basis).length
-  return { source, recorded: table.size, entered: entered.size, equivalent: count('equivalent'), ids: count('ids'), borrowed: borrowed.size, none: none.length, reasons }
+  return { source, recorded: table.size, entered: entered.size, equivalent: count('equivalent') + equal.size, ids: count('ids'), borrowed: borrowed.size, none: none.length, reasons }
 })
 induced.sort((a, b) => SOURCES.findIndex(entry => entry.source === a[5]) - SOURCES.findIndex(entry => entry.source === b[5]) || byCodePoint(a[0], b[0]))
 // The two sources on the characters both record, and the orders induced from CNS against what Rime
@@ -641,7 +658,9 @@ convention they follow.
 \`basis\` says how the order was written.
 
 - \`equivalent\`: the character is a compatibility ideograph or a radical form, and \`from\` is the
-  unified ideograph it normalizes to (NFKC). The row repeats that character's recorded orders.
+  unified ideograph it normalizes to (NFKC). The row repeats that character's orders: the recorded
+  ones, or where the source does not record it the ones induced or borrowed for it here, with the
+  lenders in \`lent\`.
   ${n(cover('cns11643').equivalent)} rows from \`cns11643\`, ${n(cover('rime-stroke').equivalent)} from \`rime-stroke\`, ${n(cover('kanjivg').equivalent)} from \`kanjivg\`.
 - \`ids\`: \`from\` is the character's description and the order joins the recorded orders of
   its components. The description is BabelStone's (the sequence its T source gives, or its J
