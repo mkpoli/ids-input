@@ -222,8 +222,6 @@
     const font = entries.find(entry => entry.ids.includes('J')) ?? plain
     return entries.map(entry => ({ ...entry, font: entry === font, named: tag ? entry.ids.includes(tag) || (tag === '.' && entry === plain) : false }))
   }
-  /** The drawing of a component's variant inside a character that has it, where a card gives one.
-   * @param {string} char @param {string[]} ids */
   /** A variant no outline shows: its chain as a line, or the composer's drawing of it without its identifiers.
    * @param {string} text @returns {{ line: string } | { sketch: string } | null} */
   function sketchOf(text) {
@@ -231,6 +229,8 @@
     if (drawing?.kind === 'chain') return { line: drawing.d }
     return drawing && VARIANTS[drawing.sequence] ? { sketch: VARIANTS[drawing.sequence] } : null
   }
+  /** The drawing of a component's variant inside a character that has it, where a card gives one.
+   * @param {string} char @param {string[]} ids */
   const variantTile = (char, ids) => sheet.flatMap(section => [...section.cards, ...section.groups.flatMap(group => group.cards)]).flatMap(card => card.quotes)
     .find(quote => quote.char === char && quote.tiles[0]?.rest.length && idsOf(quote.text).some(id => ids.includes(id)))?.tiles[0] ?? null
   const tip = $derived.by(() => {
