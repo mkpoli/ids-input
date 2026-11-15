@@ -85,7 +85,8 @@ data at commit `2597437b928e8d530b7ae09cf53fe5ec7868569c` (2026-10-31) except 4 
 The three files hold the same rules under the same ASCII rule names; the comments are in English,
 Simplified and Traditional Chinese. The appendix at <https://ids.mkpo.li/baishi> draws the grammar as one
 railroad diagram that opens rule by rule and offers the files for download; `tests/baishi-grammar.test.js`
-keeps the files and the page in step.
+keeps the files and the page in step. `bun run build:spec-pdf` sets the page and the grammar as
+PDF editions in English, Simplified and Traditional Chinese (`docs/spec/`, written to `dist/spec/`).
 
 Licence: MIT, as this package's code. The notation is the work of the zi.tools authors.
 
