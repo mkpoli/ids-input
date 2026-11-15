@@ -8,7 +8,7 @@
 //   bun run build:spec-pdf en         one edition
 import { createHash } from 'node:crypto'
 import { execFileSync, spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as baishi from '../demo/lib/baishi.js'
@@ -28,7 +28,7 @@ const TYPST = {
 const NOTO_SANS = 'https://github.com/notofonts/noto-cjk/raw/Sans2.004/Sans/SubsetOTF'
 const NOTO_SERIF = 'https://github.com/notofonts/noto-cjk/raw/Serif2.003/Serif/SubsetOTF'
 const PLANGOTHIC = 'https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project/releases/download/V2.9.5795'
-/** Each font file, where it comes from and its digest; Jigmo's three files come in one archive. */
+/** Each font file, where it comes from and its digest. */
 const FONTS = [
   ['NotoSansSC-Regular.otf', `${NOTO_SANS}/SC/NotoSansSC-Regular.otf`, 'faa6c9df652116dde789d351359f3d7e5d2285a2b2a1f04a2d7244df706d5ea9'],
   ['NotoSansSC-Bold.otf', `${NOTO_SANS}/SC/NotoSansSC-Bold.otf`, 'c6cb5a93abaa9edc8ee7463b7ebb7f42d618d40e6ed2f7a5371c97b0b64767c0'],
@@ -40,9 +40,19 @@ const FONTS = [
   ['NotoSerifTC-Bold.otf', `${NOTO_SERIF}/TC/NotoSerifTC-Bold.otf`, '3ca2b3294ec84b795d0a45695e78e3612a44dce50f9fc776cd40206340a5768d'],
   ['PlangothicP1-Regular.ttf', `${PLANGOTHIC}/PlangothicP1-Regular.ttf`, '550b5d0775b15405946b18f4843df439a51e69508d7e6778d94c1f7a53dc5ad6'],
   ['PlangothicP2-Regular.ttf', `${PLANGOTHIC}/PlangothicP2-Regular.ttf`, '681933370adfe0fc7253f77735275a82fea09fe4f8adba907bdeb46c110daf8f'],
-  ['Jigmo-20250912.zip', 'https://kamichikoichi.github.io/jigmo/Jigmo-20250912.zip', '5744c7386d129475d87607ca66d043c8793c65448adeaedc921b6931890e5d0b'],
   ['NotoEmoji.ttf', 'https://github.com/google/fonts/raw/8b0a1d0f5983c89bc2b93f1b5fb55f9e252744b5/ofl/notoemoji/NotoEmoji%5Bwght%5D.ttf', 'de6c18832938afc99caf132b39d6a30a19bac7f2e812e28db2535b4608d27551'],
 ]
+
+/** Jigmo's three files, which come in one archive. */
+const JIGMO = {
+  url: 'https://kamichikoichi.github.io/jigmo/Jigmo-20250912.zip',
+  sha256: '5744c7386d129475d87607ca66d043c8793c65448adeaedc921b6931890e5d0b',
+  files: {
+    'Jigmo.ttf': 'c8f295b9bd8f9f117a76b3a454aaaa1bb5b4babc18e254978c6deb88464e40cf',
+    'Jigmo2.ttf': '5da3582efe77e22073b86b3b86b556d7111148a76b957cfb53318a91da2efff0',
+    'Jigmo3.ttf': '815b18c1c670103723fe743090559208fdea47dc587ecb057a5a4721ee8dfeff',
+  },
+}
 
 const sha256 = (/** @type {Buffer} */ bytes) => createHash('sha256').update(bytes).digest('hex')
 
@@ -57,10 +67,12 @@ async function fetchPinned(path, url, digest) {
   if (got !== digest) { rmSync(path); throw new Error(`${path}: SHA-256 ${got}, expected ${digest}`) }
 }
 
-/** The pinned compiler: the one on PATH if it is that version, otherwise the release build. */
+/** The pinned compiler: the one on PATH if it reports that version, otherwise the release build,
+ * which exists for x86-64 Linux only here. */
 async function typst() {
   const found = spawnSync('typst', ['--version'], { encoding: 'utf8' })
   if (found.status === 0 && found.stdout.startsWith(`typst ${TYPST.version} `)) return 'typst'
+  if (process.platform !== 'linux' || process.arch !== 'x64') throw new Error(`Install Typst ${TYPST.version} on PATH; the pinned download is for x86-64 Linux`)
   const dir = join(CACHE, `typst-${TYPST.version}`)
   const binary = join(dir, 'typst-x86_64-unknown-linux-musl/typst')
   if (!existsSync(binary)) {
@@ -71,11 +83,23 @@ async function typst() {
   return binary
 }
 
+/** The font folder Typst reads, holding the pinned files and nothing else. */
 async function fonts() {
   const dir = join(CACHE, 'fonts')
   mkdirSync(dir, { recursive: true })
   for (const [file, url, digest] of FONTS) await fetchPinned(join(dir, file), url, digest)
-  if (!existsSync(join(dir, 'Jigmo3.ttf'))) execFileSync('unzip', ['-o', '-q', 'Jigmo-20250912.zip', 'Jigmo.ttf', 'Jigmo2.ttf', 'Jigmo3.ttf'], { cwd: dir })
+  const names = Object.keys(JIGMO.files)
+  if (names.some(name => !existsSync(join(dir, name)))) {
+    const archive = join(CACHE, 'Jigmo-20250912.zip')
+    await fetchPinned(archive, JIGMO.url, JIGMO.sha256)
+    execFileSync('unzip', ['-o', '-q', archive, ...names, '-d', dir])
+  }
+  for (const [name, digest] of Object.entries(JIGMO.files)) {
+    const got = sha256(readFileSync(join(dir, name)))
+    if (got !== digest) throw new Error(`${name}: SHA-256 ${got}, expected ${digest}`)
+  }
+  const pinned = new Set([...FONTS.map(([file]) => file), ...names])
+  for (const file of readdirSync(dir)) if (!pinned.has(file)) rmSync(join(dir, file), { recursive: true })
   return dir
 }
 
