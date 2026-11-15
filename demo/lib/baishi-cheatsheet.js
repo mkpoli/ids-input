@@ -254,7 +254,8 @@ export const anchorsOf = () => SHEET.filter(section => section.id !== 'worked').
 const UNARY = '⿾⿿', TERNARY = '⿲⿳', BINARY = '⿰⿱⿴⿵⿶⿷⿸⿹⿺⿻⿼⿽㇯'
 /** The katakana components that take no tag. */
 const UNTAGGED = 'コリ'
-/** How many parts an operator takes, 0 for what is none. @param {string} char */
+/** How many parts an operator of the grammar takes, 0 for what is none: 〾, which the grammar does not have, is none.
+ * @param {string} char */
 export const arityOf = char => UNARY.includes(char) ? 1 : TERNARY.includes(char) ? 3 : BINARY.includes(char) ? 2 : 0
 
 /**
