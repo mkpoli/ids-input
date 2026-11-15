@@ -273,11 +273,12 @@
         {@render grammar(['component variant', 'sequence variants'])}
         {@render said('tagAfter', ['D1', 'p.1'])}
         {@render said('tagEnd', ['D1', 'p.1'])}
-        {@render said('tagOmit', ['I26', 'p.8 §4.3'])}
+        {@render said('tagOmit', ['I26', 'p.8 §4.2'])}
         {@render examples('tags')}
         {@render examples('lists')}
         <p>{t('baishi.variants.kinds')}</p>
         {@render grammar(['variant id', 'style tag', 'tag char', 'lower letter'])}
+        <p class="inference">{@render badge('inference')} {t('baishi.kind.order')}</p>
         <div class="scroll">
           <table class="compact">
             <thead><tr><th>{t('baishi.kind.name')}</th><th>{t('baishi.kind.pattern')} {@render at(['DB', '2597437b'])}</th></tr></thead>
@@ -312,20 +313,20 @@
 
         <section id="imaginary-ucv" aria-labelledby="imaginary-ucv-title">
           <h3 id="imaginary-ucv-title">{t('baishi.heading.imaginary')}{@render cheat('imaginary-ucv')}</h3>
-          {@render said('imaginary', ['I26', 'p.11 §4.3.3'])}
+          {@render said('imaginary', ['I26', 'p.11 §4.3.2'])}
           {@render examples('imaginary')}
         </section>
 
         <section id="alternate" aria-labelledby="alternate-title">
           <h3 id="alternate-title">{t('baishi.heading.alternate')}</h3>
-          {@render said('alternate', ['I26', 'p.12 §4.3.4'])}
+          {@render said('alternate', ['I26', 'p.12 §4.3.3'])}
           <div class="scroll">
             <table class="compact">
-              <thead><tr><th>{t('baishi.alternate.letter')}</th><th>{t('baishi.alternate.gloss')} {@render at(['I26', 'pp.12–13 §4.3.4'])}</th></tr></thead>
+              <thead><tr><th>{t('baishi.alternate.letter')}</th><th>{t('baishi.alternate.gloss')} {@render at(['I26', 'pp.12–13 §4.3.3'])}</th></tr></thead>
               <tbody>{#each STYLE_LETTERS as [letter, text] (letter)}<tr><td class="code strong">{letter}</td><td><span lang="zh-Hans">{text}</span>{#if gloss(`style.${letter}`)} <span class="gloss">{gloss(`style.${letter}`)}</span>{/if}</td></tr>{/each}</tbody>
             </table>
           </div>
-          {@render said('compose', ['I26', 'p.13 §4.3.4'])}
+          {@render said('compose', ['I26', 'p.13 §4.3.3'])}
           {@render examples('alternate')}
         </section>
 
@@ -384,27 +385,27 @@
         <section id="reverse" aria-labelledby="reverse-title">
           <h3 id="reverse-title"><code>-</code>{t('baishi.heading.reverse')}</h3>
           {@render grammar(['reversal'])}
-          {@render said('reverse', ['I26', 'p.15 §5.4'])}
+          {@render said('reverse', ['I26', 'p.15 §5.3'])}
           {@render examples('reverse')}
         </section>
 
         <section id="cross" aria-labelledby="cross-title">
           <h3 id="cross-title"><code>x</code>{t('baishi.heading.cross')}</h3>
           {@render grammar(['crossing'])}
-          {@render said('cross', ['I26', 'p.15 §5.4'])}
+          {@render said('cross', ['I26', 'p.15 §5.3'])}
           {@render examples('cross')}
         </section>
 
         <section id="break-mark" aria-labelledby="break-mark-title">
           <h3 id="break-mark-title"><code>b</code>{t('baishi.heading.break')}</h3>
           {@render grammar(['break'])}
-          {@render said('break', ['I26', 'p.15 §5.4'])}
+          {@render said('break', ['I26', 'p.15 §5.3'])}
           {@render examples('break')}
         </section>
 
         <section id="closing" aria-labelledby="closing-title">
           <h3 id="closing-title"><code>z</code>{t('baishi.heading.closed')}{@render cheat('closing')}</h3>
-          {@render said('closed', ['I26', 'p.15 §5.4'])}
+          {@render said('closed', ['I26', 'p.15 §5.3'])}
           {@render examples('closed')}
         </section>
 
@@ -617,7 +618,10 @@
       </section>
 
       <section id="ebnf" aria-labelledby="ebnf-title">
-        <h2 id="ebnf-title">{t('baishi.heading.ebnf')}<span class="download"><Menu label={t('appendix.download')} icon="download" items={downloads} align="end" keyHints={false} compact /></span></h2>
+        <div class="heading-row">
+          <h2 id="ebnf-title">{t('baishi.heading.ebnf')}</h2>
+          <span class="download"><Menu label={t('appendix.download')} icon="download" items={downloads} align="end" keyHints={false} compact /></span>
+        </div>
         <p>{t('baishi.formal')} {@render at(['DB', '2597437b'])}</p>
         <pre class="full">{corrected}</pre>
         <div class="scroll">
@@ -629,7 +633,7 @@
         <RailroadCanvas rules={grammarRules} top="row" {t} bind:selected={chosen} />
         <details class="ebnf">
           <summary>{t('baishi.i26grammar')} · I26 pp.31–33</summary>
-          {@render said('ebnf', ['I26', 'p.33'])}
+          {@render said('ebnf', ['I26', 'p.31'])}
           <pre>{EBNF}</pre>
         </details>
       </section>
@@ -649,6 +653,7 @@
                   <span>{doc.extent}</span>
                 </p>
                 {#each doc.links as link (link)}<p class="link"><a href={link} target="_blank" rel="noreferrer">{link}</a></p>{/each}
+                {#if 'edition' in doc && doc.edition}<p class="link"><a href={doc.edition.url} target="_blank" rel="noreferrer">{doc.edition.url}</a> <span class="muted">{t('baishi.doc.edition', { date: doc.edition.read })} <span lang="zh-Hans">{doc.edition.printed}</span></span></p>{/if}
                 <p class="note">{t(`baishi.doc.note.${doc.key}`)}</p>
               </div>
             </li>
@@ -724,7 +729,9 @@
   .anchor{scroll-margin-top:74px;display:flex;flex-direction:column}
   .anchor > .cheat{align-self:flex-end;margin:0 0 4px}
   .rule-block{gap:6px}
-  .download{margin-left:auto;font-size:13px;font-weight:400}
+  .heading-row{display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid var(--ui-color-border);margin:0 0 12px}
+  .heading-row h2{flex:1;border-bottom:none;margin:0}
+  .download{margin-left:auto;font-size:13px;font-weight:400;padding-bottom:6px}
   .ebnf summary{cursor:pointer;font-size:13px;color:var(--ui-color-accent);margin:0 0 8px}
   .ebnf pre{max-height:70dvh}
   .examples{align-items:start;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,400px),1fr));gap:8px;margin:0 0 12px}
