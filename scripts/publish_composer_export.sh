@@ -24,7 +24,7 @@ version="$(jq -er '.version' "$directory/.export")"
 [ "$(jq -er '.composer.dirty' "$directory/manifest.json")" = false ] \
   || { echo "$version was exported from a tree with uncommitted changes" >&2; exit 1; }
 format="$(jq -er '.format' "$directory/manifest.json")"
-[ "$format" = 6 ] || { echo "$version is format $format; the client reads 6" >&2; exit 1; }
+[ "$format" = 7 ] || { echo "$version is format $format; the client reads 7" >&2; exit 1; }
 
 # The shards the manifest counts are the shards on disk; a half-packed export passes `rclone` silently.
 for kind in records hosts; do
@@ -45,7 +45,7 @@ fi
 
 rclone copy "$directory" "r2:$bucket/$version" \
   --exclude '.work/**' --exclude '.export' --exclude '.complete' \
-  --transfers 16 --checkers 32 --stats-one-line --stats 30s
+  --transfers 64 --checkers 64 --stats-one-line --stats 30s
 
 # `versions.json` lists what the bucket holds, newest first. The Worker serves it at /versions, and
 # another site reads it to choose an export instead of hard-coding one.
