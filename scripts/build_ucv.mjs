@@ -12,7 +12,7 @@ import { createHash } from 'node:crypto'
 import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { gunzipSync, gzipSync } from 'node:zlib'
-import { area, blanks, cells, counters, polygonsOf } from './lib/outline.mjs'
+import { SQUARE, area, cells, counters, enclosed, filled, polygonsOf } from './lib/outline.mjs'
 
 const revision = '8302302d615ff1c1f60ae335b118b10060be0ed4'
 const expected = '886b426ea3d1d329749e02b32cccd5082d31d6cf1b996ea37bdae5ac593ca491'
@@ -245,6 +245,14 @@ const gothicWidths = length => {
   const light = Math.max(8, 19.028 - 5.6065e-3 * length)
   return { light, heavy: Math.max(light + 3, 37.629 - 1.4314e-2 * length) }
 }
+/** The side of the box a whole character fills, in units of the 200-unit square. */
+const FULL = 170
+/** A glyph name that ends in a place in a character, before any variant: `u752c-03`, `u5c3f-05-var-001`. */
+const PLACED = /-(?:0[1-9]|1[0-5])(?:-(?:var|itaiji)-\d+)?$/
+/** The least width of a Gothic stroke, in units of the 200-unit square. */
+const GOTHIC_LEAST = 5
+/** A counter is a blank of at least `least` cells at a hairline, and open while `open` of them are blank. */
+const COUNTER = { least: 12, open: 6 }
 const kage = new Kage()
 kage.kShotai = kage.kGothic
 for (const [name, glyph] of Object.entries(strokes?.glyphs ?? {})) kage.kBuhin.push(name, glyph)
@@ -272,17 +280,32 @@ if (strokes) {
     const inked = (/** @type {number} */ width) => cells(strokesOf(glyph, width).filter(polygon => polygon.length > 2).map(polygon => area(polygon) < 0 ? polygon.reverse() : polygon))
     // How much stroke the form has: the ink of its strokes drawn two units wide, halved.
     const hairline = inked(2)
-    const widths = gothicWidths(hairline.reduce((sum, cell) => sum + cell, 0) / 2)
-    // The stroke data is spaced for Mincho's hairline bars: a width that closes a counter of the
-    // form is narrowed until every counter is open again.
-    const open = blanks(hairline)
+    // A form GlyphWiki names for a place in a character (`-03`, the top) fills part of the square:
+    // it is weighed as the character it is part of, which has that much more stroke.
+    let whole = 1
+    if (PLACED.test(name)) {
+      let left = SQUARE, top = SQUARE, right = -1, bottom = -1
+      hairline.forEach((cell, at) => {
+        if (!cell) return
+        const row = Math.floor(at / SQUARE), col = at % SQUARE
+        left = Math.min(left, col); right = Math.max(right, col); top = Math.min(top, row); bottom = Math.max(bottom, row)
+      })
+      whole = Math.min(3, Math.max(1, FULL * FULL / ((right - left + 1) * (bottom - top + 1))))
+    }
+    const widths = gothicWidths(whole * hairline.reduce((sum, cell) => sum + cell, 0) / 2)
+    // The stroke data is spaced for Mincho's hairline bars: a width that fills a counter of the
+    // form is narrowed, half a unit at a time, until every counter keeps some of its blank.
+    const inside = enclosed(hairline, COUNTER.least)
+    const fills = (/** @type {number} */ width) => filled(inked(width), inside, COUNTER.open) > 0
     const narrowed = (/** @type {number} */ width, /** @type {number} */ least) => {
-      while (width > least && blanks(inked(width)) < open) width -= 0.5
+      while (width - 0.5 >= least && fills(width)) width -= 0.5
       return width
     }
-    widths.light = narrowed(widths.light, 5)
-    widths.heavy = narrowed(widths.heavy, widths.light + 2)
-    if (widths.light < gothicWidths(0).light && blanks(inked(widths.light)) < open) clogged.push(name)
+    widths.light = narrowed(widths.light, GOTHIC_LEAST)
+    // The heavy master stays a pen wider than the light one, and near enough to it that the
+    // lightest weight the engine draws (0.6 of their difference below the light) is still a stroke.
+    widths.heavy = narrowed(Math.min(widths.heavy, 2.5 * widths.light), widths.light + 2)
+    if (fills(widths.light) || fills(widths.heavy)) clogged.push(name)
     const thin = strokesOf(glyph, widths.light), thick = strokesOf(glyph, widths.heavy)
     // The masters are one drawing at two widths only where each polygon keeps its points.
     const paired = thin.length === thick.length && thin.every((polygon, at) => polygon.length === thick[at].length)
@@ -311,7 +334,7 @@ if (strokes) {
   await writeFile(new URL('ucv-outlines-sans.json.gz', data), gzipSync(JSON.stringify({ source: 'GlyphWiki glyphs of the IRG UCV and NUCV forms, drawn in Gothic from their stroke data; see data/README.md', records: even })))
   console.log(`${gothic} forms drawn in Gothic, ${unweighted.length} of them at one width, ${Object.keys(even).length - gothic} kept in Mincho`)
   if (unweighted.length) console.log(unweighted.join(' '))
-  if (clogged.length) console.log(`${clogged.length} with a counter closed at the least width: ${clogged.join(' ')}`)
+  if (clogged.length) console.log(`${clogged.length} with a counter filled at the least width of a master: ${clogged.join(' ')}`)
 }
 console.log(`${entries.filter(entry => entry.kind === 'unifiable').length} unifiable, ${entries.filter(entry => entry.kind !== 'unifiable').length} not unifiable; ${names.length} forms, ${wanted.length} asked for, ${fetched.length} fetched from GlyphWiki, ${absent.length} without an outline; ${Object.keys(records).length} records`)
 if (absent.length) console.log(absent.join(' '))

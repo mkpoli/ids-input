@@ -157,4 +157,20 @@ it('draws every textless form in Gothic too, from stroke data that draws its rec
   expect(Buffer.from(record.G.p[0][1], 'base64').length).toBe(delta.length)
   // The Mincho record of the same form has one.
   expect(Buffer.from(mincho['&GW-u58ec-t;'].G.p[0][2], 'base64').some(byte => byte !== 0)).toBe(false)
+  // Every contour is the same stroke at each weight the engine draws, from 0.6 of the masters'
+  // difference below the light one to the heavy one: it keeps its points and never turns inside out.
+  for (const [key, form] of Object.entries(sans)) {
+    for (const [ops, light, change] of /** @type {{ G: { p: [string, string, string][] } }} */ (form).G.p) {
+      const at = Buffer.from(light, 'base64'), by = Buffer.from(change, 'base64')
+      expect(by.length).toBe(at.length)
+      expect(ops.length).toBe(at.length / 4)
+      const turn = (/** @type {number} */ weight) => {
+        let sum = 0
+        const point = (/** @type {number} */ i) => [at.readInt16LE(i) + by.readInt16LE(i) * weight, at.readInt16LE(i + 2) + by.readInt16LE(i + 2) * weight]
+        for (let i = 0; i < at.length; i += 4) { const [x, y] = point(i), [nx, ny] = point((i + 4) % at.length); sum += x * ny - nx * y }
+        return Math.sign(sum)
+      }
+      if (turn(0) !== 1 || turn(-0.6) !== 1 || turn(1) !== 1) throw new Error(`${key}: a contour turns over between weights`)
+    }
+  }
 })

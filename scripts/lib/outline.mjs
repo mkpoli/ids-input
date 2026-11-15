@@ -120,21 +120,32 @@ export function alike(a, b, near) {
   return Math.min(share(a, widened(b)), share(b, widened(a)))
 }
 
-/** How many separate regions of the drawing square are left blank: the ground around a drawing and each counter inside it. @param {Uint8Array} grid */
-export function blanks(grid) {
+/**
+ * The counters of a drawing: each blank region its ink closes off from the ground around it, as the
+ * cells it covers. A region of fewer than `least` cells is a gap between strokes that meet at an
+ * angle, which the grid leaves and no pen keeps.
+ * @param {Uint8Array} grid @param {number} least @returns {number[][]}
+ */
+export function enclosed(grid, least) {
   const seen = new Uint8Array(grid.length)
-  let regions = 0
+  /** @type {number[][]} */
+  const regions = []
   for (let start = 0; start < grid.length; start++) {
     if (grid[start] || seen[start]) continue
-    regions++
-    const stack = [start]
+    const region = [start]
+    let ground = false
     seen[start] = 1
-    while (stack.length) {
-      const at = /** @type {number} */ (stack.pop()), row = Math.floor(at / SQUARE), col = at % SQUARE
+    for (let read = 0; read < region.length; read++) {
+      const at = region[read], row = Math.floor(at / SQUARE), col = at % SQUARE
+      if (row === 0 || row === SQUARE - 1 || col === 0 || col === SQUARE - 1) ground = true
       for (const next of [row > 0 ? at - SQUARE : -1, row < SQUARE - 1 ? at + SQUARE : -1, col > 0 ? at - 1 : -1, col < SQUARE - 1 ? at + 1 : -1]) {
-        if (next >= 0 && !grid[next] && !seen[next]) { seen[next] = 1; stack.push(next) }
+        if (next >= 0 && !grid[next] && !seen[next]) { seen[next] = 1; region.push(next) }
       }
     }
+    if (!ground && region.length >= least) regions.push(region)
   }
   return regions
 }
+
+/** How many of `regions` a drawing leaves fewer than `open` blank cells of. @param {Uint8Array} grid @param {number[][]} regions @param {number} open */
+export const filled = (grid, regions, open) => regions.filter(region => region.reduce((blank, cell) => blank + (grid[cell] ? 0 : 1), 0) < open).length

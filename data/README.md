@@ -451,7 +451,7 @@ with a variant identifier (`壬q0012`) is drawn from it.
 `ucv-strokes.json.gz` holds the stroke data (KAGE) of the same 632 forms, with the 679 glyphs
 they are built from: `{ source, forms: { name: { version, same } }, glyphs: { name: strokes } }`.
 `scripts/build_ucv_strokes.mjs` reads it from GlyphWiki's dump,
-<https://glyphwiki.org/dump.tar.gz> (the files dated 2026-11-15 02:00 JST; archive SHA-256
+<https://glyphwiki.org/dump.tar.gz> (the files dated 2026-11-14 17:00 UTC; archive SHA-256
 `2c8014e56551dcdd321a307b21226f57bcf2f8b4d9cff32d0f5aeb2623033a85`). A glyph is redrawn over time,
 so the version kept for a form is the one that, drawn in Mincho, is its recorded outline: `same` is
 the lesser share of each drawing's ink within 2 units of the other's, at least 0.97 and 0.9947 for
@@ -465,8 +465,14 @@ do, so a form is weighted like the parts beside it. Their stroke widths follow t
 (`a83fc941166b-sans-compose-layout-v4-f7+variants`): over 62 characters from 一 to 鬱, ink divided
 by stroke length is `19.028 − 0.0056065 × length` in the light master and
 `37.629 − 0.014314 × length` in the heavy one, in units of the 200-unit square (RMS error 0.77 and
-1.49). A width that closes a counter of the form is narrowed until the counter is open, to no less
-than 5 units; three forms (`koseki-324900`, `u9039-g`, `u2ff1-u516b-u5902-04`) still close one.
+1.49). A form GlyphWiki names for a place in a character (`u752c-03`, the top) fills part of the
+square, so it is weighed as the character it is part of: its stroke length times the share of a
+170-unit square its box leaves out, up to three times. A width that fills a counter of the form (a blank
+of 12 cells or more that the hairline drawing encloses) is narrowed half a unit at a time while 6
+cells of it are not left blank, the light master to no less than 5 units and the heavy one to no
+less than 2 above the light. The heavy master is at most 2.5 times the light, so the lightest
+weight the engine draws is still a stroke. Five forms fill a counter at those limits:
+`u5910-var-004`, `u3fdc-var-001`, `u271e9-var-002`, `u271e9-var-003`, `u5912-var-006`.
 
 - Licence of the list: the repository declares none. Its content is the IRG working document,
   published under the Unicode Terms of Use, <https://www.unicode.org/copyright.html>.
