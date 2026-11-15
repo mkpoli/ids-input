@@ -360,9 +360,16 @@
 #outline(title: t("baishi.contents"), depth: 2)
 #pagebreak()
 
-= #t("baishi.heading.row") <row>
+= #t("baishi.heading.rows") <rows>
 #t("baishi.row.body")
-#grammar(("row", "primary group", "alternative group", "entry"))
+#grammar((
+  "row",
+  "headword",
+  "tab",
+  "primary group",
+  "alternative group",
+  "entry",
+))
 #said("rowGroups", ("I26", "p.4 §3.1"))
 #said("rowVariants", ("I26", "p.6 §4.2"))
 #examples("row")
@@ -401,7 +408,15 @@
   table.cell(colspan: 3, text(fill: muted, t("baishi.operators.ivi"))),
 )
 #t("baishi.operators.arity")
-#grammar(("ids", "component"))
+#grammar((
+  "ids",
+  "component",
+  "unary operator",
+  "binary operator",
+  "overlap operator",
+  "indexed operator",
+  "ternary operator",
+))
 #said("nest", ("I26", "p.3 §2.3"))
 #said("u31ef", ("I26", "p.3 §2.1"))
 
@@ -430,7 +445,7 @@
 #examples("lists")
 
 #t("baishi.variants.kinds")
-#grammar(("variant id", "style tag"))
+#grammar(("variant id", "style tag", "tag char", "lower letter"))
 #table(
   columns: (auto, 1fr),
   head(
@@ -444,7 +459,7 @@
     .flatten(),
 )
 
-== #t("baishi.heading.sources") <sources>
+== #t("baishi.heading.sources") <source-letters>
 #grammar(("source letter",))
 #table(
   columns: (auto, auto, 1fr),
@@ -476,11 +491,11 @@
 #text(fill: muted, t("baishi.sources.order")) #code("Q>G>H>T>J>K>P>V>M>U>S>B")
 #examples("precedence")
 
-== #t("baishi.heading.ucv") <ucv>
+== #t("baishi.heading.ucv") <ucv-position>
 #said("ucv", ("I26", "pp.9–10 §4.3.2"))
 #examples("ucv")
 
-== #t("baishi.heading.imaginary") <imaginary>
+== #t("baishi.heading.imaginary") <imaginary-ucv>
 #said("imaginary", ("I26", "p.11 §4.3.3"))
 #examples("imaginary")
 
@@ -560,7 +575,7 @@
 
 == #t("baishi.heading.characters") <characters>
 #t("baishi.characters.body") #at(("I26", "p.32"))
-#grammar(("ideograph char", "taggable char", "cjk stroke", "curve"))
+#grammar(("ideograph char", "taggable char", "hanzi", "cjk stroke", "curve"))
 #examples("katakana")
 
 == #t("baishi.heading.compounds") <compounds>
@@ -591,12 +606,12 @@
 #said("cross", ("I26", "p.15 §5.4"))
 #examples("cross")
 
-== #raw("b") #t("baishi.heading.break") <break>
+== #raw("b") #t("baishi.heading.break") <break-mark>
 #grammar(("break",))
 #said("break", ("I26", "p.15 §5.4"))
 #examples("break")
 
-== #raw("z") #t("baishi.heading.closed") <closed>
+== #raw("z") #t("baishi.heading.closed") <closing>
 #said("closed", ("I26", "p.15 §5.4"))
 #examples("closed")
 
@@ -626,8 +641,15 @@
 #t("baishi.overlap.body")
 #grammar(("overlap modifier", "overlap spec"))
 
-== #t("baishi.heading.slice") <slice>
-#grammar(("slice", "slice bound"))
+== #t("baishi.heading.slice") <quick-slice>
+#grammar((
+  "slice",
+  "slice bound",
+  "number",
+  "negative number",
+  "nonzero digit",
+  "digit",
+))
 #said("slice", ("I26", "p.17 §6.2"))
 #said("sliceTouch", ("I26", "p.18 §6.2.1"))
 #said("virtual", ("I26", "p.19 §6.2.5"))
@@ -685,7 +707,7 @@
 #examples("segments")
 #examples("matrix")
 
-== #t("baishi.heading.reverseMatrix") <reverseMatrix>
+== #t("baishi.heading.reverseMatrix") <reverse-matrix>
 #t("baishi.reverseMatrix.body")
 #said("reverseMatrix", ("I26", "p.23 §6.4"))
 #examples("reverseMatrix")
@@ -739,7 +761,7 @@
 #said("subtractSearch", ("I26", "p.26"))
 #said("subtractChain", ("I26", "p.26"))
 
-= #t("baishi.heading.unique") <unique>
+= #t("baishi.heading.prefix") <prefix>
 #grammar(("uniqueness prefix",))
 #said("unique", ("I26", "pp.26–27 §7.1"))
 #said("uniqueRare", ("I26", "p.27 §7.1"))
@@ -764,7 +786,7 @@
 #said("lv2Merge", ("I26", "p.28 §7.3"))
 #examples("levels")
 
-= #t("baishi.heading.changes") <changes>
+= #t("baishi.heading.changes") <history>
 #enum(..D.CHANGES.map(((id, cites, ..inferred)) => {
   if inferred.len() > 0 and inferred.first() {
     badge("inference")
@@ -776,7 +798,7 @@
   if id == "t" { [#metadata(none) <change-t>] }
 }))
 
-= #t("baishi.heading.data") <data>
+= #t("baishi.heading.data") <differences>
 #t(
   "baishi.data.body",
   commit: D.DATABASE.checked.commit.slice(0, 8),
@@ -890,7 +912,7 @@
   block: true,
 ))
 
-= #t("baishi.heading.documents") <documents>
+= #t("baishi.heading.documents") <sources>
 #{
   let entry(key, body, shown: none) = [
     #block(

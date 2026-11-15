@@ -138,7 +138,7 @@ function checkParity() {
   const pageKeys = keys(read('demo/Baishi.svelte'))
   const specKeys = keys(read('docs/spec/spec.typ'))
   // The page's own controls: the download menu and the interactive diagram.
-  const PAGE_ONLY = new Set(['baishi.contents', 'baishi.grammar', 'baishi.becomes', 'baishi.title'])
+  const PAGE_ONLY = new Set(['baishi.contents', 'baishi.grammar', 'baishi.becomes', 'baishi.title', 'baishi.toCheatsheet'])
   const missing = [...pageKeys].filter(key => !specKeys.has(key) && !PAGE_ONLY.has(key))
   if (missing.length) throw new Error(`docs/spec/spec.typ leaves out page text: ${missing.join(', ')}`)
   return own.length
