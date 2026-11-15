@@ -33,6 +33,18 @@ function inside([x, y], polygon) {
   return odd
 }
 
+/** Whether two segments cross at a point inside both. @param {[number, number]} a @param {[number, number]} b @param {[number, number]} c @param {[number, number]} d */
+function cross(a, b, c, d) {
+  const side = (/** @type {[number, number]} */ p, /** @type {[number, number]} */ q, /** @type {[number, number]} */ r) => Math.sign((q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]))
+  return side(a, b, c) * side(a, b, d) < 0 && side(c, d, a) * side(c, d, b) < 0
+}
+
+/** Whether a polygon lies wholly inside another: every corner strictly inside, and no edge crossing out. @param {[number, number][]} polygon @param {[number, number][]} around */
+function within(polygon, around) {
+  if (!polygon.every(point => inside(point, around))) return false
+  return !polygon.some((point, i) => around.some((corner, j) => cross(point, polygon[(i + 1) % polygon.length], corner, around[(j + 1) % around.length])))
+}
+
 /**
  * Which polygons of an outline are counters: cut out of the shape, where every other polygon adds
  * to it. A counter lies wholly inside the polygon it is cut from, touching none of its edges, and
@@ -43,7 +55,7 @@ export function counters(polygons) {
   const areas = polygons.map(area)
   return polygons.map((polygon, at) => {
     // The polygons this one lies inside, the smallest of them being the one it would be cut from.
-    const around = polygons.map((_, other) => other).filter(other => other !== at && Math.abs(areas[other]) > Math.abs(areas[at]) && polygon.every(point => inside(point, polygons[other])))
+    const around = polygons.map((_, other) => other).filter(other => other !== at && Math.abs(areas[other]) > Math.abs(areas[at]) && within(polygon, polygons[other]))
     if (around.length % 2 === 0) return false
     const from = around.reduce((least, other) => Math.abs(areas[other]) < Math.abs(areas[least]) ? other : least)
     return Math.sign(areas[from]) !== Math.sign(areas[at])

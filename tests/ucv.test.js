@@ -107,12 +107,14 @@ it('tells a counter from a stroke that overlaps another', async () => {
   expect(counters(polygonsOf(square(0, 0, 100) + square(20, 20, 60)))).toEqual([false, false])
   // A polygon that touches the edge of the one around it is a stroke meeting it, not a counter.
   expect(counters(polygonsOf(square(0, 0, 100) + reversed(0, 20, 60)))).toEqual([false, false])
+  // Nor is one whose corners are all inside a hollowed shape while it crosses the hollow.
+  expect(counters(polygonsOf('M0 0L100 0L100 30L30 30L30 70L100 70L100 100L0 100Z' + 'M60 10L60 90L80 90L80 10Z'))).toEqual([false, false])
 })
 
 it('keeps the counters of a form open in its outline record', () => {
   const { records } = JSON.parse(gunzipSync(readFileSync(new URL('../data/ucv-outlines.json.gz', import.meta.url))).toString('utf8'))
   // The second form of 凹 (UCV #438) is one shape with two counters.
-  const windings = records['&GW-cdp-885b-var-006;'].G.p.map((/** @type {[string, string]} */ [, light]) => {
+  const windings = (/** @type {string} */ key) => records[key].G.p.map((/** @type {[string, string]} */ [, light]) => {
     const bytes = Buffer.from(light, 'base64')
     let sum = 0
     for (let i = 0; i < bytes.length; i += 4) {
@@ -121,8 +123,9 @@ it('keeps the counters of a form open in its outline record', () => {
     }
     return Math.sign(sum)
   })
-  expect(windings).toEqual([1, -1, -1])
+  expect(windings('&GW-cdp-885b-var-006;')).toEqual([1, -1, -1])
   // A form drawn as strokes has every polygon wound one way.
-  const strokes = records['&GW-u58ec-t;'].G.p.length
-  expect(strokes).toBeGreaterThan(1)
+  const strokes = windings('&GW-u58ec-t;')
+  expect(strokes.length).toBeGreaterThan(1)
+  expect(new Set(strokes)).toEqual(new Set([1]))
 })
