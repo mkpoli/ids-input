@@ -77,6 +77,7 @@ export const FEATURES = /** @type {const} */ ([
 
 /** What each source is used in. Kept beside the entries so a new source has to say. */
 const USED_IN = /** @type {Record<string, string[]>} */ ({
+  'iwds-ucv': ['decompose'],
   babelstone: ['decompose', 'palette', 'search', 'composer', 'info', 'examples'],
   'babelstone-tangut': ['decompose', 'palette', 'composer', 'examples'],
   'yi-bai': ['decompose', 'search'],
@@ -134,6 +135,7 @@ const USED_IN = /** @type {Record<string, string[]>} */ ({
   'irg-ws2021': ['examples'],
   nightfury: ['decompose'],
   tatami: ['examples'],
+  'commons-shinzo': ['decompose'],
   'l2-19-230r': ['palette', 'examples'],
   zitools: ['decompose', 'palette', 'info'],
   yedict: ['decompose'],
@@ -946,6 +948,27 @@ export const SOURCES = [
     },
   },
   {
+    id: 'iwds-ucv',
+    category: 'data',
+    tags: ['irg', 'forms'],
+    title: 'IRG Working Documents Series 2: UCV & NUCV Lists (IRG N2978)',
+    people: ['IRG', 'Taichi Kawabata', 'Yi Bai'],
+    url: 'https://www.unicode.org/irg/docs/n2978-Complete.pdf',
+    more: ['https://www.unicode.org/irg/IWDS.html', 'https://github.com/yi-bai/iwds'],
+    licence: 'Unicode Terms of Use for the document; the data repository declares no licence',
+    date: '2026-10-20',
+    read: '2026-11-13',
+    summary: {
+      en: 'The unifiable and non-unifiable component variations with their example characters, read from the data file the document is generated from; form drawings are GlyphWiki glyphs.',
+      ja: '統合可能・統合不可の部品差とその例字。文書の生成元データファイルから読み込み、字形はGlyphWikiのグリフを用いる。',
+      'zh-Hans': '可认同与不可认同的部件差异及其例字，读自生成该文件的数据文件；字形图取自GlyphWiki。',
+      'zh-Hant': '可認同與不可認同的部件差異及其例字，讀自產生該文件的資料檔；字形圖取自GlyphWiki。',
+      ko: '통합 가능·통합 불가 부품 차이와 예시 글자. 문서를 생성하는 데이터 파일에서 읽었으며, 자형 그림은 GlyphWiki 글리프이다.',
+      vi: 'Các biến thể bộ phận hợp nhất được và không hợp nhất được cùng chữ ví dụ, đọc từ tệp dữ liệu sinh ra tài liệu; hình dạng lấy từ GlyphWiki.',
+    },
+    used: ['data/ucv.json', 'data/ucv-forms.json.gz', 'data/ucv-outlines.json.gz', 'data/ucv-strokes.json.gz', 'data/ucv-outlines-sans.json.gz'],
+  },
+  {
     id: 'irg-ws2021',
     category: 'references',
     tags: ['ids', 'unihan', 'irg'],
@@ -998,8 +1021,26 @@ export const SOURCES = [
       vi: 'Các nhóm 二同系, 三同系, 四同系 và 過畳系 đứng sau các ví dụ lặp. Trang dẫn 山口翔平 về 理義字 và 『童子字尽安見』「理義字集」, không nêu nguồn cho ví dụ của mình; mô tả từng chữ lấy từ BabelStone.',
     },
   },
-
-
+  {
+    id: 'commons-shinzo',
+    category: 'references',
+    tags: ['ids'],
+    title: 'しんぞ漢字',
+    url: 'https://commons.wikimedia.org/wiki/Category:しんぞ漢字',
+    more: ['https://commons.wikimedia.org/wiki/Category:Ideographic_description_sequences'],
+    licence: 'CC BY-SA 4.0',
+    date: 'last edited 2026-11-02',
+    read: '2026-11-14',
+    summary: {
+      en: 'The unencoded character しんぞ sets 疒 around 翳, 輒, 袮, 雷, 鏡 and other parts, in a 102-code-point description. Wikimedia cannot use that description as a page name, so the category is titled しんぞ漢字.',
+      ja: '未符号化の「しんぞ」。疒の中に翳・輒・袮・雷・鏡などを重ね、記述は102コードポイント。ウィキメディアはこの記述をページ名にできないため、カテゴリ名は「しんぞ漢字」になっている。',
+      'zh-Hans': '未编码的「しんぞ」：疒中叠着翳、輒、袮、雷、鏡等部件，描述长102个码位。维基媒体无法用这段描述作页面名，分类因此以「しんぞ漢字」命名。',
+      'zh-Hant': '未編碼的「しんぞ」：疒中疊著翳、輒、袮、雷、鏡等部件，描述長102個碼位。維基媒體無法用這段描述作頁面名，分類因此以「しんぞ漢字」命名。',
+      ko: '미부호화 문자 しんぞ. 疒 안에 翳, 輒, 袮, 雷, 鏡 따위를 겹쳐 놓았고 기술은 102코드포인트다. 위키미디어는 이 기술을 문서 제목으로 쓸 수 없어 분류 이름은 しんぞ漢字이다.',
+      vi: 'Chữ しんぞ chưa được mã hóa: 疒 bọc 翳, 輒, 袮, 雷, 鏡 và các bộ khác, với mô tả dài 102 điểm mã. Wikimedia không thể dùng mô tả này làm tên trang nên thể loại mang tên しんぞ漢字.',
+    },
+    note: 'The category prints the description in full, counts 103 Unicode characters and records 314 UTF-8 bytes; the description is 102 code points. The parser accepts it as a whole description; the composer caps a drawing at 24 operators, so the workshop edits this description without drawing it. The Commons category for IDS is [Ideographic description sequences](https://commons.wikimedia.org/wiki/Category:Ideographic_description_sequences).',
+  },
   {
     id: 'l2-19-230r',
     category: 'references',

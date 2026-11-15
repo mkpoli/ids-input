@@ -5,48 +5,35 @@
   // sequence, the character it encodes, its code points, export). File and Edit menus lead the toolbar;
   // the toolbar holds undo, redo, examples, sharing, the language, settings and sources; the tab
   // strip's + opens a blank tab and its chevron opens the templates and examples as starting points.
+  // Embedded (`editor.html`), it is one description inside a host page: no tabs, no site chrome,
+  // nothing kept between visits, and each change posted to the host instead of written into the address.
   import SiteSelect from './ui/SiteSelect.svelte'
   import { onMount, tick, untrack } from 'svelte'
   import { watchFallback } from '../src/svelte/fallback-font.js'
-  import { IdsCharacterInfo, IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, OperatorIcon, createEditor, shortcut, translator } from '../src/svelte/index.js'
-  import { smallSealAdapter } from '../src/adapter/index.js'
+  import { IdsAlternatives, IdsCharacterInfo, IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, OperatorIcon, createEditor, shortcut, translator } from '../src/svelte/index.js'
   import { APPROXIMATE, composableDescription } from '@han-compose/composer/compose'
   import { hasTangut } from '@han-compose/composer/tangut'
   import { composerPreview as composerAt } from '@han-compose/composer'
+  import { variationSequences } from '@han-compose/composer/variants'
   import engineOutlines from 'ids-engine-outlines'
-  import { EMPTY_MARKS, OPERATORS, characterStrokes, componentQuery, isJurchen, isShuishu, parse, substituteSequences, unalias } from '../src/core/index.js'
+  import { EMPTY_MARKS, OPERATORS, characterStrokes, componentQuery, drawnText, isJurchen, isShuishu, parse, substituteSequences, unalias } from '../src/core/index.js'
   import { loadStrokeRecords } from '../src/svelte/strokes.js'
   import { createDocumentSession, layerAtPath, sessionRecord, toSequence } from '../src/document/index.js'
   import { documentFile, readDocumentFile } from './lib/documents.js'
-  import ids from '../data/babelstone-ids.tsv.gz?url'
   import equivalencesUrl from '../data/ids-equivalences.json?url'
-  import layers from '../data/tangut-layers.json.gz?url'
-  import zitools from '../data/yi-bai-ids.tsv.gz?url'
-  import corpus from '../data/ids-corpus.json.gz?url'
-  import projectIds from '../data/ids-project.tsv.gz?url'
-  import overwriteIds from '../data/ids-overwrites.tsv?url'
-  import components from '../data/ids-components.tsv?url'
-  import sealData from '../data/small-seal.json.gz?url'
-  import shuishuData from '../data/shuishu.json.gz?url'
-  import jurchenData from '../data/jurchen.json.gz?url'
-  import sealExtraParts from '../data/seal-extra-parts.json'
-  import parts from '../data/ids-parts.json?url'
-  import sketches from '../data/sketch-parts.json.gz?url'
-  import forms from '../data/component-forms.tsv?url'
-  import names from '../data/component-names.tsv?url'
-  import folds from '../data/component-name-folds.tsv?url'
-  import characterInfo from '../data/character-info.json.gz?url'
-  import chains from '../data/zi-tools-chains.tsv.gz?url'
-  import characters from '../data/character-vocabulary.tsv.gz?url'
+  import { workshopAdapter } from './lib/workshop-adapter.js'
+  import variationOutlines from '../data/ucv-outlines.json.gz?url'
+  import variationOutlinesSans from '../data/ucv-outlines-sans.json.gz?url'
   import { LOCALES, appMessages } from './lib/locales.js'
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
   import { createIconDrawings } from './lib/icons.js'
   import { createSampleDrawings } from './lib/sample-drawings.js'
+  import { createDrawingOrder } from './lib/drawing-order.js'
   import { recognizeDrawing } from './lib/sketch-recognizer.js'
   import { COMPOSER_BASE, COMPOSER_BASES, readFrom } from './lib/composer.js'
   import { DESKTOP, SITE } from './lib/desktop.js'
   import { addressDocument, documentFrom, linkTo, sameShare, sequenceFrom, transformed } from './lib/share.js'
-  import { canonical, makeTab, readActiveTab, readTabs, tabName, writeTabs } from './lib/tabs.js'
+  import { makeTab, readActiveTab, readTabs, sameSequence, tabName, writeTabs } from './lib/tabs.js'
   import { readRecent, remember } from './lib/recent.js'
   import { openTabSession, syncTabSession } from './lib/document-state.js'
   import { applyTheme, storedTheme } from './lib/theme.js'
@@ -55,6 +42,7 @@
   import AboutDialog from './ui/AboutDialog.svelte'
   import SponsorDialog from './ui/SponsorDialog.svelte'
   import ExportPanel from './ui/ExportPanel.svelte'
+  import PartFills from './ui/PartFills.svelte'
   import FaceSample from './ui/FaceSample.svelte'
   import TitleDialog from './ui/TitleDialog.svelte'
   import { download } from './lib/files.js'
@@ -118,9 +106,17 @@
     return () => window.removeEventListener('storage', onStorage)
   })
 
+  /** @type {{ embed?: boolean }} */
+  let { embed = false } = $props()
   const params = new URLSearchParams(location.search)
   /** A preview over the export at `base`, read from wherever this build holds it. @param {Parameters<typeof composerAt>[0]} options */
-  const composerPreview = options => composerAt({ ...options, base: readFrom(options.base) })
+  const composerPreview = options => {
+    const draw = composerAt({ ...options, base: readFrom(options.base) })
+    // The engine reads no variant identifier: a form one names is written as what draws it first,
+    // for the tabs' icons and the layers as for the preview.
+    return /** @type {typeof draw} */ (Object.assign(async (/** @type {string} */ sequence, /** @type {any} */ asking) =>
+      draw(await drawnText(sequence, babel.formed, asking), asking), { warm: draw.warm }))
+  }
   // What a share names: this page, or the published site for the desktop app, whose own address
   // opens nothing outside it.
   const shareFrom = DESKTOP ? new URL(SITE) : location
@@ -132,14 +128,56 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const sealAdapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, jurchen: jurchenData, ids, layers, zitools, chise: corpus, project: projectIds, overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains })
+  // The description tables are three megabytes a drawing rarely reads, and on a slow line they share
+  // it with the layout the drawing waits for. They load once the first drawing is shown, at once
+  // when that drawing reads them, none is coming or the reader touches the page, and after ten
+  // seconds whatever happened.
+  let releaseTables = () => {}
+  /** @type {Promise<void>} */
+  const firstDrawing = new Promise(resolve => { releaseTables = resolve })
+  onMount(() => {
+    const bound = setTimeout(() => { releaseTables(); endSearchWait() }, 10_000)
+    // A reader who types or clicks wants what they ask for, not the drawing first.
+    const options = { capture: true, once: true }
+    window.addEventListener('pointerdown', releaseTables, options)
+    window.addEventListener('keydown', releaseTables, options)
+    return () => {
+      clearTimeout(bound)
+      window.removeEventListener('pointerdown', releaseTables, options)
+      window.removeEventListener('keydown', releaseTables, options)
+    }
+  })
+  const dataAdapter = workshopAdapter({ after: firstDrawing })
 
   const operatorSet = new Set(OPERATORS.map(([op]) => op))
-  const babel = { ...sealAdapter, recognizeDrawing, parts: async () => {
-    const curated = await sealAdapter.parts()
-    const seen = new Set(curated.map(part => part.part))
-    return [...curated, ...sealExtraParts.filter(part => !seen.has(part)).map(part => ({ part, kind: /** @type {const} */ ('seal'), sealGroup: /** @type {const} */ ('other') }))]
-  } }
+  /** The tables for a drawing that reads them: they stop waiting for it. */
+  const tables = {
+    encoded: (/** @type {Parameters<typeof dataAdapter.encoded>} */ ...asked) => { releaseTables(); return dataAdapter.encoded(...asked) },
+    structure: (/** @type {Parameters<typeof dataAdapter.structure>} */ ...asked) => { releaseTables(); return dataAdapter.structure(...asked) },
+  }
+  // The first search reads the description tables, and the font switch's samples read six megabytes
+  // of layout models: the samples wait for a first search under way, so the two do not share the line.
+  let searching = 0, searched = false
+  /** @type {(() => void)[]} */
+  const afterSearch = []
+  /** The samples wait no longer: a first search has answered, or has had its ten seconds. */
+  const endSearchWait = () => {
+    searched = true
+    for (const start of afterSearch.splice(0)) start()
+  }
+  /** @template {(...asked: any[]) => Promise<any>} Search @param {Search} search @returns {Search} */
+  const counted = search => /** @type {Search} */ (async (...asked) => {
+    searching++
+    try { return await search(...asked) } finally {
+      searching--
+      endSearchWait()
+    }
+  })
+  /** @returns {Promise<void>} */
+  const firstSearch = () => searched || !searching ? Promise.resolve() : new Promise(resolve => afterSearch.push(resolve))
+  const babel = { ...dataAdapter, recognizeDrawing,
+    findByIds: counted(dataAdapter.findByIds), findByStructure: counted(dataAdapter.findByStructure),
+    findByUnknownStructure: counted(dataAdapter.findByUnknownStructure), findSimilar: counted(dataAdapter.findSimilar) }
   // Direct layer editing belongs to the active document tab.
   let adjusting = $state(false)
   let titleOpen = $state(false)
@@ -176,17 +214,23 @@
   const previews = new Map()
   // The outlines the engine draws without the export, as the page serves the package's `data/`: the
   // names the package reads, and the URL Vite gives each file it bundles. See `vite.config.js`.
-  const bundles = engineOutlines
+  // The forms of the component variation lists that only an outline draws go to the engine as the
+  // host's own outlines: drawn in Gothic for Sans, in Mincho for every other face.
+  /** @param {'sans' | 'serif' | 'fangsong' | 'kaisho'} style */
+  const bundlesFor = style => ({ ...engineOutlines, 'host/outlines.json.gz': style === 'sans' ? variationOutlinesSans : variationOutlines })
   /** @param {string} at @param {boolean} split @param {'sans' | 'serif' | 'fangsong' | 'kaisho'} style @param {string} [owner] A view whose drawings the others must not cancel. */
   const previewAt = (at, split, style, owner = '', preferExport = false) => {
     const key = `${at}\0${split ? '1' : '0'}\0${style}\0${owner}\0${preferExport ? '1' : '0'}`
-    if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split, fontStyle: style, preferExport, loaders: bundles }))
+    if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split, fontStyle: style, preferExport, loaders: bundlesFor(style) }))
     return /** @type {ReturnType<typeof composerPreview>} */ (previews.get(key))
   }
   // The drawings demo/scripts/build-example-drawings.mjs prepares for this export, one per example.
   // At 2 MB they come as a chunk of their own, asked for at once and read when they arrive, so the
   // page draws without waiting for them.
   const EXAMPLE_SEQUENCES = new Set(EXAMPLES.map(example => example.sequence))
+  // The character each example names, or none: what the corpus answers for the example's sequence
+  // (tests/example-characters.test.js), known before the corpus has loaded.
+  const EXAMPLE_CHARACTERS = new Map(EXAMPLES.map(example => [example.sequence, example.char]))
   let prepared = $state.raw(/** @type {Map<string, import('../src/adapter/types.js').Drawing>} */ (new Map()))
   const preparedReady = import('./lib/example-drawings.json')
     .then(({ default: data }) => { prepared = new Map(Object.entries(data.drawings).map(([sequence, entry]) => [sequence, entry.drawn])) })
@@ -257,7 +301,7 @@
       // A description whose operator modifier narrows it to one character draws that character: the
       // layout ignores the crossing the modifier names.
       if (sequence.includes('[')) {
-        const exact = await babel.encoded(sequence, { exact: true, signal: options?.signal }).catch(() => [])
+        const exact = await tables.encoded(sequence, { exact: true, signal: options?.signal }).catch(() => [])
         const [char] = exact
         if (exact.length === 1 && char !== undefined) return composed(char, { signal: options?.signal })
       }
@@ -271,7 +315,9 @@
       // parts keep the layout, and a modifier is left to the exact answer above, since the
       // modifier-free reading is only a guess.
       if (!sequence.includes('[') && APPROXIMATE.some(operator => sequence.includes(operator))) {
-        const [named] = await babel.encoded(sequence).catch(() => [])
+        // An example states the character it names, so it draws without waiting for the corpus.
+        const [named] = EXAMPLE_CHARACTERS.has(sequence) ? [EXAMPLE_CHARACTERS.get(sequence) || undefined]
+          : await tables.encoded(sequence).catch(() => [])
         if (named !== undefined && [...named].length === 1 && named !== sequence) {
           try { return await draw(named, options) } catch { /* compose it */ }
         }
@@ -290,7 +336,7 @@
       } catch (error) {
         if (options?.signal?.aborted || stopping(error)) throw error
         // A description of an encoded character draws that character when the face has its glyph.
-        const found = split ? [] : await babel.encoded(sequence).catch(() => [])
+        const found = split ? [] : await tables.encoded(sequence).catch(() => [])
         for (const char of found) {
           if ([...char].length !== 1 || char === sequence) continue
           try { return await composed(char) } catch { /* the default export draws the sequence */ }
@@ -299,7 +345,7 @@
         // by, when every operator in it places its operands predictably. The drawing is marked so a
         // reader can see it was assembled rather than drawn.
         if ([...sequence].length === 1) {
-          const described = await babel.structure(sequence).catch(() => [])
+          const described = await tables.structure(sequence).catch(() => [])
           for (const { text } of described) {
             if (text === sequence || !composableDescription(text)) continue
             try { return { ...(await composed(text, options)), composed: true } } catch { /* the default export draws it */ }
@@ -317,14 +363,20 @@
     previewsWithExamples.set(key, preview)
     return preview
   }
+  // The description being edited is drawn first: the tab icons and the font switch's samples wait
+  // while it loads, so the other faces' exports and the icons' parts do not share its connection.
+  let previewStep = $state(/** @type {'idle' | 'loading' | 'composed' | 'final' | 'failed' | 'capped' | 'unavailable'} */ ('idle'))
+  const order = createDrawingOrder()
+  $effect(() => order.hold(previewStep === 'loading'))
+  $effect(() => { if (previewStep !== 'loading') releaseTables() })
   // Tab icons need their own drawer so their requests cannot cancel the main preview.
   /** @type {Map<string, ReturnType<typeof createIconDrawings>>} */
   const iconDrawings = new Map()
   /** A face's drawer for tabs and the tree, falling back to the default export. @param {string} at @param {'sans' | 'serif' | 'fangsong' | 'kaisho'} style */
   const drawerAt = (at, style) => {
-    const composed = composerPreview({ base: at, fontStyle: style, loaders: bundles })
+    const composed = composerPreview({ base: at, fontStyle: style, loaders: bundlesFor(style) })
     if (exportUrl(at) === preparedBase && style === 'sans') return composed
-    const sans = composerPreview({ base: COMPOSER_BASE, fontStyle: 'sans', loaders: bundles })
+    const sans = composerPreview({ base: COMPOSER_BASE, fontStyle: 'sans', loaders: bundlesFor('sans') })
     return async (/** @type {string} */ sequence) => {
       const adapted = await babel.overwrite?.(sequence).catch(() => []) ?? []
       for (const char of adapted) {
@@ -341,9 +393,10 @@
   const iconsAt = (at, style) => {
     const key = `${at}\0${style}`
     if (!iconDrawings.has(key)) {
-      const draw = drawerAt(at, style)
-      iconDrawings.set(key, createIconDrawings(async sequence =>
-        (style === 'sans' && exportUrl(at) === preparedBase && !hasEmoji(sequence) ? await preparedFor(sequence) : null) ?? draw(sequence)))
+      // A prepared drawing needs no export: it is answered ahead of the composed icons' queue.
+      const composed = createIconDrawings(order.after(drawerAt(at, style)))
+      iconDrawings.set(key, async sequence =>
+        (style === 'sans' && exportUrl(at) === preparedBase && !hasEmoji(sequence) ? await preparedFor(sequence) : null) ?? composed(sequence))
     }
     return /** @type {ReturnType<typeof createIconDrawings>} */ (iconDrawings.get(key))
   }
@@ -370,21 +423,35 @@
       sampleDrawings.delete(oldKey)
     }
     if (!sampleDrawings.has(key)) {
-      const preview = previewAt(at, separate, option.style, `switch-${option.key}`)
+      const face = previewAt(at, separate, option.style, `switch-${option.key}`)
+      const preview = order.after(async (/** @type {string} */ sequence, /** @type {{ signal?: AbortSignal }} */ options) => {
+        await firstSearch()
+        options?.signal?.throwIfAborted()
+        return face(sequence, options)
+      })
       sampleDrawings.set(key, createSampleDrawings((sequence, { signal }) => preview(sequence, { signal })))
     }
     return /** @type {ReturnType<typeof createSampleDrawings>} */ (sampleDrawings.get(key))
   }
   const componentStyle = $derived(face === 'serif' ? 'serif' : face === 'fangsong' ? 'fangsong' : face === 'klee' ? 'kaisho' : 'sans')
   const icons = $derived(iconsAt(base, componentStyle))
-  const adapter = $derived({ ...babel, preview: previewFor(base, separate, componentStyle), icon: icons, fontStyle: componentStyle })
+  // One function for each export, so a tree asks again only when the face changes.
+  /** @type {Map<string, () => Promise<Map<string, string[]>>>} */
+  const sequenceLists = new Map()
+  /** @param {string} at */
+  const sequencesAt = at => {
+    if (!sequenceLists.has(at)) sequenceLists.set(at, () => variationSequences(readFrom(at)))
+    return /** @type {() => Promise<Map<string, string[]>>} */ (sequenceLists.get(at))
+  }
+  const adapter = $derived({ ...babel, preview: previewFor(base, separate, componentStyle), icon: icons, fontStyle: componentStyle, variationSequences: sequencesAt(base) })
   const wanted = String(params.get('lang') ?? load('locale', null) ?? navigator.language ?? '')
   // A browser asking for Traditional Chinese names its region or script, never the catalogue's code.
   const traditional = /^zh-(?:Hant|TW|HK|MO)\b/i
   let locale = $state(LOCALES.find(([code]) => code === wanted)?.[0]
     ?? (traditional.test(wanted) ? 'zh-Hant' : undefined)
     ?? LOCALES.find(([code]) => wanted.startsWith(code.split('-')[0]))?.[0] ?? 'en')
-  $effect(() => save('locale', locale))
+  // A host's `?lang=` stays with the frame; the site keeps the reader's own language.
+  $effect(() => { if (!embed) save('locale', locale) })
   $effect(() => { document.documentElement.lang = locale })
   const messages = $derived(LOCALES.find(([code]) => code === locale)?.[2])
   const t = $derived(translator({ ...appMessages('en'), ...messages, ...appMessages(locale) }, locale))
@@ -503,21 +570,22 @@
 
   // The tabs of the workspace: one description each, the open ones and the active one kept for the
   // next visit. A tab's tree and history wait in `states` while another tab is shown.
-  const stored = readTabs(), linkedDocument = documentFrom(location)
-  const linked = linkedDocument ? canonical(toSequence(linkedDocument.root)) : canonical(sequenceFrom(location))
+  // Embedded, only `?ids=` opens a sequence: the page's own path is no sequence, and there are no tabs to restore.
+  const stored = embed ? [] : readTabs(), linkedDocument = embed ? null : documentFrom(location)
+  const linked = embed ? params.get('ids') ?? '' : linkedDocument ? toSequence(linkedDocument.root) : sequenceFrom(location)
   // Bring the old single-document autosave into the first tab on upgrade.
-  if (!stored.length) {
+  if (!stored.length && !embed) {
     const previous = load('current', '')
     if (typeof previous === 'string' && previous) stored.push(makeTab(previous))
   }
   const keptTab = stored.find(tab => tab.id === readActiveTab())
-  const linkedTab = linked ? stored.find(tab => tab.sequence === linked
+  const linkedTab = linked ? stored.find(tab => sameSequence(tab.sequence, linked)
     && (!linkedDocument || sameShare(tab.document?.document, linkedDocument))) : undefined
   // A link opens its tab, or a tab of its own when none has it; of two tabs holding the same text,
   // the one kept active stays.
   const linkedRecord = linkedDocument ? sessionRecord(createDocumentSession(linkedDocument)) : undefined
   const fromLink = linked && !linkedTab ? makeTab(linked, linked, linkedRecord) : undefined
-  const opening = stored.length ? [...stored, ...(fromLink ? [fromLink] : [])] : [fromLink ?? makeTab(linked || EXAMPLES[0].sequence)]
+  const opening = stored.length ? [...stored, ...(fromLink ? [fromLink] : [])] : [fromLink ?? makeTab(linked || (embed ? '' : EXAMPLES[0].sequence))]
   const initial = fromLink ?? (keptTab && linked && keptTab.sequence === linked ? keptTab : linkedTab) ?? keptTab ?? opening[0]
   let tabs = $state(opening)
   let activeId = $state(initial.id)
@@ -527,7 +595,7 @@
   let closedGroups = $state.raw([])
   // Sequences opened in this browser, newest first, for File -> Recent.
   let recents = $state(readRecent())
-  if (linked) recents = remember(linked, linkedRecord)
+  if (linked && !embed) recents = remember(linked, linkedRecord)
   const activeTab = $derived(/** @type {import('./lib/tabs.js').Tab} */ (tabs.find(tab => tab.id === activeId) ?? tabs[0]))
   /** @type {Map<string, ReturnType<typeof editor.snapshot>>} */
   const states = new Map()
@@ -554,8 +622,19 @@
     session.clearTransform(node.id)
     layerChanged()
   }
-  // The address starts on the tab shown, as it does after every change.
-  history.replaceState(null, '', linkTo(editor.draft, location, addressDocument(sessionFor(initial).document)))
+  /** Whether the output drawing can be adjusted. */
+  const canAdjust = $derived(Boolean((drawing || scopes) && !drawing?.cut))
+  /** Start direct editing from a double-click on the drawing. @param {MouseEvent} event */
+  function startAdjust(event) {
+    if (embed) return
+    if (adjusting || !canAdjust) return
+    // Only the drawing box starts it; the toolbar and the caption keep their own double-click.
+    if (!(event.target instanceof Element) || !event.target.closest('.ids-preview-large')) return
+    adjusting = true
+  }
+  // The address starts on the tab shown, as it does after every change; a host page hears of it.
+  if (embed) syncAddress()
+  else history.replaceState(null, '', linkTo(editor.draft, location, addressDocument(sessionFor(initial).document)))
   // Each change stays in its tab and is written into the address, so the link opens it; the tabs
   // and the active one are kept at the same time, a keystroke at a time.
   $effect(() => editor.listen(text => {
@@ -642,6 +721,7 @@
   /** @param {string} ch */
   const cp = ch => `U+${/** @type {number} */ (ch.codePointAt(0)).toString(16).toUpperCase().padStart(4, '0')}`
   const points = $derived([...editor.whole].map(ch => ({ ch, cp: cp(ch) })))
+  const ziToolsHref = $derived(editor.whole ? `https://zi.tools/zi/?secondary=ids&seq=${encodeURIComponent(editor.whole)}` : '')
   /** @param {string} text */
   async function copy(text) {
     try { await navigator.clipboard.writeText(text); note(t('app.copied', { text })); return true } catch { note(t('app.copyFailed')); return false }
@@ -729,11 +809,27 @@
   }
   function undoAction() { if (!travelLayer(true)) editor.undo() }
   function redoAction() { if (!travelLayer(false)) editor.redo() }
-  /** Keep the address on the active tab, including transforms when they carry state. */
+  /** Keep the address on the active tab, including transforms when they carry state. Embedded, the
+   *  host page hears of the sequence instead: `{ type: 'ids-input:sequence', sequence, whole }`. */
   function syncAddress() {
+    if (embed) {
+      if (window.parent !== window) window.parent.postMessage({ type: 'ids-input:sequence', sequence: editor.draft, whole: editor.tree === null ? '' : editor.whole }, '*')
+      return
+    }
     const tab = current()
     history.replaceState(null, '', linkTo(editor.draft, location, tab ? addressDocument(sessionFor(tab).document) : null))
   }
+  // A host page replaces the sequence with `{ type: 'ids-input:open', sequence }`.
+  onMount(() => {
+    if (!embed) return
+    /** @param {MessageEvent} event */
+    const heard = event => {
+      if (event.source !== window.parent || event.data?.type !== 'ids-input:open' || typeof event.data.sequence !== 'string') return
+      editor.reset(event.data.sequence)
+    }
+    window.addEventListener('message', heard)
+    return () => window.removeEventListener('message', heard)
+  })
   /** The active tab's document to share, or null when its sequence says it all. */
   function currentDocument() {
     const tab = current()
@@ -801,7 +897,7 @@
     syncAddress()
   }
   /** Keep the open tabs and the chosen one for the next visit. */
-  function store() { writeTabs(tabs, activeId) }
+  function store() { if (!embed) writeTabs(tabs, activeId) }
   /** Keep the active tab's tree and history before another is shown. */
   function flush() {
     const tab = current()
@@ -851,8 +947,14 @@
   }
   /** A sequence opened in the active tab when it is empty, in the tab already showing it, else in a new tab. @param {string} sequence */
   function openSequence(sequence) {
-    const text = canonical(sequence)
-    const open = tabs.find(tab => tab.sequence === text)
+    const text = sequence
+    // Embedded, there is one description: what a search hit or a replacement opens takes its place.
+    if (embed) {
+      toast = null
+      editor.reset(text)
+      return
+    }
+    const open = tabs.find(tab => sameSequence(tab.sequence, text))
     if (open) {
       if (!EMPTY_MARKS.includes(text)) recents = remember(text, open.document)
       activate(open.id)
@@ -864,7 +966,7 @@
       toast = null
       editor.reset(text)
       adjusting = false
-      if (editor.draft === editor.whole) tab.saved = tab.sequence
+      if (!editor.problem) tab.saved = tab.sequence
       if (!EMPTY_MARKS.includes(text)) recents = remember(text)
       store()
       return
@@ -875,7 +977,7 @@
   function openRecent(record) {
     // A recent document opens its own tab; a tab with another document for the same sequence is
     // not the one this entry stands for.
-    const open = tabs.find(tab => tab.sequence === record.sequence
+    const open = tabs.find(tab => sameSequence(tab.sequence, record.sequence)
       && (!record.document || sameShare(tab.document?.document, record.document.document)))
     if (open) {
       recents = remember(record.sequence, open.document)
@@ -1101,6 +1203,7 @@
   let dropping = $state(false)
   /** @param {DragEvent} event */
   function dropDocument(event) {
+    if (embed) return
     const files = event.dataTransfer?.files
     dropping = false
     if (!files?.length) return
@@ -1109,7 +1212,7 @@
   }
   /** @param {DragEvent} event */
   function dragFiles(event) {
-    if (!event.dataTransfer?.types.includes('Files')) return
+    if (embed || !event.dataTransfer?.types.includes('Files')) return
     event.preventDefault()
     event.dataTransfer.dropEffect = 'copy'
     dropping = true
@@ -1183,7 +1286,7 @@
       lang,
       drawing: prepared.get(example.sequence),
       hint: [groupKey === 'erjian' && example.char ? `${example.sequence}　${point}${replaces ? `　${replaces}` : ''}` : replaces ? `${example.sequence}　${replaces}　${t('app.examples.none')}` : example.abbreviates ? `${example.abbreviates}　${example.sequence}　${t('app.examples.abbreviation')}` : example.char ? `${example.char}${example.sequence === example.char ? '' : `　${example.sequence}`}　${point}` : `${example.sequence}　${t('app.examples.none')}`, citation].filter(Boolean).join('　'),
-      run: () => addTab(canonical(example.sequence)),
+      run: () => addTab(example.sequence),
     }
   }
   const exampleItems = $derived(EXAMPLE_GROUPS.flatMap(group => [
@@ -1226,7 +1329,7 @@
 
   let replacementOpen = $state(false), aboutOpen = $state(false), sponsorOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false), pointsOpen = $state(false), layerOpen = $state(false), closeAllOpen = $state(false)
   // A problem report: the menus open it, and `?report=1` opens it on arrival.
-  let reportOpen = $state(params.get('report') === '1')
+  let reportOpen = $state(!embed && params.get('report') === '1')
   const endpoint = reportEndpoint(location)
   // The deep link opens the dialog once: the address drops it, so a reload lands in the workshop.
   if (reportOpen) {
@@ -1261,7 +1364,7 @@
     if (target.closest('dialog, [role="dialog"]')) return
     const command = (event.ctrlKey || event.metaKey) && !event.altKey
     const mod = command && !event.shiftKey
-    if (mod && event.key === ',') { event.preventDefault(); prefsOpen = true; return }
+    if (mod && event.key === ',' && !embed) { event.preventDefault(); prefsOpen = true; return }
     // The browser may keep Ctrl+Shift+T for its own closed tabs; where it does not, this reopens one.
     if (command && event.shiftKey && event.key.toLowerCase() === 't' && closedGroups.length
       && !target.closest('[role="menu"], [role="menubar"]')) {
@@ -1339,19 +1442,22 @@
   style:--chrome-height="{chromeHeight}px" style:--phone-tabs-height="{tabsHeight}px">
   <div class="chrome" bind:offsetHeight={chromeHeight}>
     <header class="bar">
+      {#if !embed}
       <SiteSelect title={t('app.title')} label={t('app.sitesLabel')} more={t('app.sitesMore')} {locale} href="/" compact />
       <span class="wide-only"><MenuBar label={t('app.menu')} menus={[{ label: t('app.file.label'), items: fileItems }, { label: t('app.edit.label'), items: editItems }]} {keyHints} /></span>
+      {/if}
       <nav class="tools" aria-label={t('app.toolbar')}>
         <div class="group">
           <button type="button" class="ui-button key-hint" disabled={!canUndo} title={undoTitle} aria-label={undoTitle} aria-keyshortcuts="Control+Z Meta+Z" onclick={undoAction}>
             <Icon name="undo" />{#if keyHints}<KeyHint combos={['mod+z']} />{/if}</button>
           <button type="button" class="ui-button key-hint" disabled={!canRedo} title={redoTitle} aria-label={redoTitle} aria-keyshortcuts="Control+Shift+Z Control+Y Meta+Shift+Z Meta+Y" onclick={redoAction}>
             <Icon name="redo" />{#if keyHints}<KeyHint combos={['mod+shift+z', 'mod+y']} />{/if}</button>
-          <span class="wide-only"><Menu label={t('app.history.label')} icon="history" text={false} items={historyItems} {keyHints} /></span>
+          {#if !embed}<span class="wide-only"><Menu label={t('app.history.label')} icon="history" text={false} items={historyItems} {keyHints} /></span>{/if}
         </div>
-        <span class="wide-only"><Menu label={t('app.examples.label')} icon="book" items={exampleItems} {keyHints} wide view={exampleView} /></span>
+        {#if !embed}<span class="wide-only"><Menu label={t('app.examples.label')} icon="book" items={exampleItems} {keyHints} wide view={exampleView} /></span>{/if}
       {@render fontSwitch(400)}
       </nav>
+      {#if !embed}
       <button type="button" class="sponsor" title={t('app.sponsor.label')} aria-label={t('app.sponsor.label')} aria-haspopup="dialog" aria-expanded={sponsorOpen} onclick={() => sponsorOpen = true}>
         <span class="sponsor-face" aria-hidden="true">
           <img src="/sponsor-face.webp" alt="" width="24" height="24" decoding="async" />
@@ -1368,12 +1474,15 @@
         <button type="button" class="ui-button" title={t('app.about.title')} aria-label={t('app.about.title')} onclick={() => aboutOpen = true}><Icon name="info" /></button>
       </div>
       <button type="button" class="ui-button more phone-only" title={t('app.menu')} aria-label={t('app.menu')} aria-haspopup="dialog" aria-expanded={moreOpen} onclick={() => moreOpen = true}><Icon name="menu" /></button>
+      {/if}
     </header>
+    {#if !embed}
     <div class="tabs-slot">
       <TabStrip bind:this={tabStrip} {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={() => addTab()} onduplicate={duplicateTab}
         oncloseothers={closeOthers} oncloseleft={closeLeft} oncloseright={closeRight} oncloseall={askCloseAll}
         onreopen={reopenClosed} canreopen={closedGroups.length > 0} onmove={moveTab} oncommit={store} {starter} />
     </div>
+    {/if}
   </div>
 
   <main class="workspace" bind:this={work}>
@@ -1389,7 +1498,12 @@
           <div class="label-row">
             <h2 class="label">{t('ids.label')}</h2>
             {#if points.length}
-              <button type="button" class="points-btn" aria-haspopup="dialog" title={t('app.codePoints', { count: points.length })} onclick={() => pointsOpen = true}>{t('app.codePoints', { count: points.length })}</button>
+              <div class="label-actions">
+                <button type="button" class="points-btn" aria-haspopup="dialog" title={t('app.codePoints', { count: points.length })} onclick={() => pointsOpen = true}>{t('app.codePoints', { count: points.length })}</button>
+                {#if ziToolsHref}
+                  <a class="points-link" href={ziToolsHref} target="_blank" rel="noopener noreferrer" aria-label={t('info.site.zitools')} title={t('info.site.zitools')}><Icon name="link" size={15} /></a>
+                {/if}
+              </div>
             {/if}
           </div>
           <div class="seq-line">
@@ -1419,14 +1533,14 @@
           </div>
           {#if view === 'shape'}
             <div class="tree-stage" data-character-info-avoid role="tabpanel" id="shape-panel" aria-labelledby="shape-tab">
-              <div class="tree-box"><IdsTree {editor} {keyHints} /></div>
+              <div class="tree-box"><IdsTree {editor} {keyHints} variations /></div>
             </div>
           {:else}
             {#key activeId}
               <div class="tree-list" role="tabpanel" id="tree-panel" aria-labelledby="tree-tab"><IdsTreeList {editor} /></div>
             {/key}
           {/if}
-          <div class="block tools-row"><IdsPartTools {editor} {keyHints} bind:slot status={false} /></div>
+          <div class="block tools-row"><IdsPartTools {editor} {keyHints} bind:slot status={false} variations variationsHref={entry => `./ucv.html?lang=${locale}#ucv-${entry}`} /></div>
         </section>
         <div class="split" role="separator" aria-orientation="horizontal" aria-label={t('app.panels.resize')} title={`${t('app.panels.resize')} (${Math.round(split)}%)`}
           aria-valuemin="35" aria-valuemax="78" aria-valuenow={Math.round(split)} tabindex="0"
@@ -1439,6 +1553,9 @@
             <button type="button" aria-pressed={searchMode === 'current'} onclick={() => searchMode = 'current'}>{t('ids.search.title')}</button>
             <button type="button" aria-pressed={searchMode === 'component'} onclick={() => searchMode = 'component'}>{t('app.componentLookup.title')}</button>
             <button type="button" aria-pressed={searchMode === 'structure'} onclick={() => searchMode = 'structure'}>{t('ids.structural.title')}</button>
+            {#if ziToolsHref}
+              <a class="search-site" href={ziToolsHref} target="_blank" rel="noopener noreferrer">{t('info.site.zitools')}<span class="out" aria-hidden="true">↗</span></a>
+            {/if}
           </div>
           {#if searchMode === 'component'}
             <ComponentLookup {adapter} {messages} {locale} {t} onopen={hit => openSequence(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
@@ -1463,12 +1580,12 @@
           controls="output-panel" reverse onchange={width => resizeColumn('output', width)} onreset={() => resizeColumn('output', null)} />
       </div>
       <section class="pane output" class:phone-active={phonePane === 'output'} class:adjusting={adjusting} id="output-panel" aria-label={t('app.output')}>
-        <div class="preview" data-character-info-avoid>
+        <div class="preview" data-character-info-avoid ondblclick={startAdjust}>
           {#if !large}
             {#key activeId}
               <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false}
                 document={currentSession()?.document} session={currentSession()} version={documentTick} bind:scopes bind:slots
-                editable={adjusting} onchoose={path => editor.choose(path, { toggle: false })} onedit={layerChanged} bind:drawing bind:emoji bind:cut bind:cutLeaf>
+                editable={adjusting} onchoose={path => editor.choose(path, { toggle: false })} onedit={layerChanged} bind:drawing bind:emoji bind:cut bind:cutLeaf bind:step={previewStep}>
                 {#snippet detailContent()}
                   {#if substituted}
                     <span class="encoded-character substituted-character" lang="ja" title={substituted.sequence}>
@@ -1499,20 +1616,28 @@
             {/key}
           {/if}
           <div class="adjust">
+            {#if !embed}
             <button type="button" class="adjust-toggle" disabled={editor.tree === null}
               onclick={() => { const tab = current(); if (tab) { keepTabSession(tab); layerOpen = true } }}>{t('app.layers.label')}</button>
+            {/if}
             <button type="button" class="adjust-toggle" bind:this={largeButton} aria-haspopup="dialog" aria-controls="large-preview" aria-expanded={large} disabled={editor.tree === null}
               onclick={() => { large = true }}><Icon name="search" size={15} />{t('app.preview.large')}</button>
-            <button type="button" class="adjust-toggle" aria-pressed={adjusting} disabled={(!drawing && !scopes) || Boolean(drawing?.cut)}
+            {#if !embed}
+            <button type="button" class="adjust-toggle" aria-pressed={adjusting} disabled={!canAdjust}
               title={drawing?.cut ? t('ids.adjust.unavailable') : undefined}
               onclick={() => { adjusting = !adjusting }}>{t(adjusting ? 'ids.adjust.done' : 'ids.adjust.title')}</button>
             <button type="button" class="adjust-toggle adjust-report" onclick={() => { reportOpen = true }}><Icon name="mail" size={15} />{t('app.report.title')}</button>
+            {/if}
             {#if adjusting}
               <button type="button" disabled={!editor.chosen} onclick={resetChosen}>{t('ids.adjust.reset')}</button>
               <span class="adjust-hint">{t('ids.adjust.hint')}</span>
             {/if}
           </div>
         </div>
+        {#if !embed}
+        <PartFills session={currentSession()} version={documentTick} chosen={editor.chosen} disabled={!scopes} {t}
+          onchoose={path => editor.choose(path, { toggle: false })} onchange={layerChanged} />
+        {/if}
         <dialog id="large-preview" class="large-dialog" bind:this={largeDialog} aria-label={t('app.preview.large')}
           oncancel={() => { large = false }} onclose={() => { large = false; tick().then(() => { if (largeButton && !largeButton.disabled) largeButton.focus(); else largeButton?.closest('.adjust')?.querySelector('button:not(:disabled)')?.focus() }) }}
           onclick={event => {
@@ -1537,16 +1662,23 @@
           </div>
           {#if large}
             <IdsPreview {adapter} tree={editor.tree} {messages} {locale} small={false} notes={false}
-              document={currentSession()?.document} session={currentSession()} version={documentTick} editable={false} />
+              document={currentSession()?.document} session={currentSession()} version={documentTick} editable={false} bind:step={previewStep} />
           {/if}
         </dialog>
+        {#if !embed}
         <div class="details">
           <div class="block"><ExportPanel bind:this={exportPanel} {drawing} {scopes} {slots} {emoji} {cut} {cutLeaf} incomplete={exportIncomplete} document={currentSession()?.document} sequence={editor.whole} {t} onnote={note} /></div>
         </div>
+        {/if}
       </section>
     </div>
   </main>
-  <IdsCharacterInfo root={work} {adapter} {messages} {locale} disabled={editor.disabled} onpick={(part, path) => editor.take(part, path)} />
+  <IdsCharacterInfo root={work} {adapter} {messages} {locale} disabled={editor.disabled} onpick={(part, path) => editor.take(part, path)} customHref={id => `/unencoded?q=${id}`}>
+    <!-- A part chosen by selecting its text lists what can stand in its place under its card. -->
+    {#snippet extra({ path, close })}
+      {#if path && editor.chosenInField && path.join('.') === editor.chosen?.join('.')}<IdsAlternatives {editor} variations variationsHref={entry => `./ucv.html?lang=${locale}#ucv-${entry}`} onchoose={close} />{/if}
+    {/snippet}
+  </IdsCharacterInfo>
 
 </div>
 
@@ -1601,7 +1733,11 @@
 <style>
   .confirm-text{margin:0 0 var(--ui-space-xl);font-size:var(--ui-text-md);line-height:var(--ui-leading-normal)}
   .confirm-actions{display:flex;justify-content:flex-end;gap:var(--ui-space-sm)}
-  .search-modes{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+  .search-modes{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-bottom:8px}
+  .search-site{margin-inline-start:auto;padding:2px 0;color:var(--ui-color-ink-muted);font-size:11px;text-decoration:underline;text-decoration-color:color-mix(in srgb,currentColor 55%,transparent);text-underline-offset:2px;white-space:nowrap}
+  .search-site:hover{color:var(--ui-color-accent);text-decoration-color:currentColor}
+  .search-site:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:2px;border-radius:2px}
+  .search-site .out{margin-inline-start:3px}
   .similar{margin-top:12px;padding-top:8px;border-top:1px solid var(--ui-color-border)}
   .search-modes button{font:inherit;font-size:12px;padding:5px 9px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-sm);background:transparent;color:inherit;cursor:pointer}
   .search-modes button[aria-pressed=true]{background:var(--ui-color-surface-sunken);font-weight:600}
@@ -1672,6 +1808,10 @@
   .label{margin:0;font-size:11px;font-weight:600;letter-spacing:.03em;color:var(--ui-color-ink-muted)}
   .label-glyph{font-family:var(--ids-font)}
   .label-row{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:24px}
+  .label-actions{display:flex;align-items:center;gap:4px}
+  .points-link{display:grid;place-items:center;width:24px;height:24px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface);color:var(--ui-color-ink-muted)}
+  .points-link:hover{color:var(--ui-color-ink);border-color:var(--ui-color-border-strong)}
+  .points-link:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}
   .seq-line{position:relative}
   .seq-line :global(.ids-field){width:100%}
   .seq-line :global(.ids-field input){padding-right:44px}

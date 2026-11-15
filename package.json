@@ -61,6 +61,7 @@
     "docs/document-format.md",
     "docs/gongche-coverage.md",
     "docs/small-seal-candidates.md",
+    "docs/slot-hints.md",
     "docs/ids-document.schema.json",
     "docs/ids-document.example.json"
   ],
@@ -78,6 +79,9 @@
     "coverage": "bun scripts/audit_render_coverage.mjs cache/coverage-sans docs/coverage/sans.json sans && bun scripts/audit_render_coverage.mjs cache/coverage-serif docs/coverage/serif.json serif && bun scripts/audit_render_coverage.mjs cache/coverage-fangsong docs/coverage/fangsong.json fangsong && bun scripts/audit_render_coverage.mjs cache/coverage-klee docs/coverage/klee.json klee",
     "dev": "vite demo",
     "build:subtrees": "node scripts/build_subtree_parts.mjs",
+    "build:slot-hints": "bun scripts/build_slot_hints.mjs && bun scripts/build_slot_hints_appendix.mjs",
+    "build:custom-components": "bun scripts/build_custom_components.mjs",
+    "build:component-atlas": "bun scripts/build_component_atlas.mjs",
     "build:demo": "vite build demo",
     "dev:desktop-page": "VITE_DESKTOP=1 vite demo",
     "build:desktop-page": "VITE_DESKTOP=1 vite build demo",
@@ -86,6 +90,7 @@
     "desktop:build": "tauri build",
     "build:site": "bun run build:demo && bun scripts/og-assets.mjs && bun scripts/build-og-worker.mjs && bun scripts/build-sitemap.mjs",
     "build:example-drawings": "bun demo/scripts/build-example-drawings.mjs",
+    "build:baishi-cheatsheet": "bun demo/scripts/build-baishi-cheatsheet.mjs",
     "build:sketch-parts": "uv run scripts/build_sketch_parts.py",
     "preview": "vite preview demo",
     "dev:worker": "bunx wrangler dev",
@@ -94,6 +99,7 @@
     "check:demo": "bun scripts/check-demo.mjs"
   },
   "devDependencies": {
+    "@kurgm/kage-engine": "0.7.0",
     "@sveltejs/vite-plugin-svelte": "7.3.1",
     "@tauri-apps/cli": "2.12.4",
     "@types/bun": "1.4.4",

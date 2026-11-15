@@ -1,6 +1,6 @@
 // Unicode Script grouping shared by the palette and its generated catalog.
 import ranges from '../../data/script-ranges.json' with { type: 'json' }
-import { isNewKorean, isShuishu, leaves, parse } from './ids.js'
+import { isCustom, isNewKorean, isShuishu, leaves, parse } from './ids.js'
 
 /** @param {string} char @returns {string | null} */
 export function characterScript(char) {
@@ -28,7 +28,7 @@ export function characterScript(char) {
 export function partScript(part) {
   const result = parse(part, { open: true })
   if (result.problem || result.tree === null) return null
-  const scripts = new Set(leaves(result.tree).map(leaf => leaf.char && characterScript(leaf.char)).filter(Boolean))
+  const scripts = new Set(leaves(result.tree).map(leaf => leaf.char && (isCustom(leaf.char) ? 'han' : characterScript(leaf.char))).filter(Boolean))
   return scripts.size > 1 ? 'mixed' : /** @type {string | undefined} */ (scripts.values().next().value) ?? 'symbols'
 }
 

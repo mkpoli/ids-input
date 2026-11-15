@@ -4,13 +4,16 @@ import { unicodeProperty } from './unicode.js'
 import { emojiPrefix } from '@han-compose/composer/emoji'
 import { isMark, marksOf, normalizeMarks, toneMarksAt, withMarks, withoutMarks } from './marks.js'
 import { strokeChain } from './strokes.js'
+import { customAt, isCustom } from './custom.js'
+export * from './custom.js'
 export { UNICODE_VERSION } from './unicode.js'
 export * from './marks.js'
 // Ideographic description sequences: reading, writing and editing them as trees.
 //
 // Each operator takes its own number of descriptions. A component is a graphic Unicode code
 // point, a private-use character, one of the bundled allocations below, or a run of conjoining
-// Hangul jamo that forms one syllable, with an optional variation selector. ？ names an unknown
+// Hangul jamo that forms one syllable, with an optional variation selector, or a component no code
+// point names in its source's spelling (`custom.js`: {53}, &CDP-8BD0;, #(-𠃌㇉)). ？ names an unknown
 // part. Operators, draft slots and invisible characters cannot be components. A run of loose marks
 // (`marks.js`) after the whole description annotates it: ⿰亻木ˊ, ⿰ㄅㄚˇ, ⿰氵青゛.
 
@@ -46,8 +49,11 @@ export const OPERATOR_GROUPS = [
   { arity: 3, ops: ['⿲', '⿳'] },
 ]
 
-/** The longest ordinary description, in code points. */
-export const LONGEST = 64
+/**
+ * The longest ordinary description, in code points. The しんぞ description kept in
+ * tests/long-description.test.js runs to 102.
+ */
+export const LONGEST = 256
 /** The longest pyramid description, in code points: 64 layers take 3,818. */
 export const PYRAMID_LONGEST = 8192
 /** The deepest operator nest the parser reads, so a long input cannot exhaust the call stack. */
@@ -116,13 +122,40 @@ export const arity = char => (char === undefined ? 0 : ARITY.get(char) ?? 0)
  * character. @type {RegExp} */
 const SEPARATOR = /^\{(?:\?[0-9]?)?([^}]+)\}/u
 /** A zi.tools entry's glyph-variant definition, (.,T) or (d), after its description. @type {RegExp} */
-const DEFINITION = /\([0-9A-Za-z.,]+\)$/u
+const DEFINITION = /(?<!#)\([0-9A-Za-z.,]+\)$/u
+/** A BabelStone entry: ^, the description, $, and the sources it is for with virtual forms in
+ * square brackets. IDS.TXT notes 4, 8 and 9. @type {RegExp} */
+const BABELSTONE_ENTRY = /^\^([^^$]+)\$(?:\(([A-Z0-9[\]]*)\))?$/u
+
+/**
+ * The notes an entry carries around its description, none of them a part of it: zi.tools' unique
+ * `separator` ({曰}, written without its braces) and `variants` ((.,T) as ['.', 'T']), BabelStone's
+ * `sources` (GHT[K] as ['G', 'H', 'T'] with `virtual` ['K']).
+ * @param {string | null | undefined} text
+ * @returns {{ separator?: string, variants?: string[], sources?: string[], virtual?: string[] }}
+ */
+export function entryNotes(text) {
+  const written = text ?? ''
+  const framed = BABELSTONE_ENTRY.exec(written)
+  if (framed) {
+    const tags = framed[2] ?? ''
+    const virtual = [...tags.matchAll(/\[([A-Z0-9]+)\]/g)].map(match => match[1])
+    const sources = tags.replace(/\[[A-Z0-9]+\]/g, '').match(/UCS2003|[A-Z]/g) ?? []
+    return { ...(sources.length ? { sources } : {}), ...(virtual.length ? { virtual } : {}) }
+  }
+  const body = entryBody(written)
+  const separator = body.start ? written.slice(1, body.start - 1) : ''
+  const after = written.slice(body.start + body.text.length)
+  const variants = after.startsWith('(') ? after.slice(1, -1).split(',') : []
+  return { ...(separator ? { separator } : {}), ...(variants.length ? { variants } : {}) }
+}
+
 /** Whether `note` names variants, as a glyph-variant definition does: letters, digits, dots, commas.
  * @param {string} note */
 const isVariantList = note => /^[0-9A-Za-z.,]*$/u.test(note)
 /** Whether `char` may name a shape in a unique separator: an ideograph, a CJK stroke or a curve,
  * as the zi.tools grammar has it. @param {string | undefined} char */
-const isIdeograph = char => typeof char === 'string' && (unicodeProperty('ideographic', char) || /^[\u31C0-\u31E3◝◞◟◜ユス]$/u.test(char))
+const isIdeograph = char => typeof char === 'string' && (unicodeProperty('ideographic', char) || /^[\u31C0-\u31E5◝◞◟◜ユス]$/u.test(char))
 
 /**
  * The description a zi.tools entry carries, and where it starts in the entry. Its unique separator
@@ -133,6 +166,9 @@ const isIdeograph = char => typeof char === 'string' && (unicodeProperty('ideogr
  */
 export function entryBody(text) {
   let body = text ?? '', start = 0
+  // BabelStone writes a description between ^ and $, its sources after it: ^⿰氵骨$(GHTJKPV).
+  const framed = BABELSTONE_ENTRY.exec(body)
+  if (framed) return { text: framed[1], start: 1 }
   if (body.startsWith('{')) {
     const separator = SEPARATOR.exec(body)
     const name = separator ? [...separator[1]] : []
@@ -150,7 +186,8 @@ export function entryBody(text) {
     const prefix = definition ? body.slice(0, -definition[0].length) : ''
     const chars = [...prefix]
     // Only a complete description takes a definition: (d) after ⿲ is its third component, not a note.
-    if (definition && prefix && arity(chars[0]) > 0 && descriptionEnd(chars) === chars.length) body = prefix
+    // A stroke chain is a description of its own: #(H)(.) is 一 in its default form.
+    if (definition && prefix && (arity(chars[0]) > 0 || (chars[0] === '#' && chars[1] === '(')) && /** @type {Reading[]} */ (['custom', 'literal', 'variant']).some(mode => endOf(chars, 0, mode) === chars.length)) body = prefix
   }
   return { text: body, start }
 }
@@ -217,6 +254,92 @@ export function modifierLength(text, at) {
  * @returns {{ tree: Part, problem?: undefined } | { problem: Problem, tree?: undefined }}
  */
 export function parse(text, { open = false } = {}) {
+  const read = readTree(text, open, 'custom')
+  if (!readings(text).length) return read
+  // The custom reading stands where it gives a whole description; a draft follows the reading the
+  // whole text takes, so ⿲{1} is {, 1 and } while typed as well.
+  if (!read.problem && (!open || !readTree(text, false, 'custom').problem)) return read
+  const mode = readingOf(text)
+  if (mode === 'custom') return read
+  const other = readTree(text, open, mode)
+  return other.problem ? read : other
+}
+/**
+ * How a text is read. `custom`: a component no code point names is one part. `literal`: braces, &
+ * and # are graphic characters of their own (⿳{1} as {, 1 and }). `variant`: letters, digits and
+ * dots after a component are its zi.tools variant identifier (⿰令H刂, ⿱一.亅).
+ * @typedef {'custom' | 'literal' | 'variant'} Reading
+ */
+
+/** The other readings `text` may take when the first fails, in the order they are tried.
+ * @param {string | null | undefined} text @returns {Reading[]} */
+const readings = text => [.../** @type {Reading[]} */ (/[{&#]/.test(text ?? '') ? ['literal'] : []),
+  // Only a description takes the variant reading: 木A alone is two components, not 木 in form A.
+  .../** @type {Reading[]} */ (VARIANT_AFTER.test(text ?? '') && isSequence(text) ? ['variant'] : [])]
+
+/**
+ * The reading `text` takes: the first that gives a whole description, else the first that gives a
+ * draft, else `custom`. A draft so reads as the whole text does.
+ * @param {string | null | undefined} text @returns {Reading}
+ */
+export function readingOf(text) {
+  const modes = /** @type {Reading[]} */ (['custom', ...readings(text)])
+  for (const open of [false, true]) for (const mode of modes) if (!readTree(text, open, mode).problem) return mode
+  return 'custom'
+}
+
+/** A zi.tools variant identifier: a source letter, a UCV position, stroke-style letters, dots. */
+const VARIANT = /^[.0-9A-Za-z]+/u
+/** A variant identifier where one may stand: after an ideograph, a custom component or a chain. */
+const VARIANT_AFTER = /[\p{Ideographic}\p{Radical}\u31C0-\u31E5})\uFE00-\uFE0F\u{E0100}-\u{E01EF}リ〢〣コユス◝◞◟◜;][.0-9A-Za-z]/u
+/** The variant identifier at `chars[at]`, or ''. @param {string[]} chars @param {number} at */
+const variantAt = (chars, at) => VARIANT.exec(chars.slice(at, at + 16).join(''))?.[0] ?? ''
+/** Whether a component may carry a variant identifier: an ideograph, a stroke or shape zi.tools
+ * uses, or a custom component. @param {string} part */
+const takesVariant = part => isCustom(part) || isIdeograph([...part][0]) || /^[\p{Radical}\u31E4\u31E5リ〢〣コ]/u.test(part)
+
+/**
+ * A component and the zi.tools variant identifier written after it: 令 and H for 令H, 一 and . for
+ * 一., the component and '' where it has none. A Latin letter or digit is a component of its own.
+ * @param {string} part @returns {{ base: string, variant: string }}
+ */
+export function variantOf(part) {
+  const found = /^(.*[^.0-9A-Za-z])([.0-9A-Za-z]+)$/su.exec(part)
+  return found && takesVariant(found[1]) ? { base: found[1], variant: found[2] } : { base: part, variant: '' }
+}
+
+/** `tree` with no variant identifier on any component. @param {Part} tree @returns {Part} */
+export const withoutVariants = tree => isNode(tree) ? { ...tree, parts: tree.parts.map(withoutVariants) }
+  : tree === null ? null : variantOf(tree).base
+
+/**
+ * What a variant identifier says, as the 白式 IDS grammar sorts them (§4.3): `default` for `.`,
+ * `source` for a source letter, `ucv` for a form of an IRG UCV entry (q008a2 is form 2 of #8a),
+ * `analogy` for a form made by analogy with UCV entries (qq053194), else `style` (stroke style and
+ * position letters, one per part).
+ * @param {string} id
+ * @returns {{ kind: 'default' } | { kind: 'source', source: string } | { kind: 'ucv', sign: string, entry: string, form: number, other: string }
+ *   | { kind: 'analogy', entries: string[] } | { kind: 'style' } | null}
+ */
+export function variantIdentifier(id) {
+  if (!/^[.0-9A-Za-z]+$/.test(id)) return null
+  if (id === '.') return { kind: 'default' }
+  if (/^[BGHJKMPSTUVQ]$/.test(id)) return { kind: 'source', source: id }
+  /** @param {string} number */
+  const entry = number => number.replace(/^0+(?=\d)/, '')
+  const analogy = /^qq((?:\d{3}[a-z]?)+)$/.exec(id)
+  if (analogy) return { kind: 'analogy', entries: (analogy[1].match(/\d{3}[a-z]?/g) ?? []).map(entry) }
+  const ucv = /^([qpxy])(\d{3}[a-z]?)([1-9]|\d{2})([xy]?)$/.exec(id)
+  if (ucv) return { kind: 'ucv', sign: ucv[1], entry: entry(ucv[2]), form: Number(ucv[3]), other: ucv[4] }
+  return { kind: 'style' }
+}
+
+/**
+ * @param {string | null | undefined} text @param {boolean} open @param {Reading} mode
+ * @returns {{ tree: Part, problem?: undefined } | { problem: Problem, tree?: undefined }}
+ */
+function readTree(text, open, mode) {
+  const customs = mode !== 'literal'
   const body = entryDescription(text)
   const chars = [...body]
   if (open && !chars.length) return { tree: null }
@@ -233,14 +356,23 @@ export function parse(text, { open = false } = {}) {
       if (char === undefined) { if (open) return null; throw 'missing' }
       // A tone mark names the tone of the syllable it follows, not of the whole description.
       const tones = () => { const end = toneMarksAt(chars, at); const marks = chars.slice(at, end).join(''); at = end; return marks }
+      // In the variant reading, the identifier after a component goes with it.
+      const variant = (/** @type {string} */ part) => {
+        const id = mode === 'variant' && takesVariant(part) ? variantAt(chars, at) : ''
+        at += id.length
+        return part + id
+      }
       // A stroke chain that names a character stands for that character.
       if (char === '#' && !emoji) {
         const chain = strokeChain(chars, at - 1)
         if (chain) {
           at = chain.end
-          return (isSelector(chars[at]) ? chain.char + chars[at++] : chain.char) + tones()
+          return variant((isSelector(chars[at]) ? chain.char + chars[at++] : chain.char) + tones())
         }
       }
+      // A component no code point names is one part, written as its source writes it.
+      const custom = emoji || !customs ? null : customAt(chars, at - 1)
+      if (custom) { at = custom.end; return variant(custom.text) }
       const n = arity(char)
       if (!n) {
         if (open && EMPTY_MARKS.includes(char)) return null
@@ -249,7 +381,8 @@ export function parse(text, { open = false } = {}) {
         if (!isComponent(char)) throw 'component'
         const cluster = hangulClusterAt(chars, at - 1)
         if (cluster) { at = cluster.end; return cluster.text + tones() }
-        return (!emoji && isSelector(chars[at]) ? char + chars[at++] : char) + tones()
+        const part = (!emoji && isSelector(chars[at]) ? char + chars[at++] : char) + tones()
+        return emoji ? part : variant(part)
       }
       const note = takesModifier(char) ? modifierAt(chars, at) : ''
       if (note) at += [...note].length + 2
@@ -291,11 +424,22 @@ export const problemOf = text => parse(text).problem ?? null
  * @returns {number}
  */
 export function descriptionEnd(chars, at = 0) {
+  const end = endOf(chars, at, 'custom')
+  return end < 0 ? endOf(chars, at, 'literal') : end
+}
+
+/** @param {string[]} chars @param {number} at @param {Reading} mode @returns {number} */
+function endOf(chars, at, mode) {
+  const customs = mode !== 'literal'
   const char = chars[at]
   if (char === undefined) return -1
   const chain = strokeChain(chars, at)
+  /** The end of a component that ends at `end`, its variant identifier included. @param {number} end @param {string} part */
+  const varied = (end, part) => mode === 'variant' && takesVariant(part) ? end + variantAt(chars, end).length : end
   // A stroke chain stands for the character it names, and takes a variation selector like one.
-  if (chain) return toneMarksAt(chars, isSelector(chars[chain.end]) ? chain.end + 1 : chain.end)
+  if (chain) return varied(toneMarksAt(chars, isSelector(chars[chain.end]) ? chain.end + 1 : chain.end), chain.char)
+  const custom = customs ? customAt(chars, at) : null
+  if (custom) return varied(custom.end, custom.text)
   const n = arity(char)
   if (!n) {
     if (!isComponent(char)) return -1
@@ -303,12 +447,12 @@ export function descriptionEnd(chars, at = 0) {
     if (emoji) return toneMarksAt(chars, at + [...emoji].length)
     const cluster = hangulClusterAt(chars, at)
     if (cluster) return toneMarksAt(chars, cluster.end)
-    return toneMarksAt(chars, isSelector(chars[at + 1]) ? at + 2 : at + 1)
+    return varied(toneMarksAt(chars, isSelector(chars[at + 1]) ? at + 2 : at + 1), char)
   }
   let end = at + 1
   const note = takesModifier(char) ? modifierAt(chars, end) : ''
   if (note) end += [...note].length + 2
-  for (let k = 0; k < n && end >= 0; k++) end = descriptionEnd(chars, end)
+  for (let k = 0; k < n && end >= 0; k++) end = endOf(chars, end, mode)
   return end
 }
 
@@ -323,6 +467,32 @@ export const sameTree = (a, b) => a === b || isNode(a) && isNode(b) && a.op === 
 /** A tree written back as a description, an empty slot as ⬚, loose marks after their part. @param {Part} tree @returns {string} */
 export const write = tree => tree === null ? EMPTY
   : isNode(tree) ? tree.op + (tree.note && isModifier(tree.note) ? `[${tree.note}]` : '') + tree.parts.map(write).join('') + (tree.marks ?? '') : tree
+
+/**
+ * A tree written as the field holds it: the operands a node still misses at the end of the text stay
+ * out, and the field draws them as ◌ slots. A missing operand with a part after it is ⬚, or that part
+ * would read as belonging to the operator before it.
+ * @param {Part} tree @returns {string}
+ */
+export function writeDraft(tree) {
+  /** @param {Part} part @param {boolean} atEnd @returns {string} */
+  const step = (part, atEnd) => {
+    if (part === null) return EMPTY
+    if (!isNode(part)) return part
+    // A node's loose marks follow its last operand: with the slots left out, a mark would be read as
+    // that operand. A marked node keeps its slots and its last child is not at the end of the text.
+    const tail = atEnd && !part.marks
+    let end = part.parts.length
+    if (tail) while (end && part.parts[end - 1] === null) end--
+    const parts = part.parts.slice(0, end).map((kid, i) => step(kid, tail && i === end - 1))
+    return part.op + (part.note && isModifier(part.note) ? `[${part.note}]` : '') + parts.join('') + (part.marks ?? '')
+  }
+  const text = step(tree, true), whole = write(tree)
+  // A variant identifier that ends a shortened text would read as the part of the slot left out
+  // (⿰𢎘z as ⿰, 𢎘 and z), so such a text keeps its slots.
+  const cut = text !== whole && leaves(tree).some(leaf => leaf.char !== null && variantOf(leaf.char).variant !== '' && text.endsWith(leaf.char))
+  return cut ? whole : text
+}
 
 
 /**
@@ -345,6 +515,14 @@ export function leaves(tree, path = []) {
 export function paths(tree, path = []) {
   return [path, ...(isNode(tree) ? tree.parts.flatMap((part, i) => paths(part, [...path, i])) : [])]
 }
+
+/** The custom components a tree names ({53}, &CDP-8BD0;, #(-𠃌㇉)), in reading order.
+ * @param {Part} tree @returns {string[]} */
+export const customsOf = tree => leaves(tree).flatMap(leaf => leaf.char !== null && isCustom(leaf.char) ? [leaf.char] : [])
+
+/** Whether `text` is a description every component of which is a character.
+ * @param {string | null | undefined} text */
+export const isEncodedDescription = text => { const read = parse(text); return !read.problem && !customsOf(read.tree).length }
 
 /** Whether two paths name the same part. @param {Path | null | undefined} a @param {Path | null | undefined} b */
 export const samePath = (a, b) => Boolean(a && b) && a?.length === b?.length && (a ?? []).every((x, i) => x === b?.[i])
@@ -445,17 +623,22 @@ export function unwrap(tree, path) {
 /**
  * `tree` with the node at `path` under the operator `op` instead, its parts kept in order. Answers
  * `{ tree }`, or `{ problem: 'drop' }` when `op` takes fewer parts and one it would drop is filled.
- * Parts it takes beyond the old ones are empty slots (⿰亻木 as ⿲ is ⿲亻木⬚).
+ * With `drop`, the filled parts move to the front and the ones past `op`'s count are dropped
+ * (⿲亻⬚木 as ⿰ is ⿰亻木, ⿲亻木口 as ⿰ is ⿰亻木). Parts it takes beyond the old ones are empty
+ * slots (⿰亻木 as ⿲ is ⿲亻木⬚).
  * @param {Part} tree
  * @param {Path} path
  * @param {string} op
+ * @param {{ drop?: boolean }} [how]
  * @returns {{ tree: Part, problem?: undefined } | { problem: 'drop', tree?: undefined }}
  */
-export function swapOp(tree, path, op) {
+export function swapOp(tree, path, op, { drop = false } = {}) {
   const node = partAt(tree, path), n = arity(op)
   if (!isNode(node) || !n) return { tree }
-  if (node.parts.slice(n).some(part => part !== null)) return { problem: 'drop' }
-  const parts = Array.from({ length: n }, (_, i) => node.parts[i] ?? null)
+  const surplus = node.parts.slice(n).some(part => part !== null)
+  if (surplus && !drop) return { problem: 'drop' }
+  const kept = surplus ? node.parts.filter(part => part !== null) : node.parts
+  const parts = Array.from({ length: n }, (_, i) => kept[i] ?? null)
   return { tree: normalizeMarks(replaceAt(tree, path, { op, parts, ...(node.marks ? { marks: node.marks } : {}) })) }
 }
 
@@ -463,13 +646,14 @@ export function swapOp(tree, path, op) {
  * Where an operator goes in a draft, and what the tree becomes. On a node it swaps the operator; on
  * a slot or a component it splits it, the old part first. With no target, an enclosing operator puts
  * the whole tree inside an empty frame; other operators put it first. Answers the new tree and the
- * part to choose next, or `{ problem: 'drop' }`.
+ * part to choose next, or `{ problem: 'drop' }`; `drop` lets a swap drop parts, as `swapOp` does.
  * @param {Part} tree
  * @param {Path | null} at
  * @param {string} op
+ * @param {{ drop?: boolean }} [how]
  * @returns {{ tree: Part, chosen: Path, problem?: undefined } | { problem: 'drop', tree?: undefined, chosen?: undefined }}
  */
-export function applyOperator(tree, at, op) {
+export function applyOperator(tree, at, op, how) {
   if (!at) {
     // Loose marks annotate the description; a new operator around it takes them with the whole.
     const marks = marksOf(tree), base = withoutMarks(tree)
@@ -478,7 +662,7 @@ export function applyOperator(tree, at, op) {
   }
   const part = partAt(tree, at)
   if (isNode(part)) {
-    const swapped = swapOp(tree, at, op)
+    const swapped = swapOp(tree, at, op, how)
     return swapped.problem ? swapped : { tree: swapped.tree, chosen: at }
   }
   // The old part stays first; the slot to fill next is the new one beside it, or the operator's only

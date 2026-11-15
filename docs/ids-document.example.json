@@ -13,7 +13,11 @@
       {
         "id": "left-wood",
         "kind": "component",
-        "char": "木"
+        "char": "木",
+        "fill": {
+          "type": "solid",
+          "colour": "#b42318cc"
+        }
       },
       {
         "id": "right-part",

@@ -17,7 +17,7 @@ import { findLayer } from './model.js'
 /** @typedef {{ geometry: (node: Node) => Geometry | null, placement: (parent: OperatorNode, child: Node, index: number) => number[] | null }} LayerSource */
 /** @typedef {{ node: string, reason: 'geometry' | 'placement' | 'transform', message: string }} LayerIssue */
 /** @typedef {{ pieces: (Piece & { node: string, approximate: boolean })[], complete: boolean, issues: LayerIssue[] }} LayerDrawing */
-/** @typedef {{ kind: 'component', node: string, positive: Piece[], negative: Piece[] }} ComponentScope */
+/** @typedef {{ kind: 'component', node: string, positive: Piece[], negative: Piece[], fill?: import('./fill.js').Fill }} ComponentScope */
 /** @typedef {{ kind: 'operator', node: string, op: string, children: Scope[] }} OperatorScope */
 /** @typedef {{ kind: 'group', node: string, child: Scope }} GroupScope */
 /** @typedef {{ kind: 'slot', node: string }} SlotScope */
@@ -146,6 +146,7 @@ export function renderScopes(document, source, { tolerance = 0.1 } = {}) {
         const transformed = transformPieces(geometry.pieces, chain, { tolerance })
         /** @type {ComponentScope} */
         const scope = { kind: 'component', node: node.id, positive: [], negative: [] }
+        if (node.fill) scope.fill = node.fill
         for (const piece of transformed) (piece.cut ? scope.negative : scope.positive).push(piece)
         return scope
       } catch (error) {

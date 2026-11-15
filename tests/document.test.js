@@ -47,8 +47,9 @@ describe('a document from IDS', () => {
     expect(() => fromSequence('木口')).toThrow(DocumentError)
     expect(() => fromSequence('⿰木')).not.toThrow()
   })
-  it('rejects an IDS draft whose implicit slots project past the document limit', () => {
-    expect(() => fromSequence('⿰'.repeat(32))).toThrow(DocumentError)
+  it('rejects a description whose projection passes the document limit', () => {
+    const tree = n => n === 1 ? '木' : `⿰${tree(n / 2)}${tree(n / 2)}`
+    expect(() => fromSequence(tree(256))).toThrow(DocumentError)
   })
   it('keeps IDs unique even when the root ID is one the allocator would make', () => {
     const document = fromSequence('⿰木口', { id: 'l2' })

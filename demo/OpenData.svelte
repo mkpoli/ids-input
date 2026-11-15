@@ -2,20 +2,20 @@
   // The open data release: what it holds, where the files are and what may be done with them. The
   // counts come from the manifest the build writes beside the files, so the page cannot claim more
   // than the dataset carries.
-  import SiteSelect from './ui/SiteSelect.svelte'
+  import PageHeader from './ui/PageHeader.svelte'
   import { appMessages } from './lib/locales.js'
-  import { applyTheme, storedTheme } from './lib/theme.js'
-  import ThemeSwitch from './ui/ThemeSwitch.svelte'
   import manifest from '../data/open-data/manifest.json'
+  import strokes from '../data/open-strokes/manifest.json'
 
   const en = appMessages('en')
-
-  let theme = $state(storedTheme())
-  /** @param {import('./lib/theme.js').Theme} next */
-  const setTheme = next => { theme = next; applyTheme(next) }
+  /** @param {string} key */
+  const t = key => en[key] ?? key
 
   /** @param {number} bytes */
   const size = bytes => bytes < 1024 ? `${bytes} B` : `${Math.round(bytes / 1024)} KB`
+  const rime = strokes.coverage.find(row => row.source === 'rime-stroke'), cns = strokes.coverage.find(row => row.source === 'cns11643'), kanjivg = strokes.coverage.find(row => row.source === 'kanjivg')
+  /** @param {'ids' | 'equivalent'} key */
+  const total = key => strokes.coverage.reduce((sum, row) => sum + row[key], 0)
 </script>
 
 <svelte:head>
@@ -23,18 +23,9 @@
 </svelte:head>
 
 <div class="page">
-  <header class="bar">
-    <SiteSelect title="IDS Workshop" label={en['app.sitesLabel']} more={en['app.sitesMore']} locale="en" href="/" />
-    <span class="slash" aria-hidden="true">/</span>
-    <h1>Open data</h1>
+  <PageHeader page="open-data" title="Open data" {t} home="/" links={[{ href: '/data/open-data/README.md', label: 'README' }]}>
     <span class="version">version {manifest.version}</span>
-    <div class="end">
-      <a class="back" href="/data/open-data/README.md">README</a>
-      <a class="back" href="/sources.html">Sources</a>
-      <ThemeSwitch {theme} label="Theme" labels={{ system: 'System', light: 'Light', dark: 'Dark' }} onchange={setTheme} />
-      <a class="back" href="/">Workshop</a>
-    </div>
-  </header>
+  </PageHeader>
 
   <main>
     <p class="lead">The IDS descriptions this project transcribed or read, and the kana and Hangul
@@ -95,6 +86,27 @@
     <p class="cite">IDS Input. Open IDS descriptions, version {manifest.version}.
       <a href="https://ids.mkpo.li/open-data">https://ids.mkpo.li/open-data</a></p>
 
+    <h2 id="strokes">Stroke orders</h2>
+    <p class="lead">The stroke order of Han characters from CNS 全字庫, Rime's five-stroke dictionary
+      and KanjiVG, with orders induced for the characters a source lacks and marked so.</p>
+    <ul class="stats">
+      <li><b>{cns?.recorded.toLocaleString('en')}</b><span>CNS, recorded</span></li>
+      <li><b>{rime?.recorded.toLocaleString('en')}</b><span>Rime, recorded</span></li>
+      <li><b>{kanjivg?.recorded.toLocaleString('en')}</b><span>KanjiVG, recorded</span></li>
+      <li><b>{total('ids').toLocaleString('en')}</b><span>induced from IDS</span></li>
+      <li><b>{total('equivalent').toLocaleString('en')}</b><span>by equivalence</span></li>
+    </ul>
+    <ul class="files stroke-files">
+      {#each [...strokes.files, { name: 'manifest.json', bytes: 0 }, ...strokes.texts.map(name => ({ name, bytes: 0 }))] as file (file.name)}
+        <li>
+          <a href={`/data/open-strokes/${file.name}`}>{file.name}</a>
+          {#if file.bytes}<span class="meta">{size(file.bytes)}</span>{/if}
+        </li>
+      {/each}
+    </ul>
+    <p class="note">Each file keeps its source's terms:
+      {#each strokes.sources as source, index (source.key)}{index ? '; ' : ''}<a href={source.url}>{source.key}</a> {source.licence.spdx ?? source.licence.name}{/each}.</p>
+
     <h2>Rebuild</h2>
     <p>The files are built from this repository with <code>bun scripts/build_open_ids.mjs</code>;
       <code>--check</code> fails when a committed file differs.</p>
@@ -103,14 +115,7 @@
 
 <style>
   .page{display:flex;flex-direction:column;min-height:100dvh}
-  .bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px max(18px,env(safe-area-inset-right)) 10px max(18px,env(safe-area-inset-left));
-    border-bottom:1px solid var(--ui-color-border);background:color-mix(in srgb,var(--ui-color-canvas) 88%,transparent);backdrop-filter:blur(10px);position:sticky;top:0;z-index:10}
-  .slash{color:var(--ui-color-border-strong)}
-  h1{margin:0;font-size:15px;font-weight:600;color:var(--ui-color-ink-muted);white-space:nowrap}
   .version{font-size:11.5px;color:var(--ui-color-ink-muted);border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-pill);padding:2px 8px;font-variant-numeric:tabular-nums}
-  .end{display:flex;align-items:center;gap:10px;margin-left:auto;flex-wrap:wrap}
-  .back{font-size:13px;color:var(--ui-color-accent);text-decoration:none;padding:5px 9px;border-radius:var(--ui-radius-md)}
-  .back:hover{background:var(--ui-color-surface-hover)}
 
   main{width:100%;max-width:1080px;margin:0 auto;padding:26px max(18px,env(safe-area-inset-right)) 64px max(18px,env(safe-area-inset-left))}
   .lead{margin:0;max-width:74ch;font-size:17px;line-height:1.55}
@@ -150,4 +155,5 @@
     .stats{grid-template-columns:1fr 1fr}
     .stats b{font-size:22px}
   }
+  .files.stroke-files{margin-top:12px}
 </style>

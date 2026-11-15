@@ -1,4 +1,5 @@
 // Count the layouts explicitly supplied by the bundled IDS sources. Encoded components stay intact.
+import { structureSkeleton } from '../src/core/structure.js'
 import { createHash } from 'node:crypto'
 import { readFileSync, writeFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
@@ -33,18 +34,7 @@ const isHan = char => {
 }
 
 /** Normalize structural association, not the relative proportions of rendered parts. */
-export function normalizeStructure(tree) {
-  if (isLeaf(tree)) return '_'
-  const direction = axis(tree.op), children = []
-  const add = child => {
-    if (direction && !isLeaf(child) && axis(child.op) === direction) child.parts.forEach(add)
-    else children.push(normalizeStructure(child))
-  }
-  tree.parts.forEach(add)
-  if (direction === 'H' && children.join('') === 'V(_,_)V(_,_)'
-    || direction === 'V' && children.join('') === 'H(_,_)H(_,_)') return 'GRID2x2'
-  return `${direction ?? tree.op}(${children.join(',')})`
-}
+export const normalizeStructure = structureSkeleton
 
 /** One character counts once per normalized skeleton, across all its alternative descriptions. */
 export function auditStructures(table) {

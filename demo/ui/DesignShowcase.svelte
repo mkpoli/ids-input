@@ -7,6 +7,7 @@
   import Segmented from './controls/Segmented.svelte'
   import Swatches from './controls/Swatches.svelte'
   import SelectField from './controls/SelectField.svelte'
+  import SelectMenu from './controls/SelectMenu.svelte'
   import Switch from './controls/Switch.svelte'
   import TextField from './controls/TextField.svelte'
   import TextareaField from './controls/TextareaField.svelte'
@@ -47,6 +48,7 @@
   let disabledText = $state('Disabled')
   let readOnly = $state('https://ids.mkpo.li/?ids=⿰亻⿱七木')
   let select = $state('balanced')
+  let menu = $state('balanced')
   let textarea = $state('A draft of the sequence.\nA second line.')
   let checked = $state(true)
   let unchecked = $state(false)
@@ -450,6 +452,12 @@
             { value: 'compact', label: 'Compact' },
             { value: 'loose', label: 'Loose (unavailable)', disabled: true },
           ]} hint="A native select is best when the list is longer than four." />
+          {#snippet menuLeading()}<Icon name="globe" size={16} />{/snippet}
+          <SelectMenu label="A custom select" bind:value={menu} leading={menuLeading} options={[
+            { value: 'balanced', label: 'Balanced' },
+            { value: 'compact', label: 'Compact' },
+            { value: 'loose', label: 'Loose (unavailable)', disabled: true },
+          ]} hint="A button trigger and a listbox; the trigger can carry an icon." />
         </div>
 
         <div class="ui-card">

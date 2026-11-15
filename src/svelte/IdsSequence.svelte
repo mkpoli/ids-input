@@ -1,5 +1,5 @@
 <script>
-  import { parse, arity } from '../core/ids.js'
+  import { parse, arity, customLength, isCustom, unfinishedCustom } from '../core/ids.js'
   import { unalias } from '../core/aliases.js'
   import { replacementPrefix, replacementQuery } from '../core/replacement.js'
   import { replacementExpression, replacementInput } from '../core/replacement-expression.js'
@@ -7,8 +7,13 @@
   import { tokens, tint } from './tokens.js'
   import { loadFallbackText } from './fallback-font.js'
   import { sequenceScopes } from './sequence-scopes.js'
+  import { isNode, write } from '../core/ids.js'
+  import IdsAlternatives, { hasAlternatives } from './IdsAlternatives.svelte'
   /** @type {HTMLDivElement | null} */ let textRun = $state(null)
   /** @type {{left:number, right:number, inkLeft:number}[]} */ let bounds = $state([])
+  // The width of the slots drawn after the text, so the field can scroll far enough to show them.
+  // The width of the slots drawn after the text, so the input can reserve room for them.
+  let drawnSlots = $state(0)
   $effect(() => {
     void editor.draft
     const run = textRun
@@ -23,7 +28,8 @@
         const canvas = document.createElement('canvas')
         const context = canvas.getContext('2d')
         if (context) context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`
-        bounds = [...run.querySelectorAll('span')].map(span => {
+        const spans = [...run.querySelectorAll('span')]
+        bounds = spans.map(span => {
           const box = span.getBoundingClientRect()
           const character = [...(span.dataset.character ?? '')][0] ?? ''
           const metrics = context && arity(character) > 0 ? context.measureText(character) : null
@@ -32,6 +38,10 @@
             : 0
           return {left: box.left - origin, right: box.right - origin, inkLeft}
         })
+        drawnSlots = spans.filter(span => span.classList.contains('missing')).reduce((sum, span) => {
+          const style = getComputedStyle(span)
+          return sum + span.getBoundingClientRect().width + (parseFloat(style.marginLeft) || 0) + (parseFloat(style.marginRight) || 0)
+        }, 0)
       })
     }
     const observer = new ResizeObserver(measure)
@@ -115,12 +125,82 @@
     })
   })
   function select() {
-    if (!composing && field && document.activeElement === field) editor.selectText(field.selectionStart ?? 0, field.selectionEnd ?? 0)
+    if (composing || !field || document.activeElement !== field) return
+    editor.selectText(field.selectionStart ?? 0, field.selectionEnd ?? 0)
+    // Selected text shows what can stand in its place: a component in its character card, a
+    // description in the panel under it.
+    const spanned = field.selectionStart !== field.selectionEnd && editor.chosenInField
+    const chosen = editor.chosen, part = editor.picked
+    const at = chosen?.join('.')
+    const span = spanned && typeof part === 'string' ? paint?.querySelector(`span[data-path="${at}"]`) : null
+    // A component's card opens once per selection, so a card closed with Escape stays closed. From
+    // the field itself: a description is selected (its parts' cards give way to the panel), or the
+    // selection has left the component whose card it opened.
+    const component = span ? `${at}\u0000${part}` : ''
+    if (span && component !== announced) span.dispatchEvent(new CustomEvent('idscharacter', { bubbles: true }))
+    else if (!span && (spanned || announced)) field.dispatchEvent(new CustomEvent('idscharacter', { bubbles: true, detail: { all: spanned } }))
+    announced = component
+    const next = spanned && isNode(part) ? `${at}\u0000${write(part)}` : ''
+    if (next !== selection) dismissed = ''
+    selection = next
   }
-  // Expand a partial token or crossing range before the browser replaces it.
+  /** The component whose card the selection last opened. */
+  let announced = ''
+  // The description chosen by selecting its text, and the one whose panel the reader closed.
+  let selection = $state(''), dismissed = $state('')
+  /** @type {HTMLDivElement | null} */ let panel = $state(null)
+  const panelOpen = $derived(Boolean(selection) && selection !== dismissed && editor.chosenInField && isNode(editor.picked) && hasAlternatives(editor))
+  let panelTop = $state(0), panelLeft = $state(0)
+  $effect(() => { if (editor.chosenInField) editor.alternatives.load() })
+  function placePanel() {
+    if (!panel || !field) return
+    const marked = [...(paint?.querySelectorAll('span.selected') ?? [])].map(span => span.getBoundingClientRect())
+    const box = field.getBoundingClientRect(), card = panel.getBoundingClientRect(), edge = 8, gap = 4
+    const start = marked.length ? Math.max(box.left, Math.min(...marked.map(rect => rect.left))) : box.left
+    panelLeft = Math.max(edge, Math.min(start, innerWidth - card.width - edge))
+    panelTop = box.bottom + gap + card.height <= innerHeight - edge ? box.bottom + gap : Math.max(edge, box.top - gap - card.height)
+  }
+  $effect(() => {
+    if (!panelOpen || !panel) return
+    const element = panel
+    element.showPopover()
+    void editor.draft
+    placePanel()
+    const watch = new ResizeObserver(placePanel)
+    watch.observe(element)
+    addEventListener('resize', placePanel)
+    addEventListener('scroll', placePanel, true)
+    return () => {
+      watch.disconnect()
+      removeEventListener('resize', placePanel)
+      removeEventListener('scroll', placePanel, true)
+      if (element.isConnected && element.matches(':popover-open')) element.hidePopover()
+    }
+  })
+  /** Close the panel for this description, leaving the reader in the field. */
+  function dismiss() {
+    dismissed = selection
+    if (panel?.contains(document.activeElement)) field?.focus()
+  }
+  /** @param {FocusEvent} event */
+  function leaveSelection(event) {
+    const next = /** @type {Node | null} */ (event.relatedTarget)
+    if (next && (panel?.contains(next) || next === field)) return
+    selection = ''
+  }
+  /** @param {KeyboardEvent} event */
+  function escapePanel(event) {
+    if (!panelOpen || event.key !== 'Escape' || event.isComposing || event.defaultPrevented) return
+    event.preventDefault()
+    event.stopPropagation()
+    dismiss()
+  }
+  // Expand a partial token, a crossing range or an operator alone to its whole part before the
+  // browser replaces it.
   function expandSelection() {
     if (field) editor.selectText(field.selectionStart ?? 0, field.selectionEnd ?? 0)
-    const range = editor.selectionRange
+    const chosen = editor.chosen
+    const range = chosen && spans.find(token => token.path.length === chosen.length && token.path.every((n, i) => n === chosen[i]))
     if (field && field.selectionStart !== field.selectionEnd && range) field.setSelectionRange(range.start, range.end)
   }
   /** @param {string} text */
@@ -129,6 +209,22 @@
     if (!field || !text || parse(unalias(text), { open: true }).problem) return false
     if (field.selectionStart === field.selectionEnd) {
       const offset = field.selectionStart ?? 0
+      // A custom component is typed as text until its closing mark: &, C, D, P are no parts of
+      // their own. Once closed it goes in as one part, as if pasted whole.
+      const opened = unfinishedCustom(editor.draft.slice(0, offset))
+      if (opened >= 0 && [...text].length === 1) {
+        const written = editor.draft.slice(opened, offset) + text
+        if (customLength(written) !== written.length) return false
+        field.value = editor.draft.slice(0, opened) + editor.draft.slice(offset)
+        field.setSelectionRange(opened, opened)
+        editor.edit(field)
+        if (replaceText(written)) return true
+        field.value = editor.draft.slice(0, opened) + written + editor.draft.slice(opened)
+        field.setSelectionRange(opened + written.length, opened + written.length)
+        editor.edit(field)
+        return true
+      }
+      if (text === '&' || text === '{' || (text === '(' && editor.draft[offset - 1] === '#')) return false
       const inserted = unalias(text)
       const candidate = unalias(editor.draft.slice(0, offset) + text + editor.draft.slice(offset))
       if (parse(editor.draft, {open:true}).problem || (!arity(inserted) && !parse(candidate, {open:true}).problem)) return false
@@ -143,7 +239,7 @@
     expandSelection()
     if (editor.chosen === null) return false
     const start = field.selectionStart ?? 0
-    editor.take(text)
+    if (!editor.take(text)) return false
     field.value = editor.draft
     const end = Math.min(field.value.length, start + unalias(text).length)
     editor.selectText(end, end)
@@ -207,13 +303,24 @@
 <label class="ids-field">
   {#if label}<span class="ids-title">{t('ids.label')}</span>{/if}
   <div class="sequence-wrap" class:composing style:--scope-height={`${scopeHeight}px`}>
-    <div class="sequence-paint" bind:this={paint} style={metrics} aria-hidden="true"><div class="sequence-viewport"><div class="sequence-run" bind:this={textRun} style:transform={`translateX(${-scroll}px)`}>{#if spans.length}{#each spans as token}<span data-character={token.text} data-path={token.path.join('.')} class:tinted={editor.isTinted(token.path)} class:hovered={editor.isHovered(token.path)} class:selected={editor.isSelected(token.path)} style:--tint={tint(token.path, operatorToken(token))}>{token.text}</span>{/each}{:else}{editor.draft}{/if}{#if paintedScopes.length}<svg class="sequence-scopes" width="100%" height={scopeHeight} aria-hidden="true">{#each paintedScopes as scope}<g data-path={scope.path.join('.')}><path class="scope-lead" class:scope-tinted={scope.tinted} class:scope-hovered={scope.hovered} class:scope-selected={scope.selected} style:--tint={tint(scope.path, true)} data-path={scope.path.join('.')} d={scope.lead}/>{#each scope.segments as segment}<path class="scope-segment" class:scope-tinted={segment.tinted} class:scope-hovered={segment.hovered} class:scope-selected={segment.selected} style:--tint={tint(segment.path)} data-path={segment.path.join('.')} d={segment.d}/>{/each}</g>{/each}</svg>{/if}</div></div></div>
-  <input bind:this={field} value={editor.draft} disabled={editor.disabled} lang="ja" spellcheck="false" autocomplete="off"
+    <div class="sequence-paint" bind:this={paint} style={metrics} aria-hidden="true"><div class="sequence-viewport"><div class="sequence-run" bind:this={textRun} style:transform={`translateX(${-scroll}px)`}>{#if spans.length}{#each spans as token}<span data-character={token.text || '◌'} data-path={token.path.join('.')} class:missing={!token.text} class:custom={isCustom(token.text)} class:tinted={editor.isTinted(token.path)} class:hovered={editor.isHovered(token.path)} class:selected={editor.isSelected(token.path)} style:--tint={tint(token.path, operatorToken(token))}>{token.text || '◌'}</span>{/each}{:else}{editor.draft}{/if}{#if paintedScopes.length}<svg class="sequence-scopes" width="100%" height={scopeHeight} aria-hidden="true">{#each paintedScopes as scope}<g data-path={scope.path.join('.')}><path class="scope-lead" class:scope-tinted={scope.tinted} class:scope-hovered={scope.hovered} class:scope-selected={scope.selected} style:--tint={tint(scope.path, true)} data-path={scope.path.join('.')} d={scope.lead}/>{#each scope.segments as segment}<path class="scope-segment" class:scope-missing={segment.missing} class:scope-tinted={segment.tinted} class:scope-hovered={segment.hovered} class:scope-selected={segment.selected} style:--tint={tint(segment.path)} data-path={segment.path.join('.')} d={segment.d}/>{/each}</g>{/each}</svg>{/if}</div></div></div>
+  <input bind:this={field} value={editor.draft} style:padding-right={`calc(10px + ${drawnSlots + 8}px)`} disabled={editor.disabled} lang="ja" spellcheck="false" autocomplete="off"
     aria-label={label ? undefined : t('ids.label')} {placeholder} aria-invalid={Boolean(editor.problem)}
-    onselect={select} onkeyup={select} onclick={select} onbeforeinput={beforeInput} onpaste={paste} onpointermove={hover} onpointerleave={() => editor.hover(null)} onscroll={() => scroll = field?.scrollLeft ?? 0} oninput={edit} oncompositionstart={startComposition} oncompositionend={endComposition} onblur={() => editor.settle()}
-    onkeydown={event => { if (!event.isComposing && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') { event.preventDefault(); if (event.shiftKey) editor.redo(); else editor.undo(); return } if (event.key === 'Enter' && !event.isComposing) { event.preventDefault(); onenter?.() } }} />
+    onselect={select} onkeyup={select} onclick={select} onbeforeinput={beforeInput} onpaste={paste} onpointermove={hover} onpointerleave={() => editor.hover(null)} onscroll={() => scroll = field?.scrollLeft ?? 0} oninput={edit} oncompositionstart={startComposition} oncompositionend={endComposition} onblur={() => editor.settle()} onfocusout={leaveSelection}
+    onkeydown={event => { escapePanel(event); if (event.defaultPrevented) return; if (!event.isComposing && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') { event.preventDefault(); if (event.shiftKey) editor.redo(); else editor.undo(); return } if (event.key === 'Enter' && !event.isComposing) { event.preventDefault(); onenter?.() } }} />
   </div>
 </label>
+{#if panelOpen}
+  <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+  <div class="ids-selection-panel" popover="manual" role="dialog" tabindex="-1" aria-label={t('ids.swaps.label', { part: editor.sequenceAt(editor.chosen ?? []) })}
+    bind:this={panel} style:top={`${panelTop}px`} style:left={`${panelLeft}px`} onfocusout={leaveSelection} onkeydown={escapePanel}>
+    <div class="ids-selection-head">
+      <span class="ids-selection-title">{t('ids.swaps.label', { part: editor.sequenceAt(editor.chosen ?? []) })}</span>
+      <button type="button" class="ids-selection-close" aria-label={t('ids.swaps.close')} title={t('ids.swaps.close')} onclick={dismiss}>×</button>
+    </div>
+    <IdsAlternatives {editor} onchoose={() => field?.focus()} onspent={() => panel?.querySelector('button')?.focus()} />
+  </div>
+{/if}
 
 <style>
   .ids-field{
@@ -227,13 +334,25 @@
     --_font:var(--ids-font,"IDS Numbered","IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Jurchen","IDS Operators","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif);
     display:flex;flex-direction:column;gap:4px;min-width:0;color:var(--_ink)}
   .ids-title{font-size:11px;color:var(--_muted)}
+  .ids-selection-panel{position:fixed;inset:auto;margin:0;box-sizing:border-box;display:flex;flex-direction:column;gap:6px;width:max-content;min-width:min(200px,calc(100vw - 16px));
+    max-width:min(420px,calc(100vw - 16px));max-height:min(52vh,420px);padding:10px;border:1px solid var(--ids-line,light-dark(#e1e1e8,#2e2e36));border-radius:12px;
+    background:var(--ids-surface,light-dark(#fff,#1b1b20));color:var(--ids-ink,light-dark(#1c1c22,#ececf2));
+    box-shadow:0 12px 32px -8px rgb(16 16 24 / .28),0 2px 8px rgb(16 16 24 / .12);overflow:auto;overscroll-behavior:contain}
+  .ids-selection-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .ids-selection-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:11px system-ui,var(--ids-font,sans-serif),sans-serif;color:var(--ids-muted,light-dark(#686874,#9d9daa))}
+  .ids-selection-close{flex:none;display:grid;place-items:center;width:24px;height:24px;padding:0;border:0;border-radius:6px;background:none;color:var(--ids-muted,light-dark(#686874,#9d9daa));font:16px/1 system-ui;cursor:pointer}
+  .ids-selection-close:hover{background:var(--ids-surface-subtle,light-dark(#f6f6f9,#16161a));color:var(--ids-ink,light-dark(#1c1c22,#ececf2))}
+  .ids-selection-close:focus-visible{outline:2px solid var(--ids-focus,light-dark(#2944c7,#8ea8ff));outline-offset:1px}
+  @media (pointer: coarse){ .ids-selection-close{width:44px;height:44px;font-size:20px} }
   .sequence-wrap{position:relative;min-width:0}
   .sequence-paint{position:absolute;inset:1px;padding:6px 10px;overflow:hidden;pointer-events:none;border-radius:7px;font:22px var(--_font);white-space:pre}
   .sequence-paint span.tinted{color:color-mix(in oklab,var(--_ink) 76%,var(--tint));background:color-mix(in oklab,var(--tint) 12%,transparent)}
+  /* A part no code point names is written by its code: marked, so it does not read as loose punctuation. */
+  .sequence-paint span.custom{text-decoration:underline dotted color-mix(in oklab,var(--_accent) 70%,transparent);text-decoration-thickness:2px;text-underline-offset:5px}
   .sequence-paint span:first-child{border-radius:3px 0 0 3px}
   .sequence-paint span:last-of-type{border-radius:0 3px 3px 0}
   .sequence-paint span:only-of-type{border-radius:3px}
-  input{position:relative;box-sizing:border-box;width:100%;caret-color:var(--_ink);-webkit-text-fill-color:transparent;min-width:0;font:inherit;font-size:22px;line-height:1.5;padding:6px 10px calc(6px + var(--scope-height,0px));font-family:var(--_font);color:inherit;
+  input{position:relative;box-sizing:border-box;width:100%;caret-color:var(--_ink);-webkit-text-fill-color:transparent;min-width:0;font:inherit;font-size:22px;line-height:1.5;padding:6px 10px calc(6px + var(--scope-height,0px)) 10px;font-family:var(--_font);color:inherit;
     border:1px solid var(--_control-border);border-radius:8px;background:transparent}
   input::placeholder{-webkit-text-fill-color:var(--_muted);color:color-mix(in srgb,var(--_muted) 70%,transparent)}
   input:focus-visible{outline:2px solid var(--_focus);outline-offset:1px}
@@ -245,6 +364,9 @@
   .sequence-scopes path.scope-tinted{stroke:color-mix(in oklab,var(--tint) 55%,var(--_ink-soft))}
   .sequence-scopes path.scope-hovered,.sequence-scopes path.scope-selected{stroke:var(--_accent);stroke-width:1.6}
   .sequence-scopes path.scope-segment.scope-hovered,.sequence-scopes path.scope-segment.scope-selected{stroke-width:2}
+  /* A missing operand keeps the warning colour whatever is chosen or hovered around it. */
+  .sequence-scopes path.scope-missing{stroke:var(--_fault)}
+  .sequence-scopes path.scope-missing.scope-hovered,.sequence-scopes path.scope-missing.scope-selected{stroke:var(--_fault);stroke-width:2}
   .composing .sequence-paint{visibility:hidden}
   .composing input{-webkit-text-fill-color:var(--_ink)}
   @media (forced-colors: active){
@@ -254,6 +376,8 @@
     .sequence-scopes path.scope-hovered,.sequence-scopes path.scope-selected{stroke:Highlight;stroke-width:2}
     input{-webkit-text-fill-color:CanvasText}
   }
+  .sequence-paint span.missing{color:var(--_fault);font-size:.95em;margin-inline:.08em}
+  .sequence-paint span.selected.missing{background:color-mix(in oklab,var(--_fault) 16%,transparent)}
   .sequence-paint span.hovered{box-shadow:inset 0 -3px var(--_accent);border-radius:3px}
   .sequence-paint span.hovered.tinted{background:color-mix(in oklab,var(--tint) 40%,transparent)}
   .sequence-paint span.hovered + span.hovered{border-start-start-radius:0;border-end-start-radius:0}

@@ -1,5 +1,6 @@
 import { expect, it } from 'bun:test'
 import { createSealCandidates } from '../scripts/lib/seal-candidates.js'
+import { LONGEST } from '../src/core/index.js'
 import { readForms } from '../src/core/search.js'
 const [head, wood, variant, water] = [0x3D100, 0x3D101, 0x3D102, 0x3D103].map(cp => String.fromCodePoint(cp))
 const doc = { format: 1, table: { [head]: [`⿰${wood}${wood}`] }, modern: { [head]: ['林'], [wood]: ['木'], [variant]: ['木'], [water]: ['水'] }, parts: [], records: [{char:head,id:'source-1', descriptions:[{original:'⿰&wood;&wood;',status:'unresolved'}]}], sources:[{revision:'pinned'}] }
@@ -80,7 +81,7 @@ it('bounds oversized recursive expansions and marks the result as limited', () =
   const r=createSealCandidates(doc,source).compare(head)
   expect(r.truncated).toBe(true)
   expect(r.candidates.length).toBeGreaterThan(0)
-  expect(r.candidates.every(c=>[...c.text].length<=64)).toBe(true)
+  expect(r.candidates.every(c=>[...c.text].length<=LONGEST)).toBe(true)
 })
 
 it('retains alternative nested descriptions with their regions', () => {

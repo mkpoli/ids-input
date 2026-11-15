@@ -9,7 +9,7 @@
   // while the preview's data cannot be read at all, the placeholders stand with no badge.
   import { fade } from 'svelte/transition'
   import { EMPTY, leaves, samePath, write } from '../core/ids.js'
-  import { EMOJI_CUT_MATRIX, FACE, STROKE, badge, emojiPlace, emojiTransform, placeholder, roughLayout, runPreview } from '../core/preview.js'
+  import { askDrawable, EMOJI_CUT_MATRIX, FACE, STROKE, badge, emojiPlace, emojiTransform, placeholder, roughLayout, runPreview } from '../core/preview.js'
   import { documentView } from '@han-compose/composer/document-view'
   import { affineForChain, applyAffine, boxCorners, findLayer, invertAffine, layerAtPath, multiplyAffine, pathOfLayer, scopesMarkup } from '../document/index.js'
   import { layerFrames, renderScopes } from '../document/index.js'
@@ -32,10 +32,10 @@
   /** @typedef {import('../document/session.js').DocumentSession} DocumentSession */
   /** @typedef {import('../document/render.js').ScopeTree} ScopeTree */
   /**
-   * @type {{ adapter: IdsAdapter, tree: Part, chosen?: Path | null, messages?: Record<string, string>, locale?: string, small?: boolean, notes?: boolean, delay?: number, detail?: string, detailContent?: import('svelte').Snippet, drawing?: Drawing | null, document?: Document | null, session?: DocumentSession | null, version?: number, scopes?: ScopeTree | null, slots?: number[][], emoji?: NonNullable<Drawing['emoji']> | null, cut?: string | null, cutLeaf?: number | null, editable?: boolean, onchoose?: ((path: number[]) => void) | null, onedit?: (() => void) | null }}
+   * @type {{ adapter: IdsAdapter, tree: Part, chosen?: Path | null, messages?: Record<string, string>, locale?: string, small?: boolean, notes?: boolean, delay?: number, detail?: string, detailContent?: import('svelte').Snippet, drawing?: Drawing | null, document?: Document | null, session?: DocumentSession | null, version?: number, scopes?: ScopeTree | null, slots?: number[][], emoji?: NonNullable<Drawing['emoji']> | null, cut?: string | null, cutLeaf?: number | null, step?: 'idle' | 'loading' | 'composed' | 'final' | 'failed' | 'capped' | 'unavailable', editable?: boolean, onchoose?: ((path: number[]) => void) | null, onedit?: (() => void) | null }}
    */
   let { adapter, tree, chosen = null, messages, locale = 'en', small = true, notes = true, delay = 150, detail = '', detailContent, drawing = $bindable(null),
-    document = null, session = null, version = 0, scopes = $bindable(null), slots = $bindable(/** @type {number[][]} */ ([])), emoji = $bindable(null), cut = $bindable(null), cutLeaf = $bindable(null), editable = false, onchoose = null, onedit = null } = $props()
+    document = null, session = null, version = 0, scopes = $bindable(null), slots = $bindable(/** @type {number[][]} */ ([])), emoji = $bindable(null), cut = $bindable(null), cutLeaf = $bindable(null), step = $bindable('idle'), editable = false, onchoose = null, onedit = null } = $props()
   const t = $derived(translator(messages, locale))
 
   const uid = $props.id()
@@ -46,7 +46,6 @@
     box: [FACE[0] + leaf.box[0] * FACE[2], FACE[1] + leaf.box[1] * FACE[3], (leaf.box[2] - leaf.box[0]) * FACE[2], (leaf.box[3] - leaf.box[1]) * FACE[3]] })))
   let sketched = $state.raw(/** @type {{ text: string, leaves: SketchLeaf[] } | null} */ (null))
   let shown = $state.raw(/** @type {{ key: number, url?: string, drawn?: Drawing } | null} */ (null))
-  let step = $state(/** @type {'idle' | 'loading' | 'composed' | 'final' | 'failed' | 'capped' | 'unavailable'} */ ('idle'))
   // No badge while there is nothing to say: no preview asked, or no data to draw from.
   const quiet = $derived(step === 'idle' || step === 'unavailable')
   let count = 0
@@ -54,7 +53,7 @@
   // A description is drawn after a short pause in editing. A newer one aborts the one before, and an
   // answer for a description since replaced is dropped.
   $effect(() => {
-    const text = sequence, empty = text === EMPTY, ask = adapter.preview, final = adapter.drawing
+    const text = sequence, empty = text === EMPTY, ask = askDrawable(adapter.preview, adapter.drawable), final = adapter.drawing
     sketched = null
     if (empty || !(ask || final)) { step = 'idle'; shown = null; return }
     step = 'loading'
@@ -62,7 +61,7 @@
     // the parts it needs, not on the export itself.
     ask?.warm?.(text)
     const controller = new AbortController(), signal = controller.signal
-    const timer = setTimeout(() => runPreview(text, { preview: ask, drawing: final, signal }, patch => {
+    const timer = setTimeout(() => runPreview(text, { preview: ask, drawing: final, formed: adapter.formed, signal }, patch => {
       if (patch.sketch) { sketched = { text, leaves: /** @type {SketchLeaf[]} */ (patch.sketch) }; return }
       shown = patch.url ? { key: ++count, url: patch.url } : patch.drawn ? { key: ++count, drawn: /** @type {Drawing} */ (patch.drawn) } : null
       step = /** @type {typeof step} */ (patch.step)
@@ -227,7 +226,8 @@
   /** @param {KeyboardEvent} event */
   function adjustKey(event) {
     if (!editable || !session || !chosenLayer || !frame?.supported) return
-    const key = event.key
+    // The bracket keys by position: with Shift held they report { and } on most layouts.
+    const key = event.code === 'BracketLeft' ? '[' : event.code === 'BracketRight' ? ']' : event.key
     if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', '+', '=', '-', '[', ']', '0'].includes(key)) return
     event.preventDefault()
     event.stopPropagation()
@@ -251,9 +251,12 @@
       applyLocal([scale, 0, 0, scale, center[0] * (1 - scale), center[1] * (1 - scale)], base, chosenLayer.id, `key-${key}`)
       return
     }
+    // A turn is made on the canvas, as the rotate handle makes it: in the layer's own frame, which a
+    // slot can squash, it would shear the part.
+    const [cx, cy] = applyAffine(frame.full, center)
     const degrees = key === '[' ? -(event.shiftKey ? 15 : 5) : event.shiftKey ? 15 : 5
     const radians = degrees * Math.PI / 180, cos = Math.cos(radians), sin = Math.sin(radians)
-    applyLocal([cos, sin, -sin, cos, center[0] - cos * center[0] + sin * center[1], center[1] - sin * center[0] - cos * center[1]], base, chosenLayer.id, `key-${key}`)
+    applyCanvas([cos, sin, -sin, cos, cx - cos * cx + sin * cy, cy - sin * cx - cos * cy], base, chosenLayer.id, frame.place, `key-${key}`)
   }
   /** @param {string} id */
   function chooseLayer(id) {

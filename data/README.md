@@ -10,6 +10,43 @@ README with the fields and the source list; CC0 1.0. Built by `bun scripts/build
 from the starter catalogue in `demo/lib/examples.js`, its source records and
 `data/ids-components.tsv`.
 
+## `custom-components.json.gz`
+
+The components no code point names in BabelStone IDS (`{53}`), CHISE IDS (`&CDP-8BD0;`) and
+zi.tools (`#(-𠃌㇉)`): 1,672 of them, what each is in the other tables' notation where the tables'
+descriptions of shared characters settle it (973, 373 confirmed by two or more characters), and
+9,259 descriptions of characters that follow. Fields, method and limits:
+[custom IDS notation](../docs/custom-components.md). Every row is derived by this project; no
+source states it. Rebuild with `bun scripts/build_custom_components.mjs`.
+
+`custom-forms.json`, `custom-forms.tsv` and `custom-forms.csv` are the same forms flat, one row
+each: `id`, `entity`, `char`, the name each source gives (`babelstone`, `chise`, `zi_tools`) or the
+`expression` of an unnamed form, its `subtractions` (`㇯馬灬`), BabelStone's `description`, `status`, `uses`, `used_in`,
+`equivalents` (in the TSV and CSV as `notation:text:status:count`, joined by ` | `) and `of`. The
+appendix at <https://ids.mkpo.li/unencoded> offers them for download. Written by the same build.
+
+`custom-ids.tsv` is the ledger of form identifiers the file carries (`X-00053`, written `&X-00053;`
+in a description): identifier, a name the form is known by, the date, and `first`, `merged into …`
+or `withdrawn`. It is append-only and the build reads it before it writes it, so a number once
+given stays.
+
+Licence: GPL-2.0-or-later, as CHISE IDS, whose rows inform it; BabelStone IDS is public domain and
+Yi Bai's table MIT.
+
+## `custom-outlines.json.gz`
+
+The glyph [GlyphWiki](https://glyphwiki.org/) draws for 1,162 of the 1,387 CHISE entities, each as
+one SVG path in a 200-unit square: `names` gives an entity's GlyphWiki name (`&CDP-8958;` is
+`cdp-8958`, `&U-i001+864D;` is `u864d-itaiji-001`) and `outlines` that name's path. The appendix at
+`/unencoded` shows them where nothing else draws a form, and `/component-atlas` in place of an
+entity's private-use character. 137 entities have no name the two share
+(CNS planes, JIS supplements and others) and 88 have a name GlyphWiki draws nothing for. GlyphWiki's
+glyphs are edited by its users and may differ from the form CHISE means; fetched 2026-11-13. Rebuild
+with `bun scripts/build_custom_outlines.mjs`, which keeps each fetched glyph under `cache/`.
+
+Licence: GlyphWiki's data and article licence, <https://glyphwiki.org/wiki/GlyphWiki:データ・記事のライセンス>:
+anyone may use, copy and modify the glyph data freely, with no attribution required.
+
 ## `yi-bai-ids.tsv.gz`
 
 Standard IDS descriptions from Yi Bai's level-1 IDS dataset at commit
@@ -131,6 +168,34 @@ The descriptions are this project's, not a copy of CHISE's or BabelStone's. The 
 downloadable at <https://github.com/mkpoli/ids-input/raw/main/data/ids-project.tsv.gz>, and its
 source at <https://github.com/mkpoli/ids-input/raw/main/data/ids-project.tsv>.
 
+## `glyph-ids.tsv`
+
+Reviewed descriptions of the printed glyphs [han-input](https://github.com/mkpoli/han-input) keeps
+as images: IRG proposal and withdrawal glyphs, and GlyphWiki's `ebag_` glyphs. One line per glyph,
+`key<TAB>ids<TAB>verdict<TAB>by<TAB>judged<TAB>at`. The key is han-input's record:
+`<records file id>:<serial or source>`, e.g. `ext_d_removals:00225`.
+
+| Verdict | `ids` | `by` |
+| --- | --- | --- |
+| `known` | another source's description, accepted for the glyph | `zi.tools <page>` or `babelstone <char>` |
+| `model` | a han2ids reading the reviewer kept | `han2ids c0`, `c1` or `c2`, the reading's beam rank |
+| `written` | the reviewer's own description | |
+| `wrong` | empty: the reading is wrong and no description was written | |
+| `unclear` | empty: the reviewer could not tell | |
+
+`judged` is the han2ids reading shown for the glyph, and `at` the time of the answer. Every
+description except `known` is editorial: a reviewer read it from the printed glyph, and no source
+states it. zi.tools gives a sequence for glyphs that later became encoded characters and for many
+IRG N891 glyphs; the review accepts those unread. A glyph with only a BabelStone description is
+reviewed.
+
+Answers are given in the review desk of [han2ids](https://github.com/mkpoli/han2ids) and imported
+with `bun scripts/import_glyph_ids.mjs <answers.json>`.
+
+Licence: the editorial rows are CC0 1.0. BabelStone's descriptions are public domain (see
+`babelstone-ids.tsv.gz`). The zi.tools sequences come from its pages, which state no licence for
+them; their terms are uncertain.
+
 ## `ids-characters.tsv`
 
 Characters this project draws from their own outline rather than an IDS composition. One line per
@@ -244,7 +309,8 @@ common and hard-to-type part of the chosen count, with counts from 23 strokes up
   texts are in `data/licences/`. The other columns use public-domain sequences, MIT-licensed
   decomposition choices, Unicode data and explicit radical counts.
 - Format: `columns` `[part, uses, strokes, derived, first, kind, fragment, description, readonly,
-  glyph]` and one row per part, most used first; `kind` is `c` (common), `d` (hard to type) or `s`
+  glyph]`, one row per part, most used first, and `lookalikes`, the groups of common and hard parts
+  that Unicode's confusables data maps to one prototype (口囗, 土士, 未末), each most used first; `kind` is `c` (common), `d` (hard to type) or `s`
   (CJK stroke). `fragment`, `description`, `readonly` and `glyph` belong to the numbered components:
   the IDS fragment note 6 gives, where it occurs, whether the palette lists it without inserting it,
   and the PUA character BabelStone Han PUA draws for it. The 69 components note 6 leaves `？` have a
@@ -256,9 +322,9 @@ common and hard-to-type part of the chosen count, with counts from 23 strokes up
   not the 彐 those descriptions read as.
 
 The displayed Common palette places traditional, simplified and positional forms
-from `component-forms.tsv` next to one another. Each family starts where its
-first member appeared in frequency order; forms remain separate selectable
-entries. Contextual search substitutions such as 田/由/甲/申/电, 己/已/巳,
+from `component-forms.tsv`, and the `lookalikes` groups, next to one another. Each
+group starts where its first member appeared in frequency order; forms remain
+separate selectable entries. Contextual search substitutions such as 田/由/甲/申/电, 己/已/巳,
 用/甩 and 斗/鬥 remain separate. Stroke-count and first-stroke groups keep their boundaries, and Recent
 keeps selection order. The data file itself remains frequency-sorted.
 
@@ -275,6 +341,10 @@ Sources:
   `4c93ea9c1f636451729a840978f1667a53886af37ba854fdcce109721c63d43e`): stroke counts
   (`kTotalStrokes`), the one-stroke ideographs counted as strokes, and the common set (`kJoyoKanji`
   for 常用漢字; `kTGH` positions 1–3500 for the first level of the 通用规范汉字表).
+- Unicode Security Mechanisms (UTS #39) 18.0.0, `confusables.txt` (Date: 2026-08-06), Copyright
+  Unicode, Inc., Unicode License v3 (<https://www.unicode.org/Public/18.0.0/security/confusables.txt>,
+  SHA-256 `6ed3ee967c9dfdf6677d563c9985182fbc50a2efb7d6059cd57b2e2ce18f5b92`): the `lookalikes`
+  groups. The list is built for spoofing detection, so it misses pairs such as 己/已/巳.
 - Rime five-stroke dictionary, revision `1e8fff9b9494ddec23b0cbc526bcfd8171a6fd48`,
   LGPL-3.0, <https://github.com/rime/rime-stroke>. Authors: 四季的風, 雪齋, Kunki Chou and 宋天.
   The table credits CNS11643, 北大中文論壇 and 宋天's extension data.
@@ -331,6 +401,88 @@ SHA-256 of this copy `7e12d79da41b18f5fbf8fb0eae2adc31aa9f57e6e2eabe79836804c072
 (Unicode License v3, <https://www.unicode.org/license.txt>; 348 rows) and cjkvi-variants'
 `radical-variants.txt` at e4f1da2 (public domain, <https://github.com/cjkvi/cjkvi-variants>; 219
 rows), each row naming its source.
+
+## `ucv.json`, `ucv-forms.json.gz`, `ucv-outlines.json.gz`, `ucv-strokes.json.gz` and `ucv-outlines-sans.json.gz`
+
+The IRG's lists of unifiable (UCV, 599 entries) and non-unifiable (NUCV, 14 entries) component
+variations, compiled from `iwds.xml` in the IWDS data files at commit
+`8302302d615ff1c1f60ae335b118b10060be0ed4`, <https://github.com/yi-bai/iwds>, SHA-256
+`886b426ea3d1d329749e02b32cccd5082d31d6cf1b996ea37bdae5ac593ca491`. That file generates IRG N2978,
+"UCV & NUCV Lists", version 2026-10-20, <https://www.unicode.org/irg/docs/n2978-Complete.pdf>,
+listed as Series 2 of <https://www.unicode.org/irg/IWDS.html>. Rebuild with
+`bun scripts/build_ucv.mjs`, which keeps the outlines already compiled and asks only for those
+missing; `--refresh` reads every one again.
+
+`ucv.json` holds the source's groups and, per entry: `id`, `kind` (`unifiable` or
+`not-unifiable`), `level`, `group`, `forms`, the source's own `components` text, the criterion it
+cites (`jis` for the JIS X 0213 unification criterion, `jisx0212`, `hydcd` for the Hanyu Da Cidian
+new and old forms, `annexS` for ISO/IEC 10646 Annex S), and the example characters: `unified`,
+`compatibility` as `[unified, compatibility]` pairs, `disunified` and `sourceSeparations` as groups
+of characters coded apart, and `single` for the non-unifiable list's characters that keep one form, each with the `examples`
+that contain it and, where the source gives a number in their place, its `count`. `charts`
+names the older code chart an example is shown from, `unifiedMore` marks a list the source ends
+with an ellipsis, `note`, `references` and the `review` links are the source's.
+
+A form is the GlyphWiki glyph the source names. `text` is given when that name is a character, a
+description or a character with a variation selector; `of` gives the character a named form
+belongs to (`u540c-08-var-001` is a form of 同); other names (`cdp-`, `aj1-`, `koseki-`, `twedu-`,
+a numbered variant of a description) carry neither. `undrawn` marks a form no source draws.
+
+The forms stand in the source's order, which zi.tools' variant identifiers count in: `q008a2` is
+the second form of entry 8a. Its `ids_lv0.txt` (revision `2597437`, SHA-256 `af5a0de3aae85ee1…`)
+carries 306 such identifiers. For 63 the form here is the very description zi.tools gives; 73 name
+the character or a numbered variant of it; 125 name another form of an entry that lists the
+character; 44 name a glyph or a description with a slot, which cannot be compared as text; and one,
+`q1143`, names a third form of an entry that lists two.
+
+`ucv-forms.json.gz` maps a glyph name to its outline, one SVG path in a 200-unit square: 1,461
+from the snapshot's `glyphs/` directory and 134 fetched from <https://glyphwiki.org/> on
+2026-11-13, listed with their dates under `source.glyphs.fetched`. Eleven names have no drawing in
+either place.
+
+`ucv-outlines.json.gz` holds the 632 forms no text writes as records of the drawing engine's
+export format, for a composer to place as components: `{ records: { "&GW-u58ec-t;": record } }`,
+each under the reference a description names the glyph by, `&GW-` and its GlyphWiki name. The
+200-unit square is scaled to a 1000-unit em with its top at 880. A drawing made of overlapping
+strokes has every polygon wound the same way; one that is a single shape keeps its counters wound
+the other way, so they stay open. The workshop hands the file to the engine as the host's outlines; a component written
+with a variant identifier (`壬q0012`) is drawn from it.
+
+`ucv-strokes.json.gz` holds the stroke data (KAGE) of the same 632 forms, with the 679 glyphs
+they are built from: `{ source, forms: { name: { version, same } }, glyphs: { name: strokes } }`.
+`scripts/build_ucv_strokes.mjs` reads it from GlyphWiki's dump,
+<https://glyphwiki.org/dump.tar.gz> (the files dated 2026-11-14 17:00 UTC; archive SHA-256
+`2c8014e56551dcdd321a307b21226f57bcf2f8b4d9cff32d0f5aeb2623033a85`). A glyph is redrawn over time,
+so the version kept for a form is the one that, drawn in Mincho, is its recorded outline: `same` is
+the lesser share of each drawing's ink within 2 units of the other's, at least 0.97 and 0.9947 for
+the least alike. The stroke data is drawn with `@kurgm/kage-engine` 0.7.0 (GPL-3.0), which the
+build runs and the package does not ship.
+
+`ucv-outlines-sans.json.gz` is `ucv-outlines.json.gz` with every form drawn in Gothic from that
+stroke data, for the Sans face. No source shows these forms in a Gothic face: the strokes are
+GlyphWiki's and the drawing is this build's. Each record has two masters, as the engine's exports
+do, so a form is weighted like the parts beside it. Their stroke widths follow the Sans export
+(`a83fc941166b-sans-compose-layout-v4-f7+variants`): over 62 characters from 一 to 鬱, ink divided
+by stroke length is `19.028 − 0.0056065 × length` in the light master and
+`37.629 − 0.014314 × length` in the heavy one, in units of the 200-unit square (RMS error 0.77 and
+1.49). A form GlyphWiki names for a place in a character (`u752c-03`, the top) fills part of the
+square, so it is weighed as the character it is part of: its stroke length times the share of a
+170-unit square its box leaves out, up to three times. A width that fills a counter of the form (a blank
+of 12 cells or more that the hairline drawing encloses) is narrowed half a unit at a time while 6
+cells of it are not left blank, the light master to no less than 5 units and the heavy one to no
+less than 2 above the light. The heavy master is at most 2.5 times the light, so the lightest
+weight the engine draws is still a stroke. Five forms fill a counter at those limits:
+`u5910-var-004`, `u3fdc-var-001`, `u271e9-var-002`, `u271e9-var-003`, `u5912-var-006`.
+
+- Licence of the list: the repository declares none. Its content is the IRG working document,
+  published under the Unicode Terms of Use, <https://www.unicode.org/copyright.html>.
+- Licence of the outlines: GlyphWiki's data and article licence,
+  <https://glyphwiki.org/wiki/GlyphWiki:データ・記事のライセンス>, as `custom-outlines.json.gz`
+  above records it: anyone may use, copy and modify the glyph data freely, with no attribution
+  required. The page sits behind a browser check and was not re-read for this build.
+- Licence of the stroke data: the dump's `LICENSE.txt`, read 2026-11-15: "Unlimited permission is
+  hereby granted to use, copy, and distribute these files, with or without modification, either
+  commercially or non-commercially." Copyright 2009 GlyphWiki Project.
 
 ## component-names.tsv
 
@@ -1198,6 +1350,43 @@ paths: kana strokes are curved, so a turn and a curve carry the same turning ang
 built on that angle labelled ア, コ and ヨ wrongly. A class column waits for a source that names
 stroke types.
 
+## `stroke-orders.json.gz`
+
+The stroke order of the Han parts of the palette, for finding a part by the strokes it is written
+with: 10,650 `keys` in palette order with one entry of `orders` each, the codes separated by a
+space, a letter a stroke (`letters`: h 横, s 豎, p 撇, n 點, z 折). 90 KB gzipped, read when a
+stroke key of the Components panel is first reached. Built by `scripts/build_stroke_orders.mjs`
+from `ids-parts.json`.
+
+- Licence: **LGPL-3.0**, as the `first` column of `ids-parts.json`; the source authors and the
+  licence texts are in `data/licences/`.
+- Source: Rime five-stroke dictionary, revision `1e8fff9b9494ddec23b0cbc526bcfd8171a6fd48`,
+  <https://github.com/rime/rime-stroke>, SHA-256
+  `b3e93dce89c185f45c3d6e189b86b3a8626913352cc85e1094c786579a665791`. Authors: 四季的風, 雪齋,
+  Kunki Chou and 宋天.
+- A character the dictionary writes more than one way keeps every code, in the dictionary's order
+  (小 `zpn spn`, 乃 `pz zp`); 4,701 parts have more than one. The codes follow Chinese stroke
+  order and can differ from Japanese order, and a code can count strokes differently from Unihan's
+  `kTotalStrokes`.
+- A part of one stroke takes the class `ids-parts.json` gives it, so a CJK stroke symbol and the
+  ideograph Unicode calls its equivalent read alike (㇕ and 𠃍 are `z`).
+- The compound parts, BabelStone's numbered components and the radical forms the dictionary does
+  not name have no entry and are not found by strokes.
+
+## `open-strokes/`
+
+The open stroke-order release served at <https://ids.mkpo.li/open-data#strokes>: Taiwan's standard order
+from CNS 全字庫, Rime's five-stroke dictionary, Japanese order from KanjiVG, and orders induced by equivalence or from
+BabelStone's and Yi Bai's IDS for characters a source lacks. Its own `README.md` gives the fields, rules, licences
+and how often the rules agree with the sources. Built by `scripts/build_open_strokes.mjs`.
+
+## `stroke-orders-entered.tsv`
+
+Stroke orders entered by hand for characters and components the sources of `open-strokes/` do not
+record: `char`, `source`, `orders`, `basis`, `by`, `date`, tab-separated, one row per character and
+source. The build refuses a row without a basis and publishes the rows as `open-strokes/entered.tsv`;
+`open-strokes/wanted.tsv` ranks the components worth entering next.
+
 ## `han-parts.json.gz`
 
 Every Han-script character the composer can draw: 103,352 keys in code-point order, with the
@@ -1225,8 +1414,8 @@ The Components tab offers the list as **All characters**, beside the curated com
 stroke-count groups, paged at 120, searchable by character or `U+` code point and filterable by
 stroke count: single counts up to 22, then one 23+ group.
 
-Rebuild with `node scripts/build_han_parts.mjs [Unihan.zip] [stroke.dict.yaml]`. It reads all 4,096
-record shards from the export, the bundled outline index and palette outlines, and the pinned Unihan
+Rebuild with `node scripts/build_han_parts.mjs [Unihan.zip] [stroke.dict.yaml]`. It reads every
+record shard of the export, the bundled outline index and palette outlines, and the pinned Unihan
 archive (`https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip`, SHA-256
 `4c93ea9c1f636451729a840978f1667a53886af37ba854fdcce109721c63d43e`) and the Rime five-stroke
 dictionary (`https://raw.githubusercontent.com/rime/rime-stroke/1e8fff9b9494ddec23b0cbc526bcfd8171a6fd48/stroke.dict.yaml`,
@@ -1270,11 +1459,20 @@ The alignments in `ids-corpus.json.gz`, as one small table for the components pa
 status, the provenance indexes and the characters that attest it. Written by
 `scripts/build_ids_corpus.mjs`; the data is **GPL-2.0-or-later** like the corpus it comes from.
 
+## `component-atlas.json.gz`
+
+Every component a description in `ids-corpus.json.gz` uses, most used first, for the page at
+`/component-atlas`: 5,280 rows, the 4,000 most used and every unencoded part after them. Each row
+has the `cid`, its character (a private-use one for a CHISE entity), `uses` (the descriptions naming
+it), `encoded`, up to 60 characters it appears in (`subjects`) and the cid's `aliases`. A part named
+through a CHISE entity that is still unresolved is not counted. Built 2026-11-04; rebuild with
+`bun run build:component-atlas`. **GPL-2.0-or-later** like the corpus it comes from.
+
 ## Preview coverage audit
 
 `bun scripts/audit_render_coverage.mjs CACHE_DIR OUTPUT_JSON [sans|serif|fangsong|klee]` renders every
 accepted non-private Unicode scalar through the actual preview worker. It preloads the selected
-export's record shards four at a time, caches bytes and missing-shard responses, and leaves later
+export's record shards sixteen at a time, caches bytes and missing-shard responses, and leaves later
 shard requests to the worker's loader. It stops on transport errors instead of treating them as
 glyph gaps. Run it under the project's batch resource limits. A warm cache avoids repeating the
 download.

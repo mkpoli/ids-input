@@ -1,8 +1,10 @@
 // @ts-check
 // Compose a document's scoped drawing into SVG. Component cuts become a mask scoped to their
 // component; operator unions become groups; ㇯ masks its first operand by the silhouette of its
-// second. Layer transforms are already baked into the pieces by renderScopes.
+// second. Layer transforms are already baked into the pieces by renderScopes. A component's own
+// fill replaces the drawing's ink there, alpha included.
 import { EMOJI_CUT_MATRIX, emojiPlace, emojiTransform } from '../core/preview.js'
+import { fillPaint } from './fill.js'
 /** @typedef {import('./render.js').Scope} Scope */
 /** @typedef {import('./render.js').ScopeTree} ScopeTree */
 /** @typedef {import('./transform.js').Piece} Piece */
@@ -18,6 +20,12 @@ const attribute = value => String(value).replace(/[&<"]/g, character => characte
 
 /** @param {Piece} piece @param {string} fill */
 const path = (piece, fill) => `<path d="${pathData(piece.d)}" fill="${fill}" fill-rule="${piece.fillRule === 'evenodd' ? 'evenodd' : 'nonzero'}"/>`
+
+/** A component's positive pieces in one opaque paint. A translucent fill puts its alpha on a group
+ *  around them, so overlapping pieces composite once and a nonzero or evenodd winding never leaks
+ *  into another piece's fill.
+ *  @param {import('./render.js').ComponentScope} scope @param {string} paint */
+const paintedPieces = (scope, paint) => scope.positive.map(piece => path(piece, paint)).join('')
 
 /** @typedef {{ text: string, box: number[], leaf?: number, flip?: [boolean, boolean], cut?: boolean, restored?: boolean }} EmojiItem */
 
@@ -61,17 +69,20 @@ export function scopesMarkup(drawing, { ink = '#000000', background = null, size
   }
   /** @param {import('./render.js').ComponentScope} scope */
   function componentInk(scope) {
+    const paint = fillPaint(scope.fill, fill)
     const cut = scope.negative.length > 0
     const ink = cut
-      ? `<rect x="0" y="0" width="1000" height="1000" fill="${fill}" ${mask(componentMask(scope))}${layers ? ' pointer-events="none"' : ''}/>`
-      : scope.positive.map(piece => path(piece, fill)).join('')
+      ? `<rect x="0" y="0" width="1000" height="1000" fill="${paint.colour}" ${mask(componentMask(scope))}${layers ? ' pointer-events="none"' : ''}/>`
+      : paintedPieces(scope, paint.colour)
+    const alpha = Math.round(paint.opacity * 1000) / 1000
+    const painted = alpha < 1 ? `<g opacity="${alpha}">${ink}</g>` : ink
     // A mask hides ink from the eye but not from hit testing, so a cut part keeps its positive
     // outline as a transparent target. A preview can also name the part its ink belongs to, so a
     // click lands on what is painted.
     const target = layers && cut
       ? scope.positive.map(piece => `<path d="${pathData(piece.d)}" fill="transparent" fill-rule="${piece.fillRule === 'evenodd' ? 'evenodd' : 'nonzero'}" pointer-events="all"/>`).join('')
       : ''
-    return layers ? `<g data-layer="${attribute(scope.node)}">${ink}${target}</g>` : ink
+    return layers ? `<g data-layer="${attribute(scope.node)}">${painted}${target}</g>` : painted
   }
   /** @param {Scope} scope @param {string} tone @returns {string} */
   function silhouette(scope, tone = '#ffffff') {

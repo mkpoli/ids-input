@@ -122,7 +122,7 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
 | prop | | |
 | --- | --- | --- |
 | `adapter` | required | see [Adapters](#adapters) |
-| `value` | bindable | the text in the field, `⬚` for each empty slot |
+| `value` | bindable | the text in the field; an empty slot inside the parts is `⬚`, and the operands a node still misses at the end are drawn as `◌` without being part of the text |
 | `char` | | start from this character's first description when `value` is not a sequence |
 | `onuse(sequence)` | | called with a whole sequence; the Use button shows only when given |
 | `onchange(text, whole)` | | every change, and whether the sequence is whole |
@@ -174,7 +174,19 @@ A finger drags the same way on a touch screen, where the browser starts no drag 
 or a group by its operator button, and `Space` on another box places it; `Escape` lets it go, and in
 the indented Tree view the arrows move the focus between rows while a box is lifted. The context
 menu (right click, the Menu key or `Shift+F10`) splits or swaps with any operator, clears, removes a
-level or copies that part's sequence. "Take parts from" reads a character dropped on it.
+level or copies that part's sequence. A component the adapter's `variationSequences` lists has a
+button in its corner that opens its variation sequences, each drawn by the adapter's `icon`;
+choosing one writes its selector after the character (`editor.vary(sequence, path)`), and the
+context menu lists them too. "Take parts from" reads a character dropped on it.
+Double-clicking a part in either structure view edits it in place. While a single-part slot is
+edited, a panel lists the components that slot takes most often across BabelStone IDS and Yi Bai
+IDS, with the count in each button's tooltip; choosing one puts it in the slot, Tab reaches the
+buttons and Escape closes the editor. The panel shows up to 24, and **Show more** reveals the rest, up to 48
+stored for that slot. `bun run build:slot-hints` writes `src/core/slot-hints.json` through
+`scripts/build_slot_hints.mjs` and the [ranked appendix](docs/slot-hints.md) through
+`scripts/build_slot_hints_appendix.mjs`, counting each Han character once per operator slot and
+component at any depth of all its descriptions; these are dictionary coverage counts, not usage
+frequencies.
 
 The sequence field accepts zi.tools replacement expressions with three single components, such as
 `🔄林木火` or `RP林木火`. It opens the source character's descriptions and converts the expression
@@ -182,12 +194,35 @@ to an editable IDS (`⿰木火`). The lookup opens as few components as possible
 shallowest occurrence; where several are equally shallow, the last is used. If the target cannot be found in the available descriptions, the entered text
 remains in the field. Resolution is bounded to eight opened components and 128 candidate trees.
 
+`IdsVariations` (`t`, bindable `query`, and `href(text)` or `ontake(text)`) lists the IRG's unifiable
+and non-unifiable component variations from `data/ucv.json`, each form drawn from
+`data/ucv-forms.json.gz`; the workshop shows it as its `/ucv` page.
+
+With `variations`, the menu of a component's forms in `IdsTree` also lists the other characters and
+descriptions of the IRG component variation entries the component is a form of (王 and 𡈼 for 壬 in
+UCV #1, 間 for 閒 in NUCV #325), each under its entry; choosing one writes it in the component's
+place. `componentForms(part, { sequences, ucv })` in the core gives that list.
+
+A form of an entry that no code point names is written with zi.tools' variant identifier after the
+component: `壬q0012` is the second form of UCV #1. An adapter that answers `formed(sequence)`
+(`babelStoneAdapter({ variations })` over `data/ucv.json`) has the menu offer those forms too, and
+the preview draws each from `data/ucv-outlines.json.gz`, which a host lists for the composer as
+`host/outlines.json.gz`; `data/ucv-outlines-sans.json.gz` holds the same forms in Gothic, for a
+Sans face. Without them the identifier is kept in the description and the plain
+component is drawn.
+
+With `variations`, `IdsPartTools` also offers the forms the IRG unifies with the chosen component
+(its UCV entries, read from `data/ucv.json` when a component is first chosen); `variationsHref(entry)`
+gives each entry number a link.
+
 `IdsParts` (`adapter`, `onpick(part)`) and `IdsFrom` (`adapter`, `ontake(text)`, bindable `text`)
 also work without an editor. A pick that returns `false` was not placed, so the Hangul compose
 keyboard keeps its letters. `IdsSketch` (`adapter`, `onpick(part)`, `onclose()`) is the Find tab's
 drawing pad; it asks the adapter for the palette and takes its glyph shapes from the page's
 `--ids-font`. The Components panel shows the most used parts first, then every Han
 component of one stroke count, including compound IDS, grouped by first stroke. Palette text can be selected and copied;
+its stroke keys (横 豎 撇 點 折) list the parts written with the strokes typed, in writing order, fewest strokes first, and switch off the keys no part goes on with.
+In the All characters view the same keys search every Han character, by the orders of `data/open-strokes/rime-stroke.tsv.gz`, and combine with a stroke count.
 compound cells show their sequence and expose the stroke count on hover. `adapter.icon` supplies their outlines;
 without it, the cells use a font-based layout. Icon rendering must accept concurrent
 requests independently of the main preview. The components take colours from CSS custom properties with light and dark defaults
@@ -220,12 +255,13 @@ control are in [design/README.md](design/README.md).
 ### Core
 
 ```js
-import { parse, write, applyOperator, unwrap, unalias, commandFor, createHistory, enclosedRepeatSequence, pyramidOnBase, pyramidRows, pyramidSequence, repeatSequence } from 'ids-input'
+import { parse, write, writeDraft, applyOperator, unwrap, unalias, commandFor, createHistory, enclosedRepeatSequence, hintsAt, pyramidOnBase, pyramidRows, pyramidSequence, repeatSequence, SLOT_HINT_DEFAULT, slotHints } from 'ids-input'
 
 parse('⿰亻⿱七木').tree        // { op: '⿰', parts: ['亻', { op: '⿱', parts: ['七', '木'] }] }
 parse('⿰亻').problem           // 'missing'
 parse('⿰亻', { open: true })   // a draft: { tree: { op: '⿰', parts: ['亻', null] } }
 write(applyOperator(parse('⿰亻失').tree, [1], '⿱').tree)  // '⿰亻⿱失⬚'
+writeDraft(parse('⿳木').tree)  // '⿳木': the two operands still missing stay out of the field text
 unalias('lr亻ud匕失')           // '⿰亻⿱匕失'
 commandFor({ key: '&', code: 'Digit1' })  // { command: 'operator', op: '⿰' }, on any layout
 
@@ -239,6 +275,9 @@ repeatSequence('口', [2, 3])   // '⿱⿰口口⿲口口口'
 repeatSequence('口', [2, 1, 2])  // '⿳⿰口口口⿰口口'
 enclosedRepeatSequence('囗', '口')  // '⿴囗⿱⿰口口⿰口口'
 repeatSequence('屮', [3, 3], { bottom: '刀' })  // '⿱⿲屮屮屮⿲刀刀刀'
+slotHints('⿱', 1).slice(0, 2)  // [['心', 971], ['土', 653]], the common bottom parts
+hintsAt(parse('⿰木⬚', { open: true }).tree, [1])?.op  // '⿰'
+SLOT_HINT_DEFAULT             // 24, what the panel shows before Show more
 ```
 
 A component is a graphic Unicode code point (letter, mark, number, punctuation or symbol) or a
@@ -297,7 +336,7 @@ composed inside its cell. A two-layer pyramid of one part follows the composer's
 instead (品, 森). `pyramidOnBase` reads a pyramid standing on one more part, ⿳口⿰口口木 and
 ⿱⿱口⿰口口木 alike, as `{ cell, layers, base }`; the composer spreads the rows over the full width
 above the base, each cell wider than it is tall, draws the base as a cell in the row below, and
-draws the spellings alike. A whole description may run past the ordinary 64-code-point length as a pyramid
+draws the spellings alike. A whole description may run past the ordinary 256-code-point length as a pyramid
 of two or more layers, its cells any part; a draft may be longer still. The composer draws up to
 64 layers (2,080 cells). The workshop's Templates tab inserts one-click pyramids of 2 to 24
 layers, its sizes in a scrollable row, and its four-icon switch points the pyramid up, down, left
@@ -373,11 +412,28 @@ carries no variant data. A modifier after an operator (`⿻[1:]丨日`, `⿴[1]�
 stays with that operator and is written back with it: overlays, the enclosures and subtraction take
 one, other operators keep a bracket as a component, and its matrix or index narrows where a part
 sits or which occurrence an operator acts on. The layout draws the description as it does without
-one, so previewing such a description is approximate. Stroke chains (`#(H)`) are not read yet.
+one, so previewing such a description is approximate.
 
 A zi.tools stroke chain that names a stroke or a character reads as that character: `#(H)` is 一,
-`#(Wg)` is ㇁, and `#(-丨𠃍-一z)` is 口. Chains that name no character the published grammar lists
-stay in the text, to be read as their parts or rejected as usual.
+`#(Wg)` is ㇁, and `#(-丨𠃍-一z)` is 口.
+
+A component no code point names is one part, in its source's spelling: BabelStone's numbered
+component `{53}`, a CHISE entity `&CDP-8BD0;`, and any other zi.tools stroke chain `#(-𠃌㇉)`.
+`customKind(part)` answers `'numbered'`, `'entity'`, `'chain'` or null, `customsOf(tree)` lists the
+ones a tree names, and `isEncodedDescription(text)` tells a description of characters only. Where a
+text reads only with `{`, `&` or `#` as characters of their own (`⿳{1}`), it reads that way.
+
+`data/custom-components.json.gz` says what each of them is in the other tables' notation and what
+draws it; pass it as `custom` to `babelStoneAdapter` and the preview draws `⿹{53}一` as 鸟. See
+[custom IDS notation](docs/custom-components.md).
+
+Notes that are no part of a description are read around it. A zi.tools variant identifier stays on
+the component it follows (`⿰令dhs刂` has the parts `令dhs` and 刂) where the description reads no
+other way; `variantOf(part)` separates the two, `variantIdentifier(id)` says whether it names a
+source, a form of an IRG UCV entry (`q008a2`: form 2 of #8a) or a stroke style, and
+`withoutVariants(tree)` drops them, as the preview does before it draws. A BabelStone entry
+`^⿰氵骨$(GHTJKPV)` reads as its description, like a zi.tools entry; `entryNotes(text)` answers the
+separator, variants, sources and virtual forms either kind carries.
 
 A zi.tools description that carries a stroke chain this package cannot draw resolves to the
 character the published table gives it: pasting `⿱丿⿹#(-𠃌㇉)一` gives 乌. The host supplies that
@@ -462,10 +518,10 @@ apart; `scopesSvg` writes that tree with scoped masks, including ㇯ subtraction
 
 `createDocumentSession(document)` holds a document, the chosen layer ID and an allocator that never
 reuses an ID. Its edits (`replace`, `decompose`, `wrap`, `unwrap`, `changeOperator`, `remove`,
-`clear`, `setTransform`) keep the selected identity, and `undo`/`redo`, `snapshot`/`restore` work over
+`clear`, `setTransform`, `setFill`) keep the selected identity, and `undo`/`redo`, `snapshot`/`restore` work over
 whole documents. `sync(tree)` reconciles an editor tree without clearing history when the tree is
 unchanged; a structural change updates the document and clears the session history because the
-editor owns structural undo. `setTransform` accepts a coalesce key, so one drag is one step.
+editor owns structural undo. `setTransform` and `setFill` accept a coalesce key, so one drag is one step.
 `session.document` returns a detached copy; use session edits to change it.
 `listen` tells a host when to redraw; a throwing listener is reported through
 `onListenerError` (or `reportError`) and does not undo the committed edit.
@@ -475,8 +531,8 @@ ID for a tab; `readSession(text)` restores them. The record omits undo history. 
 itself is the `.ids.json` file, written by `writeDocument` and read by `readDocument`.
 
 `syncDocument(document, tree, { allocator })` reconciles the editor's positional tree into the
-document at the same paths, keeping each layer's ID, name and transform through replacements and
-structural edits. Pass the long-lived session allocator so removed IDs do not return.
+document at the same paths, keeping each layer's ID, name, fill and transform through replacements
+and structural edits. Pass the long-lived session allocator so removed IDs do not return.
 `treeFromDocument` and `documentFromTree` convert between the two projections; `layerAtPath` and
 `pathOfLayer` move between editor paths and layer IDs. `layerFrames(document, source, sketch)` gives
 each layer's box, depth and four frames: the box-to-canvas frame of its geometry (`canvas`), the
@@ -501,6 +557,7 @@ records live in [`src/document/store.js`](src/document/store.js); file bindings 
 interface IdsAdapter {
   structure(char, options?): Promise<{ text: string, regions?: string }[]>   // required
   variants?(part, options?): Promise<{ char: string, count?: number }[]>
+  variationSequences?(): Promise<Map<string, string[]>>   // 者 → [者 U+8005 U+E0101], the sequences the preview draws
   search?(query, options?): Promise<{ char: string, label?: string }[]>
   containing?(parts, options?): Promise<{ items: string[], more?: boolean }>
   parts?(options?): Promise<PalettePart[]>
@@ -545,7 +602,9 @@ two). `preview` draws a sequence that may hold empty slots (`⬚`); its options 
 Error named `TooLargeError` for a sequence larger than it draws, `UnavailableError` when its data
 cannot be read at all, and any other Error when it cannot draw. `IdsPreview` shows placeholders in the layout's boxes until a drawing arrives, a badge
 (Preview, Approximate, Final, Could not compose, Too large), and the adapter's `drawing` in place of
-the preview when there is one. While the data is unavailable, the placeholders stand with no badge.
+the preview when there is one. While the data is unavailable, the placeholders stand with no badge. It binds
+`step`, where the drawing stands: `idle`, `loading`, `composed`, `final`, `failed`, `capped` or
+`unavailable`.
 
 `IdsPreview` takes a tab `document` and `session` for direct layer editing, and binds `scopes` for
 export. Drag a part, or the selected layer's outline, to move it; drag an edge to scale one axis,
@@ -639,7 +698,7 @@ and 丿/乀 and 𠄌/亅 differ in direction. `createSearch` accepts a separate
 `structuralForms` map (strict equality by default); ordinary component search
 continues to use its broader `forms` map.
 `⬚` and `？` match any part; `|` separates up to eight alternative patterns. Each pattern must
-be a complete IDS of at most 64 code points. Matching starts at the character's whole description
+be a complete IDS of at most 256 code points. Matching starts at the character's whole description
 and opens encoded components up to six levels, considering source alternatives. It does not find
 a pattern merely contained somewhere inside an unrelated outer structure. Approximation marks
 remain explicit operators. Coverage depends on the supplied descriptions and forms.
@@ -872,7 +931,7 @@ which are laid out as equal cells. Under Vite, keep both packages out of depende
 (`optimizeDeps: { exclude: ['ids-input', '@han-compose/composer'] }`) so the Worker's URL resolves;
 `composerPreview({ base, worker })` takes a function making the Worker for other bundlers.
 
-The demo draws Sans from `https://ids-input-composer.mkpoli.workers.dev/a83fc941166b-sans-compose-layout-v4-f6/`,
+The demo draws Sans from `https://ids-input-composer.mkpoli.workers.dev/a83fc941166b-sans-compose-layout-v4-f7+variants/`,
 Serif from the serif export, Fangsong from the Zhuque Fangsong export, and Kaisho from the Kureedo export; `?composer=<url>` or
 `VITE_COMPOSER_BASE` points every face at another copy of one export. A face that cannot draw a
 description draws the encoded character it names in that face, else the Sans export's drawing.
@@ -889,7 +948,8 @@ On the tree (outside text fields), keys go by where they sit, so every layout ha
 | `Backspace`, `Delete`, `?` | empty the chosen part |
 | `Ctrl/⌘+Z`, `Ctrl/⌘+Shift+Z`, `Ctrl/⌘+Y` | undo, redo |
 | `Menu`, `Shift+F10` | the chosen part's context menu |
-| any other character | goes to the part field; `Enter` puts it in the slot |
+| `Enter`, `F2` | edit the focused part in place |
+| any other character | goes to the part field, where `Enter` puts it in the slot |
 
 Elsewhere, `Ctrl/⌘+,` opens settings. Toolbar buttons show their keys
 on hover. Outside text fields, `Ctrl/⌘+X`, `Ctrl/⌘+C` and `Ctrl/⌘+V` cut, copy and paste the selected
@@ -918,6 +978,7 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   a whole, because 102,894 of its 211,319 descriptions are CHISE's (`data/COPYING-chise-ids.txt`,
   source record `data/chise-sources.json`); the other 108,425 are public-domain BabelStone rows and
   each row says which it is. Code stays MIT.
+- `data/component-atlas.json.gz`: GPL-2.0-or-later, counted from `data/ids-corpus.json.gz`.
 - `data/seal-sources.txt.gz`: Unicode SealSources, Unicode-3.0
   (`data/COPYING-seal-sources.txt`).
 - `fonts/IDSSeal*`, with the engine's `small-seal` outlines in its package: derived Kaiyuan glyphs under
@@ -1244,9 +1305,9 @@ differs from the text it was saved with; the sequence itself is the tab's toolti
 name, not written in it. The active tab has an accent line along its top, and the + button opens an empty tab.
 Every panel follows the chosen tab: the sequence, its code points, the operators and the part pickers
 at the start; the Shape or indented Tree view and the search under it; and at the end
-the drawing in a square panel with export as SVG or PNG (256 to 2048 px) on a transparent, white, black or chosen
+the drawing in a square panel with each component's fill below it, and export as SVG or PNG (256 to 2048 px) on a transparent, white, black or chosen
 background, in an ink that suits it or a chosen one, with a margin, empty slots left out unless asked
-for. The output shows the drawing's component count and stroke total beside the code points, using the character's recorded count when it has one and marking a sum from the components with `≈`. Export can include empty slots on request, including through the scoped document drawing. An incomplete drawing blocks normal export until the partial checkbox is set. File → Document title sets the title saved in `.ids.json` and embedded in SVG/PNG exports; the page title follows it. Exported SVG and PNG files carry the editable document, so Open document restores the tree, IDs and transforms. Dropping one or more `.ids.json`, SVG or PNG files anywhere on the app opens each as a tab; a drop target shows while files are over the window. Adjust layout moves, scales and turns document layers without changing the sequence; arrow keys
+for. A fill is a hex colour with optional alpha; a component without one takes the export's ink. The output shows the drawing's component count and stroke total beside the code points, using the character's recorded count when it has one and marking a sum from the components with `≈`. Export can include empty slots on request, including through the scoped document drawing. An incomplete drawing blocks normal export until the partial checkbox is set. File → Document title sets the title saved in `.ids.json` and embedded in SVG/PNG exports; the page title follows it. Exported SVG and PNG files carry the editable document, so Open document restores the tree, IDs and transforms. Dropping one or more `.ids.json`, SVG or PNG files anywhere on the app opens each as a tab; a drop target shows while files are over the window. Adjust layout moves, scales and turns document layers without changing the sequence; a double-click on the drawing starts it, and arrow keys
 nudge, `+` and `-` scale evenly, `[` and `]` turn, and `0` resets. An edge handle scales one axis,
 a corner handle scales both, and Shift makes a corner even. The changes stay with their tab and export
 through the scoped drawing. The Layers dialog edits the same layer
@@ -1291,7 +1352,8 @@ a link keeps the token. Tabs use
 chooses the face for Han text and Sans/Serif bundled component forms, and shows the description
 being built in each face. Other composed outlines use the configured export’s font. Settings,
 the recent sequences, the theme and font choice stay in `localStorage`; the keys use the
-`ids-input:` prefix.
+`ids-input:` prefix. The report form’s contact address is kept there too, so the next report has
+it filled in already; a report sent with the field empty clears it.
 
 ### Share cards
 
@@ -1334,12 +1396,30 @@ transforms, the active tab, the view, face, theme, language and panel widths) an
 document: the version and build commit (`__APP_VERSION__` and `__BUILD_COMMIT__`, the commit the CI
 built), the route without its query, the viewport, pixel ratio, user agent, loaded font families,
 the preview's step and label, and the last twenty console warnings, errors and failed requests
-collected by the ring `demo/main.js` installs before the app mounts. Anything naming the reporter's
-own machine — a local address, a `file:` URL, a `/@fs/` or home path, wherever it appears, including
-inside a logged line — is taken out before the report leaves, and the share link is rebuilt on the
-published site with only the parameters that open the sequence. The answer replaces the form with
-the issue it became; a report matching an open issue says so and links to it, and a refused or
-timed-out one keeps the text and offers another try.
+collected by the ring `demo/main.js` installs before the app mounts. A workspace too large for the
+intake loses its last tabs, then their documents; the JSON counts what was left out. Anything
+naming the reporter's own machine — a local address, a `file:` URL, a `/@fs/` or home path, wherever
+it appears, including inside a logged line — is taken out before the report leaves, and the share
+link is rebuilt on the published site with only the parameters that open the sequence. The answer
+replaces the form with the issue it became; a report matching an open issue says so and links to
+it, and a refused or timed-out one keeps the text and offers another try.
+
+### Embedding the workshop
+
+`/editor.html` is the workshop as one editor for another page's frame. It has no tabs, no site
+menus, no sharing, layers or export, and keeps no tabs, history or language of its own. `?ids=` opens
+a sequence and `?lang=` picks the language. A search hit or a replacement takes the place of the
+sequence. Each change is posted to the host page; a host can replace the sequence:
+
+```js
+addEventListener('message', ({ data }) => {
+  if (data?.type === 'ids-input:sequence') console.log(data.sequence, data.whole)
+})
+frame.contentWindow.postMessage({ type: 'ids-input:open', sequence: '⿰木木' }, '*')
+```
+
+`sequence` is the text as written; `whole` is the complete description, or `''` while it does not
+parse.
 
 ### Desktop app
 
@@ -1444,6 +1524,7 @@ bun run build:demo      # the demo into dist/
 bun run build:site      # assets into dist/, share-card Worker into dist-worker/
 bun run dev:worker      # the worker and dist/ locally, on port 8787
 bun run build:example-drawings   # the examples' drawings, after COMPOSER_BASE changes
+bun run build:baishi-cheatsheet  # the cheatsheet's outlines, after COMPOSER_BASE or its cards change
 bun run build:sketch-parts       # the drawing search's glyph masks, after a font change
 ```
 
@@ -1507,6 +1588,12 @@ request to the assets.
 The prepared drawings in `demo/lib/example-drawings.json` are composed once from the export at
 `demo/lib/composer.js`'s `COMPOSER_BASE`; `bun run build:example-drawings` rebuilds them, and
 `tests/example-drawings.test.js` fails while the file and the export disagree.
+
+The zi.tools IDS cheatsheet (`demo/lib/baishi-cheatsheet.js`) quotes Yi Bai's data at one commit and
+colours the contours of real outlines. `bun run build:baishi-cheatsheet` looks every quotation up in
+the row it names, then stores each drawn character's contours from the export in
+`demo/lib/baishi-cheatsheet-outlines.json`; `tests/baishi-cheatsheet.test.js` fails while the cards
+and the file disagree.
 
 `data/sketch-parts.json.gz` is built by `scripts/build_sketch_parts.py` from the bundled faces and
 the system Noto Sans CJK JP (`NOTO_SANS_CJK` overrides its path). `tests/sketch-data.test.js` reads

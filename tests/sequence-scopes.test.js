@@ -40,7 +40,19 @@ test('invalid and unmeasured drafts have no lines; partial slots remain finite',
   const [scope] = sequenceScopes(tokens('⿰木'), boxes([20, 20, 0]))
   expect(scope.segments).toEqual([{ path: [0], d: 'M 22.5 4 H 37.5' }])
   expect(scope.lead).not.toMatch(/NaN|Infinity/)
-  expect(sequenceScopes(tokens('⿰'), boxes([20, 0, 0]))).toEqual([])
+})
+
+test('an operand the text still misses carries a marked scope of its own', () => {
+  const [scope] = sequenceScopes(tokens('⿰木'), boxes([20, 20, 20]))
+  expect(scope.segments).toEqual([
+    { path: [0], d: 'M 22.5 4 H 37.5' },
+    { path: [1], d: 'M 42.5 4 H 57.5', missing: true },
+  ])
+  const [all] = sequenceScopes(tokens('⿰'), boxes([20, 20, 20]))
+  expect(all.segments).toEqual([
+    { path: [0], d: 'M 22.5 4 H 37.5', missing: true },
+    { path: [1], d: 'M 42.5 4 H 57.5', missing: true },
+  ])
 })
 
 test('loose marks on a leaf do not create an operator scope', () => {

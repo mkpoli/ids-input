@@ -95,7 +95,7 @@ describe('the source catalogue', () => {
     for (const [code] of LOCALES) {
       const messages = appMessages(code)
       for (const key of keys) expect(messages[key], `${code} ${key}`).toBeTruthy()
-      for (const key of ['app.about.fullSources', 'app.about.openSources', 'sources.files', 'sources.citedBy', ...FEATURES.map(([id]) => `sources.use.${id}`)]) expect(messages[key], `${code} ${key}`).toBeTruthy()
+      for (const key of ['sources.title', 'sources.files', 'sources.citedBy', ...FEATURES.map(([id]) => `sources.use.${id}`)]) expect(messages[key], `${code} ${key}`).toBeTruthy()
     }
   })
 

@@ -88,7 +88,7 @@ export function readSession(text) {
 // ---------------------------------------------------------------- share tokens
 //
 // A token holds only what its sequence cannot: the title, the rendering recipe and each layer's
-// name, transform and extensions, addressed by its path in the tree. The sequence travels in the
+// name, fill, transform and extensions, addressed by its path in the tree. The sequence travels in the
 // token as well as in the fragment, since the fragment is the part of a URL that gets stripped.
 // Layer IDs are fresh on arrival, from the same allocator every time; a group, the one node a
 // sequence cannot spell, is written as the kind of its path, and a geometry edit whose target the
@@ -107,6 +107,7 @@ export function carriedMore(document) {
   /** @param {Node} node @returns {boolean} */
   const walk = node => {
     if (node.kind === 'group' || node.name !== undefined || node.transform !== undefined || node.extensions !== undefined) return true
+    if (node.kind === 'component' && node.fill !== undefined) return true
     return node.kind === 'operator' && node.children.some(walk)
   }
   return walk(document.root)
@@ -167,6 +168,7 @@ export function shareDocument(document) {
     const fields = {}
     if (node.kind === 'group') fields.k = GROUP
     if (node.name !== undefined) fields.n = node.name
+    if (node.kind === 'component' && node.fill !== undefined) fields.f = node.fill
     if (node.transform !== undefined) fields.x = node.transform
     if (node.extensions !== undefined) fields.e = node.extensions
     if (Object.keys(fields).length) layers.push([path, fields])
@@ -234,6 +236,10 @@ export function readShareDocument(token) {
       node = wrapped
     }
     if (fields.n !== undefined) node.name = fields.n
+    if (fields.f !== undefined) {
+      if (node.kind === 'component') node.fill = fields.f
+      else issues.push({ path: `/l/${path}`, message: 'a fill belongs to a component' })
+    }
     if (fields.x !== undefined) node.transform = fields.x
     if (fields.e !== undefined) node.extensions = fields.e
   }

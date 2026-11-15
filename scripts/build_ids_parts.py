@@ -30,6 +30,9 @@ Each part carries:
   1–3500); d (difficult) for the rest. The palette's Common view lists the parts 50 or more
   ideographs use; its stroke groups list every c and d part.
 
+`lookalikes` lists the c and d parts that Unicode's confusables data (UTS #39) maps to one
+prototype, such as 口 and 囗, each group most used first; the palette shows a group together.
+
     uv run scripts/build_ids_parts.py          # write data/ids-parts.json
     uv run scripts/build_ids_parts.py --font   # and the webfont subsets in fonts/
     bun run build:subtrees                    # then add compound parts from the bundled corpus
@@ -100,6 +103,8 @@ RIME_REVISION = "1e8fff9b9494ddec23b0cbc526bcfd8171a6fd48"
 RIME_URL = f"https://raw.githubusercontent.com/rime/rime-stroke/{RIME_REVISION}/stroke.dict.yaml"
 RIME_SHA256 = "b3e93dce89c185f45c3d6e189b86b3a8626913352cc85e1094c786579a665791"
 RIME_SOURCE = f"Rime five-stroke dictionary, {RIME_REVISION}, LGPL-3.0, {RIME_URL}"
+CONFUSABLES_URL = f"https://www.unicode.org/Public/{UNICODE_VERSION}/security/confusables.txt"
+CONFUSABLES_SHA256 = "6ed3ee967c9dfdf6677d563c9985182fbc50a2efb7d6059cd57b2e2ce18f5b92"
 # CJK Radicals Supplement forms absent from Unihan kTotalStrokes.
 RADICAL_COUNTS = dict(zip("⺊⺌⺗⺼⺈⺶⺄⺝⺀⺆⺻⻀⺂⺕", (2, 3, 4, 4, 2, 6, 1, 4, 2, 2, 5, 4, 1, 3), strict=True))
 # 〇 is an ideograph, one stroke, that no sequence names; it enters the palette beside the strokes. The
@@ -483,6 +488,24 @@ def font(rows: list[list], cache: Path, refresh: bool, out: Path = FONT_DIR) -> 
     print(f"{len(covered)} of {len(wanted)} parts drawn; the fonts lack {lacking or 'none'}")
 
 
+def lookalikes(text: str, rows: list[list]) -> list[str]:
+    """Groups of two or more single-character c and d parts that confusables.txt maps to one
+    prototype, each most used first, in the order of their most used member."""
+    prototype = {}
+    for line in text.splitlines():
+        fields = line.split("#", 1)[0].split(";")
+        if len(fields) < 2:
+            continue
+        source = chr(int(fields[0], 16))
+        prototype[source] = "".join(chr(int(code, 16)) for code in fields[1].split())
+    groups: dict[str, list[str]] = defaultdict(list)
+    for row in rows:
+        part, kind = row[0], row[5]
+        if kind in ("c", "d") and len(part) == 1:
+            groups[prototype.get(part, part)].append(part)
+    return ["".join(group) for group in groups.values() if len(group) > 1]
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--cache", type=Path, default=ROOT / "cache")
@@ -494,6 +517,7 @@ def main(argv: list[str] | None = None) -> int:
     unihan_path = fetch(UNIHAN_URL, args.cache / f"Unihan-{UNICODE_VERSION}.zip", UNIHAN_SHA256, args.refresh)
     hfhchan_path = fetch(HFHCHAN_URL, args.cache / "hfhchan-ids-20240112.txt", HFHCHAN_SHA256, args.refresh)
     rime_path = fetch(RIME_URL, args.cache / "rime-stroke.dict.yaml", RIME_SHA256, args.refresh)
+    confusables_path = fetch(CONFUSABLES_URL, args.cache / f"confusables-{UNICODE_VERSION}.txt", CONFUSABLES_SHA256, args.refresh)
     ids_path = args.ids or fetch(IDS_URL, args.cache / "IDS.TXT", refresh=args.refresh)
 
     source, written, ids_date = read_ids(ids_path)
@@ -516,8 +540,11 @@ def main(argv: list[str] | None = None) -> int:
             f"Unihan {UNICODE_VERSION}, Unicode License v3, Copyright Unicode, Inc., {UNIHAN_URL}",
             RIME_SOURCE,
             SOURCE,
+            f"Unicode Security Mechanisms (UTS #39) {UNICODE_VERSION} confusables.txt, Unicode License v3,"
+            f" Copyright Unicode, Inc., {CONFUSABLES_URL}",
         ],
         "parts": rows,
+        "lookalikes": lookalikes(confusables_path.read_text(encoding="utf-8"), rows),
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)
     text = json.dumps(document, ensure_ascii=False, separators=(",", ":")) + "\n"

@@ -1,5 +1,6 @@
 // Run against a local devrun server: IDS_URL=http://localhost:5186 bun demo/check-selection.js
 import { chromium } from 'playwright-core'
+import { LONGEST } from '../src/core/index.js'
 import { strict as assert } from 'node:assert'
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH })
 try {
@@ -76,11 +77,11 @@ try {
   await page.locator('.ids-slot').press('Enter')
   assert.equal(await field.inputValue(), '⿲木水日')
   // A draft may run past the ordinary description length; only a whole description is capped.
-  await field.fill('⿾'.repeat(63)+'木')
-  await select(64,64)
+  await field.fill('⿾'.repeat(LONGEST - 1)+'木')
+  await select(LONGEST,LONGEST)
   await page.keyboard.insertText('水')
   const longer = await field.inputValue()
-  assert.ok([...longer].length > 64, `the 65th code point was refused: ${longer}`)
+  assert.ok([...longer].length > LONGEST, `the ${LONGEST + 1}th code point was refused: ${longer}`)
   assert.equal(await field.getAttribute('aria-invalid'), 'false')
   await field.fill('⿰木日')
   await select(1,2)
@@ -90,7 +91,10 @@ try {
   await field.fill('⿰木日')
   await select(3,3)
   await page.keyboard.insertText('⿱')
-  assert.equal(await field.inputValue(), '⿲木日⿱⬚⬚')
+  // The new operator's operands are missing, so the text stops at it; the field draws them as ◌.
+  assert.equal(await field.inputValue(), '⿲木日⿱')
+  assert.deepEqual(await page.locator('.sequence-run span').allTextContents(), ['⿲', '木', '日', '⿱', '◌', '◌'])
+  assert.equal(await page.locator('.sequence-run span.missing').count(), 2)
   assert.deepEqual(errors, [])
   console.log('PASS caret typing, operator insertion/replacement, paste, IME, palette, undo, length limit')
 } finally { await browser.close() }

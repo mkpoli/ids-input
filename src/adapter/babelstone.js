@@ -10,7 +10,10 @@ import { componentIndex } from './containing.js'
 import { createSearch, readForms, readStructuralForms } from '../core/search.js'
 import { createNameSearch, readFolds, readNames } from '../core/names.js'
 import { unicodeProperty } from '../core/unicode.js'
-import { isComponent, isSequence, parse, write } from '../core/ids.js'
+import { isComponent, isCustom, isSequence, parse, write } from '../core/ids.js'
+import { createCustomComponents } from '../core/custom-components.js'
+import { formedText } from '../core/forms.js'
+import { createUcvIndex } from '../core/ucv.js'
 import { chainCharacter as chainName, readChainEntries } from '../core/chain-entries.js'
 import { readSketchTemplates } from '../core/sketch-data.js'
 import { download } from '@han-compose/composer/retry'
@@ -110,19 +113,25 @@ export function parseLayers(text) {
 }
 
 /**
- * The palette file's rows as objects.
- * @param {{ columns: string[], parts: unknown[][], subtrees?: { encoded?: Record<string, string>, sourceAliases?: Record<string, string[]> } }} document
+ * The palette file's rows as objects. A part in one of the file's look-alike groups takes the
+ * group's first member as its `group`.
+ * @param {{ columns: string[], parts: unknown[][], lookalikes?: string[], subtrees?: { encoded?: Record<string, string>, sourceAliases?: Record<string, string[]> } }} document
  * @returns {PalettePart[]}
  */
-export const paletteRows = ({ columns, parts, subtrees }) => parts.map(row => {
-  const part = /** @type {PalettePart} */ (Object.fromEntries(columns.map((name, i) => [name, row[i]])))
-  const aliases = [...new Set([
-    ...Object.entries(subtrees?.encoded ?? {}).filter(([, encoded]) => encoded === part.part).map(([ids]) => ids),
-    ...(subtrees?.sourceAliases?.[part.part] ?? []),
-  ])]
-  if (aliases.length) part.aliases = aliases
-  return part
-})
+export const paletteRows = ({ columns, parts, lookalikes = [], subtrees }) => {
+  const lookalike = new Map(lookalikes.flatMap(members => [...members].map(member => [member, [...members][0]])))
+  return parts.map(row => {
+    const part = /** @type {PalettePart} */ (Object.fromEntries(columns.map((name, i) => [name, row[i]])))
+    const group = lookalike.get(part.part)
+    if (group) part.group = group
+    const aliases = [...new Set([
+      ...Object.entries(subtrees?.encoded ?? {}).filter(([, encoded]) => encoded === part.part).map(([ids]) => ids),
+      ...(subtrees?.sourceAliases?.[part.part] ?? []),
+    ])]
+    if (aliases.length) part.aliases = aliases
+    return part
+  })
+}
 
 /**
  * A response's text, gunzipped when it is a gzip file served as it is (as GitHub Pages serves a
@@ -220,7 +229,9 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  * split, and offers each where it differs from the character's own descriptions; a layer is marked
  * `derived` so a reader knows it is not a source record. The description search (`findByIds`) runs in
  * a Web Worker made by `worker` where there is one, its index built there once; elsewhere it runs
- * on the caller's thread. `smallSeal` adds the compiled CHISE Small Seal document to the
+ * on the caller's thread. `after` is a promise the description tables (`ids`, `zitools`, `chise`,
+ * `project`) and the search worker wait for before they load, for a page with something to show
+ * first. `smallSeal` adds the compiled CHISE Small Seal document to the
  * same table and palette; its modern correspondences supply search labels and character information.
  * `sketches` is the URL of `data/sketch-parts.json.gz` (or its decoded document), the prepared
  * glyph masks the Find tab's drawing search compares with; without it the tab builds them from
@@ -232,6 +243,9 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  *   parts?: string | URL, forms?: string | URL, formsText?: string, names?: string | URL, namesText?: string,
  *   folds?: string | URL, foldsText?: string, characters?: string | URL, charactersText?: string,
  *   chains?: string | URL,
+ *   custom?: string | URL | import('../core/custom-components.js').CustomComponentsData,
+ *   customOutlines?: string | URL | import('./types.js').CustomOutlinesData,
+ *   variations?: string | URL | import('../core/ucv.js').UcvData,
  *   characterInfo?: string | URL | import('./character-info.js').CharacterInfoData,
  *   layers?: string | URL, layersText?: string,
 
@@ -240,12 +254,16 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  *   sketches?: string | URL | import('../core/sketch-data.js').SketchData,
  *   shuishu?: string | URL | import('./shuishu-data.js').ShuishuData,
  *   jurchen?: string | URL | import('./jurchen-data.js').JurchenData,
- *   worker?: (() => Worker) | null }} options
+ *   worker?: (() => Worker) | null, after?: Promise<unknown> }} options
  * @returns {IdsAdapter & { table: () => Promise<Map<string, Sequence[]>> }}
  */
-export function babelStoneAdapter({ ids, zitools, chise, project, components, componentsText, overwrite, overwriteText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, chains, characterInfo, layers, layersText, smallSeal, sketches, shuishu, jurchen, table: given, palette: givenPalette, fetch: get = download,
+export function babelStoneAdapter({ ids, zitools, chise, project, components, componentsText, overwrite, overwriteText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, chains, custom, customOutlines, variations, characterInfo, layers, layersText, smallSeal, sketches, shuishu, jurchen, table: given, palette: givenPalette, fetch: get = download, after,
 
   worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./search-worker.js', import.meta.url), { type: 'module' }) } = {}) {
+  // A page with something to show first passes `after`: the description tables and the search worker,
+  // which reads them itself, wait for it, however it settles. Every other file loads when asked for.
+  const held = after ? Promise.resolve(after).then(() => {}, () => {}) : null
+  const tables = new Set([ids, zitools, chise, project])
   /** @type {Promise<Map<string, Sequence[]>> | null} */
   let table = null
   /** Bumped whenever the search table is rebuilt with a fresh reading of the layer file. */
@@ -290,7 +308,8 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
     return building
   }
   /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit @param {'ids' | 'structure' | 'unknown' | 'similar'} [mode] @param {boolean} [componentLookup] */
-  function inWorker(query, limit, mode = 'ids', componentLookup = true) {
+  async function inWorker(query, limit, mode = 'ids', componentLookup = true) {
+    await held
     if (!searcher && worker) {
       searcher = worker()
       searcher.onmessage = ({ data }) => {
@@ -329,10 +348,29 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
   /** @param {string | URL} url */
   /** @param {string | URL} url @param {{ signal?: AbortSignal }} [options] */
   const load = async (url, options) => {
+    if (tables.has(url)) await held
     const response = await get(url, options)
     if (!response.ok) throw new Error(`${url}: ${response.status}`)
     return response
   }
+  /** @type {Promise<ReturnType<typeof createCustomComponents>> | null} */
+  let customComponents = null
+  /** The dictionary of components no code point names, loaded once. */
+  const readCustom = () => customComponents ??= (async () => createCustomComponents(
+    typeof custom === 'string' || custom instanceof URL ? JSON.parse(await readText(await load(custom))) : /** @type {import('../core/custom-components.js').CustomComponentsData} */ (custom)))()
+    .catch(error => { customComponents = null; throw error })
+  /** @type {Promise<import('./types.js').CustomOutlinesData | null> | null} */
+  let outlines = null
+  /** The outlines some components are shown by, loaded once; a card reads without them. */
+  const readOutlines = () => outlines ??= (async () => !customOutlines ? null
+    : typeof customOutlines === 'string' || customOutlines instanceof URL ? JSON.parse(await readText(await load(customOutlines))) : customOutlines)()
+    .catch(() => { outlines = null; return null })
+  /** @type {Promise<import('../core/ucv.js').UcvIndex> | null} */
+  let ucvIndex = null
+  /** The IRG component variation lists (`data/ucv.json`), loaded once. */
+  const readVariations = () => ucvIndex ??= (async () => createUcvIndex(
+    typeof variations === 'string' || variations instanceof URL ? JSON.parse(await readText(await load(variations))) : /** @type {import('../core/ucv.js').UcvData} */ (variations)))()
+    .catch(error => { ucvIndex = null; throw error })
   /** @type {Promise<import('./seal-data.js').SmallSealData | null> | null} */
   let seal = null
   const readSeal = () => seal ??= (async () => {
@@ -518,12 +556,24 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
     const rows = doc || shuiDoc || jurDoc ? [...new Map([...base, ...(doc?.parts ?? []), ...(shuiDoc?.parts ?? []), ...(jurDoc?.parts ?? [])].map(p => [p.part, p])).values()] : base
     // Keep reviewed contextual search substitutions out of palette families.
     const safe = text.split('\n').filter(line => !line.split('\t').slice(0, 2).some(char => PALETTE_SEPARATE.has(char))).join('\n')
-    const variants = readForms(safe)
-    for (const root of variants.values()) variants.set(root, root)
+    // Variant forms and look-alikes join one group.
+    const groups = readForms(safe)
+    for (const root of groups.values()) groups.set(root, root)
+    /** @param {string} char @returns {string} */
+    const find = char => { let root = char; while (groups.has(root) && groups.get(root) !== root) root = /** @type {string} */ (groups.get(root)); return root }
+    const grouped = (/** @type {PalettePart} */ part) => (part.kind === 'c' || part.kind === 'd') && !isSequence(part.part) && !PALETTE_SEPARATE.has(part.part)
+    for (const part of rows) {
+      if (!part.group || !grouped(part) || PALETTE_SEPARATE.has(part.group)) continue
+      const a = find(part.group), b = find(part.part)
+      groups.set(a, a)
+      if (a !== b) groups.set(b, a)
+    }
+    const sizes = new Map()
+    for (const part of rows) if (grouped(part) && groups.has(part.part)) sizes.set(find(part.part), (sizes.get(find(part.part)) ?? 0) + 1)
     return rows.map(part => {
-      if (part.kind !== 'c' && part.kind !== 'd' || isSequence(part.part) || PALETTE_SEPARATE.has(part.part)) return part
-      const variantGroup = variants.get(part.part)
-      return variantGroup ? { ...part, variantGroup } : part
+      if (grouped(part) && groups.has(part.part) && sizes.get(find(part.part)) > 1) return { ...part, group: find(part.part) }
+      const { group, ...rest } = part
+      return group ? rest : part
     })
   })
     .catch(error => { palette = null; throw error })
@@ -706,6 +756,34 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
       for (const [char, rows] of table) sorted.set(char, byRank(rows))
       return sorted
     },
+    ...(custom ? {
+      async customComponents(/** @type {import('./types.js').Options} */ { signal } = {}) {
+        signal?.throwIfAborted()
+        return (await readCustom()).components
+      },
+      async customPart(/** @type {string} */ text, /** @type {import('./types.js').Options} */ { signal } = {}) {
+        signal?.throwIfAborted()
+        const part = (await readCustom()).describe(text)
+        if (!part) return null
+        const read = await readOutlines()
+        signal?.throwIfAborted()
+        for (const name of [text, ...part.names.map(name => name.text)]) {
+          const from = read?.names[name], d = from === undefined ? undefined : read?.outlines[from]
+          if (from !== undefined && d) return { ...part, outline: { d, from, source: read?.source.title ?? '' } }
+        }
+        return part
+      },
+      async drawable(/** @type {string} */ sequence, /** @type {import('./types.js').Options} */ { signal } = {}) {
+        signal?.throwIfAborted()
+        return /[{&#㇯]/.test(sequence) ? (await readCustom()).drawableLeaves(sequence) : { text: sequence, leaves: [] }
+      },
+    } : {}),
+    ...(variations ? {
+      async formed(/** @type {string} */ sequence, /** @type {import('./types.js').Options} */ { signal } = {}) {
+        signal?.throwIfAborted()
+        return formedText(sequence, await readVariations())
+      },
+    } : {}),
     ...(characterInfo ? { async characterInfo(/** @type {string} */ char, /** @type {import('./types.js').Options} */ { signal } = {}) {
       signal?.throwIfAborted()
       const { doc, lookup } = await readInformation()
@@ -724,6 +802,15 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
     } } : {}),
     /** @param {string} char @param {import('./types.js').Options} [options] */
     async structure(char, { signal } = {}) {
+      // A component no code point names is described by what it is in the other tables.
+      if (custom && isCustom(char)) {
+        const row = (await readCustom()).get(char)
+        signal?.throwIfAborted()
+        const seen = new Set()
+        return [...(row?.fragment ? [{ text: row.fragment, regions: '', sources: ['babelstone'] }] : []),
+          ...(row?.equivalents ?? []).filter(item => item.basis === 'difference').map(item => ({ text: item.text, regions: '', sources: [item.in] }))]
+          .filter(sequence => !seen.has(sequence.text) && seen.add(sequence.text))
+      }
       const found = (await readSearch()).table.get(char) ?? []
       signal?.throwIfAborted()
       // A computed character-first description replaces its source in the decomposition tree;

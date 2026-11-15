@@ -8,7 +8,8 @@
   // box. A click on a row chooses that part, a click on its arrow opens or closes its parts, and a
   // part dragged from a palette or a search drops onto the row; a row of the list dropped beside a
   // sibling moves there or on any other row switches places with it. Arrow keys move, ArrowRight
-  // opens a row or steps into it, ArrowLeft closes it or steps out, and Enter chooses the row.
+  // opens a row or steps into it, ArrowLeft closes it or steps out, and Enter edits the row in place
+  // as a double click does.
   import { isNode, samePath, write } from '../core/ids.js'
   import OperatorIcon from './OperatorIcon.svelte'
 
@@ -185,7 +186,7 @@
       if (row.path.length && !editor.disabled) { event.preventDefault(); if (next) { move(row.path, next); focusRow(key(next)) } }
       return
     }
-    if (event.key === 'Enter') { event.preventDefault(); if (!editor.disabled) editor.choose(row.path); return }
+    if (event.key === 'Enter' && !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.isComposing) { event.preventDefault(); if (!editor.disabled) editRow(row); return }
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault()
       const next = rows[index + (event.key === 'ArrowDown' ? 1 : -1)]
@@ -303,6 +304,7 @@
   li.carried{outline:2px dashed var(--_accent);outline-offset:-2px}
   li.swap{border-color:var(--_accent);background:var(--_accent-light)}
   li.dragged{opacity:.45}
+  li:has(:global(.inline-edit)){position:relative;z-index:70}
   li:focus-visible{outline:2px solid var(--_focus);outline-offset:-2px}
   .toggle{display:grid;place-items:center;width:14px;flex:none;color:var(--_muted);font-size:11px}
   .part{display:grid;place-items:center;min-width:22px;font-family:var(--_font);font-size:20px;line-height:1.1}

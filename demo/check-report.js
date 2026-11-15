@@ -37,8 +37,9 @@ const shoot = async (page, name) => { if (shots) await page.screenshot({ path: `
  * @param {{ width: number, height: number }} viewport @param {'light' | 'dark'} scheme @param {boolean} deepLink
  * @param {string} [sequence] the path, an encoded sequence by default
  * @param {boolean} [clean] forget the workspace a previous case left in storage
+ * @param {(() => void) | null} [seed] a script to run before the page's own, to stock storage
  */
-async function open(viewport, scheme, deepLink = false, sequence = '%E2%BF%B0%E6%9C%A8%E5%8F%A3', clean = false) {
+async function open(viewport, scheme, deepLink = false, sequence = '%E2%BF%B0%E6%9C%A8%E5%8F%A3', clean = false, seed = null) {
   const page = await browser.newPage({ viewport, deviceScaleFactor: 2, colorScheme: scheme })
   /** @type {string[]} */
   const errors = []
@@ -53,6 +54,7 @@ async function open(viewport, scheme, deepLink = false, sequence = '%E2%BF%B0%E6
     await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({ number: 123, url: 'https://github.com/mkpoli/ids-input/issues/123', duplicate: false }) })
   })
   if (clean) await page.addInitScript(() => { localStorage.clear(); sessionStorage.clear() })
+  if (seed) await page.addInitScript(seed)
   const address = `${base}/${sequence}?endpoint=${encodeURIComponent(INTAKE)}${deepLink ? '&report=1' : ''}${process.env.IDS_COMPOSER ? `&composer=${encodeURIComponent(process.env.IDS_COMPOSER)}` : ''}`
   await page.goto(address, { waitUntil: 'domcontentloaded' })
   // The output panel starts hidden on a phone, so the preview is only required to be drawn.
@@ -118,6 +120,30 @@ try {
   assert.equal(sent.image?.type, 'image/png', 'the drawing is sent as a PNG')
   assert.ok(sent.image.value.startsWith('\x89PNG'), 'and it is a PNG')
   assert.ok(sent.image.value.length > 1000, `of some size: ${sent.image.value.length}`)
+
+  // The address is kept across a reload, so the next report does not ask for it again.
+  assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('ids-input:reportContact') ?? 'null')), '@someone', 'the contact is written down')
+  await page.reload({ waitUntil: 'domcontentloaded' })
+  await page.getByRole('menuitem', { name: 'File', exact: true }).waitFor({ timeout: 60000 })
+  await page.getByRole('menuitem', { name: 'File', exact: true }).click()
+  await page.getByRole('menuitem', { name: 'Report a problem', exact: true }).click()
+  await dialog.waitFor({ timeout: 5000 })
+  assert.equal(await dialog.getByRole('textbox', { name: 'How to reach you (optional)' }).inputValue(), '@someone', 'the contact is kept for the next report')
+  assert.equal(await dialog.locator('textarea').inputValue(), '', 'the next report starts with a fresh account')
+
+  // Sending a report with the field cleared forgets the address.
+  await dialog.locator('textarea').fill('The next report has no way back.')
+  await dialog.getByRole('textbox', { name: 'How to reach you (optional)' }).fill('')
+  await dialog.getByRole('button', { name: 'Send report' }).click()
+  await dialog.getByRole('link', { name: 'Issue #123' }).waitFor({ timeout: 10000 })
+  assert.equal(parts(body()).contact, undefined, 'a report sent without an address carries none')
+  await page.reload({ waitUntil: 'domcontentloaded' })
+  await page.getByRole('menuitem', { name: 'File', exact: true }).waitFor({ timeout: 60000 })
+  await page.getByRole('menuitem', { name: 'File', exact: true }).click()
+  await page.getByRole('menuitem', { name: 'Report a problem', exact: true }).click()
+  await dialog.waitFor({ timeout: 5000 })
+  assert.equal(await dialog.getByRole('textbox', { name: 'How to reach you (optional)' }).inputValue(), '', 'the cleared address stays forgotten')
+  await dialog.getByRole('button', { name: 'Close', exact: true }).click()
   assert.deepEqual(errors, [])
   await page.close()
 
@@ -168,5 +194,51 @@ try {
   assert.deepEqual(bare.errors, [])
   await bare.page.close()
 
-  console.log('PASS the report dialog opens from File, the More sheet and ?report=1, sends the sequence, the workspace, the context and the drawing, shows the issue it became, and keeps the text when the intake refuses it')
+  // A workspace larger than the dispatch is cut to fit it, rather than the report being refused.
+  const heavy = await open({ width: 1440, height: 900 }, 'light', true, '%E2%BF%B0%E6%9C%A8%E5%8F%A3', true, () => {
+    const tabs = Array.from({ length: 60 }, (_, index) => ({
+      id: `heavy-${index}`,
+      sequence: '⿰木口',
+      saved: '⿰木口',
+      document: {
+        format: 'ids-input/session', version: 1,
+        document: { format: 'ids-input/document', version: 1, root: { id: 'root', kind: 'operator', op: '⿰', children: [
+          { id: 'l', kind: 'component', char: '木' },
+          { id: 'r', kind: 'component', char: '口' },
+        ] } },
+        chosen: 'l',
+        ids: Array.from({ length: 80 }, (_, n) => `id-${n}-${'x'.repeat(48)}`),
+      },
+    }))
+    localStorage.setItem('ids-input:tabs', JSON.stringify(tabs))
+    localStorage.setItem('ids-input:activeTab', JSON.stringify('heavy-30'))
+  })
+  const heavyDialog = heavy.page.getByRole('dialog').filter({ has: heavy.page.getByRole('heading', { name: 'Report a problem' }) })
+  await heavyDialog.waitFor({ timeout: 10000 })
+  await heavyDialog.locator('textarea').fill('心太大')
+  await heavyDialog.getByRole('button', { name: 'Send report' }).click()
+  await heavyDialog.getByRole('link', { name: 'Issue #123' }).waitFor({ timeout: 10000 })
+  const seeded = Buffer.byteLength(await heavy.page.evaluate(() => localStorage.getItem('ids-input:tabs') ?? ''))
+  assert.ok(seeded > 30000, `the workspace starts larger than the dispatch: ${seeded} bytes`)
+  const heavySent = parts(heavy.body())
+  assert.equal(heavySent.symptom?.value, '心太大', 'the account survives the cut')
+  const heavyContext = JSON.parse(heavySent.context?.value ?? 'null')
+  assert.ok(heavyContext?.appVersion && heavyContext?.locale && Array.isArray(heavyContext?.console), 'the context survives the cut')
+  const heavyWorkspace = JSON.parse(heavySent.document?.value ?? 'null')
+  assert.ok(heavyWorkspace?.tabs?.length > 0, 'the report keeps a tab')
+  const active = heavyWorkspace.tabs.find(tab => tab.id === 'heavy-30')
+  assert.ok(active, `the report keeps the tab being looked at: active ${heavyWorkspace.activeTab}, kept ${heavyWorkspace.tabs.map(tab => tab.id).join(',')}`)
+  assert.ok(active.document, 'the tab being looked at keeps its document')
+  assert.ok(heavyWorkspace.droppedTabs > 0, `the report cuts tabs that cannot ride the dispatch: ${heavyWorkspace.droppedTabs}`)
+  const carried = {
+    symptom: heavySent.symptom?.value, sequence: heavySent.sequence?.value, link: heavySent.link?.value,
+    document: heavySent.document?.value, context: heavySent.context?.value,
+  }
+  if (heavySent.contact?.value) carried.contact = heavySent.contact.value
+  const dispatched = Buffer.byteLength(JSON.stringify({ ...carried, origin: 'https://ids.mkpo.li' }))
+  assert.ok(dispatched <= 30000, `the report fits the dispatch: ${dispatched} bytes`)
+  assert.deepEqual(heavy.errors, [])
+  await heavy.page.close()
+
+  console.log('PASS the report dialog opens from File, the More sheet and ?report=1, sends the sequence, the workspace, the context and the drawing, cuts a workspace too large for the dispatch, shows the issue it became, and keeps the text when the intake refuses it')
 } finally { await browser.close() }

@@ -96,6 +96,24 @@
       },
       "additionalProperties": true
     },
+    "fill": {
+      "type": "object",
+      "required": [
+        "type",
+        "colour"
+      ],
+      "properties": {
+        "type": {
+          "const": "solid"
+        },
+        "colour": {
+          "type": "string",
+          "pattern": "^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "description": "A hex colour, with an optional alpha channel."
+        }
+      },
+      "additionalProperties": false
+    },
     "complex": {
       "type": "array",
       "items": {
@@ -282,6 +300,9 @@
               "minLength": 1,
               "maxLength": 64,
               "description": "One component, its variation selector and loose marks, or one conjoining Hangul jamo run."
+            },
+            "fill": {
+              "$ref": "#/$defs/fill"
             }
           }
         }

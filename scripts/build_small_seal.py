@@ -25,6 +25,8 @@ MAP_URL = f'https://gitlab.chise.org/api/v4/projects/CHISE%2Fxemacs-chise/reposi
 IDS_SHA = 'ad63ab00a768e097ad0030f1e4714e4d556b7bef171de407bc0828d3e20bd074'
 MAP_SHA = 'c4c1062d38487299b37dc27c3a090416bfdea6571ca523845fbd7a850f2fa92a'
 ARITY = {c: 2 for c in '⿰⿱⿴⿵⿶⿷⿸⿹⿺⿻⿼⿽㇯'} | {c: 3 for c in '⿲⿳'} | {c: 1 for c in '⿾⿿〾'}
+# The parser's ordinary description limit (src/core/ids.js), kept in step here.
+LONGEST = 256
 ENTITY = re.compile(r'&[^;]+;')
 TOKENS = re.compile(r';[^\n]*|"(?:\\.|[^"\\])*"|[()\']|[^\s()\';]+')
 
@@ -83,7 +85,7 @@ def valid(sequence):
         if c not in ARITY and not (0x2E80 <= ord(c) <= 0x2FDF or 0x31C0 <= ord(c) <= 0x31EE or
             0x3400 <= ord(c) <= 0x9FFF or 0x20000 <= ord(c) <= 0x3FFFD): return False
         remaining += ARITY.get(c, 0) - 1
-    return remaining == 0 and len(sequence) <= 64
+    return remaining == 0 and len(sequence) <= LONGEST
 
 
 def compile_data(text, mapping, modern):

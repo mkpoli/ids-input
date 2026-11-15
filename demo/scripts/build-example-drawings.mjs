@@ -16,12 +16,15 @@ import { hasJurchen, jurchenSource } from '@han-compose/composer/jurchen'
 import { onlyBundled } from '@han-compose/composer/local'
 import { bundledSource } from '@han-compose/composer/bundled'
 import { compose, fromUrl } from '@han-compose/composer/loader'
-import { EXAMPLES } from '../lib/examples.js'
+import { EXAMPLES, EXAMPLE_GROUPS } from '../lib/examples.js'
 import { COMPOSER_BASE } from '../lib/composer.js'
 
 // The outlines the engine carries, where its package keeps them.
 const DATA = join(dirname(fileURLToPath(import.meta.resolve('@han-compose/composer/package.json'))), 'data')
 const bundledOutlines = path => JSON.parse(gunzipSync(readFileSync(join(DATA, path))))
+// A draft form names the character it stood for, so its example is drawn from the description.
+const DRAFTED = new Map(EXAMPLE_GROUPS.filter(group => ['sign', 'erjian'].includes(group.key))
+  .flatMap(group => group.examples.map(example => [example.sequence, group.key])))
 const source = fromUrl(COMPOSER_BASE)
 // Examples whose parts are all bundled draw from a local source. `onlyBundled` also says yes to a
 // whole sequence that matches a component form, then skips its parts, so the export stays behind

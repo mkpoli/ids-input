@@ -101,11 +101,14 @@ try {
 
   // A strip of tabs wider than the window scrolls by itself while a tab is held at its edge.
   await page.setViewportSize({ width: 375, height: 812 })
-  for (let i = 0; i < 2; i++) await page.getByRole('button', { name: 'New tab', exact: true }).click()
-  await page.waitForFunction(() => document.querySelectorAll('.tabbar .tab').length === 5)
   const strip = page.locator('.tabs')
+  for (let i = 0; i < 12; i++) {
+    if (await strip.evaluate(el => el.scrollWidth > el.clientWidth + 2)) break
+    await page.getByRole('button', { name: 'New tab', exact: true }).click()
+    await page.waitForFunction(n => document.querySelectorAll('.tabbar .tab').length === n, 4 + i)
+  }
   const wide = await strip.evaluate(el => el.scrollWidth > el.clientWidth + 2)
-  assert.equal(wide, true, 'five tabs overflow the narrow strip')
+  assert.equal(wide, true, 'the open tabs overflow the narrow strip')
   await strip.evaluate(el => { el.scrollLeft = 0 })
   const before = await order()
   // Show the first tab, so its reveal does not scroll the strip while it is being dragged.

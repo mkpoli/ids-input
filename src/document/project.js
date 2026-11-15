@@ -1,7 +1,7 @@
 // @ts-check
 // The bridge between the editor's positional core tree and the identified document. The core tree
 // stays the projection the existing controls edit; this module reconciles it into a document at the
-// same paths, keeping each layer's ID, name and transform through replacements and structural edits.
+// same paths, keeping each layer's ID, name, fill and transform through replacements and structural edits.
 import { parse, sameTree, write } from '../core/ids.js'
 import { DocumentError, allocatorFor, assertDocument, fromSequence } from './model.js'
 
@@ -33,6 +33,7 @@ function kept(old, allocator, kind) {
   /** @type {Record<string, unknown>} */
   const out = { id: old?.id ?? allocator.next(), kind }
   if (old?.name !== undefined) out.name = old.name
+  if (old?.kind === 'component' && old.fill !== undefined && kind === 'component') out.fill = structuredClone(old.fill)
   if (old?.transform !== undefined) out.transform = structuredClone(old.transform)
   if (old?.extensions !== undefined) out.extensions = structuredClone(old.extensions)
   return /** @type {T} */ (out)

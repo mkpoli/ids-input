@@ -38,6 +38,11 @@ def main():
     identity['root']['transform'] = []
     case('empty operation array', identity)
     case('supplementary component with variation selector', with_root({'id': 'a', 'kind': 'component', 'char': '𠮷\U000E0100'}))
+    case('solid fill with alpha', with_root({'id': 'a', 'kind': 'component', 'char': '木', 'fill': {'type': 'solid', 'colour': '#b42318cc'}}))
+    case('unknown fill type rejected', with_root({'id': 'a', 'kind': 'component', 'char': '木', 'fill': {'type': 'linear', 'colour': '#b42318'}}), False)
+    case('fill colour that is not hex rejected', with_root({'id': 'a', 'kind': 'component', 'char': '木', 'fill': {'type': 'solid', 'colour': 'red'}}), False)
+    case('fill on an operator rejected', with_root({'id': 'a', 'kind': 'operator', 'op': '⿰', 'fill': {'type': 'solid', 'colour': '#b42318'},
+                                                   'children': [{'id': 'b', 'kind': 'slot'}, {'id': 'c', 'kind': 'slot'}]}), False)
     case('group retains child identity', with_root({'id': 'wrapper', 'kind': 'group', 'child': base['root']}))
     case('unknown operation retained', with_transform({'type': 'example.org/warp', 'parameters': {'strength': 3}}))
     metadata = deepcopy(base)

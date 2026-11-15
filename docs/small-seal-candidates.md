@@ -41,9 +41,9 @@ occurrences introduced by later expansions.
 
 Cycles stop at an unresolved component. Each root description allows at most eight
 component expansions on a path and 512 expansion attempts, with a bounded pending
-queue. Expanded IDS must fit the parser's 64-code-point limit. `truncated` also
+queue. Expanded IDS must fit the parser's 256-code-point limit. `truncated` also
 marks expansion limits; candidates retain unresolved slots when a limit prevents
-completion. The generator version is `cjk-to-seal/2`.
+completion. The generator version is `cjk-to-seal/3`.
 
 Remaining unmapped components become `⬚` slots. Self-referencing substitutions are excluded.
 Generation preserves modern source-region tags and descriptions, including

@@ -27,7 +27,7 @@
         <span class="ids-op-label" id={`${uid}-ops-empty`}>{t('ids.empty')}</span>
         <div class="ids-op-keys">
           <button type="button" class="ids-key ids-key-empty" disabled={editor.disabled || !editor.chosen || picked === null || picked === undefined}
-            aria-label={t('ids.empty')} aria-keyshortcuts={EMPTY_KEY} title={`${t('ids.empty')} (${shortcut(EMPTY_KEY)})`}
+            aria-label={t('ids.empty')} aria-keyshortcuts={EMPTY_KEY} title={`${t('ids.empty')} (${shortcut(EMPTY_KEY)})\n${t('ids.emptyTip')}`}
             onclick={() => editor.empty(editor.chosen)}>
             <span class="ids-empty-glyph" aria-hidden="true">⬚</span>{#if keyHints}<kbd class="ids-kbd" aria-hidden="true">{shortcut(EMPTY_KEY)}</kbd>{/if}
           </button>

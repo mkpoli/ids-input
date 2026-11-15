@@ -32,18 +32,18 @@
     "mergedCharacters": 108115,
     "hanCharacters": 101960,
     "descriptions": 126454,
-    "validDescriptions": 123783,
-    "invalidDescriptions": 2671,
-    "unknownDescriptions": 104,
-    "eligibleDescriptions": 121105,
-    "eligibleCharacters": 100172,
+    "validDescriptions": 126318,
+    "invalidDescriptions": 136,
+    "unknownDescriptions": 107,
+    "eligibleDescriptions": 123256,
+    "eligibleCharacters": 100824,
     "previousTemplates": 17,
-    "previousCoveredCharacters": 88719,
+    "previousCoveredCharacters": 89258,
     "curatedTemplates": 3,
-    "frequencyAdditions": 38,
-    "templates": 58,
-    "addedTemplates": 41,
-    "coveredCharacters": 98610
+    "frequencyAdditions": 41,
+    "templates": 61,
+    "addedTemplates": 44,
+    "coveredCharacters": 99395
   },
   "templates": [
     {
@@ -51,7 +51,7 @@
       "sequence": "⿰⬚⬚",
       "curated": false,
       "slots": 2,
-      "count": 61042,
+      "count": 61122,
       "examples": [
         "丩",
         "丬",
@@ -65,7 +65,7 @@
       "sequence": "⿱⬚⬚",
       "curated": false,
       "slots": 2,
-      "count": 20417,
+      "count": 20626,
       "examples": [
         "丁",
         "丂",
@@ -79,7 +79,7 @@
       "sequence": "⿺⬚⬚",
       "curated": false,
       "slots": 2,
-      "count": 3630,
+      "count": 3636,
       "examples": [
         "上",
         "乪",
@@ -93,7 +93,7 @@
       "sequence": "⿸⬚⬚",
       "curated": false,
       "slots": 2,
-      "count": 3388,
+      "count": 3426,
       "examples": [
         "万",
         "下",
@@ -107,7 +107,7 @@
       "sequence": "⿵⬚⬚",
       "curated": false,
       "slots": 2,
-      "count": 998,
+      "count": 1002,
       "examples": [
         "両",
         "丸",
@@ -121,13 +121,27 @@
       "sequence": "⿻⬚⬚",
       "curated": false,
       "slots": 2,
-      "count": 503,
+      "count": 525,
       "examples": [
         "丈",
         "不",
-        "世",
-        "丗",
-        "丙"
+        "与",
+        "丑",
+        "世"
+      ]
+    },
+    {
+      "id": "layout-1f6b65a0b456",
+      "sequence": "⿹⬚⬚",
+      "curated": false,
+      "slots": 2,
+      "count": 513,
+      "examples": [
+        "丌",
+        "与",
+        "丮",
+        "乃",
+        "习"
       ]
     },
     {
@@ -135,7 +149,7 @@
       "sequence": "⿴⬚⬚",
       "curated": false,
       "slots": 2,
-      "count": 498,
+      "count": 502,
       "examples": [
         "且",
         "丼",
@@ -145,25 +159,11 @@
       ]
     },
     {
-      "id": "layout-1f6b65a0b456",
-      "sequence": "⿹⬚⬚",
-      "curated": false,
-      "slots": 2,
-      "count": 466,
-      "examples": [
-        "丌",
-        "丮",
-        "乃",
-        "习",
-        "亓"
-      ]
-    },
-    {
       "id": "layout-f4b03475f3c3",
       "sequence": "⿷⬚⬚",
       "curated": false,
       "slots": 2,
-      "count": 251,
+      "count": 257,
       "examples": [
         "丘",
         "佂",
@@ -216,13 +216,13 @@
       "sequence": "⿰⬚⿱⬚⬚",
       "curated": false,
       "slots": 3,
-      "count": 3211,
+      "count": 3362,
       "examples": [
+        "仱",
         "伔",
+        "伶",
         "侃",
-        "俢",
-        "倦",
-        "偂"
+        "侯"
       ]
     },
     {
@@ -230,13 +230,13 @@
       "sequence": "⿳⬚⬚⬚",
       "curated": false,
       "slots": 3,
-      "count": 1917,
+      "count": 2027,
       "examples": [
         "产",
         "亨",
         "享",
-        "亵",
-        "余"
+        "亴",
+        "亵"
       ]
     },
     {
@@ -244,7 +244,7 @@
       "sequence": "⿰⿱⬚⬚⬚",
       "curated": false,
       "slots": 3,
-      "count": 895,
+      "count": 932,
       "examples": [
         "乿",
         "亁",
@@ -258,13 +258,13 @@
       "sequence": "⿱⿰⬚⬚⬚",
       "curated": false,
       "slots": 3,
-      "count": 772,
+      "count": 813,
       "examples": [
+        "丝",
         "亇",
-        "华",
-        "唘",
-        "啓",
-        "啔"
+        "势",
+        "勢",
+        "华"
       ]
     },
     {
@@ -272,7 +272,7 @@
       "sequence": "⿱⬚⿰⬚⬚",
       "curated": false,
       "slots": 3,
-      "count": 689,
+      "count": 709,
       "examples": [
         "丌",
         "丏",
@@ -286,13 +286,13 @@
       "sequence": "⿲⬚⬚⬚",
       "curated": false,
       "slots": 3,
-      "count": 680,
+      "count": 703,
       "examples": [
         "丱",
         "修",
         "偹",
         "傲",
-        "吪"
+        "卿"
       ]
     },
     {
@@ -300,7 +300,7 @@
       "sequence": "⿰⬚⿸⬚⬚",
       "curated": false,
       "slots": 3,
-      "count": 298,
+      "count": 315,
       "examples": [
         "傉",
         "嗕",
@@ -314,7 +314,7 @@
       "sequence": "⿸⬚⿱⬚⬚",
       "curated": false,
       "slots": 3,
-      "count": 285,
+      "count": 295,
       "examples": [
         "原",
         "唐",
@@ -328,13 +328,13 @@
       "sequence": "⿺⬚⿱⬚⬚",
       "curated": false,
       "slots": 3,
-      "count": 231,
+      "count": 242,
       "examples": [
+        "延",
         "暹",
         "趝",
         "逞",
-        "遀",
-        "遂"
+        "遀"
       ]
     },
     {
@@ -342,7 +342,7 @@
       "sequence": "⿰⬚⿻⬚⬚",
       "curated": false,
       "slots": 3,
-      "count": 228,
+      "count": 237,
       "examples": [
         "偖",
         "冸",
@@ -356,13 +356,13 @@
       "sequence": "⿱⬚⿻⬚⬚",
       "curated": false,
       "slots": 3,
-      "count": 191,
+      "count": 208,
       "examples": [
         "两",
         "乇",
         "乎",
-        "伞",
-        "傘"
+        "争",
+        "伞"
       ]
     },
     {
@@ -370,13 +370,13 @@
       "sequence": "⿰⬚⿹⬚⬚",
       "curated": false,
       "slots": 3,
-      "count": 173,
+      "count": 188,
       "examples": [
         "匏",
         "咆",
+        "嘄",
         "圴",
-        "垉",
-        "扚"
+        "垉"
       ]
     },
     {
@@ -384,7 +384,7 @@
       "sequence": "⿱⿻⬚⬚⬚",
       "curated": false,
       "slots": 3,
-      "count": 118,
+      "count": 122,
       "examples": [
         "专",
         "丗",
@@ -412,13 +412,13 @@
       "sequence": "⿱⬚⿸⬚⬚",
       "curated": false,
       "slots": 3,
-      "count": 93,
+      "count": 98,
       "examples": [
+        "倉",
         "叢",
         "最",
         "朂",
-        "樷",
-        "罽"
+        "樷"
       ]
     },
     {
@@ -426,7 +426,7 @@
       "sequence": "⿺⬚⿰⬚⬚",
       "curated": false,
       "slots": 3,
-      "count": 86,
+      "count": 88,
       "examples": [
         "遨",
         "𢌦",
@@ -440,13 +440,13 @@
       "sequence": "⿸⬚⿰⬚⬚",
       "curated": false,
       "slots": 3,
-      "count": 82,
+      "count": 88,
       "examples": [
         "不",
+        "厩",
         "在",
         "存",
-        "屜",
-        "屦"
+        "屜"
       ]
     },
     {
@@ -454,27 +454,13 @@
       "sequence": "⿱⬚⿺⬚⬚",
       "curated": false,
       "slots": 3,
-      "count": 76,
+      "count": 78,
       "examples": [
         "丘",
         "冦",
         "宼",
         "寇",
-        "窛"
-      ]
-    },
-    {
-      "id": "layout-6c95e7154dd2",
-      "sequence": "⿱⿴⬚⬚⬚",
-      "curated": false,
-      "slots": 3,
-      "count": 67,
-      "examples": [
-        "兠",
-        "叟",
-        "夓",
-        "盥",
-        "羋"
+        "甚"
       ]
     },
     {
@@ -482,13 +468,27 @@
       "sequence": "⿰⿸⬚⬚⬚",
       "curated": false,
       "slots": 3,
-      "count": 67,
+      "count": 75,
       "examples": [
         "既",
+        "覛",
         "郰",
         "鄏",
-        "㓹",
-        "㦺"
+        "㓹"
+      ]
+    },
+    {
+      "id": "layout-6c95e7154dd2",
+      "sequence": "⿱⿴⬚⬚⬚",
+      "curated": false,
+      "slots": 3,
+      "count": 72,
+      "examples": [
+        "兠",
+        "叟",
+        "夓",
+        "楽",
+        "盥"
       ]
     },
     {
@@ -496,7 +496,7 @@
       "sequence": "⿰⬚⿵⬚⬚",
       "curated": false,
       "slots": 3,
-      "count": 63,
+      "count": 64,
       "examples": [
         "𠆰",
         "𠑆",
@@ -510,7 +510,7 @@
       "sequence": "⿱⬚⿵⬚⬚",
       "curated": false,
       "slots": 3,
-      "count": 55,
+      "count": 57,
       "examples": [
         "南",
         "嵗",
@@ -524,13 +524,41 @@
       "sequence": "⿱⬚⿹⬚⬚",
       "curated": false,
       "slots": 3,
-      "count": 54,
+      "count": 57,
       "examples": [
         "煢",
         "笣",
         "簚",
         "舄",
         "苞"
+      ]
+    },
+    {
+      "id": "layout-08167add30d8",
+      "sequence": "⿱⬚⿴⬚⬚",
+      "curated": false,
+      "slots": 3,
+      "count": 56,
+      "examples": [
+        "亙",
+        "囱",
+        "圅",
+        "彔",
+        "录"
+      ]
+    },
+    {
+      "id": "layout-ca463fb12832",
+      "sequence": "⿻⬚⿱⬚⬚",
+      "curated": false,
+      "slots": 3,
+      "count": 54,
+      "examples": [
+        "乗",
+        "亊",
+        "事",
+        "傘",
+        "失"
       ]
     },
     {
@@ -548,17 +576,17 @@
       ]
     },
     {
-      "id": "layout-ca463fb12832",
-      "sequence": "⿻⬚⿱⬚⬚",
+      "id": "layout-e4f3da6d4282",
+      "sequence": "⿵⬚⿱⬚⬚",
       "curated": false,
       "slots": 3,
-      "count": 50,
+      "count": 51,
       "examples": [
-        "乗",
-        "亊",
-        "事",
-        "傘",
-        "失"
+        "冏",
+        "周",
+        "斎",
+        "関",
+        "闉"
       ]
     },
     {
@@ -575,7 +603,7 @@
       "sequence": "⿰⬚⿳⬚⬚⬚",
       "curated": false,
       "slots": 4,
-      "count": 679,
+      "count": 731,
       "examples": [
         "临",
         "侫",
@@ -589,13 +617,13 @@
       "sequence": "⿱⿱⬚⬚⿱⬚⬚",
       "curated": false,
       "slots": 4,
-      "count": 329,
+      "count": 368,
       "examples": [
         "呉",
         "嚢",
         "壳",
         "壸",
-        "夢"
+        "壼"
       ]
     },
     {
@@ -603,13 +631,13 @@
       "sequence": "⿰⿳⬚⬚⬚⬚",
       "curated": false,
       "slots": 4,
-      "count": 221,
+      "count": 243,
       "examples": [
         "割",
+        "敹",
         "毂",
         "穀",
-        "虩",
-        "鷇"
+        "虩"
       ]
     },
     {
@@ -617,13 +645,13 @@
       "sequence": "⿱⿲⬚⬚⬚⬚",
       "curated": false,
       "slots": 4,
-      "count": 122,
+      "count": 127,
       "examples": [
+        "兜",
         "凞",
         "夑",
         "樂",
-        "燮",
-        "爕"
+        "燮"
       ]
     },
     {
@@ -631,7 +659,7 @@
       "sequence": "⿲⬚⿱⬚⬚⬚",
       "curated": false,
       "slots": 4,
-      "count": 106,
+      "count": 110,
       "examples": [
         "幑",
         "徴",
@@ -645,13 +673,13 @@
       "sequence": "⿰⬚⿱⬚⿻⬚⬚",
       "curated": false,
       "slots": 4,
-      "count": 101,
+      "count": 106,
       "examples": [
         "墸",
         "隹",
+        "㙿",
         "㵮",
-        "𠈷",
-        "𠋾"
+        "𠈷"
       ]
     },
     {
@@ -659,7 +687,7 @@
       "sequence": "⿱⿰⬚⬚⿰⬚⬚",
       "curated": false,
       "slots": 4,
-      "count": 99,
+      "count": 105,
       "examples": [
         "囍",
         "幷",
@@ -673,7 +701,7 @@
       "sequence": "⿱⬚⿲⬚⬚⬚",
       "curated": false,
       "slots": 4,
-      "count": 96,
+      "count": 104,
       "examples": [
         "嬴",
         "彘",
@@ -683,11 +711,25 @@
       ]
     },
     {
+      "id": "layout-57e9e5e41a62",
+      "sequence": "⿲⬚⬚⿱⬚⬚",
+      "curated": false,
+      "slots": 4,
+      "count": 91,
+      "examples": [
+        "佀",
+        "修",
+        "倏",
+        "倐",
+        "候"
+      ]
+    },
+    {
       "id": "layout-db582f14be0f",
       "sequence": "⿰⬚⿱⿻⬚⬚⬚",
       "curated": false,
       "slots": 4,
-      "count": 82,
+      "count": 91,
       "examples": [
         "傁",
         "嗖",
@@ -697,31 +739,31 @@
       ]
     },
     {
+      "id": "middleRow",
+      "sequence": "⿳⬚⿰⬚⬚⬚",
+      "curated": false,
+      "slots": 4,
+      "count": 89,
+      "examples": [
+        "兿",
+        "尋",
+        "彝",
+        "彞",
+        "築"
+      ]
+    },
+    {
       "id": "layout-b78dd6ff9519",
       "sequence": "⿳⬚⬚⿰⬚⬚",
       "curated": false,
       "slots": 4,
-      "count": 80,
+      "count": 87,
       "examples": [
         "养",
+        "欝",
+        "爵",
         "眾",
-        "竀",
-        "鬰",
-        "㒪"
-      ]
-    },
-    {
-      "id": "layout-57e9e5e41a62",
-      "sequence": "⿲⬚⬚⿱⬚⬚",
-      "curated": false,
-      "slots": 4,
-      "count": 74,
-      "examples": [
-        "修",
-        "倏",
-        "倐",
-        "儵",
-        "囀"
+        "竀"
       ]
     },
     {
@@ -729,7 +771,7 @@
       "sequence": "⿰⬚⿸⬚⿱⬚⬚",
       "curated": false,
       "slots": 4,
-      "count": 74,
+      "count": 81,
       "examples": [
         "壥",
         "擄",
@@ -739,39 +781,11 @@
       ]
     },
     {
-      "id": "middleRow",
-      "sequence": "⿳⬚⿰⬚⬚⬚",
-      "curated": false,
-      "slots": 4,
-      "count": 74,
-      "examples": [
-        "尋",
-        "彝",
-        "築",
-        "𠂜",
-        "𠆖"
-      ]
-    },
-    {
-      "id": "layout-29785c69bcb8",
-      "sequence": "⿰⬚⿱⿰⬚⬚⬚",
-      "curated": false,
-      "slots": 4,
-      "count": 67,
-      "examples": [
-        "嘒",
-        "曜",
-        "灊",
-        "鐕",
-        "㺆"
-      ]
-    },
-    {
       "id": "layout-8adbc5645ca0",
       "sequence": "⿳⿴⬚⬚⬚⬚",
       "curated": false,
       "slots": 4,
-      "count": 64,
+      "count": 71,
       "examples": [
         "夓",
         "爂",
@@ -781,17 +795,31 @@
       ]
     },
     {
+      "id": "layout-29785c69bcb8",
+      "sequence": "⿰⬚⿱⿰⬚⬚⬚",
+      "curated": false,
+      "slots": 4,
+      "count": 70,
+      "examples": [
+        "嘒",
+        "曜",
+        "灊",
+        "鎦",
+        "鐕"
+      ]
+    },
+    {
       "id": "layout-31cc4c810758",
       "sequence": "⿱⬚⿰⬚⿱⬚⬚",
       "curated": false,
       "slots": 4,
-      "count": 63,
+      "count": 68,
       "examples": [
+        "官",
+        "苢",
         "薓",
         "虄",
-        "軣",
-        "霿",
-        "𡪗"
+        "軣"
       ]
     },
     {
@@ -799,13 +827,27 @@
       "sequence": "⿰⬚⿱⬚⿰⬚⬚",
       "curated": false,
       "slots": 4,
-      "count": 62,
+      "count": 67,
       "examples": [
         "婲",
         "椛",
         "榋",
         "橻",
-        "糀"
+        "櫛"
+      ]
+    },
+    {
+      "id": "layout-c824a4183d7d",
+      "sequence": "⿱⿰⿱⬚⬚⬚⬚",
+      "curated": false,
+      "slots": 4,
+      "count": 56,
+      "examples": [
+        "糱",
+        "蠥",
+        "䞇",
+        "𠡹",
+        "𠦨"
       ]
     },
     {
@@ -813,7 +855,7 @@
       "sequence": "⿱⿰⬚⿱⬚⬚⬚",
       "curated": false,
       "slots": 4,
-      "count": 53,
+      "count": 56,
       "examples": [
         "監",
         "盬",
@@ -827,13 +869,13 @@
       "sequence": "⿺⬚⿳⬚⬚⬚",
       "curated": false,
       "slots": 4,
-      "count": 50,
+      "count": 55,
       "examples": [
         "遥",
         "邃",
         "邉",
         "㡭",
-        "䬒"
+        "㲱"
       ]
     },
     {
@@ -841,7 +883,7 @@
       "sequence": "⿰⿰⬚⬚⿰⬚⬚",
       "curated": false,
       "slots": 4,
-      "count": 20,
+      "count": 21,
       "examples": [
         "丱",
         "灬",

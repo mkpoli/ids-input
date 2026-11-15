@@ -8,6 +8,7 @@
 import { unicodeProperty } from './unicode.js'
 import { hangulClusterAt } from '@han-compose/composer/hangul'
 import { emojiPrefix } from '@han-compose/composer/emoji'
+import { customAt } from './custom.js'
 
 /** A variation selector, as `isSelector` reads it in `ids.js`; kept here so the modules need not cycle. */
 const SELECTOR = /^[\uFE00-\uFE0F\u{E0100}-\u{E01EF}]$/u
@@ -61,10 +62,13 @@ export function splitMarks(part) {
     return { base, marks }
   }
   const chars = [...part]
-  // A conjoining jamo run or an Emoji sequence is one component, not its first character and a mark.
+  // A conjoining jamo run, an Emoji sequence or a component no code point names ({53}, &CDP-8964;,
+  // #(-𠃌㇉)) is one component, not its first character and a mark.
   const emoji = emojiPrefix(part)
-  let at = emoji ? [...emoji].length : hangulClusterAt(chars, 0)?.end ?? 1
+  let at = customAt(chars)?.end ?? (emoji ? [...emoji].length : hangulClusterAt(chars, 0)?.end ?? 1)
   if (isSelector(chars[at])) at++
+  // What follows and is no mark stays with the component: a zi.tools variant identifier (令H).
+  while (at < chars.length && !isMark(chars[at])) at++
   return { base: chars.slice(0, at).join(''), marks: chars.slice(at).join('') }
 }
 

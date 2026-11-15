@@ -1,25 +1,8 @@
 import { describe, expect, it } from 'bun:test'
 import { DEFAULTS, backgroundOf, keepSettings, scopedSvgOf, storedSettings } from '../demo/lib/exporting.js'
+import { withStorage } from './fixtures/storage.js'
 
 const scopes = { root: { kind: 'slot', node: 'slot' }, complete: true, issues: [] }
-
-/** Run `test` with localStorage starting from `record`. @param {Record<string, string>} record @param {() => void} test */
-function withStorage(record, test) {
-  const store = new Map(Object.entries(record))
-  const original = Object.getOwnPropertyDescriptor(globalThis, 'localStorage')
-  Object.defineProperty(globalThis, 'localStorage', {
-    configurable: true,
-    value: {
-      getItem: key => store.get(key) ?? null,
-      setItem: (key, value) => { store.set(key, value) },
-      removeItem: key => { store.delete(key) },
-    },
-  })
-  try { test() } finally {
-    if (original) Object.defineProperty(globalThis, 'localStorage', original)
-    else delete globalThis.localStorage
-  }
-}
 
 describe('export settings', () => {
   it('starts as a PNG on white', () => {

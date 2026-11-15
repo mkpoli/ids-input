@@ -45,7 +45,8 @@ try {
 
   await open('⿱⿰木⬚日')
   await drag(part(2), part(1))
-  assert.equal(await value(), '⿱⿰木日⬚', 'a part dropped on an empty slot takes its place')
+  assert.equal(await value(), '⿱⿰木日', 'a part dropped on an empty slot takes its place')
+  assert.deepEqual(await page.locator('.sequence-run span').allTextContents(), ['⿱', '⿰', '木', '日', '◌'])
 
   await open('⿲木口日')
   await drag(part(0), part(2))
