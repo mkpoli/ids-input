@@ -1,18 +1,23 @@
 <script>
-  // The zi.tools (白式) extended IDS on one sheet: each construct as a quoted sequence beside the
-  // character it describes, a written part and the strokes it names in one colour. The cards and
-  // their sources are demo/lib/baishi-cheatsheet.js; the outlines are prepared by
-  // demo/scripts/build-baishi-cheatsheet.mjs, and a chain's line is drawn from the chain itself.
+  // The zi.tools (白式) extended IDS on one sheet, laid out top down as its grammar nests: a row,
+  // its entries, an IDS and its operators, components, variant identifiers, stroke chains and the
+  // brackets after an operator. Each level gives its rules from data/baishi-ids.ebnf and links to the
+  // same anchor of the specification page (demo/lib/baishi-sections.js); each card is a quoted
+  // sequence beside the character it describes, a written part and the strokes it names in one
+  // colour. The cards and their sources are demo/lib/baishi-cheatsheet.js; the outlines are prepared
+  // by demo/scripts/build-baishi-cheatsheet.mjs.
   import PageHeader from './ui/PageHeader.svelte'
   import Dialog from './ui/Dialog.svelte'
   import Icon from './ui/Icon.svelte'
-  import { translator } from '../src/svelte/index.js'
+  import NotationSequence from './ui/NotationSequence.svelte'
+  import { OP_NAMES, translator } from '../src/svelte/index.js'
   import { watchFallback } from '../src/svelte/fallback-font.js'
-  import { chainStrokes } from '../src/core/chain-shape.js'
   import { LOCALES, appMessages } from './lib/locales.js'
   import { load, save } from './lib/storage.js'
-  import { pages } from './lib/pages.js'
-  import { DRAFTS, GRAMMAR, LEGENDS, SECTIONS, SOURCE, UNUSED, focusOf, tokenise } from './lib/baishi-cheatsheet.js'
+  import { SECTIONS, sectionHref } from './lib/baishi-sections.js'
+  import { readGrammar } from './lib/railroad.js'
+  import ebnf from '../data/baishi-ids.ebnf?raw'
+  import { DRAFTS, GLOSS, GRAMMAR, GROUP_LABELS, SHEET, SOURCE, UNUSED, arityOf, bareOf, entriesOf, focusOf, idsOf, kindOf, tokenise } from './lib/baishi-cheatsheet.js'
   import outlines from './lib/baishi-cheatsheet-outlines.json'
 
   const params = new URLSearchParams(location.search)
@@ -25,262 +30,523 @@
   $effect(() => { document.documentElement.lang = locale })
   const messages = $derived(LOCALES.find(([code]) => code === locale)?.[2])
   const t = $derived(translator({ ...appMessages('en'), ...messages, ...appMessages(locale) }, locale))
-  // The reference page of the same notation, once the workshop has it.
-  const reference = $derived(pages(t).find(page => page.id === 'baishi'))
 
-  const GLYPHS = /** @type {Record<string, string[]>} */ (outlines.glyphs)
-  /** The syntax each section is about, as written. */
-  const SHAPES = /** @type {Record<string, string>} */ ({ rows: '字⇥…;…⇥…', operators: '⿰ … ⿿', katakana: 'コ リ ユ ス', tags: '字x', lists: '(x,y)', prefix: '{字}', chains: '#(…)', letters: 'H S P N …', overlap: '⿻[…]', index: '⿴[n]' })
+  const GLYPHS = /** @type {Record<string, string[]>} */ ({ ...outlines.components, ...outlines.glyphs })
+  const COMPOSED = /** @type {Record<string, string[]>} */ (outlines.composed)
+  const ROWS = /** @type {Record<string, string>} */ (outlines.rows)
+  const grammar = readGrammar(ebnf)
+  const anchors = new Map(SECTIONS.map(section => [section.id, section]))
+  /** An anchor's name: the title the specification gives it, or its rule. @param {string} id */
+  const nameOf = id => { const section = anchors.get(id); return section?.title ? t(section.title) : section?.rule ?? id }
+  /** A group's heading: its own label where the sheet has one. @param {string} id */
+  const groupName = id => {
+    const [kind, name] = (GROUP_LABELS[id] ?? '').split('.')
+    return kind === 'group' ? t(`cheatsheet.group.${name}`) : kind === 'section' ? t(`cheatsheet.section.${name}`) : kind === 'label' ? t(`cheatsheet.label.${name}`) : nameOf(id)
+  }
 
   /** @typedef {import('./lib/baishi-cheatsheet.js').Card} Card */
   /** @typedef {import('./lib/baishi-cheatsheet.js').Quote} Quote */
-  /**
-   * A quotation ready to draw: its pieces with their colour slot and whether they are underlined,
-   * and its tiles, an outline per entry and the chain's line.
-   * @param {Card} card @param {Quote} quote
-   */
-  function prepare(card, quote) {
-    const ranges = focusOf(quote)
-    // A written part takes a colour only where something drawn has the same one.
-    /** @param {number} entry */
-    const coloured = entry => Boolean(quote.glyphs?.[entry]?.parts || quote.chain || quote.slots)
-    let stroke = 0
-    const tokens = tokenise(quote.text, { strokes: card.strokes }).map(token => ({
-      ...token,
-      slot: token.leaf !== undefined && coloured(token.entry) ? (quote.slots?.[token.leaf] ?? token.leaf) : null,
-      focus: ranges.some(([from, to]) => token.at < to && token.at + [...token.text].length > from),
-      index: card.indices && token.kind === 'stroke' ? stroke++ : null,
-    }))
-    const tiles = (quote.glyphs ?? []).flatMap((glyph, entry) => {
-      if (!glyph) return []
-      const contours = GLYPHS[glyph.char]
-      /** @param {number[]} list */
-      const path = list => list.map(index => contours[index]).join('')
-      return [{ kind: /** @type {const} */ ('glyph'), entry, char: glyph.char,
-        layers: (glyph.parts ?? []).map((list, slot) => ({ slot, d: path(list), names: tokens.filter(token => token.entry === entry && token.slot === slot).map(token => token.text).join('') })),
-        rest: path(glyph.rest ?? []), ink: glyph.parts ? '' : contours.join('') }]
-    })
-    const chain = quote.chain ? chainStrokes(/#\([^)]*\)/u.exec(quote.text)?.[0] ?? '') : null
-    return { ...quote, tokens, tiles, line: chain ? chain.strokes.map((part, index) => ({ ...part, slot: card.strokes ? index : 0, index })) : null }
-  }
-  const sections = SECTIONS.map(section => ({ ...section, cards: section.cards.map(card => ({ ...card, quotes: card.quotes.map(quote => prepare(card, quote)) })) }))
+  /** @typedef {import('./lib/baishi-cheatsheet.js').Piece} Piece */
+  /** @typedef {import('./lib/baishi-cheatsheet.js').Glyph} Glyph */
+  /** A piece of an outline as drawn: its path and the box it is cut to. @typedef {{ d: string, box: number[] | null }} Cut */
 
+  /** Pieces of an outline, those cut to the same box drawn as one path so a ring keeps its hole.
+   * @param {string[]} contours @param {Piece[]} pieces @returns {Cut[]} */
+  function cuts(contours, pieces) {
+    /** @type {Map<string, Cut>} */
+    const byBox = new Map()
+    for (const piece of pieces) {
+      const box = typeof piece === 'number' ? null : piece.slice(1)
+      const key = box ? box.join() : ''
+      const cut = byBox.get(key) ?? { d: '', box }
+      cut.d += contours[typeof piece === 'number' ? piece : piece[0]]
+      byBox.set(key, cut)
+    }
+    return [...byBox.values()]
+  }
+
+  /**
+   * A quotation ready to draw: its tokens with their colour slot and what the card is about, and
+   * the drawing of each entry, an outline cut into its parts or the composer's drawing.
+   * @param {Card} card @param {Quote} quote @param {number} at
+   */
+  function prepare(card, quote, at) {
+    const ranges = focusOf(quote)
+    const read = tokenise(quote.text, { strokes: quote.strokes })
+    /** @param {number} entry */
+    const coloured = entry => { const glyph = quote.glyphs[entry]; return glyph === 'composed' || Boolean(glyph?.parts) }
+    /** @param {number} leaf */
+    const slotOf = leaf => quote.slots?.[leaf] ?? leaf
+    const tokens = read.map(token => ({
+      ...token,
+      slot: token.leaf !== undefined && coloured(token.entry) ? slotOf(token.leaf) : null,
+      // What the token lights: its own part, or every part under an operator or in a chain.
+      lights: !coloured(token.entry) ? null : token.leaf !== undefined ? [slotOf(token.leaf)] : token.leaves ? [...new Set(token.leaves.map(slotOf))] : null,
+      subject: token.stretches.map(stretch => ranges.some(([from, to]) => stretch.at < to && stretch.at + [...stretch.text].length > from)),
+    }))
+    /** @param {number} entry @param {number} slot */
+    const names = (entry, slot) => tokens.filter(token => token.entry === entry && token.slot === slot && token.leaf !== undefined).map(token => token.text).join(' ')
+    const tiles = quote.glyphs.flatMap((glyph, entry) => {
+      if (!glyph) return []
+      if (glyph === 'composed') {
+        const parts = COMPOSED[/** @type {string} */ (bareOf(read, entry))]
+        /** @type {Map<number, string>} */
+        const bySlot = new Map()
+        parts.forEach((d, leaf) => bySlot.set(slotOf(leaf), (bySlot.get(slotOf(leaf)) ?? '') + d))
+        return [{ entry, char: quote.char, composed: true, ink: '', rest: /** @type {Cut[]} */ ([]), layers: [...bySlot].map(([slot, d]) => ({ slot, cuts: [{ d, box: null }], names: names(entry, slot) })), marks: [], cross: null }]
+      }
+      const contours = GLYPHS[glyph.char]
+      const strokes = tokens.filter(token => token.entry === entry && token.kind === 'stroke')
+      const closed = tokens.some(token => token.entry === entry && token.kind === 'close')
+      // Where the chain takes up each stroke: a square after a break, a filled ring where it closes.
+      const marks = (glyph.joins ?? []).map(([x, y], order) => ({ x, y, order, slot: strokes[order]?.slot ?? 0,
+        broken: order > 0 && strokes[order - 1]?.stretches.some(stretch => stretch.role === 'mark' && stretch.text === 'b'), closed: closed && order === 0 }))
+      return [{ entry, char: glyph.char, composed: false, ink: glyph.parts ? '' : contours.join(''), rest: cuts(contours, glyph.rest ?? []),
+        layers: (glyph.parts ?? []).map((pieces, slot) => ({ slot, cuts: cuts(contours, pieces), names: names(entry, slot) })), marks, cross: glyph.cross ?? null }]
+    })
+    return { ...quote, key: `${card.id}/${at}`, tokens, tiles, numbered: Boolean(quote.strokes) && tokens.filter(token => token.kind === 'stroke').length > 1 }
+  }
+  /** @typedef {ReturnType<typeof prepare>} Shown */
+  /** @param {Card} card */
+  const shown = card => ({ ...card, quotes: card.quotes.map((quote, at) => prepare(card, quote, at)) })
+  const sheet = SHEET.map(section => ({ ...section, cards: (section.cards ?? []).map(shown), groups: (section.groups ?? []).map(group => ({ ...group, cards: (group.cards ?? []).map(shown) })) }))
+  /** @typedef {ReturnType<typeof shown>} ShownCard */
+
+  // The token pointed at or focused: it inverts, its parts light in the drawing, and a tooltip says what it is.
+  /** @type {{ key: string, index: number, card: ShownCard, quote: Shown } | null} */
+  let pointed = $state(null)
+  /** @type {{ left: number, top: number, bottom: number } | null} */
+  let anchor = $state(null)
+  /** @type {HTMLElement | null} */ let tipBox = $state(null)
+  let place = $state({ left: 0, top: 0 })
+  /** @type {HTMLElement | null} */ let pointedAt = null
+  /** @param {ShownCard} card @param {Shown} quote @param {number | null} index @param {HTMLElement | null} element */
+  function point(card, quote, index, element) {
+    if (index === null || !element) { if (pointed?.key === quote.key) forget() ; return }
+    pointed = { key: quote.key, index, card, quote }
+    pointedAt = element
+    follow()
+  }
+  const forget = () => { pointed = null; anchor = null; pointedAt = null }
+  // The tooltip stays with its token while the page scrolls under it.
+  function follow() {
+    if (!pointedAt) return
+    const rect = pointedAt.getBoundingClientRect()
+    anchor = { left: rect.left, top: rect.top, bottom: rect.bottom }
+  }
+  // The tooltip sits under its token, or over it near the foot of the window, and inside the window's width.
+  $effect(() => {
+    if (!tipBox || !anchor) return
+    const { width, height } = tipBox.getBoundingClientRect()
+    const below = anchor.bottom + 14
+    place = { left: Math.max(8, Math.min(anchor.left - 8, innerWidth - width - 8)), top: below + height <= innerHeight - 8 ? below : Math.max(8, anchor.top - height - 10) }
+  })
+  /** @param {Shown} quote @param {number} entry */
+  const lit = (quote, entry) => pointed?.key === quote.key && pointed.quote.tokens[pointed.index].entry === entry ? pointed.quote.tokens[pointed.index].lights : null
+
+  /** The identifiers a list writes. @param {string} list */
+  const listed = list => list.slice(1, -1).split(',')
+  /** What a source letter stands for, as the grammar prints it. @param {string} letter */
+  const sourceName = letter => GLOSS.source[letter] && GLOSS.source[letter] !== letter ? `${letter} (${GLOSS.source[letter]})` : letter
+  /** The letters of a style identifier with the gloss the grammar prints for each. @param {string} id */
+  const glossed = id => [...id].filter(letter => GLOSS.style[letter]).map(letter => `${letter} ${GLOSS.style[letter]}`).join(' · ')
+  /**
+   * What a token is, for its tooltip: its kind and what it does.
+   * @param {Shown['tokens'][number]} token @returns {{ kind: string, lines: string[] }}
+   */
+  function describe(token) {
+    const piece = token.stretches[0].text
+    switch (token.kind) {
+      case 'head': return { kind: t('cheatsheet.kind.head'), lines: [t('cheatsheet.tip.head')] }
+      case 'tab': return { kind: 'TAB', lines: [t('cheatsheet.tip.tab')] }
+      case 'sep': return { kind: t('cheatsheet.kind.sep'), lines: [t('cheatsheet.tip.sep')] }
+      case 'prefix': return { kind: t('cheatsheet.section.prefix'), lines: [t('cheatsheet.tip.prefix'), ...(piece.startsWith('{?') ? [t('cheatsheet.hint.prefixDistant')] : []), ...(/[A-Z]\}$/.test(piece) ? [t('cheatsheet.hint.prefixSource')] : [])] }
+      case 'op': {
+        const mod = token.stretches[1]?.text
+        const lines = [t(`cheatsheet.tip.operator.${arityOf(piece)}`)]
+        if (mod && piece === '⿻') lines.push(...mod.slice(1, -1).split('|').map((spec, at) => at ? t('cheatsheet.hint.reverse2') : t(spec.includes(':') ? 'cheatsheet.hint.slice' : 'cheatsheet.hint.matrix')))
+        else if (mod) lines.push(t('cheatsheet.hint.space'))
+        return { kind: `${piece} ${t(`ids.op.${OP_NAMES[piece]}`)}`, lines }
+      }
+      case 'part': {
+        const tag = token.stretches[1]?.text
+        const lines = [t('コリユス'.includes(piece) ? 'cheatsheet.tip.katakana' : 'cheatsheet.tip.part')]
+        if (tag) {
+          const kind = kindOf(tag)
+          lines.push(kind === 'default' ? t('cheatsheet.hint.tagDefault') : kind === 'source' ? t('cheatsheet.tip.tag.source', { source: sourceName(tag) })
+            : kind === 'style' || kind === 'position' ? t('cheatsheet.tip.tag.style') : t('cheatsheet.tip.tag.other'))
+          if ((kind === 'style' || kind === 'position') && glossed(tag)) lines.push(glossed(tag))
+        }
+        return { kind: t('cheatsheet.kind.part'), lines }
+      }
+      case 'open': case 'shut': return { kind: t('cheatsheet.kind.chain'), lines: [t('cheatsheet.hint.chain')] }
+      case 'close': return { kind: t('cheatsheet.label.closed'), lines: [t('cheatsheet.hint.closed')] }
+      case 'stroke': {
+        const stroke = token.stretches.find(stretch => stretch.role === 'stroke')?.text ?? ''
+        const mark = token.stretches.find(stretch => stretch.role === 'mark')?.text
+        const lines = [/^[A-Za-z]+$/.test(stroke) ? t('cheatsheet.tip.letters') : '◝◞◟◜'.includes(stroke) ? t('cheatsheet.hint.curves') : t('cheatsheet.tip.stroke')]
+        if (GLOSS.stroke[stroke]) lines.push(`${stroke} = ${GLOSS.stroke[stroke]}`)
+        if (token.stretches.some(stretch => stretch.role === 'rev')) lines.push(t('cheatsheet.hint.reverse'))
+        if (mark === 'b') lines.push(t('cheatsheet.tip.break'))
+        else if (mark) lines.push(t('cheatsheet.hint.cross'))
+        return { kind: t('cheatsheet.kind.stroke'), lines }
+      }
+      default: return { kind: t('cheatsheet.section.lists'), lines: listed(piece).map(id => {
+        const kind = kindOf(id)
+        const gloss = (kind === 'style' || kind === 'position') && glossed(id) ? ` (${glossed(id)})` : ''
+        return `${id}  ${kind === 'default' ? t('cheatsheet.hint.listDefault') : kind === 'source' ? t('cheatsheet.tip.list.source', { source: sourceName(id) }) : kind === 'mirror' ? t('cheatsheet.tip.list.mirror') : t(`cheatsheet.tip.list.${kind}`)}${gloss}`
+      }) }
+    }
+  }
+  /** A component's own row: each entry with its identifiers, and whether the tag written names it.
+   * @param {string} char @param {string | undefined} tag */
+  function variantsOf(char, tag) {
+    const row = ROWS[char]
+    if (!row) return []
+    const entries = entriesOf(`${char}\t${row}`).map(text => ({ text, ids: idsOf(text) }))
+    // An entry without a list is the form a component without a tag, or with a dot, takes.
+    return entries.map(entry => ({ ...entry, named: tag ? entry.ids.includes(tag) || (tag === '.' && !entry.ids.length && !entries.some(other => other.ids.includes('.'))) : false }))
+  }
+  /** The drawing of a component's variant inside a character that has it, where a card gives one.
+   * @param {string} char @param {string[]} ids */
+  const variantTile = (char, ids) => sheet.flatMap(section => [...section.cards, ...section.groups.flatMap(group => group.cards)]).flatMap(card => card.quotes)
+    .find(quote => quote.char === char && quote.tiles[0]?.rest.length && idsOf(quote.text).some(id => ids.includes(id)))?.tiles[0] ?? null
+  const tip = $derived.by(() => {
+    if (!pointed) return null
+    const token = pointed.quote.tokens[pointed.index]
+    const char = token.kind === 'part' ? token.stretches[0].text : ''
+    const variants = char ? variantsOf(char, token.stretches[1]?.text) : []
+    return { token, ...describe(token), char, glyph: char && GLYPHS[char] ? GLYPHS[char].join('') : '',
+      variants: variants.slice(0, 6).map(variant => ({ ...variant, tile: variantTile(char, variant.ids) })), more: Math.max(0, variants.length - 6),
+      // The other quotations of the card stand beside an operator's bracket: with it and without.
+      beside: token.kind === 'op' && pointed.card.quotes.length > 1 ? pointed.card.quotes : [] }
+  })
+
+  /** @type {{ card: ShownCard, quote: Shown } | null} */
+  let zoomed = $state(null)
+  let zoomOpen = $state(false)
+  $effect(() => { if (!zoomOpen) zoomed = null })
   let helpOpen = $state(false)
-  /** @type {HTMLElement | null} */ let main = $state(null)
-  $effect(() => { if (main) return watchFallback(main) })
+  /** @type {HTMLElement | null} */ let page = $state(null)
+  $effect(() => { if (page) return watchFallback(page) })
 </script>
 
 <svelte:head>
   <title>{t('cheatsheet.title')} — {t('app.title')}</title>
 </svelte:head>
+<svelte:window onscroll={follow} onresize={follow} onkeydown={event => { if (event.key === 'Escape' && pointed) forget() }} />
 
-{#snippet sequence(/** @type {ReturnType<typeof prepare>} */ quote)}
-  <code class="seq" lang="ja">{#each quote.tokens as token, at (at)}<span
-    class={['tok', token.kind, token.slot !== null && `s${token.slot}`, token.focus && 'focus']} data-index={token.index}
-    title={token.kind === 'tab' ? 'TAB' : undefined}>{token.kind === 'tab' ? '⇥' : token.text}</span>{/each}</code>
+{#snippet cut(/** @type {Cut} */ piece)}
+  {#if piece.box}<svg x={piece.box[0]} y={piece.box[1]} width={piece.box[2] - piece.box[0]} height={piece.box[3] - piece.box[1]} viewBox={`${piece.box[0]} ${piece.box[1]} ${piece.box[2] - piece.box[0]} ${piece.box[3] - piece.box[1]}`}><path d={piece.d} /></svg>{:else}<path d={piece.d} />{/if}
 {/snippet}
 
-<div class="page">
-  <PageHeader page="baishi-cheatsheet" title={t('cheatsheet.title')} {t} bind:locale links={reference ? [{ href: `./baishi.html?lang=${locale}`, label: reference.label }] : []}>
+{#snippet drawing(/** @type {Shown['tiles'][number]} */ tile, /** @type {number[] | null} */ lights, /** @type {boolean} */ numbered)}
+  <svg class="glyph" viewBox="0 0 1000 1000" role="img" aria-label={tile.layers.length ? `${tile.char}: ${tile.layers.map(layer => layer.names).join(' ')}` : tile.char}>
+    {#if tile.ink}<path class="ink" d={tile.ink} />{/if}
+    <g class="rest">{#each tile.rest as piece, at (at)}{@render cut(piece)}{/each}</g>
+    {#each tile.layers as layer (layer.slot)}
+      <g class={['part', `s${layer.slot}`]} class:dim={lights !== null && !lights.includes(layer.slot)} class:lit={lights !== null && lights.includes(layer.slot)}>
+        <title>{layer.names}</title>{#each layer.cuts as piece, at (at)}{@render cut(piece)}{/each}
+      </g>
+    {/each}
+    {#if tile.cross}{#each ['halo', ''] as halo (halo)}<path class={['cross', halo]} d={`M${tile.cross[0] - 38} ${tile.cross[1] - 38}l76 76m0 -76l-76 76`} />{/each}{/if}
+    {#each tile.marks as mark (mark.order)}
+      {#if mark.broken}<rect class={['join', `s${mark.slot}`]} x={mark.x - 30} y={mark.y - 30} width="60" height="60" />
+      {:else}<circle class={['join', `s${mark.slot}`]} cx={mark.x} cy={mark.y} r="33" />{/if}
+      {#if mark.closed}<circle class={['closing', `s${mark.slot}`]} cx={mark.x} cy={mark.y} r="13" />{/if}
+      {#if numbered}<text class="order" x={mark.x} y={mark.y - 52}>{mark.order}</text>{/if}
+    {/each}
+  </svg>
+{/snippet}
+
+{#snippet about(/** @type {string | undefined} */ label, /** @type {string | undefined} */ hint, /** @type {string} */ subject, /** @type {string | undefined} */ link, /** @type {boolean | undefined} */ open, /** @type {string} */ lang)}
+  <header class="about">
+    <span class="what">
+      {#if subject}<code class="subject" lang="ja">{subject}</code>{/if}
+      {#if label}{#if link}<a class="label" href={sectionHref('spec', link)} {lang}>{label}</a>{:else}<span class="label" {lang}>{label}</span>{/if}{/if}
+      {#if open}<span class="open">{t('cheatsheet.open')}</span>{/if}
+    </span>
+    {#if hint}<p class="hint">{hint}</p>{/if}
+  </header>
+{/snippet}
+
+{#snippet card(/** @type {ShownCard} */ item)}
+  {@const first = item.quotes[0]}
+  {@const subject = first.tokens.flatMap(token => token.stretches.filter((_, at) => token.subject[at]).map(stretch => stretch.text)).join('')}
+  {@const operator = item.id.startsWith('op-') ? first.tokens.find(token => token.kind === 'op' && token.subject[0])?.stretches[0].text : undefined}
+  <article class="card" id={item.anchors?.[0]}>
+    {#each item.anchors?.slice(1) ?? [] as id (id)}<span {id} class="anchor"></span>{/each}
+    {@render about(operator ? t(`ids.op.${OP_NAMES[operator]}`) : item.label ? t(`cheatsheet.label.${item.label}`) : item.id.startsWith('worked-') ? first.char : undefined,
+      item.hint && t(`cheatsheet.hint.${item.hint}`), item.id.startsWith('worked-') || subject.length > 8 ? '' : subject === '\t' ? '⇥' : subject, item.anchors?.[0], item.open, item.label || operator ? '' : 'ja')}
+    {#each item.quotes as quote (quote.key)}
+      <div class="quote">
+        <div class="tiles">
+          {#each quote.tiles as tile (tile.entry)}
+            <button type="button" class="tile" class:composed={tile.composed} title={tile.composed ? t('cheatsheet.composed') : t('cheatsheet.zoom')} aria-label={`${t('cheatsheet.zoom')}: ${quote.char}`}
+              onclick={() => { zoomed = { card: item, quote }; zoomOpen = true }}>{@render drawing(tile, lit(quote, tile.entry), false)}</button>
+          {/each}
+        </div>
+        <div class="text">
+          <!-- A whole row opens with its character; an entry is named by the one it describes. -->
+          {#if !quote.text.includes('\t')}<span class="char" lang="ja">{quote.char}</span>{/if}
+          <NotationSequence tokens={quote.tokens} numbered={quote.numbered} active={pointed?.key === quote.key ? pointed.index : null} lit={pointed?.key === quote.key ? pointed.quote.tokens[pointed.index].lights : null}
+            tip="cheatsheet-tip" onpoint={(index, element) => point(item, quote, index, element)} />
+        </div>
+      </div>
+    {/each}
+  </article>
+{/snippet}
+
+{#snippet rules(/** @type {string[] | undefined} */ names)}
+  {#if names?.length}<pre class="rules">{names.map(name => grammar.get(name)?.text ?? '').join('\n')}</pre>{/if}
+{/snippet}
+
+{#snippet legend(/** @type {import('./lib/baishi-cheatsheet.js').Legend} */ item)}
+  <article class="card legend">
+    {@render about(t(`cheatsheet.label.${item.id}`), t(`cheatsheet.hint.${item.id}`), '', undefined, false, '')}
+    <dl>{#each item.items as [letter, gloss] (letter)}<div><dt>{letter}</dt>{#if gloss !== letter}<dd lang={item.lang}>{gloss}</dd>{/if}</div>{/each}</dl>
+  </article>
+{/snippet}
+
+<div class="page" bind:this={page}>
+  <PageHeader page="baishi-cheatsheet" title={t('cheatsheet.title')} {t} bind:locale links={[{ href: `./baishi.html?lang=${locale}`, label: t('baishi.title') }]}>
     <button type="button" class="ui-button" data-size="icon" data-variant="quiet" aria-label={t('cheatsheet.help.title')} title={t('cheatsheet.help.title')} onclick={() => { helpOpen = true }}><Icon name="info" /></button>
   </PageHeader>
 
-  <main bind:this={main}>
-    {#each sections as section (section.id)}
-      <section id={section.id} class={section.id} aria-labelledby={`${section.id}-title`}>
-        <h2 id={`${section.id}-title`}>{t(`cheatsheet.section.${section.id}`)}{#if SHAPES[section.id]}<code class="shape" lang="ja">{SHAPES[section.id]}</code>{/if}</h2>
-        <div class="grid">
-          {#each section.cards as card (card.id)}
-            <article class="card" class:small={card.small} class:wide={card.wide}>
-              {#if card.label || card.hint}
-                <details class="about">
-                  <summary><span class="label" lang={card.label ? undefined : 'ja'}>{card.label ? t(`cheatsheet.label.${card.label}`) : card.quotes[0].char}</span>{#if card.open}<span class="open">{t('cheatsheet.open')}</span>{/if}<Icon name="chevron" size={14} /></summary>
-                  <p>{t(`cheatsheet.hint.${card.hint}`)}</p>
-                </details>
-              {/if}
-              {#each card.quotes as quote, index (index)}
-                <div class="quote">
-                  {#if quote.tiles.length || quote.line}
-                    <div class="tiles">
-                      {#each quote.tiles as tile (tile.entry)}
-                        <svg class="tile" viewBox="0 0 1000 1000" role="img" aria-label={tile.layers.length ? `${tile.char}: ${tile.layers.map(layer => layer.names).join(' ')}` : tile.char}>
-                          {#if tile.ink}<path class="ink" d={tile.ink} />{/if}
-                          {#if tile.rest}<path class="rest" d={tile.rest} />{/if}
-                          {#each tile.layers as layer (layer.slot)}
-                            <path class={['part', `s${layer.slot}`]} d={layer.d}><title>{layer.names}</title></path>
-                          {/each}
-                        </svg>
-                      {/each}
-                      {#if quote.line}
-                        <svg class="tile line" viewBox="0 0 1000 1000" role="img" aria-label={t('cheatsheet.line')}>
-                          <title>{t('cheatsheet.line')}</title>
-                          {#each quote.line as part (part.index)}
-                            <path class={['stroke', `s${part.slot}`]} d={part.d} />
-                          {/each}
-                          {#each quote.line as part (part.index)}
-                            <circle class={['start', `s${part.slot}`]} cx={part.from[0]} cy={part.from[1]} r="46" />
-                          {/each}
-                        </svg>
-                      {/if}
-                    </div>
-                  {/if}
-                  <div class="text">
-                    <!-- A whole row opens with its character; an entry is named by the one it describes. -->
-                    {#if !quote.text.includes('\t')}<span class="char" lang="ja">{quote.char}</span>{/if}
-                    <span title={`${quote.file ?? 'ids_lv0.txt'}:${quote.row}`}>{@render sequence(quote)}</span>
-                  </div>
-                </div>
-              {/each}
-            </article>
+  <div class="body">
+    <nav class="toc" aria-label={t('cheatsheet.contents')}>
+      <ol>
+        {#each sheet as section (section.id)}
+          <li><a href={`#${section.id}`}>{t(`cheatsheet.section.${section.label}`)}</a>
+            {#if section.groups.length}<ol>{#each section.groups as group (group.id)}<li><a href={`#${group.id}`}>{groupName(group.id)}</a></li>{/each}</ol>{/if}
+          </li>
+        {/each}
+      </ol>
+    </nav>
+
+    <main>
+      {#each sheet as section (section.id)}
+        <section id={section.id} aria-labelledby={`${section.id}-title`}>
+          <header class="level">
+            <h2 id={`${section.id}-title`}>{t(`cheatsheet.section.${section.label}`)}</h2>
+            {#if section.id !== 'worked'}<a class="spec" href={sectionHref('spec', section.id)}>{t('cheatsheet.spec')}<Icon name="arrow-right" size={13} /></a>{/if}
+          </header>
+          {@render rules(section.rules)}
+          {#if section.cards.length}<div class="cards" class:worked={section.id === 'worked'}>{#each section.cards as item (item.id)}{@render card(item)}{/each}</div>{/if}
+          {#each section.groups as group (group.id)}
+            <section id={group.id} class="group" aria-labelledby={`${group.id}-title`}>
+              <header class="level">
+                <h3 id={`${group.id}-title`}>{groupName(group.id)}</h3>
+                <a class="spec" href={sectionHref('spec', group.id)}>{t('cheatsheet.spec')}<Icon name="arrow-right" size={13} /></a>
+              </header>
+              {@render rules(group.rules)}
+              <div class="cards">
+                {#each group.cards as item (item.id)}{@render card(item)}{/each}
+                {#each group.legends ?? [] as item (item.id)}{@render legend(item)}{/each}
+                {#if group.id === 'unary-operator'}
+                  <article class="card unused">
+                    {@render about(t('cheatsheet.unused'), t('cheatsheet.hint.unused'), '', undefined, false, '')}
+                    <div class="quote"><div class="text"><span class="idle" lang="ja">{UNUSED.join(' ')}</span></div></div>
+                  </article>
+                {/if}
+              </div>
+            </section>
           {/each}
-          {#if section.id === 'operators'}
-            <article class="card unused">
-              <details class="about">
-                <summary><span class="label">{t('cheatsheet.unused')}</span><Icon name="chevron" size={14} /></summary>
-                <p>{t('cheatsheet.hint.unused')}</p>
-              </details>
-              <div class="quote"><div class="text"><code class="seq" lang="ja">{UNUSED.join(' ')}</code></div></div>
-            </article>
-          {/if}
-          {#each LEGENDS[section.id] ?? [] as legend (legend.id)}
-            <article class="card legend">
-              <details class="about">
-                <summary><span class="label">{t(`cheatsheet.label.${legend.id}`)}</span><Icon name="chevron" size={14} /></summary>
-                <p>{t(`cheatsheet.hint.${legend.id}`)}</p>
-              </details>
-              <dl>
-                {#each legend.items as [letter, gloss] (letter)}
-                  <div><dt>{letter}</dt>{#if gloss !== letter}<dd lang={legend.lang}>{gloss}</dd>{/if}</div>
-                {/each}
-              </dl>
-            </article>
-          {/each}
+        </section>
+      {/each}
+
+      <footer id="sources">
+        <h2>{t('cheatsheet.sources')}</h2>
+        <ul>
+          <li><span class="what">{t('cheatsheet.source.data')}</span> <a href={SOURCE.repository} target="_blank" rel="noreferrer">yi-bai/ids</a> <a href={`${SOURCE.repository}/tree/${SOURCE.commit}`} target="_blank" rel="noreferrer"><code>{SOURCE.commit.slice(0, 8)}</code></a> · {SOURCE.date} · MIT</li>
+          <li><span class="what">{t('cheatsheet.source.notation')}</span> <b class="key">{GRAMMAR.key}</b> <a href={GRAMMAR.url} target="_blank" rel="noreferrer" lang="zh-Hans">{GRAMMAR.title}</a> · {GRAMMAR.date} · {t('cheatsheet.source.notationBy')} <span class="weak">{t('cheatsheet.source.notationNote')}</span></li>
+          <li><span class="what">{t('cheatsheet.source.drafts')}</span> <b class="key">{DRAFTS.key}</b> {DRAFTS.author}, <span lang="zh-Hans">{DRAFTS.title}</span> {DRAFTS.versions} <span class="weak">{t('cheatsheet.source.draftsNote')}</span></li>
+          <li><span class="what">{t('cheatsheet.source.grammar')}</span> <a href={sectionHref('spec', 'row')}>{t('baishi.title')}</a> · <code>data/baishi-ids.ebnf</code></li>
+          <li><span class="what">{t('cheatsheet.source.outlines')}</span> <a href="https://github.com/notofonts/noto-cjk" target="_blank" rel="noreferrer">Noto Sans CJK JP</a> · <a href="https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project" target="_blank" rel="noreferrer">Plangothic</a> · <a href="https://github.com/mkpoli/han-compose" target="_blank" rel="noreferrer">han-compose</a> <code>{outlines.composer.commit}</code></li>
+        </ul>
+      </footer>
+    </main>
+  </div>
+
+  {#if tip && anchor}
+    <div class="tip" id="cheatsheet-tip" role="tooltip" bind:this={tipBox} style:left={`${place.left}px`} style:top={`${place.top}px`}>
+      <p class="kind"><code lang="ja">{tip.token.kind === 'tab' ? '⇥' : tip.token.text}</code>{tip.kind}</p>
+      {#each tip.lines as line, at (at)}<p>{line}</p>{/each}
+      {#if tip.variants.length || tip.glyph}
+        <div class="variants">
+          {#if tip.glyph}<svg class="mini" viewBox="0 0 1000 1000" aria-hidden="true"><path class="ink" d={tip.glyph} /></svg>{/if}
+          <ul lang="ja">
+            {#each tip.variants as variant (variant.text)}
+              <li class:named={variant.named}>
+                {#if variant.tile}<span class="mini">{@render drawing(variant.tile, null, false)}</span>{/if}
+                <code>{variant.text}</code>
+              </li>
+            {/each}
+            {#if tip.more}<li class="more">+{tip.more}</li>{/if}
+          </ul>
         </div>
-      </section>
-    {/each}
+      {/if}
+      {#if tip.beside.length}
+        <ul class="beside" lang="ja">
+          {#each tip.beside as quote (quote.key)}<li>{#if quote.tiles[0]}<span class="mini">{@render drawing(quote.tiles[0], null, false)}</span>{/if}<code>{quote.text}</code></li>{/each}
+        </ul>
+      {/if}
+    </div>
+  {/if}
 
-    <footer>
-      <h2>{t('cheatsheet.sources')}</h2>
-      <ul>
-        <li><span class="what">{t('cheatsheet.source.data')}</span> <a href={SOURCE.repository} target="_blank" rel="noreferrer">yi-bai/ids</a> <a href={`${SOURCE.repository}/tree/${SOURCE.commit}`} target="_blank" rel="noreferrer"><code>{SOURCE.commit.slice(0, 8)}</code></a> · {SOURCE.date} · MIT</li>
-        <li><span class="what">{t('cheatsheet.source.notation')}</span> <b class="key">{GRAMMAR.key}</b> <a href={GRAMMAR.url} target="_blank" rel="noreferrer" lang="zh-Hans">{GRAMMAR.title}</a> · {GRAMMAR.date} · {t('cheatsheet.source.notationBy')} <span class="weak">{t('cheatsheet.source.notationNote')}</span></li>
-        <li><span class="what">{t('cheatsheet.source.drafts')}</span> <b class="key">{DRAFTS.key}</b> {DRAFTS.author}, <span lang="zh-Hans">{DRAFTS.title}</span> {DRAFTS.versions} <span class="weak">{t('cheatsheet.source.draftsNote')}</span></li>
-        <li><span class="what">{t('cheatsheet.source.outlines')}</span> <a href="https://github.com/notofonts/noto-cjk" target="_blank" rel="noreferrer">Noto Sans CJK JP</a> · <a href="https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project" target="_blank" rel="noreferrer">Plangothic</a> · <a href="https://github.com/mkpoli/han-compose" target="_blank" rel="noreferrer">han-compose</a> <code>{outlines.composer.commit}</code></li>
-      </ul>
-    </footer>
-  </main>
+  <Dialog bind:open={zoomOpen} title={zoomed ? zoomed.quote.char : ''} closeLabel={t('app.close')} wide>
+    {#if zoomed}
+      {@const quote = zoomed.quote}
+      {@const owner = zoomed.card}
+      <div class="zoom">
+        <div class="zoomed">
+          {#each quote.tiles as tile (tile.entry)}<div class="big" class:composed={tile.composed}>{@render drawing(tile, lit(quote, tile.entry), true)}</div>{/each}
+        </div>
+        <div class="beside-zoom">
+          <NotationSequence tokens={quote.tokens} numbered={quote.numbered} large active={pointed?.key === quote.key ? pointed.index : null} lit={pointed?.key === quote.key ? pointed.quote.tokens[pointed.index].lights : null}
+            tip="cheatsheet-tip" onpoint={(index, element) => point(owner, quote, index, element)} />
+          {#if owner.hint}<p>{t(`cheatsheet.hint.${owner.hint}`)}</p>{/if}
+          {#if quote.tiles.some(tile => tile.composed)}<p class="weak">{t('cheatsheet.composed')}</p>{/if}
+          <p class="weak"><code>{quote.file ?? 'ids_lv0.txt'}:{quote.row}</code></p>
+        </div>
+      </div>
+    {/if}
+  </Dialog>
+
+  <Dialog bind:open={helpOpen} title={t('cheatsheet.help.title')} closeLabel={t('app.close')}>
+    <ul class="help">
+      <li>{t('cheatsheet.help.colour')}</li>
+      <li>{t('cheatsheet.help.subject')}</li>
+      <li>{t('cheatsheet.help.glyphs')}</li>
+      <li>{t('cheatsheet.help.entry')}</li>
+      <li>{t('cheatsheet.help.composed')}</li>
+      <li>{t('cheatsheet.help.marks')}</li>
+      <li>{t('cheatsheet.help.open')}</li>
+    </ul>
+  </Dialog>
 </div>
-
-<Dialog bind:open={helpOpen} title={t('cheatsheet.help.title')} closeLabel={t('app.close')}>
-  <ul class="help">
-    <li>{t('cheatsheet.help.colour')}</li>
-    <li>{t('cheatsheet.help.glyphs')}</li>
-    <li>{t('cheatsheet.help.entry')}</li>
-    <li>{t('cheatsheet.help.lines')}</li>
-    <li>{t('cheatsheet.help.open')}</li>
-  </ul>
-</Dialog>
 
 <style>
   .page{display:flex;flex-direction:column;min-height:100dvh;
     /* One colour for each written part and the strokes it names: chosen to stay apart with red-green
-       and blue-yellow colour-vision deficiencies, and to read as text on the card and its tile. */
-    --part-0:light-dark(#2a67e0,#7db1ff);--part-1:light-dark(#cc4e00,#ffa35c);--part-2:light-dark(#0a5a3a,#12996a);--part-3:light-dark(#651a78,#f0bfea)}
-  main{width:100%;max-width:1360px;margin:0 auto;padding:20px max(18px,env(safe-area-inset-right)) 64px max(18px,env(safe-area-inset-left))}
-  section{scroll-margin-top:74px;margin:0 0 26px}
-  h2{display:flex;align-items:baseline;gap:10px;margin:0 0 10px;font-size:14px;font-weight:var(--ui-weight-semibold)}
-  .shape{font-family:var(--ids-font),var(--ids-glyph-fallback);font-size:14px;font-weight:400;color:var(--ui-color-ink-muted)}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:8px;align-items:start}
-  .rows .grid,.chains .grid{grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr))}
-  .operators .grid,.katakana .grid{grid-template-columns:repeat(auto-fill,minmax(176px,1fr))}
-  .letters .grid{grid-template-columns:repeat(auto-fill,minmax(132px,1fr))}
-  .worked .grid{grid-template-columns:repeat(auto-fill,minmax(min(420px,100%),1fr))}
+       and blue-yellow colour-vision deficiencies, and to read as text on the card and its tile. The
+       marker is what a card is about. */
+    --part-0:light-dark(#2a67e0,#7db1ff);--part-1:light-dark(#cc4e00,#ffa35c);--part-2:light-dark(#0a5a3a,#12996a);--part-3:light-dark(#651a78,#f0bfea);
+    --mark:light-dark(#ffeeb0,#3d3410)}
+  .body{display:grid;grid-template-columns:200px minmax(0,1fr);gap:28px;width:100%;max-width:1500px;margin:0 auto;padding:22px max(18px,env(safe-area-inset-right)) 64px max(18px,env(safe-area-inset-left))}
+  .toc{position:sticky;top:70px;align-self:start;max-height:calc(100dvh - 86px);overflow:auto;font-size:13px}
+  .toc ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px}
+  .toc ol ol{margin:1px 0 6px 10px;padding-left:8px;border-left:1px solid var(--ui-color-border)}
+  .toc a{display:block;padding:4px 8px;border-radius:var(--ui-radius-sm);color:var(--ui-color-ink-soft);text-decoration:none}
+  .toc ol ol a{padding-block:2px;font-size:12px;color:var(--ui-color-ink-muted)}
+  .toc a:hover{background:var(--ui-color-surface-hover);color:var(--ui-color-ink)}
+  main{min-width:0}
+  section{scroll-margin-top:70px;margin:0 0 30px}
+  .group{margin:16px 0 0}
+  .level{display:flex;align-items:baseline;gap:12px;margin:0 0 6px}
+  h2{margin:0;font-size:17px;font-weight:var(--ui-weight-bold)}
+  h3{margin:0;font-size:13.5px;font-weight:var(--ui-weight-semibold);color:var(--ui-color-ink-soft)}
+  .spec{display:inline-flex;align-items:center;gap:3px;font-size:12px;color:var(--ui-color-accent);text-decoration:none}
+  .spec:hover{text-decoration:underline}
+  .rules,.toc{scrollbar-width:thin;scrollbar-color:var(--ui-color-scrollbar) transparent}
+  .rules{margin:0 0 10px;padding:0;overflow-x:auto;font-family:var(--ui-font-mono);font-size:12px;line-height:1.55;color:var(--ui-color-ink-muted);white-space:pre}
 
-  .card{display:flex;flex-direction:column;gap:8px;min-width:0;padding:10px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-lg);background:var(--ui-color-surface)}
-  .card.small{padding:8px}
-  .about{font-size:12px}
-  .about summary{display:flex;align-items:center;gap:6px;width:fit-content;max-width:100%;list-style:none;cursor:pointer;border-radius:var(--ui-radius-xs);color:var(--ui-color-ink-soft);font-weight:var(--ui-weight-semibold)}
-  .about summary::-webkit-details-marker{display:none}
-  .about summary :global(svg){flex:none;color:var(--ui-color-ink-muted);transition:rotate var(--ui-duration-fast) var(--ui-ease)}
-  .about[open] summary :global(svg){rotate:180deg}
-  .about summary:hover{color:var(--ui-color-ink)}
-  .about .label[lang]{font-family:var(--ids-font),var(--ids-glyph-fallback);font-size:15px}
-  .about p{margin:6px 0 0;color:var(--ui-color-ink-soft);line-height:var(--ui-leading-normal)}
+  /* Cards take the width of what they quote, so a sequence stays on one line where the window allows. */
+  .cards{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px}
+  .card{position:relative;display:flex;flex-direction:column;gap:8px;min-width:150px;max-width:100%;padding:10px 12px 12px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-lg);background:var(--ui-color-surface);scroll-margin-top:70px}
+  .anchor{position:absolute;top:0;scroll-margin-top:70px}
+  .about{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 14px;min-height:18px}
+  .what{display:inline-flex;align-items:baseline;gap:6px;flex:none;font-size:12px;font-weight:var(--ui-weight-semibold);color:var(--ui-color-ink-soft)}
+  .label{color:inherit;text-decoration:none}
+  a.label:hover{color:var(--ui-color-accent);text-decoration:underline}
+  .label[lang='ja']{font-family:var(--ids-font),var(--ids-glyph-fallback);font-size:15px}
+  code.subject{padding:0 5px;border-radius:4px;background:var(--mark);font-family:var(--ids-font),var(--ids-glyph-fallback);font-size:14px;font-weight:700;color:var(--ui-color-ink)}
+  /* The description takes no width of its own: it wraps inside what the sequence needs. */
+  .hint{flex:1 1 0;width:0;min-width:15em;margin:0;font-size:11.5px;line-height:1.4;color:var(--ui-color-ink-muted);text-align:end;text-wrap:pretty}
   .open{padding:0 6px;border:1px dashed var(--ui-color-control-border);border-radius:var(--ui-radius-pill);color:var(--ui-color-ink-muted);font-size:11px;font-weight:var(--ui-weight-medium);line-height:1.6}
 
-  .quote{display:flex;align-items:center;gap:10px;min-width:0}
+  .quote{display:flex;align-items:center;gap:12px;min-width:0}
   .tiles{display:flex;flex:none;gap:6px}
-  .tile{inline-size:60px;block-size:60px;border-radius:var(--ui-radius-md);background:var(--ui-color-surface-sunken)}
-  .small .tile{inline-size:40px;block-size:40px}
-  .wide .tile{inline-size:112px;block-size:112px}
-  .text{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .tile{all:unset;box-sizing:border-box;display:block;inline-size:64px;block-size:64px;border-radius:var(--ui-radius-md);background:var(--ui-color-surface-sunken);cursor:zoom-in}
+  #stroke-chain .tile,.worked .tile{inline-size:96px;block-size:96px}
+  .tile:hover{box-shadow:0 0 0 1px var(--ui-color-border-strong)}
+  .tile:focus-visible{outline:var(--ui-ring-width) solid var(--ui-color-focus);outline-offset:var(--ui-ring-offset)}
+  /* Drawn by the composer from the sequence, for a form no outline has. */
+  .tile.composed,.big.composed{background:none;outline:1.5px dashed var(--ui-color-control-border);outline-offset:-1.5px}
+  .text{display:flex;flex-direction:column;gap:2px;min-width:0;overflow-x:auto;scrollbar-width:thin;scrollbar-color:var(--ui-color-scrollbar) transparent}
   .char{font-family:var(--ids-font),var(--ids-glyph-fallback);font-size:13px;line-height:1.2;color:var(--ui-color-ink-muted)}
-  .seq{font-family:var(--ids-font),var(--ids-glyph-fallback);font-size:20px;line-height:1.5;color:var(--ui-color-ink);overflow-wrap:anywhere}
-  .small .seq{font-size:16px}
-  .small .char{font-size:16px;color:var(--ui-color-ink)}
-  .wide .seq{font-size:22px}
-  /* A quotation with nothing drawn stands under the text of the one above it. */
-  .wide .quote:not(:has(.tiles)){padding-inline-start:122px}
+  .idle{font-family:var(--ids-font),var(--ids-glyph-fallback);font-size:20px;color:var(--ui-color-ink-muted)}
 
-  /* Written pieces. A part and its tag share a colour and an underline of that slot's pattern, so the
-     pairing does not rest on colour alone; what the card is about stands in a box. */
-  .tok{border-radius:3px;white-space:nowrap;transition:opacity var(--ui-duration-fast) var(--ui-ease)}
-  .tok:is(.tab,.sep,.chain,.close,.list,.prefix){color:var(--ui-color-ink-muted)}
-  .tok.mod{color:var(--ui-color-ink-soft)}
-  .tok.tab{padding-inline:3px}
-  .tok:is(.s0,.s1,.s2,.s3){font-weight:700;text-decoration-line:underline;text-decoration-thickness:2px;text-underline-offset:5px;text-decoration-skip-ink:none}
-  .tok.s0{color:var(--part-0);text-decoration-style:solid}
-  .tok.s1{color:var(--part-1);text-decoration-style:dashed}
-  .tok.s2{color:var(--part-2);text-decoration-style:dotted}
-  .tok.s3{color:var(--part-3);text-decoration-style:double;text-decoration-thickness:1px}
-  .tok.focus{box-shadow:0 0 0 1.5px var(--ui-color-control-border)}
-  .tok.focus:is(.tab,.sep,.chain,.close,.list,.prefix,.mod){color:var(--ui-color-ink)}
-  .tok[data-index]::after{content:attr(data-index);margin-inline-start:1px;font-size:11px;font-weight:600;vertical-align:sub;font-family:var(--ui-font-sans)}
-  /* Pointing at a part, written or drawn, dims the others of its quotation. */
-  .quote:has(.s0:hover) :is(.s1,.s2,.s3),.quote:has(.s1:hover) :is(.s0,.s2,.s3),.quote:has(.s2:hover) :is(.s0,.s1,.s3),.quote:has(.s3:hover) :is(.s0,.s1,.s2){opacity:.28}
-
+  .glyph{display:block;inline-size:100%;block-size:100%;overflow:visible}
   .ink{fill:var(--ui-color-ink)}
   .rest{fill:var(--ui-color-border-strong)}
   .part{transition:opacity var(--ui-duration-fast) var(--ui-ease)}
-  .part.s0{fill:var(--part-0)}
-  .part.s1{fill:var(--part-1)}
-  .part.s2{fill:var(--part-2)}
-  .part.s3{fill:var(--part-3)}
-  .stroke{fill:none;stroke-width:64;stroke-linecap:round;stroke-linejoin:round;transition:opacity var(--ui-duration-fast) var(--ui-ease)}
-  .stroke.s0,.start.s0{stroke:var(--part-0)}
-  .stroke.s1,.start.s1{stroke:var(--part-1)}
-  .stroke.s2,.start.s2{stroke:var(--part-2)}
-  .stroke.s3,.start.s3{stroke:var(--part-3)}
-  /* Where the pen starts a stroke. */
-  .start{fill:var(--ui-color-surface-sunken);stroke-width:22;transition:opacity var(--ui-duration-fast) var(--ui-ease)}
+  .part.s0,.join.s0,.closing.s0{--part:var(--part-0)}
+  .part.s1,.join.s1,.closing.s1{--part:var(--part-1)}
+  .part.s2,.join.s2,.closing.s2{--part:var(--part-2)}
+  .part.s3,.join.s3,.closing.s3{--part:var(--part-3)}
+  .part{fill:var(--part)}
+  .part.dim{opacity:.2}
+  /* Pointing at a drawn part dims the others of its drawing. */
+  .glyph:has(.part:hover) .part:not(:hover){opacity:.2}
+  /* Where a chain takes up each stroke, and where two of its strokes cross. */
+  .join{fill:var(--ui-color-surface);stroke:var(--part);stroke-width:18}
+  .closing{fill:var(--part)}
+  .cross{fill:none;stroke:var(--ui-color-ink);stroke-width:14;stroke-linecap:round}
+  .cross.halo{stroke:var(--ui-color-surface);stroke-width:34}
+  .order{fill:var(--ui-color-ink);font:700 54px var(--ui-font-sans);text-anchor:middle;paint-order:stroke;stroke:var(--ui-color-surface);stroke-width:14}
 
   .unused{border-style:dashed;background:none}
-  .unused .seq{color:var(--ui-color-ink-muted)}
-  .legend dl{display:flex;flex-wrap:wrap;gap:4px 12px;margin:0}
+  .legend dl{display:flex;flex-wrap:wrap;gap:4px 12px;margin:0;max-width:420px}
   .legend dl div{display:flex;align-items:baseline;gap:4px}
   .legend dt{font-family:var(--ui-font-mono);font-size:14px;font-weight:700;color:var(--ui-color-ink)}
   .legend dd{margin:0;font-size:12px;color:var(--ui-color-ink-soft)}
+  .legend dd[lang='ja']{font-family:var(--ids-font),var(--ids-glyph-fallback);font-size:17px;color:var(--ui-color-ink)}
+
+  /* What a token is, under the token. */
+  .tip{position:fixed;z-index:var(--ui-z-toast);display:flex;flex-direction:column;gap:5px;width:max-content;max-width:min(340px,calc(100vw - 16px));padding:9px 11px;border:1px solid var(--ui-color-border-strong);border-radius:var(--ui-radius-lg);
+    background:var(--ui-color-surface);box-shadow:var(--ui-shadow-2);font-size:12px;line-height:1.45;color:var(--ui-color-ink-soft);pointer-events:none}
+  .tip p{margin:0}
+  .tip .kind{display:flex;align-items:baseline;gap:7px;font-weight:var(--ui-weight-semibold);color:var(--ui-color-ink)}
+  .tip code{font-family:var(--ids-font),var(--ids-glyph-fallback);font-size:15px;color:var(--ui-color-ink)}
+  .variants{display:flex;align-items:flex-start;gap:9px;padding-top:6px;border-top:1px solid var(--ui-color-border)}
+  .variants ul,.beside{display:flex;flex-direction:column;gap:2px;margin:0;padding:0;list-style:none;min-width:0}
+  .beside{padding-top:6px;border-top:1px solid var(--ui-color-border)}
+  .variants li,.beside li{display:flex;align-items:center;gap:6px;padding:0 4px;border-radius:4px;overflow-wrap:anywhere}
+  .variants li.named{background:var(--mark)}
+  .variants li.more{color:var(--ui-color-ink-muted)}
+  .mini{flex:none;display:block;inline-size:34px;block-size:34px;border-radius:5px;background:var(--ui-color-surface-sunken)}
+
+  .zoom{display:flex;flex-wrap:wrap;align-items:flex-start;gap:18px}
+  .zoomed{display:flex;flex-wrap:wrap;gap:10px}
+  .big{inline-size:min(300px,70vw);block-size:min(300px,70vw);border-radius:var(--ui-radius-lg);background:var(--ui-color-surface-sunken)}
+  .beside-zoom{display:flex;flex:1 1 220px;flex-direction:column;gap:10px;min-width:0;font-size:13px;line-height:var(--ui-leading-normal);color:var(--ui-color-ink-soft);overflow-x:auto}
+  .beside-zoom p{margin:0}
 
   footer{margin-top:34px;padding-top:14px;border-top:1px solid var(--ui-color-border);font-size:12px;color:var(--ui-color-ink-soft)}
+  footer h2{font-size:14px;margin-bottom:8px}
   footer ul{display:flex;flex-direction:column;gap:4px;margin:0;padding:0;list-style:none}
   footer a{color:var(--ui-color-accent);text-decoration:none}
   footer a:hover{text-decoration:underline}
   footer code{font-family:var(--ui-font-mono);font-size:11.5px}
-  .what{display:inline-block;min-inline-size:5.5em;margin-inline-end:6px;color:var(--ui-color-ink-muted)}
+  footer .what{display:inline-block;min-inline-size:5.5em;margin-inline-end:6px;font-weight:400;color:var(--ui-color-ink-muted)}
   .weak{color:var(--ui-color-ink-muted)}
   .key{font-weight:var(--ui-weight-semibold);color:var(--ui-color-ink)}
   .help{display:flex;flex-direction:column;gap:10px;margin:0;padding-inline-start:18px;font-size:13px;line-height:var(--ui-leading-normal);color:var(--ui-color-ink-soft)}
 
+  @media (max-width:860px) {
+    .body{grid-template-columns:minmax(0,1fr);gap:14px}
+    .toc{position:static;max-height:none}
+    .toc>ol{flex-direction:row;flex-wrap:wrap;gap:2px 4px}
+    .toc ol ol{display:none}
+  }
   @media (max-width:520px) {
-    .grid,.operators .grid,.katakana .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
-    .worked .grid{grid-template-columns:minmax(0,1fr)}
-    .wide .quote{flex-direction:column;align-items:flex-start}
-    .wide .quote:not(:has(.tiles)){padding-inline-start:0}
-    .wide .tile{inline-size:96px;block-size:96px}
-    .seq{font-size:18px}
-    .wide .seq{font-size:19px}
+    .card{min-width:0;flex:1 1 auto}
+    .quote{flex-wrap:wrap}
+    #stroke-chain .tile,.worked .tile{inline-size:80px;block-size:80px}
+    .hint{min-width:8em}
   }
   @media (prefers-reduced-motion:reduce) {
-    .tok,.part,.stroke,.start,.about summary :global(svg){transition:none}
+    .part{transition:none}
   }
 </style>
