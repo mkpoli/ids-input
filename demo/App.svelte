@@ -11,37 +11,19 @@
   import { onMount, tick, untrack } from 'svelte'
   import { watchFallback } from '../src/svelte/fallback-font.js'
   import { IdsAlternatives, IdsCharacterInfo, IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, OperatorIcon, createEditor, shortcut, translator } from '../src/svelte/index.js'
-  import { smallSealAdapter } from '../src/adapter/index.js'
   import { APPROXIMATE, composableDescription } from '@han-compose/composer/compose'
   import { hasTangut } from '@han-compose/composer/tangut'
   import { composerPreview as composerAt } from '@han-compose/composer'
   import { variationSequences } from '@han-compose/composer/variants'
   import engineOutlines from 'ids-engine-outlines'
-  import { EMPTY_MARKS, OPERATORS, characterStrokes, componentQuery, isJurchen, isShuishu, parse, substituteSequences, unalias } from '../src/core/index.js'
+  import { EMPTY_MARKS, OPERATORS, characterStrokes, componentQuery, drawnText, isJurchen, isShuishu, parse, substituteSequences, unalias } from '../src/core/index.js'
   import { loadStrokeRecords } from '../src/svelte/strokes.js'
   import { createDocumentSession, layerAtPath, sessionRecord, toSequence } from '../src/document/index.js'
   import { documentFile, readDocumentFile } from './lib/documents.js'
-  import ids from '../data/babelstone-ids.tsv.gz?url'
   import equivalencesUrl from '../data/ids-equivalences.json?url'
-  import layers from '../data/tangut-layers.json.gz?url'
-  import zitools from '../data/yi-bai-ids.tsv.gz?url'
-  import corpus from '../data/ids-corpus.json.gz?url'
-  import projectIds from '../data/ids-project.tsv.gz?url'
-  import overwriteIds from '../data/ids-overwrites.tsv?url'
-  import components from '../data/ids-components.tsv?url'
-  import sealData from '../data/small-seal.json.gz?url'
-  import shuishuData from '../data/shuishu.json.gz?url'
-  import jurchenData from '../data/jurchen.json.gz?url'
-  import sealExtraParts from '../data/seal-extra-parts.json'
-  import parts from '../data/ids-parts.json?url'
-  import sketches from '../data/sketch-parts.json.gz?url'
-  import forms from '../data/component-forms.tsv?url'
-  import names from '../data/component-names.tsv?url'
-  import folds from '../data/component-name-folds.tsv?url'
-  import characterInfo from '../data/character-info.json.gz?url'
-  import chains from '../data/zi-tools-chains.tsv.gz?url'
-  import custom from '../data/custom-components.json.gz?url'
-  import characters from '../data/character-vocabulary.tsv.gz?url'
+  import { workshopAdapter } from './lib/workshop-adapter.js'
+  import variationOutlines from '../data/ucv-outlines.json.gz?url'
+  import variationOutlinesSans from '../data/ucv-outlines-sans.json.gz?url'
   import { LOCALES, appMessages } from './lib/locales.js'
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
   import { createIconDrawings } from './lib/icons.js'
@@ -128,7 +110,13 @@
   let { embed = false } = $props()
   const params = new URLSearchParams(location.search)
   /** A preview over the export at `base`, read from wherever this build holds it. @param {Parameters<typeof composerAt>[0]} options */
-  const composerPreview = options => composerAt({ ...options, base: readFrom(options.base) })
+  const composerPreview = options => {
+    const draw = composerAt({ ...options, base: readFrom(options.base) })
+    // The engine reads no variant identifier: a form one names is written as what draws it first,
+    // for the tabs' icons and the layers as for the preview.
+    return /** @type {typeof draw} */ (Object.assign(async (/** @type {string} */ sequence, /** @type {any} */ asking) =>
+      draw(await drawnText(sequence, babel.formed, asking), asking), { warm: draw.warm }))
+  }
   // What a share names: this page, or the published site for the desktop app, whose own address
   // opens nothing outside it.
   const shareFrom = DESKTOP ? new URL(SITE) : location
@@ -140,14 +128,56 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const sealAdapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, jurchen: jurchenData, ids, layers, zitools, chise: corpus, project: projectIds, overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains, custom })
+  // The description tables are three megabytes a drawing rarely reads, and on a slow line they share
+  // it with the layout the drawing waits for. They load once the first drawing is shown, at once
+  // when that drawing reads them, none is coming or the reader touches the page, and after ten
+  // seconds whatever happened.
+  let releaseTables = () => {}
+  /** @type {Promise<void>} */
+  const firstDrawing = new Promise(resolve => { releaseTables = resolve })
+  onMount(() => {
+    const bound = setTimeout(() => { releaseTables(); endSearchWait() }, 10_000)
+    // A reader who types or clicks wants what they ask for, not the drawing first.
+    const options = { capture: true, once: true }
+    window.addEventListener('pointerdown', releaseTables, options)
+    window.addEventListener('keydown', releaseTables, options)
+    return () => {
+      clearTimeout(bound)
+      window.removeEventListener('pointerdown', releaseTables, options)
+      window.removeEventListener('keydown', releaseTables, options)
+    }
+  })
+  const dataAdapter = workshopAdapter({ after: firstDrawing })
 
   const operatorSet = new Set(OPERATORS.map(([op]) => op))
-  const babel = { ...sealAdapter, recognizeDrawing, parts: async () => {
-    const curated = await sealAdapter.parts()
-    const seen = new Set(curated.map(part => part.part))
-    return [...curated, ...sealExtraParts.filter(part => !seen.has(part)).map(part => ({ part, kind: /** @type {const} */ ('seal'), sealGroup: /** @type {const} */ ('other') }))]
-  } }
+  /** The tables for a drawing that reads them: they stop waiting for it. */
+  const tables = {
+    encoded: (/** @type {Parameters<typeof dataAdapter.encoded>} */ ...asked) => { releaseTables(); return dataAdapter.encoded(...asked) },
+    structure: (/** @type {Parameters<typeof dataAdapter.structure>} */ ...asked) => { releaseTables(); return dataAdapter.structure(...asked) },
+  }
+  // The first search reads the description tables, and the font switch's samples read six megabytes
+  // of layout models: the samples wait for a first search under way, so the two do not share the line.
+  let searching = 0, searched = false
+  /** @type {(() => void)[]} */
+  const afterSearch = []
+  /** The samples wait no longer: a first search has answered, or has had its ten seconds. */
+  const endSearchWait = () => {
+    searched = true
+    for (const start of afterSearch.splice(0)) start()
+  }
+  /** @template {(...asked: any[]) => Promise<any>} Search @param {Search} search @returns {Search} */
+  const counted = search => /** @type {Search} */ (async (...asked) => {
+    searching++
+    try { return await search(...asked) } finally {
+      searching--
+      endSearchWait()
+    }
+  })
+  /** @returns {Promise<void>} */
+  const firstSearch = () => searched || !searching ? Promise.resolve() : new Promise(resolve => afterSearch.push(resolve))
+  const babel = { ...dataAdapter, recognizeDrawing,
+    findByIds: counted(dataAdapter.findByIds), findByStructure: counted(dataAdapter.findByStructure),
+    findByUnknownStructure: counted(dataAdapter.findByUnknownStructure), findSimilar: counted(dataAdapter.findSimilar) }
   // Direct layer editing belongs to the active document tab.
   let adjusting = $state(false)
   let titleOpen = $state(false)
@@ -184,11 +214,14 @@
   const previews = new Map()
   // The outlines the engine draws without the export, as the page serves the package's `data/`: the
   // names the package reads, and the URL Vite gives each file it bundles. See `vite.config.js`.
-  const bundles = engineOutlines
+  // The forms of the component variation lists that only an outline draws go to the engine as the
+  // host's own outlines: drawn in Gothic for Sans, in Mincho for every other face.
+  /** @param {'sans' | 'serif' | 'fangsong' | 'kaisho'} style */
+  const bundlesFor = style => ({ ...engineOutlines, 'host/outlines.json.gz': style === 'sans' ? variationOutlinesSans : variationOutlines })
   /** @param {string} at @param {boolean} split @param {'sans' | 'serif' | 'fangsong' | 'kaisho'} style @param {string} [owner] A view whose drawings the others must not cancel. */
   const previewAt = (at, split, style, owner = '', preferExport = false) => {
     const key = `${at}\0${split ? '1' : '0'}\0${style}\0${owner}\0${preferExport ? '1' : '0'}`
-    if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split, fontStyle: style, preferExport, loaders: bundles }))
+    if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split, fontStyle: style, preferExport, loaders: bundlesFor(style) }))
     return /** @type {ReturnType<typeof composerPreview>} */ (previews.get(key))
   }
   // The drawings demo/scripts/build-example-drawings.mjs prepares for this export, one per example.
@@ -268,7 +301,7 @@
       // A description whose operator modifier narrows it to one character draws that character: the
       // layout ignores the crossing the modifier names.
       if (sequence.includes('[')) {
-        const exact = await babel.encoded(sequence, { exact: true, signal: options?.signal }).catch(() => [])
+        const exact = await tables.encoded(sequence, { exact: true, signal: options?.signal }).catch(() => [])
         const [char] = exact
         if (exact.length === 1 && char !== undefined) return composed(char, { signal: options?.signal })
       }
@@ -284,7 +317,7 @@
       if (!sequence.includes('[') && APPROXIMATE.some(operator => sequence.includes(operator))) {
         // An example states the character it names, so it draws without waiting for the corpus.
         const [named] = EXAMPLE_CHARACTERS.has(sequence) ? [EXAMPLE_CHARACTERS.get(sequence) || undefined]
-          : await babel.encoded(sequence).catch(() => [])
+          : await tables.encoded(sequence).catch(() => [])
         if (named !== undefined && [...named].length === 1 && named !== sequence) {
           try { return await draw(named, options) } catch { /* compose it */ }
         }
@@ -303,7 +336,7 @@
       } catch (error) {
         if (options?.signal?.aborted || stopping(error)) throw error
         // A description of an encoded character draws that character when the face has its glyph.
-        const found = split ? [] : await babel.encoded(sequence).catch(() => [])
+        const found = split ? [] : await tables.encoded(sequence).catch(() => [])
         for (const char of found) {
           if ([...char].length !== 1 || char === sequence) continue
           try { return await composed(char) } catch { /* the default export draws the sequence */ }
@@ -312,7 +345,7 @@
         // by, when every operator in it places its operands predictably. The drawing is marked so a
         // reader can see it was assembled rather than drawn.
         if ([...sequence].length === 1) {
-          const described = await babel.structure(sequence).catch(() => [])
+          const described = await tables.structure(sequence).catch(() => [])
           for (const { text } of described) {
             if (text === sequence || !composableDescription(text)) continue
             try { return { ...(await composed(text, options)), composed: true } } catch { /* the default export draws it */ }
@@ -335,14 +368,15 @@
   let previewStep = $state(/** @type {'idle' | 'loading' | 'composed' | 'final' | 'failed' | 'capped' | 'unavailable'} */ ('idle'))
   const order = createDrawingOrder()
   $effect(() => order.hold(previewStep === 'loading'))
+  $effect(() => { if (previewStep !== 'loading') releaseTables() })
   // Tab icons need their own drawer so their requests cannot cancel the main preview.
   /** @type {Map<string, ReturnType<typeof createIconDrawings>>} */
   const iconDrawings = new Map()
   /** A face's drawer for tabs and the tree, falling back to the default export. @param {string} at @param {'sans' | 'serif' | 'fangsong' | 'kaisho'} style */
   const drawerAt = (at, style) => {
-    const composed = composerPreview({ base: at, fontStyle: style, loaders: bundles })
+    const composed = composerPreview({ base: at, fontStyle: style, loaders: bundlesFor(style) })
     if (exportUrl(at) === preparedBase && style === 'sans') return composed
-    const sans = composerPreview({ base: COMPOSER_BASE, fontStyle: 'sans', loaders: bundles })
+    const sans = composerPreview({ base: COMPOSER_BASE, fontStyle: 'sans', loaders: bundlesFor('sans') })
     return async (/** @type {string} */ sequence) => {
       const adapted = await babel.overwrite?.(sequence).catch(() => []) ?? []
       for (const char of adapted) {
@@ -389,7 +423,12 @@
       sampleDrawings.delete(oldKey)
     }
     if (!sampleDrawings.has(key)) {
-      const preview = order.after(previewAt(at, separate, option.style, `switch-${option.key}`))
+      const face = previewAt(at, separate, option.style, `switch-${option.key}`)
+      const preview = order.after(async (/** @type {string} */ sequence, /** @type {{ signal?: AbortSignal }} */ options) => {
+        await firstSearch()
+        options?.signal?.throwIfAborted()
+        return face(sequence, options)
+      })
       sampleDrawings.set(key, createSampleDrawings((sequence, { signal }) => preview(sequence, { signal })))
     }
     return /** @type {ReturnType<typeof createSampleDrawings>} */ (sampleDrawings.get(key))
@@ -1634,7 +1673,7 @@
       </section>
     </div>
   </main>
-  <IdsCharacterInfo root={work} {adapter} {messages} {locale} disabled={editor.disabled} onpick={(part, path) => editor.take(part, path)}>
+  <IdsCharacterInfo root={work} {adapter} {messages} {locale} disabled={editor.disabled} onpick={(part, path) => editor.take(part, path)} customHref={id => `/unencoded?q=${id}`}>
     <!-- A part chosen by selecting its text lists what can stand in its place under its card. -->
     {#snippet extra({ path, close })}
       {#if path && editor.chosenInField && path.join('.') === editor.chosen?.join('.')}<IdsAlternatives {editor} variations variationsHref={entry => `./ucv.html?lang=${locale}#ucv-${entry}`} onchoose={close} />{/if}

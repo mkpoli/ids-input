@@ -13,11 +13,12 @@
   // menu (right click, the Menu key or Shift+F10) splits or swaps with any operator, clears, removes a
   // level or copies that part's sequence. An empty slot shows as ⬚. A component with other forms
   // has a button that lists them, each as the preview draws it, and the menu lists them too: the
-  // variation sequences the preview draws and, with `variations`, the other characters and
-  // descriptions of the IRG component variation entries it is a form of.
-  import { OPERATOR_GROUPS, isCustom, isNode, partAt, samePath, write } from '../core/ids.js'
+  // variation sequences the preview draws and, with `variations`, the forms of the IRG component
+  // variation entries it belongs to: another character or a description, or, where the adapter
+  // draws them (`formed`), a form no code point names, written with its variant identifier (壬q0012).
+  import { OPERATOR_GROUPS, isCustom, isNode, parse, partAt, samePath, write } from '../core/ids.js'
   import { codePoints, variationBase, variationOf, withVariation } from '../core/variation.js'
-  import { componentForms } from '../core/forms.js'
+  import { componentForms, drawnForm } from '../core/forms.js'
   import { loadUcvIndex } from './ucv.js'
   import IdsPartIcon from './IdsPartIcon.svelte'
   import OperatorIcon from './OperatorIcon.svelte'
@@ -55,8 +56,10 @@
     const handle = requestIdleCallback(read, { timeout: 3000 })
     return () => cancelIdleCallback(handle)
   })
-  /** What a component can be written as, its character first. None where it has no other form. @param {Part | undefined} part */
-  const formsOf = part => componentForms(part, { sequences, ucv })
+  /** What a component can be written as, its character first. None where it has no other form. A
+   * component that is the whole text takes no variant identifier, which only a description carries.
+   * @param {Part | undefined} part @param {Path} path */
+  const formsOf = (part, path) => componentForms(part, { sequences, ucv, variants: Boolean(editor.adapter.formed) && path.length > 0 })
   /** The forms under one heading each: the character and its variation sequences, then each entry's.
    * @param {import('../core/forms.js').ComponentForm[]} forms */
   function formGroups(forms) {
@@ -77,12 +80,18 @@
     // The form already written is left as it is, with no step to undo.
     if (typeof part !== 'string' || variationOf(part) === form.write) return
     if ((form.kind === 'plain' || form.kind === 'sequence') && editor.vary(form.write, path)) return
-    editor.take([...form.write].length === 1 || variationBase(form.write) !== null ? withVariation(part, form.write) : form.write, path)
+    // A component is put as it is written: the editor's own reading would take the letters of a
+    // variant identifier for typed operators.
+    if (form.kind !== 'sibling' || variationBase(form.write) !== null) { editor.put(withVariation(part, form.write), path); return }
+    const read = parse(form.write, { open: true })
+    if (!read.problem && read.tree !== null && read.tree !== undefined) editor.put(read.tree, path)
   }
   /** What a form's button says: its code points or its description, and the entry that lists it. @param {import('../core/forms.js').ComponentForm} form */
   const formTitle = form => [variationBase(form.write) !== null ? codePoints(form.write) : form.write, form.entry ? `${form.unifiable ? 'UCV' : 'NUCV'} ${form.entry}` : ''].filter(Boolean).join(' · ')
-  /** Whether the component is written with a variation selector. @param {Part} part */
-  const varied = part => typeof part === 'string' && variationBase(part) !== null && variationOf(part) !== variationBase(part)
+  /** Whether the component is written as one of its forms: with a variation selector, or with the
+   * identifier of an entry form the preview draws. @param {Part} part */
+  const varied = part => typeof part === 'string' && (variationBase(part) !== null ? variationOf(part) !== variationBase(part)
+    : Boolean(ucv && editor.adapter.formed && drawnForm(ucv, part)))
   /** @param {Path} path */
   const key = path => path.join('.')
 
@@ -244,7 +253,7 @@
   function openMenu(path, x, y) {
     if (editor.disabled) return
     // Placed where it opened, over everything (so no scrolled or clipped box moves or cuts it), kept inside the window.
-    const W = 260, H = 280 + formGroups(formsOf(partAt(editor.tree, path))).reduce((sum, group) => sum + 30 + Math.ceil(group.forms.length / 6) * 42, 0)
+    const W = 260, H = 280 + formGroups(formsOf(partAt(editor.tree, path), path)).reduce((sum, group) => sum + 30 + Math.ceil(group.forms.length / 6) * 42, 0)
     menu = { path, x: Math.max(8, Math.min(x, innerWidth - W - 8)), y: Math.max(8, Math.min(y, innerHeight - H - 8)) }
     editor.choose(path, { toggle: false })
     queueMicrotask(() => /** @type {HTMLElement | null | undefined} */ (menuEl?.querySelector('[role^="menuitem"]'))?.focus())
@@ -252,7 +261,7 @@
   /** The variation sequences of the component at `path`, listed under its button. @param {Path} path @param {HTMLElement} anchor */
   function openForms(path, anchor) {
     if (editor.disabled) return
-    const groups = formGroups(formsOf(partAt(editor.tree, path))), r = anchor.getBoundingClientRect()
+    const groups = formGroups(formsOf(partAt(editor.tree, path), path)), r = anchor.getBoundingClientRect()
     const W = Math.min(Math.max(...groups.map(group => group.forms.length), 3), 6) * 42 + 14, H = groups.reduce((sum, group) => sum + 30 + Math.ceil(group.forms.length / 6) * 42, 10)
     menu = { path, forms: true, x: Math.max(8, Math.min(r.left, innerWidth - W - 8)), y: r.bottom + 4 + H > innerHeight - 8 ? Math.max(8, r.top - H - 4) : r.bottom + 4 }
     editor.choose(path, { toggle: false })
@@ -306,7 +315,7 @@
     else if (event.key === 'Home' || event.key === 'End') { event.preventDefault(); items[event.key === 'Home' ? 0 : items.length - 1]?.focus() }
   }
   const menuPart = $derived(menu ? partAt(editor.tree, menu.path) : undefined)
-  const menuForms = $derived(formsOf(menuPart))
+  const menuForms = $derived(menu ? formsOf(menuPart, menu.path) : [])
   const menuGroups = $derived(formGroups(menuForms))
   /** A click on a node's frame, away from its parts and buttons, chooses it. @param {MouseEvent} event @param {Path} path */
   function frameClick(event, path) {
@@ -360,7 +369,7 @@
       aria-label={parent ? t('ids.part', { part: label, n: parent.n, name: editor.name(parent.op) }) : label}
       onclick={() => editor.choose(path)} oncontextmenu={event => contextmenu(event, path)} onkeydown={event => partKey(event, path)}
       ondragover={event => dragover(event, path)} ondragleave={() => { overPath = null; overSwap = false }} ondrop={event => drop(event, path)}>{#if part !== null && isCustom(part)}<span class="ids-custom"><IdsPartIcon sequence={part} adapter={editor.adapter} /><span class="ids-custom-name">{part}</span></span>{:else if part !== null && varied(part) && editor.adapter.icon}<span class="ids-form"><IdsPartIcon sequence={variationOf(part)} adapter={editor.adapter} />{part.slice(variationOf(part).length)}</span>{:else}{part ?? '⬚'}{/if}</button>
-    {#if formsOf(part).length}
+    {#if formsOf(part, path).length}
       {@const open = menu?.forms === true && samePath(menu.path, path)}
       <button type="button" class="ids-forms-toggle" class:varied={varied(part)} disabled={editor.disabled} aria-haspopup="menu" aria-expanded={open}
         aria-label={t('ids.variants.label', { part: variationBase(part) ?? '' })} title={t('ids.variants.label', { part: variationBase(part) ?? '' })}
