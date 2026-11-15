@@ -195,6 +195,9 @@
   // At 2 MB they come as a chunk of their own, asked for at once and read when they arrive, so the
   // page draws without waiting for them.
   const EXAMPLE_SEQUENCES = new Set(EXAMPLES.map(example => example.sequence))
+  // The character each example names, or none: what the corpus answers for the example's sequence
+  // (tests/example-characters.test.js), known before the corpus has loaded.
+  const EXAMPLE_CHARACTERS = new Map(EXAMPLES.map(example => [example.sequence, example.char]))
   let prepared = $state.raw(/** @type {Map<string, import('../src/adapter/types.js').Drawing>} */ (new Map()))
   const preparedReady = import('./lib/example-drawings.json')
     .then(({ default: data }) => { prepared = new Map(Object.entries(data.drawings).map(([sequence, entry]) => [sequence, entry.drawn])) })
@@ -279,7 +282,9 @@
       // parts keep the layout, and a modifier is left to the exact answer above, since the
       // modifier-free reading is only a guess.
       if (!sequence.includes('[') && APPROXIMATE.some(operator => sequence.includes(operator))) {
-        const [named] = await babel.encoded(sequence).catch(() => [])
+        // An example states the character it names, so it draws without waiting for the corpus.
+        const [named] = EXAMPLE_CHARACTERS.has(sequence) ? [EXAMPLE_CHARACTERS.get(sequence) || undefined]
+          : await babel.encoded(sequence).catch(() => [])
         if (named !== undefined && [...named].length === 1 && named !== sequence) {
           try { return await draw(named, options) } catch { /* compose it */ }
         }
