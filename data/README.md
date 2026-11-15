@@ -402,7 +402,7 @@ SHA-256 of this copy `7e12d79da41b18f5fbf8fb0eae2adc31aa9f57e6e2eabe79836804c072
 `radical-variants.txt` at e4f1da2 (public domain, <https://github.com/cjkvi/cjkvi-variants>; 219
 rows), each row naming its source.
 
-## `ucv.json`, `ucv-forms.json.gz` and `ucv-outlines.json.gz`
+## `ucv.json`, `ucv-forms.json.gz`, `ucv-outlines.json.gz`, `ucv-strokes.json.gz` and `ucv-outlines-sans.json.gz`
 
 The IRG's lists of unifiable (UCV, 599 entries) and non-unifiable (NUCV, 14 entries) component
 variations, compiled from `iwds.xml` in the IWDS data files at commit
@@ -448,12 +448,35 @@ strokes has every polygon wound the same way; one that is a single shape keeps i
 the other way, so they stay open. The workshop hands the file to the engine as the host's outlines; a component written
 with a variant identifier (`壬q0012`) is drawn from it.
 
+`ucv-strokes.json.gz` holds the stroke data (KAGE) of the same 632 forms, with the 679 glyphs
+they are built from: `{ source, forms: { name: { version, same } }, glyphs: { name: strokes } }`.
+`scripts/build_ucv_strokes.mjs` reads it from GlyphWiki's dump,
+<https://glyphwiki.org/dump.tar.gz> (the files dated 2026-11-15 02:00 JST; archive SHA-256
+`2c8014e56551dcdd321a307b21226f57bcf2f8b4d9cff32d0f5aeb2623033a85`). A glyph is redrawn over time,
+so the version kept for a form is the one that, drawn in Mincho, is its recorded outline: `same` is
+the lesser share of each drawing's ink within 2 units of the other's, at least 0.97 and 0.9947 for
+the least alike. The stroke data is drawn with `@kurgm/kage-engine` 0.7.0 (GPL-3.0), which the
+build runs and the package does not ship.
+
+`ucv-outlines-sans.json.gz` is `ucv-outlines.json.gz` with every form drawn in Gothic from that
+stroke data, for the Sans face. No source shows these forms in a Gothic face: the strokes are
+GlyphWiki's and the drawing is this build's. Each record has two masters, as the engine's exports
+do, so a form is weighted like the parts beside it. Their stroke widths follow the Sans export
+(`a83fc941166b-sans-compose-layout-v4-f7+variants`): over 62 characters from 一 to 鬱, ink divided
+by stroke length is `19.028 − 0.0056065 × length` in the light master and
+`37.629 − 0.014314 × length` in the heavy one, in units of the 200-unit square (RMS error 0.77 and
+1.49). A width that closes a counter of the form is narrowed until the counter is open, to no less
+than 5 units; three forms (`koseki-324900`, `u9039-g`, `u2ff1-u516b-u5902-04`) still close one.
+
 - Licence of the list: the repository declares none. Its content is the IRG working document,
   published under the Unicode Terms of Use, <https://www.unicode.org/copyright.html>.
 - Licence of the outlines: GlyphWiki's data and article licence,
   <https://glyphwiki.org/wiki/GlyphWiki:データ・記事のライセンス>, as `custom-outlines.json.gz`
   above records it: anyone may use, copy and modify the glyph data freely, with no attribution
   required. The page sits behind a browser check and was not re-read for this build.
+- Licence of the stroke data: the dump's `LICENSE.txt`, read 2026-11-15: "Unlimited permission is
+  hereby granted to use, copy, and distribute these files, with or without modification, either
+  commercially or non-commercially." Copyright 2009 GlyphWiki Project.
 
 ## component-names.tsv
 
