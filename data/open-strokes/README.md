@@ -13,9 +13,9 @@ The format is `ids-input/open-strokes`, version 3.
 | `cns11643.tsv.gz` | 76,282 | Taiwan's standard order, from CNS 全字庫: `char`, `codepoint`, `orders`, `cns` (the CNS plane-codes mapped to the character). Open Government Data License 1.0. |
 | `rime-stroke.tsv.gz` | 102,582 | Rime's five-stroke dictionary: `char`, `codepoint`, `orders`. LGPL-3.0. |
 | `kanjivg.tsv.gz` | 6,728 | Japanese order, from KanjiVG: `char`, `codepoint`, `orders`, `strokes` (KanjiVG's type of each stroke, as it writes them). CC BY-SA 3.0. |
-| `induced.tsv.gz` | 124,414 | Induced and borrowed orders: `char`, `codepoint`, `orders`, `basis`, `from`, `source`, `ids`, `lent`. Each row keeps the terms of its `source` and of the sources in `lent`. |
-| `entered.tsv` | 1 | Orders entered by hand: `char`, `codepoint`, `orders`, `basis`, `by`, `source`, `date`. CC0 1.0. |
-| `wanted.tsv` | 51 | Characters and components no source has an order for: `char`, `codepoint`, `source`, `blocks`, `alone`, `examples`. CC0 1.0. |
+| `induced.tsv.gz` | 124,452 | Induced and borrowed orders: `char`, `codepoint`, `orders`, `basis`, `from`, `source`, `ids`, `lent`. Each row keeps the terms of its `source` and of the sources in `lent`. |
+| `entered.tsv` | 22 | Orders entered by hand: `char`, `codepoint`, `orders`, `basis`, `by`, `source`, `date`. CC0 1.0. |
+| `wanted.tsv` | 0 | Characters and components no source has an order for: `char`, `codepoint`, `source`, `blocks`, `alone`, `examples`. CC0 1.0. |
 | `within.tsv` | 183 | What each `within` row of `induced.tsv.gz` rests on: `char`, `codepoint`, `source`, `named`, `shape`, `found`, `read`, `within`, `lent`. Each row keeps the terms of the source whose characters were read. |
 | `manifest.json` | | Sources with checksums, licences, coverage and the tables below. |
 | `LICENSE-rime-stroke-LGPL-3.0.txt`, `LICENSE-GPL-3.0.txt`, `AUTHORS-rime-stroke.txt` | | The terms and authors of the Rime dictionary. |
@@ -78,15 +78,15 @@ convention they follow.
   unified ideograph it normalizes to (NFKC). The row repeats that character's orders: the recorded
   ones, or where the source does not record it the ones induced or borrowed for it here, with the
   lenders in `lent`.
-  722 rows from `cns11643`, 681 from `rime-stroke`, 1,121 from `kanjivg`.
+  722 rows from `cns11643`, 681 from `rime-stroke`, 1,126 from `kanjivg`.
 - `ids`: `from` is the character's description and the order joins the recorded orders of
   its components. The description is BabelStone's (the sequence its T source gives, or its J
   source for `kanjivg`, else the first) or, where BabelStone has none, Yi Bai's. The `ids` column names the dataset of the
   character's description, then that of any component read by its own description.
-  24,989 rows from `cns11643` (4,431 of them through one of Yi Bai's descriptions), 3 from `rime-stroke`, 91,242 from `kanjivg`. Up to 8 ways are kept.
+  25,031 rows from `cns11643` (4,439 of them through one of Yi Bai's descriptions), 3 from `rime-stroke`, 91,746 from `kanjivg`. Up to 8 ways are kept.
 - `borrowed`: the source has no order for the character and none can be written from its
   components, and `from` is the other source whose order the row repeats, in this source's
-  symbols. 1,281 rows in `cns11643`, 8 in `rime-stroke`, 4,184 in `kanjivg`.
+  symbols. 1,239 rows in `cns11643`, 25 in `rime-stroke`, 3,696 in `kanjivg`.
 
 - `within`: the character is a form of the CJK Radicals Supplement that no source records,
   `from` is the component the descriptions write it as, and the order is what most of the
@@ -100,7 +100,7 @@ A source borrows from the nearest convention first: `cns11643` from `rime-stroke
 `rime-stroke`; an order entered for the lender counts as its own. A component is borrowed before
 a whole character, so a character is written from its source's own components wherever they
 exist. `lent` names the sources a row borrows from: the lender of a `borrowed` row, and for an
-`ids` row the lenders of the components it is written with (21,274 rows). A borrowed order follows
+`ids` row the lenders of the components it is written with (21,778 rows). A borrowed order follows
 its lender's convention, which can differ from the borrowing source's.
 
 The components of ⿰ ⿱ ⿲ ⿳ are joined in the order the description names them. In the other
@@ -203,7 +203,7 @@ learned, or never.
 
 An induced row is a prediction, not a record. Over everything they write, the rules agree with CNS
 on 89.7% of the characters CNS records. The rows induced from CNS cannot be checked against the
-Rime file: Rime records 24,689 of those characters and 12,148 agree, since Rime's
+Rime file: Rime records 24,731 of those characters and 12,169 agree, since Rime's
 additions do not all follow CNS order.
 
 ## Entered orders
@@ -243,18 +243,18 @@ disagree, or under a `variant` shape is weaker than the rest, and `within.tsv` s
 
 | Source | Recorded | Entered | By equivalence | From IDS | Borrowed | Read in characters | Without an order |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| `cns11643` | 76,282 | 1 | 722 | 24,989 | 1,281 | 61 | 17 |
-| `rime-stroke` | 102,582 | 0 | 681 | 3 | 8 | 61 | 17 |
-| `kanjivg` | 6,728 | 0 | 1,121 | 91,242 | 4,184 | 61 | 17 |
+| `cns11643` | 76,282 | 22 | 722 | 25,031 | 1,239 | 61 | 0 |
+| `rime-stroke` | 102,582 | 0 | 681 | 3 | 25 | 61 | 0 |
+| `kanjivg` | 6,728 | 0 | 1,126 | 91,746 | 3,696 | 61 | 0 |
 
 "Without an order" counts the Han characters the workshop's composer draws or either IDS source
 describes that end with no row for that source, borrowed ones included. Why, for each:
 
 | Source | No description | Unreadable description | Operator not induced through | Component without an order |
 | --- | ---: | ---: | ---: | ---: |
-| `cns11643` | 17 | 0 | 0 | 0 |
-| `rime-stroke` | 17 | 0 | 0 | 0 |
-| `kanjivg` | 17 | 0 | 0 | 0 |
+| `cns11643` | 0 | 0 | 0 | 0 |
+| `rime-stroke` | 0 | 0 | 0 | 0 |
+| `kanjivg` | 0 | 0 | 0 | 0 |
 
 An unreadable description is a single component, carries 〾 or an operator modifier, or names a
 numbered component BabelStone gives no fragment for.

@@ -16,12 +16,12 @@ char	codepoint	source	named	shape	found	read	within	lent
 ⺠	U+2EA0	cns11643	民	same	52	51515×51 5515×1	㢯㥸䂥䇇䋋䛉䟨䡑	
 ⺣	U+2EA3	cns11643	灬	same	227	4444×226 3444×1	㶨㶵㶻㷊㷛㷦㷶㸐	
 ⺫	U+2EAB	cns11643	罒	same	380	25221×378 25351×2	㗄㝲㝶㡢㬅䉚䍐䍒	
-⺯	U+2EAF	cns11643	糹	same	1034	554444×1021 554534×9 55444×2	䊵䊶䊷䊸䊹䊺䊻䊼	
+⺯	U+2EAF	cns11643	糹	same	1035	554444×1022 554534×9 55444×2	䊵䊶䊷䊸䊹䊺䊻䊼	
 ⺰	U+2EB0	cns11643	纟	same	191	551×190 5514×1	䌶䌷䌸䌹䌺䌻䌼䌽	
 ⺱	U+2EB1	cns11643	罓	same	12	2534×12	𠤣𡴓𦆢𦉮𦊋𦊕𦊬𦋇	
 ⺹	U+2EB9	cns11643	耂	same	22	1213×22	㠻孝老考者耇耊𢳩	
 ⺺	U+2EBA	cns11643	肀	same	4	5112×4	𢗱𣌦𤞍𦘡	
-⻀	U+2EC0	cns11643	艹	variant	2712	2112×2384 122×316 1221×8	㭉䒒䒓䒔䒕䒗䒘䒙	
+⻀	U+2EC0	cns11643	艹	variant	2714	2112×2386 122×316 1221×8	㭉䒒䒓䒔䒕䒗䒘䒙	
 ⻁	U+2EC1	cns11643	虎	variant	104	21531535×103 12531535×1	㙈䖊䖋䖌䖎䖐䖓䖔	
 ⻂	U+2EC2	cns11643	衤	same	627	413234×613 45234×10 4132344×2	䘛䘜䘝䘞䘟䘢䘣䘤	
 ⻄	U+2EC4	cns11643	西	same	42	125351×41 1253511×1	㛉䄽䇴䙶哂垔徆恓	
@@ -32,10 +32,10 @@ char	codepoint	source	named	shape	found	read	within	lent
 ⻋	U+2ECB	cns11643	车	same	84	1521×73 1512×11	䢀䢁䢂伡军斩毂砗	
 ⻐	U+2ED0	cns11643	钅	same	305	31115×303 3111532×1 311154×1	䥺䥻䥼䥽䥾䦀䦁䦅	
 ⻑	U+2ED1	cns11643	長	same	48	21111534×44 2111154×3 12111534×1	㙊㷃䂻䗅䛫䠆䩨倀	
-⻒	U+2ED2	cns11643	镸	same	126	2111154×126	䦈䦉䦊䦋套瓺肆蕻	
+⻒	U+2ED2	cns11643	镸	same	127	2111154×127	䦇䦈䦉䦊䦋套瓺肆	
 ⻓	U+2ED3	cns11643	长	same	11	3154×11	伥帐张怅枨胀账𪼴	
 ⻔	U+2ED4	cns11643	门	variant	5	245×3 425×2	们扪钔𡭜𪡯	
-⻘	U+2ED8	cns11643	青	same	76	11213511×75 12511121555121×1	䑶䝼䞍䨝䨼䴖倩啨	
+⻘	U+2ED8	cns11643	青	same	77	11213511×76 12511121555121×1	䑶䝼䞍䨝䨼䴖倩啨	
 ⻙	U+2ED9	cns11643	韦	same	26	1152×26	㭏伟帏炜玮祎纬袆	
 ⻚	U+2EDA	cns11643	页	same	64	132534×64	㑔嚣灏烦硕顶顷顸	
 ⻛	U+2EDB	cns11643	风	same	10	3534×10	㐽㚯岚枫沨砜讽飒	
@@ -138,7 +138,7 @@ char	codepoint	source	named	shape	found	read	within	lent
 ⺠	U+2EA0	kanjivg	民	same	7	51515×7	岷愍氓泯眠緡罠	
 ⺣	U+2EA3	kanjivg	灬	same	21	4444×21	勲杰濕点烈烋烹焦	
 ⺫	U+2EAB	kanjivg	罒	same	42	25221×42	壊夢寧徳德懌懐擇	
-⺯	U+2EAF	kanjivg	糹	same	1034	554444×1021 554534×9 55444×2	䊵䊶䊷䊸䊹䊺䊻䊼	cns11643
+⺯	U+2EAF	kanjivg	糹	same	1035	554444×1022 554534×9 55444×2	䊵䊶䊷䊸䊹䊺䊻䊼	cns11643
 ⺰	U+2EB0	kanjivg	纟	same	191	551×190 5514×1	䌶䌷䌸䌹䌺䌻䌼䌽	cns11643
 ⺱	U+2EB1	kanjivg	罓	same	12	2534×12	𠤣𡴓𦆢𦉮𦊋𦊕𦊬𦋇	cns11643
 ⺹	U+2EB9	kanjivg	耂	same	3	1213×3	孝老者	

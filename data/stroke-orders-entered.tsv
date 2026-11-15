@@ -5,4 +5,25 @@
 #   orders  one code per way of writing it, separated by a space
 #   basis   where the order was read: a citation, or the reasoning behind an editorial reading; may be empty
 # `data/open-strokes/wanted.tsv` lists the components whose order would let the most characters be written.
-㇒	cns11643	3	CNS 全字庫 writes 丿, the unified ideograph Unicode gives as the equivalent of ㇒, as 3	ids-input	2026-11-15
+㇒	cns11643	3	㇒ is the stroke of the 撇 class, which CNS 全字庫 writes 3	ids-input	2026-11-15
+㇖	cns11643	5		mkpoli	2026-11-15
+㇉	cns11643	5		mkpoli	2026-11-15
+コ	cns11643	51		mkpoli	2026-11-15
+㇂	cns11643	5		mkpoli	2026-11-15
+〤	cns11643	34		mkpoli	2026-11-15
+〡	cns11643	2		mkpoli	2026-11-15
+〥	cns11643	35		mkpoli	2026-11-15
+〦	cns11643	21		mkpoli	2026-11-15
+〧	cns11643	211		mkpoli	2026-11-15
+〨	cns11643	2111		mkpoli	2026-11-15
+〩	cns11643	454		mkpoli	2026-11-15
+〻	cns11643	44		mkpoli	2026-11-15
+𖿢	cns11643	5		mkpoli	2026-11-15
+𖿣	cns11643	11		mkpoli	2026-11-15
+𖿰	cns11643	352		mkpoli	2026-11-15
+𖿱	cns11643	34		mkpoli	2026-11-15
+𖿲	cns11643	35		mkpoli	2026-11-15
+𖿳	cns11643	32511135		mkpoli	2026-11-15
+𖿴	cns11643	221		mkpoli	2026-11-15
+𖿵	cns11643	2221		mkpoli	2026-11-15
+𖿶	cns11643	341		mkpoli	2026-11-15
