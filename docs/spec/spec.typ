@@ -333,6 +333,13 @@
   author: "mkpoli",
   running: t("spec.title"),
 )
+// A compatibility ideograph stays itself: the shaper would draw a font's unified ideograph in its
+// place (者 for U+FA5B), so these take the fallback faces that have them.
+#show regex("[\u{F900}-\u{FAFF}\u{2F800}-\u{2FA1F}]"): set text(font: (
+  "Plangothic P1",
+  "Jigmo",
+  "Jigmo2",
+))
 
 #{
   set par(justify: false)
