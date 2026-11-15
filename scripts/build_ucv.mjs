@@ -10,6 +10,7 @@ import { createHash } from 'node:crypto'
 import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { gunzipSync, gzipSync } from 'node:zlib'
+import { area, counters, polygonsOf } from './lib/outline.mjs'
 
 const revision = '8302302d615ff1c1f60ae335b118b10060be0ed4'
 const expected = '886b426ea3d1d329749e02b32cccd5082d31d6cf1b996ea37bdae5ac593ca491'
@@ -187,21 +188,18 @@ for (const entry of entries) for (const form of entry.forms) if (!outlines[form.
 
 /**
  * An outline as a record of the drawing engine's exports, for a composer to place as a component:
- * the 200-unit square, y down, on a 1000-unit em whose top is 880; every polygon wound the same
- * way, since the strokes overlap and are filled as one shape.
- * @param {string} key @param {string} d
+ * the 200-unit square, y down, on a 1000-unit em whose top is 880. The strokes overlap and are
+ * filled as one shape, so every polygon is wound the same way, and a counter the other way.
+ * @param {string} key @param {[number, number][][]} polygons
  */
-function record(key, d) {
-  if (/[^MLZ\d\s.-]/.test(d)) throw new Error(`${key}: an outline with curves`)
+function record(key, polygons) {
   let xMin = Infinity, yMin = Infinity, xMax = -Infinity, yMax = -Infinity, ink = 0
-  const p = d.split('Z').filter(part => part.trim()).map(part => {
-    const numbers = (part.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number)
+  const cut = counters(polygons)
+  const p = polygons.map((polygon, at) => {
     /** @type {[number, number][]} */
-    let points = []
-    for (let i = 0; i + 1 < numbers.length; i += 2) points.push([numbers[i] * 5, 880 - numbers[i + 1] * 5])
-    let area = 0
-    points.forEach(([x, y], i) => { const [nx, ny] = points[(i + 1) % points.length]; area += x * ny - nx * y; ink += Math.hypot(nx - x, ny - y) })
-    if (area < 0) points = points.reverse()
+    let points = polygon.map(([x, y]) => [x * 5, 880 - y * 5])
+    points.forEach(([x, y], i) => { const [nx, ny] = points[(i + 1) % points.length]; ink += Math.hypot(nx - x, ny - y) })
+    if ((area(points) < 0) !== cut[at]) points = points.reverse()
     const light = Buffer.alloc(points.length * 4)
     points.forEach(([x, y], i) => {
       xMin = Math.min(xMin, x); xMax = Math.max(xMax, x); yMin = Math.min(yMin, y); yMax = Math.max(yMax, y)
@@ -219,7 +217,7 @@ for (const entry of entries) for (const form of entry.forms) {
   if (form.text || !outlines[form.glyph]) continue
   const key = `&GW-${form.glyph};`
   if ([...key].length > 48 || !/^&[A-Za-z][A-Za-z0-9+_-]*;$/.test(key)) throw new Error(`${key}: not a reference a description can name`)
-  records[key] = record(key, outlines[form.glyph])
+  records[key] = record(key, polygonsOf(outlines[form.glyph]))
 }
 
 const source = {

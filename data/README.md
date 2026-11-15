@@ -443,8 +443,9 @@ either place.
 `ucv-outlines.json.gz` holds the 632 forms no text writes as records of the drawing engine's
 export format, for a composer to place as components: `{ records: { "&GW-u58ec-t;": record } }`,
 each under the reference a description names the glyph by, `&GW-` and its GlyphWiki name. The
-200-unit square is scaled to a 1000-unit em with its top at 880, and every polygon is wound the
-same way. The workshop hands the file to the engine as the host's outlines; a component written
+200-unit square is scaled to a 1000-unit em with its top at 880. A drawing made of overlapping
+strokes has every polygon wound the same way; one that is a single shape keeps its counters wound
+the other way, so they stay open. The workshop hands the file to the engine as the host's outlines; a component written
 with a variant identifier (`壬q0012`) is drawn from it.
 
 - Licence of the list: the repository declares none. Its content is the IRG working document,
