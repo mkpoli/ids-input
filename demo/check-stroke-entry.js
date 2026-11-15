@@ -4,21 +4,22 @@ import { chromium } from 'playwright-core'
 import { strict as assert } from 'node:assert'
 import { readFileSync } from 'node:fs'
 const file = new URL('../data/stroke-orders-entered.tsv', import.meta.url)
+const base = process.env.IDS_URL ?? 'http://localhost:5173'
 const before = readFileSync(file, 'utf8')
+// A private-use character: no source records it and nobody enters it, so the check owns its row.
+const CHAR = '', row = new RegExp(`\\n${CHAR}\\tcns11643\\t`)
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH })
 try {
+  assert.equal(row.test(before), false, 'the check\'s character is already entered')
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
   page.setDefaultNavigationTimeout(120000)
-  await page.goto(`${process.env.IDS_URL ?? 'http://localhost:5173'}/strokes.html?lang=en`, { waitUntil: 'networkidle' })
-  await page.locator('.wanted').first().waitFor()
+  await page.goto(`${base}/strokes.html?lang=en`, { waitUntil: 'networkidle' })
   await page.locator('tbody tr').first().waitFor()
-
   const order = page.getByLabel('Order', { exact: true }), basis = page.getByLabel('Basis', { exact: true })
-  // 〡 is wanted: no source records it and no character is written with it. The check saves a row
-  // for it, so it stops where a person already has.
-  assert.equal(/\n〡\tcns11643\t/.test(before), false, '〡 is entered: the check would overwrite it')
-  await page.locator('.wanted', { hasText: '〡' }).click()
-  assert.equal(await page.locator('.glyph').innerText(), '〡')
+
+  // Any character can be entered by typing it.
+  await page.getByPlaceholder('Another character').fill(CHAR)
+  assert.equal(await page.locator('.glyph').innerText(), CHAR)
   assert.equal(await order.inputValue(), '')
   // The keys write the digits; a second way follows a space.
   await page.locator('.keys .key').nth(1).click()
@@ -38,33 +39,34 @@ try {
 
   // The basis may be left out, and the row is the maintainer's.
   await page.getByRole('button', { name: 'Save' }).click()
-  await page.locator('tbody tr', { hasText: '〡' }).waitFor()
-  assert.match(readFileSync(file, 'utf8'), /\n〡\tcns11643\t2\t\tmkpoli\t\d{4}-\d{2}-\d{2}\n$/)
-  await page.locator('.wanted', { hasText: '〡' }).first().click()
+  await page.getByRole('button', { name: `Remove ${CHAR}` }).waitFor()
+  assert.match(readFileSync(file, 'utf8'), new RegExp(`\\n${CHAR}\\tcns11643\\t2\\t\\tmkpoli\\t\\d{4}-\\d{2}-\\d{2}\\n$`))
 
+  // Saving again with a basis replaces the row.
   await basis.fill('browser check')
   await page.getByRole('button', { name: 'Save' }).click()
   await page.locator('tbody tr', { hasText: 'browser check' }).waitFor()
-  assert.match(readFileSync(file, 'utf8'), /\n〡\tcns11643\t2\tbrowser check\tmkpoli\t\d{4}-\d{2}-\d{2}\n$/)
-  // The queue marks it done and moves on to a character still open.
-  assert.equal(await page.locator('.wanted.done', { hasText: '〡' }).count(), 1)
-  assert.notEqual(await page.locator('.glyph').innerText(), '〡')
+  assert.match(readFileSync(file, 'utf8'), new RegExp(`\\n${CHAR}\\tcns11643\\t2\\tbrowser check\\tmkpoli\\t\\d{4}-\\d{2}-\\d{2}\\n$`))
 
-  // What is being typed for another character survives a row leaving the table.
+  // What is being typed survives a row leaving the table.
   await basis.fill('still typing')
-  await page.locator('tbody tr', { hasText: 'browser check' }).getByRole('button', { name: 'Remove 〡' }).click()
+  await page.getByRole('button', { name: `Remove ${CHAR}` }).click()
   await page.locator('tbody tr', { hasText: 'browser check' }).waitFor({ state: 'detached' })
   assert.equal(readFileSync(file, 'utf8'), before)
   assert.equal(await basis.inputValue(), 'still typing')
-  // A request from another site is refused and writes nothing.
-  const foreign = await page.request.post(`${process.env.IDS_URL ?? 'http://localhost:5173'}/api/stroke-entries`, { headers: { origin: 'https://example.com', 'content-type': 'application/json' }, data: { char: '〡', source: 'cns11643', orders: '1', basis: 'x', by: 'x', date: '2026-01-01' } })
+
+  // A write from another site, or one that names no origin, is refused and writes nothing.
+  const entry = { char: CHAR, source: 'cns11643', orders: '1', basis: 'x', by: 'x', date: '2026-01-01' }
+  const foreign = await page.request.post(`${base}/api/stroke-entries`, { headers: { origin: 'https://example.com', 'content-type': 'application/json' }, data: entry })
   assert.equal(foreign.status(), 403)
+  const unnamed = await fetch(`${base}/api/stroke-entries`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(entry) })
+  assert.equal(unnamed.status, 403)
   assert.equal(readFileSync(file, 'utf8'), before)
   console.log('PASS the stroke-order page saves an entered order to the repository file')
 } finally {
   await browser.close()
   // Whatever happened, the check's own row is taken out again; rows a person saved meanwhile stay.
-  if (!/\n〡\tcns11643\t/.test(before) && /\n〡\tcns11643\t/.test(readFileSync(file, 'utf8'))) {
-    await fetch(`${process.env.IDS_URL ?? 'http://localhost:5173'}/api/stroke-entries`, { method: 'DELETE', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ char: '〡', source: 'cns11643' }) })
+  if (!row.test(before) && row.test(readFileSync(file, 'utf8'))) {
+    await fetch(`${base}/api/stroke-entries`, { method: 'DELETE', headers: { 'content-type': 'application/json', origin: base }, body: JSON.stringify({ char: CHAR, source: 'cns11643' }) })
   }
 }
