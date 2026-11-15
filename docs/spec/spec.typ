@@ -136,6 +136,8 @@
   mono(size: 6.8pt, fill: accent, cite.at(0) + " " + cite.at(1)),
 ))
 
+/// A badge's word: proposal, inference, history and the like.
+#let kind-name(kind) = t("baishi." + kind)
 #let badge(kind) = box(
   inset: (x: 3pt, y: 1.5pt),
   outset: (y: 1pt),
@@ -152,7 +154,7 @@
     size: 6.8pt,
     weight: "regular",
     fill: if kind in ("proposal", "searchOnly") { accent } else { soft },
-    t("baishi." + kind),
+    kind-name(kind),
   ),
 )
 
@@ -627,7 +629,7 @@
   thickness: 0.6pt,
   dash: "dashed",
 ))[
-  == #t("baishi.history") <chains-history>
+  == #kind-name("history") <chains-history>
   #t("baishi.chainsHistory.letters")
   #said("oldLetters", ("D1", "p.1"))
   #said("oldConnector", ("D1", "p.2"))
@@ -722,7 +724,7 @@
   thickness: 0.6pt,
   dash: "dashed",
 ))[
-  == #t("baishi.history") <overlap-history>
+  == #kind-name("history") <overlap-history>
   #t("baishi.overlapHistory")
   #said("oldMarks", ("D2", "p.4"))
   #examples("oldMarks", current: false)

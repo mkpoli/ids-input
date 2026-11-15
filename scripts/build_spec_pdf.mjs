@@ -151,21 +151,28 @@ function placements(source, call) {
     // Calls inside the snippets themselves, which place whatever they are handed.
     .filter(one => !/^(said|examples|grammar|at)\((id|key|names|cite|one|doc)\b/.test(one))
 }
+/** The line in docs/spec/spec.typ after which the sections are the edition's own. */
+const OWN = "// ---------------------------------------------------------------- the edition's own sections"
 function checkParity() {
   const own = placements(read('demo/Baishi.svelte'), /@render (said|examples|grammar|at)\(([^)]*\)?)\)/g)
-  const ours = placements(read('docs/spec/spec.typ').split('// ---------------------------------------------------------------- the edition\'s own sections')[0], /#(said|examples|grammar|at)\(([^)]*\)?)\)/g)
+  const ours = placements(read('docs/spec/spec.typ').split(OWN)[0], /#(said|examples|grammar|at)\(([^)]*\)?)\)/g)
   const width = Math.max(own.length, ours.length)
   for (let i = 0; i < width; i++) {
     if (own[i] !== ours[i]) throw new Error(`docs/spec/spec.typ parts from the page at placement ${i + 1}: page ${own[i] ?? '(end)'}, spec ${ours[i] ?? '(end)'}`)
   }
-  const keys = (/** @type {string} */ text) => new Set([...text.matchAll(/\bt\(\s*['"](baishi\.[\w.]+)['"]/g)].map(match => match[1]))
+  // Every message the page names outright (keys built from data are the tables', checked above
+  // through the data), in the same order. Left out: the page's title bar, its contents list and
+  // the label of the contents list, the accessible names of its rule list and of the → between a
+  // text and what it becomes (the PDF shows the arrow), and the link to the cheatsheet.
+  const PAGE_ONLY = new Set(['baishi.title', 'baishi.contents', 'baishi.grammar', 'baishi.becomes', 'baishi.toCheatsheet'])
+  const keys = (/** @type {string} */ text) => [...text.matchAll(/\bt\(\s*['"](baishi\.[\w.]+)['"]/g)]
+    .map(match => match[1]).filter(key => !key.endsWith('.') && !PAGE_ONLY.has(key))
   const pageKeys = keys(read('demo/Baishi.svelte'))
-  const specKeys = keys(read('docs/spec/spec.typ'))
-  // The page's own controls: the download menu and the interactive diagram.
-  const PAGE_ONLY = new Set(['baishi.contents', 'baishi.grammar', 'baishi.becomes', 'baishi.title', 'baishi.toCheatsheet'])
-  const missing = [...pageKeys].filter(key => !specKeys.has(key) && !PAGE_ONLY.has(key))
-  if (missing.length) throw new Error(`docs/spec/spec.typ leaves out page text: ${missing.join(', ')}`)
-  return own.length
+  const specKeys = keys(read('docs/spec/spec.typ').split(OWN)[0])
+  for (let i = 0; i < Math.max(pageKeys.length, specKeys.length); i++) {
+    if (pageKeys[i] !== specKeys[i]) throw new Error(`docs/spec/spec.typ parts from the page at message ${i + 1}: page ${pageKeys[i] ?? '(end)'}, spec ${specKeys[i] ?? '(end)'}`)
+  }
+  return own.length + pageKeys.length
 }
 
 /** The data the document reads: the page's tables, examples and quotations, its messages, the grammar. */
@@ -211,4 +218,4 @@ for (const edition of wanted.length ? wanted : EDITIONS) {
   ], { stdio: 'inherit', env: { ...process.env, SOURCE_DATE_EPOCH: String(time) } })
   console.log(`${pdf.slice(ROOT.length + 1)}  ${(readFileSync(pdf).length / 1024).toFixed(0)} KB`)
 }
-console.log(`${placed} placements match demo/Baishi.svelte`)
+console.log(`${placed} placements and messages match demo/Baishi.svelte`)
