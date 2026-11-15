@@ -3,10 +3,12 @@
 /** @param {(key: string) => string} t */
 export const pages = t => [
   { id: 'sources', icon: 'book', label: t('sources.title') },
+  { id: 'components', icon: 'layers', label: t('library.title') },
   { id: 'unencoded', icon: 'unencoded', label: t('appendix.title') },
   { id: 'component-atlas', icon: 'grid', label: t('app.atlas') },
   { id: 'ucv', icon: 'variants', label: t('ucv.title') },
   { id: 'normalization', icon: 'funnel', label: t('normalization.title') },
+  { id: 'history', icon: 'clock', label: t('history.title') },
   { id: 'baishi-cheatsheet', icon: 'list', label: t('cheatsheet.title') },
   { id: 'open-data', icon: 'download', label: t('app.openData') },
   { id: 'compare', icon: 'scales', label: t('app.compare') },
