@@ -1,13 +1,11 @@
 <script>
   // A public gallery of the composer beside KAGE: the same IDS drawn by both, with the measured
   // agreement. Two sets: 44 unencoded KRM headwords and 20 common-use kanji.
-  import SiteSelect from './ui/SiteSelect.svelte'
+  import PageHeader from './ui/PageHeader.svelte'
   import { translator } from '../src/svelte/index.js'
   import { LOCALES, appMessages } from './lib/locales.js'
-  import { applyTheme, storedTheme } from './lib/theme.js'
   import { load, save } from './lib/storage.js'
   import Segmented from './ui/controls/Segmented.svelte'
-  import ThemeSwitch from './ui/ThemeSwitch.svelte'
   import data from './lib/comparison.json'
 
   const params = new URLSearchParams(location.search)
@@ -21,10 +19,6 @@
   $effect(() => { document.documentElement.lang = locale })
   const messages = $derived(LOCALES.find(([code]) => code === locale)?.[2])
   const t = $derived(translator({ ...appMessages('en'), ...messages, ...appMessages(locale) }, locale))
-
-  let theme = $state(storedTheme())
-  /** @param {import('./lib/theme.js').Theme} next */
-  const setTheme = next => { theme = next; applyTheme(next) }
 
   /** @typedef {'all' | 'side' | 'stacked' | 'enclosure'} Filter */
   /** @type {Filter} */
@@ -63,23 +57,7 @@
 </svelte:head>
 
 <div class="page">
-  <header class="bar">
-    <SiteSelect title={t('app.title')} label={t('app.sitesLabel')} more={t('app.sitesMore')} {locale} href="./" />
-    <span class="slash" aria-hidden="true">/</span>
-    <h1>{t('compare.title')}</h1>
-    <div class="end">
-      <label class="select">
-        <span class="ui-visually-hidden">{t('app.language')}</span>
-        <span class="ui-select-wrap">
-          <select class="ui-select" bind:value={locale} aria-label={t('app.language')}>
-            {#each LOCALES as [code, name] (code)}<option value={code}>{name}</option>{/each}
-          </select>
-        </span>
-      </label>
-      <ThemeSwitch {theme} label={t('app.prefs.theme')} labels={{ system: t('app.theme.system'), light: t('app.theme.light'), dark: t('app.theme.dark') }} onchange={setTheme} />
-      <a class="back" href="./">{t('compare.back')}</a>
-    </div>
-  </header>
+  <PageHeader page="compare" title={t('compare.title')} {t} bind:locale />
 
   <main>
     <p class="lead">{t('compare.lead')}</p>
@@ -169,13 +147,6 @@
 
 <style>
   .page{display:flex;flex-direction:column;min-height:100dvh}
-  .bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px max(18px,env(safe-area-inset-right)) 10px max(18px,env(safe-area-inset-left));
-    border-bottom:1px solid var(--ui-color-border);background:color-mix(in srgb,var(--ui-color-canvas) 88%,transparent);backdrop-filter:blur(10px);position:sticky;top:0;z-index:10}
-  .slash{color:var(--ui-color-border-strong)}
-  h1{margin:0;font-size:15px;font-weight:600;color:var(--ui-color-ink-muted);white-space:nowrap}
-  .end{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap}
-  .back{font-size:13px;color:var(--ui-color-accent);text-decoration:none;padding:5px 9px;border-radius:var(--ui-radius-md)}
-  .back:hover{background:var(--ui-color-surface-hover)}
   .select .ui-select-wrap,.order .ui-select-wrap{inline-size:auto}
   .select .ui-select,.order .ui-select{inline-size:auto;min-inline-size:0;font-size:var(--ui-text-sm)}
 

@@ -190,5 +190,17 @@ export function issueBody(report, attachments) {
   return body.length <= MAX_BODY_CHARS ? body : `${body.slice(0, MAX_BODY_CHARS - 40)}\n\n_This report was cut to fit an issue._\n`
 }
 
+/**
+ * The mark an issue carries for the report it was filed from; the intake finds the issue by it.
+ * @param {string} key the report's dedupe key @returns {string}
+ */
+export const reportMarker = key => `<!-- report:${key} -->`
+
+/**
+ * The body an issue is filed with: what the report says, then its mark.
+ * @param {Report} report @param {string} key @param {Attachments} attachments @returns {string}
+ */
+export const filedBody = (report, key, attachments) => `${issueBody(report, attachments)}\n${reportMarker(key)}\n`
+
 /** The comment left on an issue a repeat report matches. @param {string} when an ISO timestamp */
 export const duplicateComment = when => `Reported again at ${when}.`

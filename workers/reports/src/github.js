@@ -1,10 +1,11 @@
 // @ts-check
-// The GitHub REST calls a report needs: the labels it files under, the issue itself, a comment on a
-// repeat, and the attachments. Attachments go through the Git Data API onto an orphan branch —
+// The GitHub REST calls a report needs: the labels it files under, the dispatch to the Action, the
+// issue itself, a comment on a repeat, and the attachments. Attachments go through the Git Data API onto an orphan branch —
 // blob, tree, commit, ref — because the issue-attachment upload has no API.
 
 export const ATTACHMENT_BRANCH = 'bug-attachments'
 const API = 'https://api.github.com'
+const CALL_TIMEOUT = 15_000
 
 /** @typedef {{ REPO: string, GITHUB_TOKEN: string }} GitHubEnv */
 /** @typedef {{ path: string, bytes: Uint8Array }} UploadFile */
@@ -38,6 +39,8 @@ export async function call(env, path, init = {}) {
     method: init.method ?? 'GET',
     headers: headers(env),
     body: init.body === undefined ? undefined : JSON.stringify(init.body),
+    // A call that hangs must not hold the reporter past the wait.
+    signal: AbortSignal.timeout(CALL_TIMEOUT),
   })
   const text = await response.text()
   if (!response.ok) throw new GitHubError(response.status, `${init.method ?? 'GET'} ${path} answered ${response.status}: ${text.slice(0, 500)}`)
@@ -77,9 +80,28 @@ export async function createIssue(env, issue) {
   return { number: created.number, url: created.html_url }
 }
 
+/** @param {GitHubEnv} env @param {number} number @param {string} body @returns {Promise<void>} */
+export async function rewriteIssue(env, number, body) {
+  await call(env, `/repos/${env.REPO}/issues/${number}`, { method: 'PATCH', body: { body } })
+}
+
 /**
- * Ask the workshop's Action to file a report: the report rides in the payload as base64, and the
- * Action answers through the queue.
+ * The newest issue under `label`, touched since `since`, whose body ends in `ending`; null when
+ * there is none. Only the end counts: a reporter's own text sits inside the body and may quote
+ * anything.
+ * @param {GitHubEnv} env @param {{ label: string, since: Date, ending: string }} wanted
+ * @returns {Promise<{ number: number, url: string } | null>}
+ */
+export async function findIssue(env, { label, since, ending }) {
+  const query = new URLSearchParams({ labels: label, state: 'all', sort: 'created', direction: 'desc', since: since.toISOString(), per_page: '50' })
+  /** @type {{ number: number, html_url: string, body?: string | null, pull_request?: unknown }[]} */
+  const issues = await call(env, `/repos/${env.REPO}/issues?${query}`)
+  const found = issues.find(issue => !issue.pull_request && typeof issue.body === 'string' && issue.body.trimEnd().endsWith(ending))
+  return found ? { number: found.number, url: found.html_url } : null
+}
+
+/**
+ * Ask the workshop's Action to file a report, which rides in the payload.
  * @param {GitHubEnv} env @param {{ event_type: string, client_payload: Record<string, unknown> }} event
  * @returns {Promise<void>}
  */

@@ -18,11 +18,12 @@ import { DESKTOP, SITE } from './desktop.js'
  *  smaller than any field's, so `dispatch` is the real bound: the workspace and the context share
  *  what the other fields leave of it (`MAX_DISPATCH` in `workers/reports/src/index.js`). */
 export const LIMITS = { symptom: 4000, sequence: 2000, contact: 200, link: 4000, dispatch: 30_000, image: 5 * 1024 * 1024 }
-// The origin the Worker adds to the dispatch, and the room the estimate leaves itself.
+// What the Worker adds to the dispatch, and the room the estimate leaves itself.
 const DISPATCH_ROOM = 512
 const RING = 20, LINE = 500, BURST = 100, ATTRIBUTE = 120
-// Long enough for 8 MB on a slow phone, short enough that a hung intake gives the dialog back.
-const SEND_TIMEOUT = 60_000
+// The intake answers once the issue is filed, about ten seconds on, and gives up by itself after
+// eighty; past this a hung intake gives the dialog back.
+const SEND_TIMEOUT = 120_000
 const HOST = String.raw`localhost|127(?:\.\d{1,3}){1,3}|0\.0\.0\.0|10(?:\.\d{1,3}){3}|192\.168(?:\.\d{1,3}){2}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2}|\[[0-9a-f:]*:[0-9a-f:]*\]|[\w.-]*\.local(?:host)?`
 const LOCAL = new RegExp(`^(?:${HOST})$`, 'i')
 

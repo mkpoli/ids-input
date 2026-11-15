@@ -46,6 +46,8 @@ function lazyFallbackFont() {
 const ENGINE_DATA = fileURLToPath(new URL('../node_modules/@han-compose/composer/data/', import.meta.url))
 const ENGINE_OUTLINES = [
   ...['tangut', 'bopomofo', 'new-korean', 'small-seal', 'shuishu', 'jurchen', 'palette'].map(name => `sources/${name}/outlines.json.gz`),
+  // The Sans cuts of the numbered components, which the palette lays over its own outlines.
+  'numbered-sans-outlines.json.gz',
   ...readdirSync(join(ENGINE_DATA, 'unicode/outlines')).map(file => `unicode/outlines/${file}`),
 ]
 const ENGINE_MODULE = '\0ids-engine-outlines'
@@ -159,7 +161,7 @@ export default defineConfig({
     // A fallback shard is fetched when a character needs it; inlined, the small ones would ride in
     // the first scripts as base64, which hardly compresses.
     assetsInlineLimit: file => file.endsWith('.woff2') ? false : undefined,
-    rollupOptions: { input: { index: `${import.meta.dirname}/index.html`, compare: `${import.meta.dirname}/compare.html`, engines: `${import.meta.dirname}/engines.html`, sources: `${import.meta.dirname}/sources.html`, embed: `${import.meta.dirname}/embed.html`, design: `${import.meta.dirname}/design.html`, 'open-data': `${import.meta.dirname}/open-data.html`, unencoded: `${import.meta.dirname}/unencoded.html`, ucv: `${import.meta.dirname}/ucv.html`, normalization: `${import.meta.dirname}/normalization.html`, components: `${import.meta.dirname}/components.html`, history: `${import.meta.dirname}/history.html` } } },
+    rollupOptions: { input: { index: `${import.meta.dirname}/index.html`, compare: `${import.meta.dirname}/compare.html`, engines: `${import.meta.dirname}/engines.html`, sources: `${import.meta.dirname}/sources.html`, embed: `${import.meta.dirname}/embed.html`, editor: `${import.meta.dirname}/editor.html`, design: `${import.meta.dirname}/design.html`, 'open-data': `${import.meta.dirname}/open-data.html`, unencoded: `${import.meta.dirname}/unencoded.html`, ucv: `${import.meta.dirname}/ucv.html`, normalization: `${import.meta.dirname}/normalization.html`, 'baishi-cheatsheet': `${import.meta.dirname}/baishi-cheatsheet.html`, 'component-atlas': `${import.meta.dirname}/component-atlas.html`, components: `${import.meta.dirname}/components.html`, history: `${import.meta.dirname}/history.html` } } },
   // The drawing engine's files, outside this checkout's root: a dependency that is a directory is
   // read where it stands, and its Worker is a `file:` module the page asks for by that path.
   server: { fs: { strict: false, allow: ['..', join(import.meta.dirname, '..', 'node_modules', '@han-compose', 'composer')] } },

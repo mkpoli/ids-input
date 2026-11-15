@@ -29,7 +29,7 @@
 </svelte:head>
 
 <div class="page">
-  <PageHeader title={t('ucv.title')} {t} bind:locale links={[{ href: `./sources.html?lang=${locale}#iwds-ucv`, label: t('ucv.source') }]} />
+  <PageHeader page="ucv" title={t('ucv.title')} {t} bind:locale links={[{ href: `./sources.html?lang=${locale}#iwds-ucv`, label: t('ucv.source') }]} />
 
   <main>
     <IdsVariations {t} bind:query href={text => `./?lang=${locale}&ids=${encodeURIComponent(text)}`} />

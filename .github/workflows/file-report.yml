@@ -1,48 +1,52 @@
 name: File report
 # The endpoint hands each report to this action, so the issue is opened by the workshop's own bot
-# and the report names the reporter. Dispatch comes from the intake Worker; the answer goes back
-# through it, to the dialog that is waiting.
+# and the report names the reporter. The endpoint finds the issue by the mark its body carries.
 on:
   repository_dispatch:
     types: [report]
-permissions:
-  contents: write
-  issues: write
+permissions: {}
 jobs:
+  # The dialog waits on this job, so it installs nothing: the step runs on Bun alone.
   file:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+    outputs:
+      number: ${{ steps.file.outputs.number }}
     steps:
-      # The run commits the drawing to bug-attachments with this checkout's token.
       - uses: actions/checkout@v4
         with:
-          persist-credentials: true
-          ref: main
+          sparse-checkout: workers/reports
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - name: File the report
+        id: file
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bun workers/reports/intake/file.js
+  # The drawing is photographed from the site and added to the issue once it exists.
+  draw:
+    needs: file
+    if: github.event.client_payload.drawing
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.14
       - uses: ./.github/actions/composer
       - run: bun install --frozen-lockfile
-      - uses: actions/cache@v4
-        id: browser
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
       - name: Install Chromium
-        if: steps.browser.outputs.cache-hit != 'true'
-        run: bunx playwright-core install --with-deps chromium
-      # The report rides in the payload as base64; this files the issue and leaves the drawing in
-      # .cache/report for the step below, which names the address the body points at.
-      - name: File the report
-        run: bun workers/reports/intake/run.js
-      # The drawing is taken from the site, so it waits in .cache/ and goes in after the browser is done.
-      - name: Commit the drawing
-        if: hashFiles('.cache/report/attachment') != ''
+        run: bunx playwright-core install --with-deps --only-shell chromium
+      - name: Add the drawing
         env:
-          GIT_AUTHOR_NAME: github-actions[bot]
-          GIT_AUTHOR_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
-          GIT_COMMITTER_NAME: github-actions[bot]
-          GIT_COMMITTER_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
-        run: bun workers/reports/intake/attach.js
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE: ${{ needs.file.outputs.number }}
+        run: bun workers/reports/intake/draw.js

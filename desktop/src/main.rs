@@ -21,7 +21,7 @@ fn inside(url: &Url) -> bool {
     }
 }
 
-/// A file of the export by its name in the export (`manifest.json`, `g/07a.json`): only plain
+/// A file of the export by its name in the export (`manifest.json`, `g/07/07a3.json`): only plain
 /// names below the export's folder are read.
 fn export_file(root: &Path, name: &str) -> Option<PathBuf> {
     let name = name.trim_start_matches('/');
@@ -125,7 +125,8 @@ mod tests {
     #[test]
     fn reads_only_names_below_the_export() {
         let root = Path::new("/export");
-        assert_eq!(export_file(root, "/g/07a.json"), Some(root.join("g/07a.json")));
+        assert_eq!(export_file(root, "/g/07/07a3.json"), Some(root.join("g/07/07a3.json")));
+        assert_eq!(export_file(root, "/p/07a.json"), Some(root.join("p/07a.json")));
         assert_eq!(export_file(root, "/manifest.json"), Some(root.join("manifest.json")));
         assert_eq!(export_file(root, "/../secret"), None);
         assert_eq!(export_file(root, "/g/../../secret"), None);
