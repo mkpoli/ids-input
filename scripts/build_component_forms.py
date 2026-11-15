@@ -178,16 +178,15 @@ def huang_eight(cs):
             - min(p[0] for _, args in contour for p in args) > 250]
 
 # 王's top bar under 金's roof, as (top edge, left end, right end), and the opening between the
-# legs of the 八 that replaces the roof.
+# heads of the 八 that replaces the roof.
 JIN_BAR = {'sans': (530, 249, 750), 'serif': (503, 247, 739)}
-JIN_APEX = 690
 JIN_OPENING = (455, 545)
 
 def jin_with_ba(cs, style='sans'):
     """金 with its 𠆢 rebuilt as 八 from the face's own ㇒ and ㇏.
 
-    The roof comes off 金, and ㇒ (U+31D2) and ㇏ (U+31CF) are each fitted to the box one leg of
-    the roof filled, with an opening where the apex was. The strokes keep their own heads and
+    The roof comes off 金, and ㇒ (U+31D2) and ㇏ (U+31CF) each fill one leg's reach and the
+    roof's full height, with an opening where the apex was. The strokes keep their own heads and
     ends, so the top reads as 八 in the face's hand.
     """
     recordings = cs('金')
@@ -205,12 +204,14 @@ def jin_with_ba(cs, style='sans'):
         whole = outline_path(recordings)
         roof = pathops.op(whole, region, pathops.PathOp.INTERSECTION)
         body = pathops.op(whole, region, pathops.PathOp.DIFFERENCE)
-    legs = pathops.op(roof, rect_path(385, JIN_APEX, 615, 1000), pathops.PathOp.DIFFERENCE)
-    x0, y0, x0_end, y1 = pathops.op(legs, rect_path(0, 0, 500, 1000), pathops.PathOp.INTERSECTION).bounds
-    x1_start, v0, x1, v1 = pathops.op(legs, rect_path(500, 0, 1000, 1000), pathops.PathOp.INTERSECTION).bounds
+    # Each stroke spans one leg's reach and the roof's full height, so the 八 stands as tall as
+    # the roof it replaces and opens at the apex.
+    roof_top = roof.bounds[3]
+    left_leg = pathops.op(roof, rect_path(0, 0, 500, 1000), pathops.PathOp.INTERSECTION).bounds
+    right_leg = pathops.op(roof, rect_path(500, 0, 1000, 1000), pathops.PathOp.INTERSECTION).bounds
     drawn = body
-    for stroke, (left, bottom, right, top) in (('\u31d2', (x0, y0, min(x0_end, JIN_OPENING[0]), y1)),
-                                               ('\u31cf', (max(x1_start, JIN_OPENING[1]), v0, x1, v1))):
+    for stroke, (left, bottom, right, top) in (('\u31d2', (left_leg[0], left_leg[1], JIN_OPENING[0], roof_top)),
+                                               ('\u31cf', (JIN_OPENING[1], right_leg[1], right_leg[2], roof_top))):
         source = outline_path(cs(stroke))
         sx0, sy0, sx1, sy1 = source.bounds
         scale_x, scale_y = (right - left) / (sx1 - sx0), (top - bottom) / (sy1 - sy0)
