@@ -1,5 +1,5 @@
 <script>
-  // The zi.tools (白式) IDS notation as a reference page: rows, operators, variant identifiers,
+  // The zi.tools IDS Extension (白式 in its documents) as a reference page: rows, operators, variant identifiers,
   // stroke chains, overlap, index and subtraction brackets, the unique separator, replacement and
   // the merge levels, each example cited to its document and page (demo/lib/baishi.js). Examples in
   // the current notation are drawn with the workshop's preview, chains as their own line; the
@@ -15,16 +15,24 @@
   import { load, save } from './lib/storage.js'
   import { COMPOSER_BASE, readFrom } from './lib/composer.js'
   import { createIconDrawings } from './lib/icons.js'
-  import { SvelteMap, SvelteSet } from 'svelte/reactivity'
+  import { SvelteSet } from 'svelte/reactivity'
+  import RailroadCanvas from './ui/RailroadCanvas.svelte'
+  import { railroad, readGrammar } from './lib/railroad.js'
   import {
     ANGLES, CELLS, CHANGES, COMPOUNDS, CORRECTIONS, DATABASE, DATA_DIFFERENCES, DOCUMENTS, EBNF, EXAMPLES, EXAMPLE_DIFFERENCES, KINDS,
-    MALFORMED, OPERATORS, QUOTES, QU_STEPS, SLICES, SOURCES, SPECIAL, TOOLS, STROKE_LETTERS, STYLE_LETTERS, SUBTRACTIONS, UNSETTLED, ruleNames, rulesOf, splitTag,
+    MALFORMED, OPERATORS, QUOTES, QU_STEPS, SLICES, SOURCES, SPECIAL, TOOLS, STROKE_LETTERS, STYLE_LETTERS, SUBTRACTIONS, UNSETTLED, splitTag,
   } from './lib/baishi.js'
   import en from './lib/baishi-quotes/en.json'
   import ja from './lib/baishi-quotes/ja.json'
   import ko from './lib/baishi-quotes/ko.json'
   import vi from './lib/baishi-quotes/vi.json'
-  import corrected from './lib/baishi-corrected.ebnf?raw'
+  import Menu from './ui/Menu.svelte'
+  // The grammar the page shows and draws is the file it offers: data/baishi-ids.ebnf, beside its
+  // Simplified and Traditional Chinese editions.
+  import corrected from '../data/baishi-ids.ebnf?raw'
+  import grammarUrl from '../data/baishi-ids.ebnf?url'
+  import grammarHansUrl from '../data/baishi-ids.zh-Hans.ebnf?url'
+  import grammarHantUrl from '../data/baishi-ids.zh-Hant.ebnf?url'
 
   const params = new URLSearchParams(location.search)
   const wanted = String(params.get('lang') ?? load('locale', null) ?? navigator.language ?? '')
@@ -73,24 +81,23 @@
     observer.observe(node)
     return { destroy: () => observer.disconnect() }
   }
-  // The railroad diagram of each rule of the corrected grammar, one file per rule.
-  const DIAGRAMS = import.meta.glob('./lib/baishi-railroad/*.svg', { query: '?raw', import: 'default' })
-  /** @param {string} name */
-  const slug = name => name.replaceAll(' ', '-')
-  const diagrams = new SvelteMap()
-  /** Load a rule's diagram once its place comes into view: its own colours go, and its links lead
-   * to the rule on this page. @param {HTMLElement} node @param {string} name */
-  function diagram(node, name) {
-    const load = () => DIAGRAMS[`./lib/baishi-railroad/${slug(name)}.svg`]?.().then(svg => {
-      diagrams.set(name, String(svg).replace(/<style>[\s\S]*?<\/style>/, '').replace(/xlink:href="([^"]+)\.svg"/g, 'xlink:href="#rule-$1"'))
-    })
-    if (typeof IntersectionObserver === 'undefined') { load(); return }
-    const observer = new IntersectionObserver(entries => {
-      if (entries.some(entry => entry.isIntersecting)) { observer.disconnect(); load() }
-    }, { rootMargin: '400px' })
-    observer.observe(node)
-    return { destroy: () => observer.disconnect() }
+  /** Save a file the site serves, under its own name. @param {string} url @param {string} name */
+  function download(url, name) {
+    const link = document.createElement('a')
+    link.href = url
+    link.download = name
+    link.click()
   }
+  const languageName = (/** @type {string} */ code) => LOCALES.find(([one]) => one === code)?.[1] ?? code
+  const downloads = [
+    { label: languageName('en'), note: 'baishi-ids.ebnf', run: () => download(grammarUrl, 'baishi-ids.ebnf') },
+    { label: languageName('zh-Hans'), note: 'baishi-ids.zh-Hans.ebnf', run: () => download(grammarHansUrl, 'baishi-ids.zh-Hans.ebnf') },
+    { label: languageName('zh-Hant'), note: 'baishi-ids.zh-Hant.ebnf', run: () => download(grammarHantUrl, 'baishi-ids.zh-Hant.ebnf') },
+  ]
+  const grammarRules = readGrammar(corrected)
+  /** The rule the grammar's panel shows. */
+  let chosen = $state('row')
+
   /** A printed text as groups (at TAB) of descriptions (at `;`), each kept as printed.
    * @param {string} text */
   const piecesOf = text => text.split('\t').map(group => group.split(';').map(piece => {
@@ -124,15 +131,11 @@
   </blockquote>
 {/snippet}
 
-{#snippet railroad(/** @type {string} */ name)}
-  <div class="railroad" use:diagram={name}>{@html diagrams.get(name) ?? ''}</div>
-{/snippet}
-
 {#snippet grammar(/** @type {string[]} */ names)}
   <div class="rules" aria-label={t('baishi.grammar')}>
-    {#each rulesOf(corrected, names) as text, i (i)}
-      <a class="rule" href={`#rule-${slug(names[i])}`}><pre>{text}</pre></a>
-      {@render railroad(names[i])}
+    {#each names as name (name)}
+      <a class="rule" href="#grammar-view" onclick={() => { chosen = name }}><pre>{grammarRules.get(name)?.text}</pre></a>
+      <div class="railroad">{@html railroad(grammarRules, name).svg}</div>
     {/each}
   </div>
 {/snippet}
@@ -595,7 +598,7 @@
       </section>
 
       <section id="ebnf" aria-labelledby="ebnf-title">
-        <h2 id="ebnf-title">{t('baishi.heading.ebnf')}</h2>
+        <h2 id="ebnf-title">{t('baishi.heading.ebnf')}<span class="download"><Menu label={t('appendix.download')} icon="download" items={downloads} align="end" keyHints={false} compact /></span></h2>
         <p>{t('baishi.formal')} {@render at(['DB', '2597437b'])}</p>
         <pre class="full">{corrected}</pre>
         <div class="scroll">
@@ -603,12 +606,8 @@
             <tbody>{#each SPECIAL as [sequence, meaning] (sequence)}<tr><td class="code strong">{sequence}</td><td class="code">{meaning}</td></tr>{/each}</tbody>
           </table>
         </div>
-        <h3>{t('baishi.heading.diagrams')}</h3>
-        <div class="diagrams">
-          {#each ruleNames(corrected) as name (name)}
-            <figure id={`rule-${slug(name)}`}>{@render railroad(name)}</figure>
-          {/each}
-        </div>
+        <h3 id="grammar-view">{t('baishi.heading.diagrams')}</h3>
+        <RailroadCanvas rules={grammarRules} top="row" {t} bind:selected={chosen} />
         <details class="ebnf">
           <summary>{t('baishi.i26grammar')} · I26 pp.31–33</summary>
           {@render said('ebnf', ['I26', 'p.33'])}
@@ -688,25 +687,20 @@
   .ebnf pre{margin:0 0 12px;padding:9px 12px;background:var(--ui-color-surface-sunken);border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-sm);font-family:var(--ui-font-mono),var(--cjk-sans);font-size:12px;line-height:1.6;overflow-x:auto;white-space:pre;color:var(--ui-color-ink)}
   .rules{display:flex;flex-direction:column;gap:6px;margin:0 0 12px}
   .rules .rule{text-decoration:none;color:inherit}
-  .rules .railroad :global(text.rule-title){display:none}
   .plain{color:var(--ui-color-accent);overflow-wrap:anywhere;font-size:12.5px}
   .rules pre,.full,pre.inline{margin:0;padding:8px 12px;background:var(--ui-color-surface-sunken);border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-sm);font-family:var(--ui-font-mono),var(--cjk-sans);font-size:12px;line-height:1.6;overflow-x:auto;white-space:pre;color:var(--ui-color-ink)}
   pre.inline{margin-top:6px;padding:4px 8px}
   .full{max-height:70dvh;margin:0 0 16px}
-  .railroad{overflow-x:auto;min-height:24px}
-  .railroad :global(svg){display:block;max-width:100%;height:auto}
+  .railroad{overflow-x:auto;padding:4px 0}
+  .railroad :global(svg){display:block}
   .railroad :global(path){stroke:var(--ui-color-ink-soft);stroke-width:1.5;fill:none}
-  .railroad :global(rect){stroke:var(--ui-color-border-strong);stroke-width:1.5;fill:var(--ui-color-surface)}
-  .railroad :global(g.terminal rect){fill:var(--ui-color-surface-sunken)}
-  .railroad :global(g.special rect){stroke-dasharray:4 3}
-  .railroad :global(rect.group-box){fill:none;stroke-dasharray:10 5}
+  .railroad :global(rect){stroke:var(--ui-color-border-strong);stroke-width:1.2;fill:var(--ui-color-surface)}
+  .railroad :global(.terminal rect),.railroad :global(.special rect){fill:var(--ui-color-surface-sunken)}
+  .railroad :global(.special rect){stroke-dasharray:4 3}
   .railroad :global(text){font:12.5px var(--ui-font-mono),var(--cjk-sans);text-anchor:middle;fill:var(--ui-color-ink)}
-  .railroad :global(text.rule-title){text-anchor:start;font-weight:600;font-size:13.5px}
-  .railroad :global(a text){fill:var(--ui-color-accent)}
+  .railroad :global(.non-terminal text){fill:var(--ui-color-accent)}
   #data h3,#ebnf h3{margin-top:24px}
-  .diagrams{display:flex;flex-direction:column;gap:10px;margin:0 0 16px}
-  .diagrams figure{margin:0;padding:8px 10px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-sm);background:var(--ui-color-surface);scroll-margin-top:74px}
-  .diagrams figure:target{border-color:var(--ui-color-accent)}
+  .download{margin-left:auto;font-size:13px;font-weight:400}
   .ebnf summary{cursor:pointer;font-size:13px;color:var(--ui-color-accent);margin:0 0 8px}
   .ebnf pre{max-height:70dvh}
   .examples{align-items:start;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,400px),1fr));gap:8px;margin:0 0 12px}

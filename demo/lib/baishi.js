@@ -1,5 +1,5 @@
-// The zi.tools (白式) IDS notation as its documents write it: every example, table row and quotation
-// on the Bai-style IDS page, each with the document and page it comes from. The documents are listed
+// The zi.tools IDS Extension (白式 in its documents) as they write it: every example, table row and quotation
+// on its appendix page, each with the document and page it comes from. The documents are listed
 // in DOCUMENTS; `I26` is the current one and the rest are earlier drafts. Quotations keep the
 // documents' wording, and their renderings live in baishi-quotes/<locale>.json (a Chinese reader
 // reads the quotation itself).
@@ -111,11 +111,11 @@ export const SPECIAL = /** @type {const} */ ([
   ['? TAB ?', 'U+0009'],
 ])
 
-/** What the grammar and its diagrams are written with. */
+/** What the grammar is written in, what it is read with, and whose layout its diagrams follow. */
 export const TOOLS = /** @type {const} */ ([
   ['ISO/IEC 14977:1996, Information technology — Syntactic metalanguage — Extended BNF', ''],
   ['Unicode 18.0.0, PropList.txt (2026-08-07)', 'https://www.unicode.org/Public/18.0.0/ucd/PropList.txt'],
-  ['Tab Atkins Jr., railroad-diagrams 3.0.1 (2023-02-14)', 'https://github.com/tabatkins/railroad-diagrams'],
+  ['Tab Atkins Jr., railroad-diagrams: the layout the diagrams follow', 'https://github.com/tabatkins/railroad-diagrams'],
 ])
 
 /** Questions neither the documents nor the data settle. */
@@ -533,14 +533,6 @@ Three_Digit_Number ::= One_Digit_Number One_Digit_Number One_Digit_Number
 Number ::= "0" | Positive_Numeral One_Digit_Number*
 Negative_Number ::= "-" Positive_Numeral One_Digit_Number*`
 
-/** Rules of a grammar in ISO EBNF, each as written from its name to its `;`, without comments.
- * @param {string} ebnf @param {string[]} names */
-export const rulesOf = (ebnf, names) => {
-  const plain = ebnf.replace(/\(\*[\s\S]*?\*\)/g, '')
-  return names.map(name => new RegExp(`^${name} =[\\s\\S]*?;$`, 'm').exec(plain)?.[0] ?? '')
-}
-/** Every rule name of a grammar in ISO EBNF, in order. @param {string} ebnf */
-export const ruleNames = ebnf => [...ebnf.replace(/\(\*[\s\S]*?\*\)/g, '').matchAll(/^([a-z][a-z ]*) =/gm)].map(match => match[1])
 
 /**
  * One description of a row: the text before its identifier, and the identifier. A chain's own

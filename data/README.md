@@ -76,6 +76,19 @@ it with `bun scripts/build_zi_tools_chains.mjs`.
 
 Licence: MIT, Copyright (c) 2021 Yi Bai; see `data/licences/yi-bai-ids-MIT.txt`.
 
+## `baishi-ids.ebnf`, `baishi-ids.zh-Hans.ebnf` and `baishi-ids.zh-Hant.ebnf`
+
+The grammar of the zi.tools IDS Extension (白式 in its documents) in ISO/IEC 14977 EBNF: the EBNF of （白式）IDS
+延展语法导论 (2026-03-20) with two corrections, a third column that may be left out and CJK strokes
+through U+31E5. It accepts every row of `ids_lv0.txt`, `ids_lv1.txt` and `ids_lv2.txt` of Yi Bai's
+data at commit `2597437b928e8d530b7ae09cf53fe5ec7868569c` (2026-10-31) except 4 malformed rows.
+The three files hold the same rules under the same ASCII rule names; the comments are in English,
+Simplified and Traditional Chinese. The appendix at <https://ids.mkpo.li/baishi> draws the grammar as one
+railroad diagram that opens rule by rule and offers the files for download; `tests/baishi-grammar.test.js`
+keeps the files and the page in step.
+
+Licence: MIT, as this package's code. The notation is the work of the zi.tools authors.
+
 ## `babelstone-ids.tsv.gz`
 
 BabelStone IDS (Ideographic Description Sequences for CJK Unified Ideographs) by Andrew West (魏安),

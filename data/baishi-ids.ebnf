@@ -1,10 +1,28 @@
-(* Bai-style (zi.tools) extended IDS: corrected grammar, ISO/IEC 14977 EBNF.
-   Checked against yi-bai/ids @ 2597437b928e8d530b7ae09cf53fe5ec7868569c (2026-10-31).
-   Base: the EBNF in （白式）IDS 延展语法导论 (2026-03-20), pp.31-33 ("I26").
-   I26 rule names are given in each comment as [I26: ...].
-   Changes against I26 are tagged CHANGE Cn; rewrites that keep the accepted
-   language unchanged and only remove ambiguity are tagged SAME-LANGUAGE.
-   Special sequences are defined in the table beside this grammar. *)
+(* zi.tools IDS Extension: the extended IDS of the zi.tools database, which its
+   documents call 白式 (Bai-style), as a grammar in ISO/IEC 14977 EBNF.
+
+   Data: accepts every row of ids_lv0.txt, ids_lv1.txt and ids_lv2.txt of
+   https://github.com/yi-bai/ids at commit 2597437b928e8d530b7ae09cf53fe5ec7868569c
+   (2026-10-31), 306,102 rows, except 4 malformed ones.
+
+   Source: the EBNF on pp.31-33 of （白式）IDS 延展语法导论, 2026-03-20 ("I26"),
+   compiled by NightFurySL2001 from the design of 白易 (Yi Bai, zi.tools),
+   https://github.com/NightFurySL2001/bai-ids. I26 calls its EBNF reference only,
+   not a formal definition ("仅供参考，并非正式定义").
+
+   Corrections against I26, tagged CHANGE in the comments below:
+     C1  the third column (the alternative group) is optional;
+     C2  CJK strokes run through U+31E5.
+   Rewrites that keep the accepted language and only remove ambiguity are tagged
+   SAME-LANGUAGE. I26's rule names are given as [I26: ...].
+
+   Special sequences: ? Ideographic ? and ? Radical ? are the properties of those
+   names in Unicode 18.0.0 PropList.txt; ? CJK stroke ? is U+31C0..U+31E5;
+   ? TAB ? is U+0009.
+
+   Licence of this file: MIT, as the code of ids-input
+   (https://github.com/mkpoli/ids-input). The notation is the work of the
+   zi.tools authors. *)
 
 (* ================= 1. Rows ================= *)
 
@@ -152,7 +170,13 @@ component variant = variant id ;
    SAME-LANGUAGE: the five I26 alternatives overlap: "." is both
    Wildcard_Source and Alternate_Variants, and every UCV_Full_Position and
    Imaginary_UCV string is also an Alternate_Variants string. The kinds are
-   told apart by the patterns of their kinds, not by syntax. *)
+   told apart by pattern, the first match winning:
+     wildcard        ^\.$
+     source letter   ^[BGHJKMPQSTUV]$
+     imaginary UCV   ^qq(?:\d{3}[a-z]?)+$
+     UCV position    ^[qpxy]\d{3}[a-z]?(?:[1-9]|\d{2})[xy]?$
+     other q tag     ^q
+     style letters   ^[0-9a-z.]+$ *)
 variant id = source letter | style tag ;
 
 (* One IRG source letter. [I26: Unicode_Sources] *)
