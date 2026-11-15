@@ -5,15 +5,17 @@
   // only the rules that hold a change are redrawn. The canvas pans and zooms; the page scrolls past
   // it with the wheel, and Ctrl or ⌘ with the wheel zooms. One rule at a time takes the Tab stop:
   // the arrow keys move between rules, Enter or Space opens and closes. A rule shows on its own in
-  // the panel beside it.
+  // the panel beside it. It can fill its container (`fill`) and the screen, and open at the chosen
+  // rule (`reveal`).
   import { onMount, tick } from 'svelte'
+  import Icon from './Icon.svelte'
   import { SvelteSet } from 'svelte/reactivity'
   import RailroadNode from './RailroadNode.svelte'
   import { openable, placeOf, railroad, railTree } from '../lib/railroad.js'
 
   /** @type {{ rules: Map<string, { text: string, expr: import('../lib/railroad.js').Expr }>, top: string,
-   *   t: (key: string, params?: Record<string, unknown>) => string, selected?: string }} */
-  let { rules, top, t, selected = $bindable(top) } = $props()
+   *   t: (key: string, params?: Record<string, unknown>) => string, selected?: string, fill?: boolean, reveal?: boolean }} */
+  let { rules, top, t, selected = $bindable(top), fill = false, reveal = false } = $props()
 
   const open = new SvelteSet()
   const tree = $derived(railTree(rules, top, open))
@@ -45,7 +47,22 @@
   }
   /** Actual size, the start of the top rule's track halfway down the canvas. */
   function reset() { scale = 1; x = 0; y = (viewport?.clientHeight ?? 0) / 2 - tree.y }
-  onMount(reset)
+  onMount(() => { reset(); if (reveal) tick().then(showSelected) })
+
+  // Full screen: the whole diagram with its tools, panel and index, while the browser allows it.
+  /** @type {HTMLElement | undefined} */
+  let root = $state()
+  let full = $state(false)
+  const canFull = document.fullscreenEnabled
+  function toggleFull() {
+    if (document.fullscreenElement) document.exitFullscreen()
+    else root?.requestFullscreen().catch(() => {})
+  }
+  onMount(() => {
+    const changed = () => { full = document.fullscreenElement === root }
+    document.addEventListener('fullscreenchange', changed)
+    return () => document.removeEventListener('fullscreenchange', changed)
+  })
 
   /** The rule elements that take focus, in document order. */
   const focusable = () => /** @type {SVGElement[]} */ ([...(viewport?.querySelectorAll('.non-terminal[data-path], .frame-label') ?? [])])
@@ -236,7 +253,7 @@
   })
 </script>
 
-<div class="rr">
+<div class="rr" class:fill bind:this={root}>
   <div class="tools" role="toolbar" aria-label={t('baishi.grand.label')}>
     <button type="button" class="ui-button" onclick={expandLevel}>{t('baishi.grand.level')}</button>
     <button type="button" class="ui-button" onclick={expandAll}>{t('baishi.grand.all')}</button>
@@ -247,6 +264,11 @@
       <button type="button" class="ui-button" aria-label={t('baishi.grand.zoomIn')} title={t('baishi.grand.zoomIn')} onclick={() => zoom(1.25)}>+</button>
       <button type="button" class="ui-button" onclick={fit}>{t('baishi.grand.fit')}</button>
       <button type="button" class="ui-button" onclick={reset}>1:1</button>
+      {#if canFull}
+        <button type="button" class="ui-button" aria-pressed={full} onclick={toggleFull}>
+          <Icon name={full ? 'shrink' : 'expand'} size={15} />{full ? t('baishi.grand.exitFullscreen') : t('baishi.grand.fullscreen')}
+        </button>
+      {/if}
     </span>
   </div>
   <div class="body">
@@ -309,9 +331,18 @@
   .rr :global(svg.railroad-diagram .selected > rect){stroke:var(--ui-color-accent);stroke-width:2.2}
   .rr :global(svg.railroad-diagram [tabindex]:focus-visible){outline:none}
   .rr :global(svg.railroad-diagram [tabindex]:focus-visible > rect){stroke:var(--ui-color-focus);stroke-width:3}
+  .rr.fill,.rr:fullscreen{flex:1;min-height:0;margin:0}
+  .rr:fullscreen{padding:12px 16px 16px;background:var(--ui-color-surface-sunken)}
+  .rr.fill .body,.rr:fullscreen .body{flex:1;min-height:0;grid-template-rows:minmax(0,1fr)}
+  .rr.fill .canvas,.rr:fullscreen .canvas{height:auto}
+  .rr.fill .panel,.rr:fullscreen .panel{max-height:none}
+  .rr.fill .index,.rr:fullscreen .index{max-height:5.5em;overflow:auto}
+  .zoom .ui-button{display:inline-flex;align-items:center;gap:5px}
   @media (max-width:760px){
     .body{grid-template-columns:minmax(0,1fr)}
     .canvas{height:60dvh}
+    .rr.fill .body,.rr:fullscreen .body{grid-template-rows:minmax(0,1fr) auto}
+    .rr.fill .panel,.rr:fullscreen .panel{max-height:30dvh}
     .panel{max-height:none}
     .zoom{margin-left:0}
   }

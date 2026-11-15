@@ -10,6 +10,7 @@ export const pages = t => [
   { id: 'normalization', icon: 'funnel', label: t('normalization.title') },
   { id: 'history', icon: 'clock', label: t('history.title') },
   { id: 'baishi', icon: 'document', label: t('baishi.title') },
+  { id: 'baishi-railroad', icon: 'railroad', label: t('railroad.title') },
   { id: 'baishi-cheatsheet', icon: 'list', label: t('cheatsheet.title') },
   { id: 'open-data', icon: 'download', label: t('app.openData') },
   { id: 'compare', icon: 'scales', label: t('app.compare') },

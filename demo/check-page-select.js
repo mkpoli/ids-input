@@ -2,6 +2,7 @@
 // other page, keeps the language of a translated page, and ticks the page it is on. IDS_PAGE_SHOTS saves the open menu.
 import { chromium } from 'playwright-core'
 import { strict as assert } from 'node:assert'
+import { pages } from './lib/pages.js'
 const base = process.env.IDS_URL ?? 'http://localhost:5186'
 const shots = process.env.IDS_PAGE_SHOTS
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH })
@@ -10,13 +11,14 @@ try {
     const page = await browser.newPage({ viewport: { width: 1100, height: 700 }, deviceScaleFactor: 2, colorScheme: scheme })
     const errors = []
     page.on('pageerror', error => errors.push(error.message))
-    for (const id of ['sources', 'unencoded', 'component-atlas', 'ucv', 'normalization', 'baishi', 'baishi-cheatsheet', 'open-data', 'compare', 'engines']) {
+    const ids = pages(key => key).map(entry => entry.id)
+    for (const id of ids) {
       await page.goto(`${base}/${id}.html?lang=ja`, { waitUntil: 'domcontentloaded' })
       const trigger = page.locator('h1 button[aria-haspopup="menu"]')
       await trigger.click()
       const menu = page.getByRole('menu')
       const items = menu.getByRole('menuitem')
-      assert.equal(await items.count(), 11, `${id}: the workshop and ten pages`)
+      assert.equal(await items.count(), ids.length + 1, `${id}: the workshop and every page`)
       const english = id === 'open-data' || id === 'engines'
       assert.equal(await menu.locator('[aria-current="page"]').getAttribute('href'), `./${id}.html${english ? '' : '?lang=ja'}`, `${id}: its own row is ticked`)
       assert.equal(await page.evaluate(() => document.activeElement?.getAttribute('aria-current')), 'page', `${id}: opening focuses the current row`)

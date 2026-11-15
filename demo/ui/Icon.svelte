@@ -46,6 +46,9 @@
     table: 'M4 5h16v14H4zM4 10h16M10 10v9',
     clock: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM12 7v5l3 2',
     document: 'M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7',
+    expand: 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5',
+    shrink: 'M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5',
+    railroad: 'M3 12h4M17 12h4M7 12c2.5 0 2.5-5 5-5s2.5 5 5 5M7 12c2.5 0 2.5 5 5 5s2.5-5 5-5',
     eye: 'M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12ZM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z',
   }
 </script>

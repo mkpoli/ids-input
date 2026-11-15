@@ -621,7 +621,10 @@
             <tbody>{#each SPECIAL as [sequence, meaning] (sequence)}<tr><td class="code strong">{sequence}</td><td class="code">{meaning}</td></tr>{/each}</tbody>
           </table>
         </div>
-        <h3 id="grammar-view">{t('baishi.heading.diagrams')}</h3>
+        <div class="diagram-head">
+          <h3 id="grammar-view">{t('baishi.heading.diagrams')}</h3>
+          <a class="cheat" href={`./baishi-railroad.html?lang=${locale}#${ruleId(chosen)}`}>{t('baishi.grand.page')}</a>
+        </div>
         <RailroadCanvas rules={grammarRules} top="row" {t} bind:selected={chosen} />
         <details class="ebnf">
           <summary>{t('baishi.i26grammar')} · I26 pp.31–33</summary>
@@ -721,6 +724,8 @@
   .anchor{scroll-margin-top:74px;display:flex;flex-direction:column}
   .anchor > .cheat{align-self:flex-end;margin:0 0 4px}
   .rule-block{gap:6px}
+  .diagram-head{display:flex;align-items:baseline;gap:12px}
+  .diagram-head h3{flex:1}
   .heading-row{display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid var(--ui-color-border);margin:0 0 12px}
   .heading-row h2{flex:1;border-bottom:none;margin:0}
   .download{margin-left:auto;font-size:13px;font-weight:400;padding-bottom:6px}
