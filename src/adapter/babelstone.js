@@ -229,7 +229,9 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  * split, and offers each where it differs from the character's own descriptions; a layer is marked
  * `derived` so a reader knows it is not a source record. The description search (`findByIds`) runs in
  * a Web Worker made by `worker` where there is one, its index built there once; elsewhere it runs
- * on the caller's thread. `smallSeal` adds the compiled CHISE Small Seal document to the
+ * on the caller's thread. `after` is a promise the description tables (`ids`, `zitools`, `chise`,
+ * `project`) and the search worker wait for before they load, for a page with something to show
+ * first. `smallSeal` adds the compiled CHISE Small Seal document to the
  * same table and palette; its modern correspondences supply search labels and character information.
  * `sketches` is the URL of `data/sketch-parts.json.gz` (or its decoded document), the prepared
  * glyph masks the Find tab's drawing search compares with; without it the tab builds them from
@@ -252,12 +254,16 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  *   sketches?: string | URL | import('../core/sketch-data.js').SketchData,
  *   shuishu?: string | URL | import('./shuishu-data.js').ShuishuData,
  *   jurchen?: string | URL | import('./jurchen-data.js').JurchenData,
- *   worker?: (() => Worker) | null }} options
+ *   worker?: (() => Worker) | null, after?: Promise<unknown> }} options
  * @returns {IdsAdapter & { table: () => Promise<Map<string, Sequence[]>> }}
  */
-export function babelStoneAdapter({ ids, zitools, chise, project, components, componentsText, overwrite, overwriteText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, chains, custom, customOutlines, variations, characterInfo, layers, layersText, smallSeal, sketches, shuishu, jurchen, table: given, palette: givenPalette, fetch: get = download,
+export function babelStoneAdapter({ ids, zitools, chise, project, components, componentsText, overwrite, overwriteText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, chains, custom, customOutlines, variations, characterInfo, layers, layersText, smallSeal, sketches, shuishu, jurchen, table: given, palette: givenPalette, fetch: get = download, after,
 
   worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./search-worker.js', import.meta.url), { type: 'module' }) } = {}) {
+  // A page with something to show first passes `after`: the description tables and the search worker,
+  // which reads them itself, wait for it, however it settles. Every other file loads when asked for.
+  const held = after ? Promise.resolve(after).then(() => {}, () => {}) : null
+  const tables = new Set([ids, zitools, chise, project])
   /** @type {Promise<Map<string, Sequence[]>> | null} */
   let table = null
   /** Bumped whenever the search table is rebuilt with a fresh reading of the layer file. */
@@ -302,7 +308,8 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
     return building
   }
   /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit @param {'ids' | 'structure' | 'unknown' | 'similar'} [mode] @param {boolean} [componentLookup] */
-  function inWorker(query, limit, mode = 'ids', componentLookup = true) {
+  async function inWorker(query, limit, mode = 'ids', componentLookup = true) {
+    await held
     if (!searcher && worker) {
       searcher = worker()
       searcher.onmessage = ({ data }) => {
@@ -341,6 +348,7 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
   /** @param {string | URL} url */
   /** @param {string | URL} url @param {{ signal?: AbortSignal }} [options] */
   const load = async (url, options) => {
+    if (tables.has(url)) await held
     const response = await get(url, options)
     if (!response.ok) throw new Error(`${url}: ${response.status}`)
     return response

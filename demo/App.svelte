@@ -21,7 +21,7 @@
   import { createDocumentSession, layerAtPath, sessionRecord, toSequence } from '../src/document/index.js'
   import { documentFile, readDocumentFile } from './lib/documents.js'
   import equivalencesUrl from '../data/ids-equivalences.json?url'
-  import { dataAdapter } from './lib/workshop-adapter.js'
+  import { workshopAdapter } from './lib/workshop-adapter.js'
   import variationOutlines from '../data/ucv-outlines.json.gz?url'
   import { LOCALES, appMessages } from './lib/locales.js'
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
@@ -127,8 +127,56 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
+  // The description tables are three megabytes a drawing rarely reads, and on a slow line they share
+  // it with the layout the drawing waits for. They load once the first drawing is shown, at once
+  // when that drawing reads them, none is coming or the reader touches the page, and after ten
+  // seconds whatever happened.
+  let releaseTables = () => {}
+  /** @type {Promise<void>} */
+  const firstDrawing = new Promise(resolve => { releaseTables = resolve })
+  onMount(() => {
+    const bound = setTimeout(() => { releaseTables(); endSearchWait() }, 10_000)
+    // A reader who types or clicks wants what they ask for, not the drawing first.
+    const options = { capture: true, once: true }
+    window.addEventListener('pointerdown', releaseTables, options)
+    window.addEventListener('keydown', releaseTables, options)
+    return () => {
+      clearTimeout(bound)
+      window.removeEventListener('pointerdown', releaseTables, options)
+      window.removeEventListener('keydown', releaseTables, options)
+    }
+  })
+  const dataAdapter = workshopAdapter({ after: firstDrawing })
+
   const operatorSet = new Set(OPERATORS.map(([op]) => op))
-  const babel = { ...dataAdapter, recognizeDrawing }
+  /** The tables for a drawing that reads them: they stop waiting for it. */
+  const tables = {
+    encoded: (/** @type {Parameters<typeof dataAdapter.encoded>} */ ...asked) => { releaseTables(); return dataAdapter.encoded(...asked) },
+    structure: (/** @type {Parameters<typeof dataAdapter.structure>} */ ...asked) => { releaseTables(); return dataAdapter.structure(...asked) },
+  }
+  // The first search reads the description tables, and the font switch's samples read six megabytes
+  // of layout models: the samples wait for a first search under way, so the two do not share the line.
+  let searching = 0, searched = false
+  /** @type {(() => void)[]} */
+  const afterSearch = []
+  /** The samples wait no longer: a first search has answered, or has had its ten seconds. */
+  const endSearchWait = () => {
+    searched = true
+    for (const start of afterSearch.splice(0)) start()
+  }
+  /** @template {(...asked: any[]) => Promise<any>} Search @param {Search} search @returns {Search} */
+  const counted = search => /** @type {Search} */ (async (...asked) => {
+    searching++
+    try { return await search(...asked) } finally {
+      searching--
+      endSearchWait()
+    }
+  })
+  /** @returns {Promise<void>} */
+  const firstSearch = () => searched || !searching ? Promise.resolve() : new Promise(resolve => afterSearch.push(resolve))
+  const babel = { ...dataAdapter, recognizeDrawing,
+    findByIds: counted(dataAdapter.findByIds), findByStructure: counted(dataAdapter.findByStructure),
+    findByUnknownStructure: counted(dataAdapter.findByUnknownStructure), findSimilar: counted(dataAdapter.findSimilar) }
   // Direct layer editing belongs to the active document tab.
   let adjusting = $state(false)
   let titleOpen = $state(false)
@@ -251,7 +299,7 @@
       // A description whose operator modifier narrows it to one character draws that character: the
       // layout ignores the crossing the modifier names.
       if (sequence.includes('[')) {
-        const exact = await babel.encoded(sequence, { exact: true, signal: options?.signal }).catch(() => [])
+        const exact = await tables.encoded(sequence, { exact: true, signal: options?.signal }).catch(() => [])
         const [char] = exact
         if (exact.length === 1 && char !== undefined) return composed(char, { signal: options?.signal })
       }
@@ -267,7 +315,7 @@
       if (!sequence.includes('[') && APPROXIMATE.some(operator => sequence.includes(operator))) {
         // An example states the character it names, so it draws without waiting for the corpus.
         const [named] = EXAMPLE_CHARACTERS.has(sequence) ? [EXAMPLE_CHARACTERS.get(sequence) || undefined]
-          : await babel.encoded(sequence).catch(() => [])
+          : await tables.encoded(sequence).catch(() => [])
         if (named !== undefined && [...named].length === 1 && named !== sequence) {
           try { return await draw(named, options) } catch { /* compose it */ }
         }
@@ -286,7 +334,7 @@
       } catch (error) {
         if (options?.signal?.aborted || stopping(error)) throw error
         // A description of an encoded character draws that character when the face has its glyph.
-        const found = split ? [] : await babel.encoded(sequence).catch(() => [])
+        const found = split ? [] : await tables.encoded(sequence).catch(() => [])
         for (const char of found) {
           if ([...char].length !== 1 || char === sequence) continue
           try { return await composed(char) } catch { /* the default export draws the sequence */ }
@@ -295,7 +343,7 @@
         // by, when every operator in it places its operands predictably. The drawing is marked so a
         // reader can see it was assembled rather than drawn.
         if ([...sequence].length === 1) {
-          const described = await babel.structure(sequence).catch(() => [])
+          const described = await tables.structure(sequence).catch(() => [])
           for (const { text } of described) {
             if (text === sequence || !composableDescription(text)) continue
             try { return { ...(await composed(text, options)), composed: true } } catch { /* the default export draws it */ }
@@ -318,6 +366,7 @@
   let previewStep = $state(/** @type {'idle' | 'loading' | 'composed' | 'final' | 'failed' | 'capped' | 'unavailable'} */ ('idle'))
   const order = createDrawingOrder()
   $effect(() => order.hold(previewStep === 'loading'))
+  $effect(() => { if (previewStep !== 'loading') releaseTables() })
   // Tab icons need their own drawer so their requests cannot cancel the main preview.
   /** @type {Map<string, ReturnType<typeof createIconDrawings>>} */
   const iconDrawings = new Map()
@@ -372,7 +421,12 @@
       sampleDrawings.delete(oldKey)
     }
     if (!sampleDrawings.has(key)) {
-      const preview = order.after(previewAt(at, separate, option.style, `switch-${option.key}`))
+      const face = previewAt(at, separate, option.style, `switch-${option.key}`)
+      const preview = order.after(async (/** @type {string} */ sequence, /** @type {{ signal?: AbortSignal }} */ options) => {
+        await firstSearch()
+        options?.signal?.throwIfAborted()
+        return face(sequence, options)
+      })
       sampleDrawings.set(key, createSampleDrawings((sequence, { signal }) => preview(sequence, { signal })))
     }
     return /** @type {ReturnType<typeof createSampleDrawings>} */ (sampleDrawings.get(key))

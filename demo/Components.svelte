@@ -11,7 +11,7 @@
   import { componentIdentity } from '../src/core/component-identity.js'
   import { LOCALES, appMessages } from './lib/locales.js'
   import { load, save } from './lib/storage.js'
-  import { dataAdapter } from './lib/workshop-adapter.js'
+  import { workshopAdapter } from './lib/workshop-adapter.js'
   import { createIconDrawings } from './lib/icons.js'
   import { COMPOSER_BASE, readFrom } from './lib/composer.js'
 
@@ -26,6 +26,7 @@
   const messages = $derived(/** @type {Record<string, string>} */ ({ ...appMessages('en'), ...LOCALES.find(([code]) => code === locale)?.[2], ...appMessages(locale) }))
   const t = $derived(translator(messages, locale))
 
+  const dataAdapter = workshopAdapter()
   // The palette's parts, and after them every custom component the dictionary lists.
   const icon = createIconDrawings(composerPreview({ base: readFrom(COMPOSER_BASE), fontStyle: 'sans', loaders: engineOutlines }))
   /** @type {Promise<import('../src/adapter/types.js').PalettePart[]> | null} */

@@ -25,11 +25,16 @@ import customOutlines from '../../data/custom-outlines.json.gz?url'
 import variations from '../../data/ucv.json?url'
 import characters from '../../data/character-vocabulary.tsv.gz?url'
 
-const sealAdapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, jurchen: jurchenData, ids, layers, zitools, chise: corpus, project: projectIds, overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, customOutlines, characterInfo, chains, custom, variations })
-
-/** The adapter, with the Small Seal forms the curated palette leaves out added to its parts. */
-export const dataAdapter = { ...sealAdapter, parts: async () => {
-  const curated = await sealAdapter.parts()
-  const seen = new Set(curated.map(part => part.part))
-  return [...curated, ...sealExtraParts.filter(part => !seen.has(part)).map(part => ({ part, kind: /** @type {const} */ ('seal'), sealGroup: /** @type {const} */ ('other') }))]
-} }
+/**
+ * The adapter, with the Small Seal forms the curated palette leaves out added to its parts. A page
+ * with a drawing to show first passes `after`: the description tables wait for it.
+ * @param {{ after?: Promise<unknown> }} [options]
+ */
+export function workshopAdapter({ after } = {}) {
+  const sealAdapter = smallSealAdapter({ after, data: sealData, shuishu: shuishuData, jurchen: jurchenData, ids, layers, zitools, chise: corpus, project: projectIds, overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, customOutlines, characterInfo, chains, custom, variations })
+  return { ...sealAdapter, parts: async () => {
+    const curated = await sealAdapter.parts()
+    const seen = new Set(curated.map(part => part.part))
+    return [...curated, ...sealExtraParts.filter(part => !seen.has(part)).map(part => ({ part, kind: /** @type {const} */ ('seal'), sealGroup: /** @type {const} */ ('other') }))]
+  } }
+}
