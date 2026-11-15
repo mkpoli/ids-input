@@ -2,7 +2,7 @@
   // Every form no code point names, one row each: its identifier, the names BabelStone, CHISE and
   // zi.tools give it, what it is in each notation, and the characters it stands in. A reader can add
   // pairs, which show beside the form they name.
-  import { onMount } from 'svelte'
+  import { onMount, untrack } from 'svelte'
   import PageHeader from './ui/PageHeader.svelte'
   import Segmented from './ui/controls/Segmented.svelte'
   import TextField from './ui/controls/TextField.svelte'
@@ -18,7 +18,7 @@
   import ledgerUrl from '../data/custom-ids.tsv?url'
   import Menu from './ui/Menu.svelte'
   import { componentDrawing } from '@han-compose/composer/component-forms'
-  import { SvelteSet } from 'svelte/reactivity'
+  import { SvelteMap, SvelteSet } from 'svelte/reactivity'
   import { chainPath } from '../src/core/chain-shape.js'
   import engineOutlines from 'ids-engine-outlines'
   import { composerPreview } from '@han-compose/composer'
@@ -147,12 +147,41 @@
     icon, fontStyle: 'sans',
     drawable: async (/** @type {string} */ text) => custom?.drawableLeaves(text) ?? { text, leaves: [] },
   })))
+  // A form drawn as what is left of a character (㇯碌石): the subtraction is drawn as written, not
+  // as the form it names, and only where the composer takes the part out of the character's own
+  // description; a part it could only cut out by laying it over the character is no drawing. What
+  // is left keeps its place in the character, so the cell shows the square around its ink.
+  /** @type {SvelteMap<string, { d: string, view: string } | null>} */
+  const remains = new SvelteMap()
+  /** The square around the drawn parts, a little larger, as a viewBox. @param {{ box: number[] }[]} parts */
+  function viewOf(parts) {
+    const x0 = Math.min(...parts.map(part => part.box[0])), y0 = Math.min(...parts.map(part => part.box[1]))
+    const x1 = Math.max(...parts.map(part => part.box[0] + part.box[2])), y1 = Math.max(...parts.map(part => part.box[1] + part.box[3]))
+    const side = Math.max(x1 - x0, y1 - y0) * 1.16
+    return `${(x0 + x1 - side) / 2} ${(y0 + y1 - side) / 2} ${side} ${side}`
+  }
+  /** @param {string} sequence */
+  async function drawRemainder(sequence) {
+    const drawn = await queued(sequence)
+    if (drawn?.parts?.length && !drawn.approximate?.includes('㇯')) { remains.set(sequence, { d: drawn.d, view: viewOf(drawn.parts) }); return }
+    remains.set(sequence, null)
+    undrawn.add(sequence)
+  }
+  // The rows on the page ask for theirs; one that cannot be drawn gives way to the form's next.
+  $effect(() => {
+    for (const row of visible) {
+      const glyph = glyphOf(row)
+      if (glyph?.kind !== 'remainder' || remains.has(glyph.sequence)) continue
+      const sequence = glyph.sequence
+      untrack(() => { remains.set(sequence, null); drawRemainder(sequence) })
+    }
+  })
   /**
    * What stands for a form in the table, the first that there is: this project's cut of a numbered
    * component, GlyphWiki's glyph of a CHISE entity, a chain's own line, what the composer draws of
-   * its equivalent, or nothing.
+   * its equivalent, what it leaves of a character the form is part of, or nothing.
    * @param {Row} row
-   * @returns {{ kind: 'composed', sequence: string } | { kind: 'outline', d: string, from: string } | { kind: 'chain', d: string } | null}
+   * @returns {{ kind: 'composed' | 'remainder', sequence: string } | { kind: 'outline', d: string, from: string } | { kind: 'chain', d: string } | null}
    */
   function glyphOf(row) {
     const cut = row.names.find(name => name.source === 'babelstone' && componentDrawing(name.text, 'sans'))
@@ -168,7 +197,9 @@
     }
     const text = custom ? custom.drawable(row.shown) : row.shown
     const read = parse(text, { open: true })
-    return !read.problem && read.tree !== null && !customsOf(read.tree).length && !undrawn.has(text) ? { kind: 'composed', sequence: row.shown } : null
+    if (!read.problem && read.tree !== null && !customsOf(read.tree).length && !undrawn.has(text)) return { kind: 'composed', sequence: row.shown }
+    const left = row.subtractions.find(written => !undrawn.has(written))
+    return left ? { kind: 'remainder', sequence: left } : null
   }
   /** @param {string} cid */
   const shortName = cid => cid.replace(/^(?:chise|bsp|ucs):/, '')
@@ -286,6 +317,7 @@
               <tr id={row.id} class:yours={row.yours.length > 0}>
                 <td class="glyph">
                   {#if glyph?.kind === 'composed'}<span class="drawn"><IdsPartIcon sequence={glyph.sequence} {adapter} /></span>
+                  {:else if glyph?.kind === 'remainder'}{@const left = remains.get(glyph.sequence)}{#if left}<svg class="drawn" viewBox={left.view} role="img" aria-label={glyph.sequence}><path d={left.d} fill="currentColor" /></svg>{/if}
                   {:else if glyph?.kind === 'outline'}<svg class="drawn" viewBox="0 0 200 200" role="img" aria-label={glyph.from}><title>GlyphWiki · {glyph.from}</title><path d={glyph.d} fill="currentColor" /></svg>
                   {:else if glyph?.kind === 'chain'}<svg class="drawn" viewBox="0 0 1000 1000" aria-hidden="true"><path d={glyph.d} fill="none" stroke="currentColor" stroke-width="64" stroke-linecap="round" stroke-linejoin="round" /></svg>
                   {:else}<span class="dash">—</span>{/if}
