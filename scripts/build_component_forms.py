@@ -13,6 +13,7 @@ from fontTools.ttLib import TTFont
 from fontTools.pens.recordingPen import RecordingPen, replayRecording
 from fontTools.pens.basePen import BasePen
 from fontTools.pens.cu2quPen import Cu2QuPen
+from fontTools.pens.transformPen import TransformPen
 from xie_forms import xie_noto, register as register_xie, PROVENANCE as XIE_PROVENANCE
 from biang_forms import IDS as BIANG_IDS, biang_noto
 
@@ -53,6 +54,27 @@ def group(cs):
     pen = Contours()
     for c in cs: replayRecording(c, Cu2QuPen(pen, 0.5))
     return pen.result
+
+def crop_wound(cs, box):
+    """`crop_group`, keeping the outlines' own winding: pathops returns its own, and a form whose
+    groups wind both ways cancels where they overlap."""
+    shape, rect = pathops.Path(), pathops.Path()
+    for c in cs: replayRecording(c, shape.getPen())
+    x0, y0, x1, y1 = box
+    rect.moveTo(x0, y0); rect.lineTo(x1, y0); rect.lineTo(x1, y1); rect.lineTo(x0, y1); rect.close()
+    cut = pathops.op(shape, rect, pathops.PathOp.INTERSECTION)
+    if cut.clockwise != shape.clockwise: cut.reverse()
+    pen = RecordingPen()
+    cut.draw(pen)
+    return group([pen.value])
+
+def set_in_em(groups, height):
+    """Groups scaled together about their foot to `height` units and centred on the em."""
+    xs = [v for outlines in groups for _, points in outlines for v in points[0::2]]
+    ys = [v for outlines in groups for _, points in outlines for v in points[1::2]]
+    k, middle, foot = height / (max(ys) - min(ys)), (min(xs) + max(xs)) / 2, min(ys)
+    return [[[ops, [round(500 + (v - middle) * k, 2) if i % 2 == 0 else round(foot + (v - foot) * k, 2)
+                    for i, v in enumerate(points)]] for ops, points in outlines] for outlines in groups]
 
 def pieces(cs, ch):
     """A glyph's untouching pieces: its contours merged where they overlap, each outer outline with
@@ -157,6 +179,69 @@ def compress_chang(outlines, style):
     return [[ops, [ymap(v) if i % 2 else v for i,v in enumerate(points)]] for ops,points in outlines]
 
 
+
+def rect_path(x0, y0, x1, y1):
+    path = pathops.Path()
+    path.moveTo(x0, y0); path.lineTo(x1, y0); path.lineTo(x1, y1); path.lineTo(x0, y1); path.close()
+    return path
+
+def outline_path(recordings, transform=None):
+    path = pathops.Path()
+    pen = path.getPen()
+    for recording in recordings: replayRecording(recording, TransformPen(pen, transform) if transform else pen)
+    return path
+
+def huang_eight(cs):
+    """黄's 八: the two wide, short strokes the character ends in."""
+    return [contour for contour in cs('\u9ec4')
+            if max(p[1] for _, args in contour for p in args) < 120
+            and max(p[0] for _, args in contour for p in args)
+            - min(p[0] for _, args in contour for p in args) > 250]
+
+# 王's top bar under 金's roof, as (top edge, left end, right end), and the opening between the
+# heads of the 八 that replaces the roof.
+JIN_BAR = {'sans': (530, 249, 750), 'serif': (503, 247, 739)}
+JIN_OPENING = (455, 545)
+
+def jin_with_ba(cs, style='sans'):
+    """金 with its 𠆢 rebuilt as 八 from the face's own ㇒ and ㇏.
+
+    The roof comes off 金, and ㇒ (U+31D2) and ㇏ (U+31CF) each fill one leg's reach and the
+    roof's full height, with an opening where the apex was. The strokes keep their own heads and
+    ends, so the top reads as 八 in the face's hand.
+    """
+    recordings = cs('金')
+    bar_top, bar_left, bar_right = JIN_BAR[style]
+    if style == 'serif':
+        # The roof is a contour of its own; the top bar's serif rises above the bar's edge.
+        roof_index = next(i for i, c in enumerate(recordings) if outline_path([c]).bounds[3] > 800)
+        roof = outline_path([recordings[roof_index]])
+        body = outline_path([c for i, c in enumerate(recordings) if i != roof_index])
+    else:
+        # The roof runs into the bar: everything above the bar, and the leg tips past its ends.
+        region = rect_path(0, bar_top, 1000, 1000)
+        for box in ((0, 380, bar_left, bar_top), (bar_right, 380, 1000, bar_top)):
+            region = pathops.op(region, rect_path(*box), pathops.PathOp.UNION)
+        whole = outline_path(recordings)
+        roof = pathops.op(whole, region, pathops.PathOp.INTERSECTION)
+        body = pathops.op(whole, region, pathops.PathOp.DIFFERENCE)
+    # Each stroke spans one leg's reach and the roof's full height, so the 八 stands as tall as
+    # the roof it replaces and opens at the apex.
+    roof_top = roof.bounds[3]
+    left_leg = pathops.op(roof, rect_path(0, 0, 500, 1000), pathops.PathOp.INTERSECTION).bounds
+    right_leg = pathops.op(roof, rect_path(500, 0, 1000, 1000), pathops.PathOp.INTERSECTION).bounds
+    drawn = body
+    for stroke, (left, bottom, right, top) in (('\u31d2', (left_leg[0], left_leg[1], JIN_OPENING[0], roof_top)),
+                                               ('\u31cf', (JIN_OPENING[1], right_leg[1], right_leg[2], roof_top))):
+        source = outline_path(cs(stroke))
+        sx0, sy0, sx1, sy1 = source.bounds
+        scale_x, scale_y = (right - left) / (sx1 - sx0), (top - bottom) / (sy1 - sy0)
+        placed = outline_path(cs(stroke), (scale_x, 0, 0, scale_y, left - sx0 * scale_x, bottom - sy0 * scale_y))
+        drawn = pathops.op(drawn, placed, pathops.PathOp.UNION)
+    pen = RecordingPen()
+    drawn.draw(pen)
+    return [group([pen.value])]
+
 def huang_body(cs):
     """黄 without its last two strokes, which 金's top stands in for.
 
@@ -164,14 +249,8 @@ def huang_body(cs):
     sharing a stroke, so the example names the body and this form keeps it where 黄
     draws it, rather than letting the composer lay 龷 and 由 out afresh.
     """
-    body = []
-    for contour in cs('黄'):
-        ys = [p[1] for _, values in contour for p in values if p is not None]
-        xs = [p[0] for _, values in contour for p in values if p is not None]
-        if min(ys) > 330 and max(ys) < 460 and max(xs) - min(xs) > 180:
-            continue                      # the 八: two wide, short strokes along the bottom
-        body.append(contour)
-    return body
+    eight = huang_eight(cs)
+    return [contour for contour in cs('黄') if contour not in eight]
 
 def wan_shan(cs, style):
     if style in ('kaisho', 'fangsong'):
@@ -308,7 +387,9 @@ def wan_shan_brush(cs, style):
     return [group([band] + retained), group([shan])]
 
 hashes = {'sans':'b76b0433203017ca80401b2ee0dd69350349871c4b19d504c34dbdd80541690a', 'serif':'93069d8e9e45d515cc421c971a79e6a5777704b348e36a9ef86578bf58adef77'}
-result = {'license':'SIL OFL 1.1', 'sources':{}, 'forms':{}, 'positions':{}}
+# `native` lists, per face, the forms an encoded character holding them still draws from its own
+# glyph: the form gives a description its parts without keeping that glyph from it.
+result = {'license':'SIL OFL 1.1', 'sources':{}, 'forms':{}, 'positions':{}, 'native':{}}
 genzui_path = Path('fonts/GenZuiSans-Regular.woff2')
 genzui_sha = hashlib.sha256(genzui_path.read_bytes()).hexdigest()
 if genzui_sha != 'efb3b0bf65f178b52ede78a552cf7d642d1c9bbd47c3fbddf860d70ec92d7f7a':
@@ -406,6 +487,13 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     # TC supplies the 氺 form of 犀 and the four-stroke 卝 in 夢.
     tc=TTFont(path,fontNumber=3); tcgs=tc.getGlyphSet(); tccmap=tc.getBestCmap()
     tcs=lambda ch:contours(tcgs,tccmap[ord(ch)])
+    # ⿲𰀪丨⿱丶丶 is the lower half of 眔 as TC writes it, with 𰀪 and two dots; JP's 眔 writes
+    # ⿱罒氺. Its five strokes stand apart: 7 and 8 the 𰀪, 4 the stem, 5 and 6 the dots. Serif keeps
+    # its composed drawing.
+    if style=='sans':
+        c=tcs('眔')
+        forms['⿲𰀪丨⿱丶丶']=[group([c[7],c[8]]),group([c[4]]),group([c[5]]),group([c[6]])]
+        result['native'][style]=['⿲𰀪丨⿱丶丶']
     c=tcs('犀')
     forms['⿸尸氺']=[group(c[:7] if style=='sans' else [c[0],c[1],c[3],c[4]])]
     c=cs('橐')
@@ -426,14 +514,16 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     forms['⿳士冖一']=crown+[bar]
     forms['⿱⿱士冖一']=crown+[bar]
     # 興's upper component: preserve the open top of 𦥑 and remove 一八 below.
-    # Crop the outer frame at the native baseline; keep 同's counters intact.
+    # Crop the outer frame at the native baseline; keep 同's counters intact. The font draws 同's 冂
+    # in one outline with 𦥑, so the counter inside it (c[6]) stays with the frame: each group then
+    # draws alone as it draws in the form, where the counter alone filled 同 solid.
     c=cs('興')
     if style=='sans':
-        forms['⿴𦥑同']=[crop_group([c[5],c[7]], (0,222,1000,880)),group([c[0],c[1],c[2],c[6]])]
+        forms['⿴𦥑同']=[crop_group([c[5],c[7]], (0,222,1000,880))+group([c[6]]),group([c[0],c[1],c[2]])]
     else:
         # Drop the bottom 一's terminal before clipping: its tip rises above y=197.
         outer=[('moveTo', ((854,197),))]+c[3][7:]
-        forms['⿴𦥑同']=[crop_group([outer,c[7]], (0,197,1000,880)),group([c[0],c[4],c[5],c[6]])]
+        forms['⿴𦥑同']=[crop_group([outer,c[7]], (0,197,1000,880))+group([c[6]]),group([c[0],c[4],c[5]])]
     # The connected-stroke regional 卑 (also U+FA35), without its bottom 十.
     # Keep its native em, including the downward stroke emerging from 日.
     c=cs('卑')
@@ -481,6 +571,7 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     forms['#(-𠃍㇉)'] = chain_from(cs, '马', '一')
     forms['⿱田⿵冂山'] = globals()['WAN_WITHOUT_CAO']
     forms['⿱龷由'] = [group(huang_body(cs))]
+    forms['⿱⿰丿㇏⿻王丷'] = jin_with_ba(cs, style)
     # The top of the KRM vulgar 處 (K07097330): ⺊'s dot as a bar, the stem centred on the cover
     # and joined to it. One component, reused as the top of ⿳⺊冖人 and its relatives.
     forms['⿱⺊冖'] = seal_dot_top(cs, style)
@@ -499,7 +590,7 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     register_xie(forms, [group(part) for part in xie_noto(cs, style)])
     result['forms'][style]=forms
     result['sources'][style]={'name':font['name'].getDebugName(4),'version':font['name'].getDebugName(5),'sha256':sha,'face':0,
-        'additionalFaces':[{'face':3,'name':tc['name'].getDebugName(4),'forms':['⿸尸氺','⿳卝罒冖']}]}
+        'additionalFaces':[{'face':3,'name':tc['name'].getDebugName(4),'forms':['⿸尸氺','⿳卝罒冖']+(['⿲𰀪丨⿱丶丶'] if style=='sans' else [])}]}
 # The brush variant uses its own native donor font; no Noto fallback is bundled.
 from xie_kaisho import xie_kaisho
 brush_path = Path('fonts/Kureedo-Regular.woff2')
@@ -524,6 +615,13 @@ fangsong = TTFont(fangsong_path)
 fangsong_gs, fangsong_cmap = fangsong.getGlyphSet(), fangsong.getBestCmap()
 fangsong_cs = lambda ch: contours(fangsong_gs, fangsong_cmap[ord(ch)])
 result['forms']['fangsong'] = {'⿳艹田⿵冂山': wan_shan(fangsong_cs, 'fangsong')}
+# Zhuque Fangsong has no 眔; the right side of 鰥 writes its lower half, ⿲𰀪丨⿱丶丶. Contours 12
+# and 5 are the 𰀪, 14 and 13 the dots; the stem is one contour with the 罒, cut below the 罒's
+# bottom bar (which meets it at y=430) and clear of the frame's legs. The narrow column of 鰥 is set
+# 600 units high, as tall as 眔's lower half in the Noto faces.
+c=fangsong_cs('鰥')
+result['forms']['fangsong']['⿲𰀪丨⿱丶丶'] = set_in_em([group([c[12],c[5]]), crop_wound([c[0]], (580,-200,780,420)), group([c[14]]), group([c[13]])], 600)
+result['native']['fangsong'] = ['⿲𰀪丨⿱丶丶']
 result['sources']['fangsong'] = {
     'name': fangsong['name'].getDebugName(4), 'version': fangsong['name'].getDebugName(5),
     'sha256': fangsong_sha,

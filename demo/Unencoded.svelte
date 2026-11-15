@@ -2,7 +2,7 @@
   // Every form no code point names, one row each: its identifier, the names BabelStone, CHISE and
   // zi.tools give it, what it is in each notation, and the characters it stands in. A reader can add
   // pairs, which show beside the form they name.
-  import { onMount } from 'svelte'
+  import { onMount, untrack } from 'svelte'
   import PageHeader from './ui/PageHeader.svelte'
   import Segmented from './ui/controls/Segmented.svelte'
   import TextField from './ui/controls/TextField.svelte'
@@ -18,7 +18,7 @@
   import ledgerUrl from '../data/custom-ids.tsv?url'
   import Menu from './ui/Menu.svelte'
   import { componentDrawing } from '@han-compose/composer/component-forms'
-  import { SvelteSet } from 'svelte/reactivity'
+  import { SvelteMap, SvelteSet } from 'svelte/reactivity'
   import { chainPath } from '../src/core/chain-shape.js'
   import engineOutlines from 'ids-engine-outlines'
   import { composerPreview } from '@han-compose/composer'
@@ -75,7 +75,7 @@
 
   // The query lives in the address, so a search can be linked to.
   const SOURCES = /** @type {const} */ (['all', 'babelstone', 'chise', 'zi-tools', 'unnamed', 'yours'])
-  const STATUSES = /** @type {const} */ (['any', 'confirmed', 'candidate', 'none'])
+  const STATUSES = /** @type {const} */ (['any', 'confirmed', 'candidate', 'editorial', 'none'])
   /** @template {string} T @param {readonly T[]} list @param {string | null} value @returns {T} */
   const oneOf = (list, value) => list.find(item => item === value) ?? list[0]
   let hashed = ''
@@ -147,12 +147,41 @@
     icon, fontStyle: 'sans',
     drawable: async (/** @type {string} */ text) => custom?.drawableLeaves(text) ?? { text, leaves: [] },
   })))
+  // A form drawn as what is left of a character (㇯碌石): the subtraction is drawn as written, not
+  // as the form it names, and only where the composer takes the part out of the character's own
+  // description; a part it could only cut out by laying it over the character is no drawing. What
+  // is left keeps its place in the character, so the cell shows the square around its ink.
+  /** @type {SvelteMap<string, { d: string, view: string } | null>} */
+  const remains = new SvelteMap()
+  /** The square around the drawn parts, a little larger, as a viewBox. @param {{ box: number[] }[]} parts */
+  function viewOf(parts) {
+    const x0 = Math.min(...parts.map(part => part.box[0])), y0 = Math.min(...parts.map(part => part.box[1]))
+    const x1 = Math.max(...parts.map(part => part.box[0] + part.box[2])), y1 = Math.max(...parts.map(part => part.box[1] + part.box[3]))
+    const side = Math.max(x1 - x0, y1 - y0) * 1.16
+    return `${(x0 + x1 - side) / 2} ${(y0 + y1 - side) / 2} ${side} ${side}`
+  }
+  /** @param {string} sequence */
+  async function drawRemainder(sequence) {
+    const drawn = await queued(sequence)
+    if (drawn?.parts?.length && !drawn.approximate?.includes('㇯')) { remains.set(sequence, { d: drawn.d, view: viewOf(drawn.parts) }); return }
+    remains.set(sequence, null)
+    undrawn.add(sequence)
+  }
+  // The rows on the page ask for theirs; one that cannot be drawn gives way to the form's next.
+  $effect(() => {
+    for (const row of visible) {
+      const glyph = glyphOf(row)
+      if (glyph?.kind !== 'remainder' || remains.has(glyph.sequence)) continue
+      const sequence = glyph.sequence
+      untrack(() => { remains.set(sequence, null); drawRemainder(sequence) })
+    }
+  })
   /**
    * What stands for a form in the table, the first that there is: this project's cut of a numbered
    * component, GlyphWiki's glyph of a CHISE entity, a chain's own line, what the composer draws of
-   * its equivalent, or nothing.
+   * its equivalent, what it leaves of a character the form is part of, or nothing.
    * @param {Row} row
-   * @returns {{ kind: 'composed', sequence: string } | { kind: 'outline', d: string, from: string } | { kind: 'chain', d: string } | null}
+   * @returns {{ kind: 'composed' | 'remainder', sequence: string } | { kind: 'outline', d: string, from: string } | { kind: 'chain', d: string } | null}
    */
   function glyphOf(row) {
     const cut = row.names.find(name => name.source === 'babelstone' && componentDrawing(name.text, 'sans'))
@@ -168,7 +197,9 @@
     }
     const text = custom ? custom.drawable(row.shown) : row.shown
     const read = parse(text, { open: true })
-    return !read.problem && read.tree !== null && !customsOf(read.tree).length && !undrawn.has(text) ? { kind: 'composed', sequence: row.shown } : null
+    if (!read.problem && read.tree !== null && !customsOf(read.tree).length && !undrawn.has(text)) return { kind: 'composed', sequence: row.shown }
+    const left = row.subtractions.find(written => !undrawn.has(written))
+    return left ? { kind: 'remainder', sequence: left } : null
   }
   /** @param {string} cid */
   const shortName = cid => cid.replace(/^(?:chise|bsp|ucs):/, '')
@@ -286,6 +317,7 @@
               <tr id={row.id} class:yours={row.yours.length > 0}>
                 <td class="glyph">
                   {#if glyph?.kind === 'composed'}<span class="drawn"><IdsPartIcon sequence={glyph.sequence} {adapter} /></span>
+                  {:else if glyph?.kind === 'remainder'}{@const left = remains.get(glyph.sequence)}{#if left}<svg class="drawn" viewBox={left.view} role="img" aria-label={glyph.sequence}><path d={left.d} fill="currentColor" /></svg>{/if}
                   {:else if glyph?.kind === 'outline'}<svg class="drawn" viewBox="0 0 200 200" role="img" aria-label={glyph.from}><title>GlyphWiki · {glyph.from}</title><path d={glyph.d} fill="currentColor" /></svg>
                   {:else if glyph?.kind === 'chain'}<svg class="drawn" viewBox="0 0 1000 1000" aria-hidden="true"><path d={glyph.d} fill="none" stroke="currentColor" stroke-width="64" stroke-linecap="round" stroke-linejoin="round" /></svg>
                   {:else}<span class="dash">—</span>{/if}
@@ -299,6 +331,9 @@
                     {#each row.names as name (name.text)}
                       <li><span class="tag" data-source={name.source}>{t(`appendix.source.${name.source}`)}</span>{@render written(name.text, row.id)}{#if name.description}<span class="desc" lang="ja">{name.description}</span>{/if}</li>
                     {/each}
+                    {#if row.subtractions.length}
+                      <li class="minus"><span class="tag">㇯</span>{#each row.subtractions.slice(0, 6) as one (one)}<span class="name" lang="ja">{one}</span>{/each}{#if row.subtractions.length > 6}<span class="by" title={row.subtractions.slice(6).join(' ')}>+{row.subtractions.length - 6}</span>{/if}</li>
+                    {/if}
                     {#each row.of as other (other.id + other.relation)}
                       <li><span class="tag">{t(`appendix.relation.${other.relation}`)}</span><a class="name" href={`?q=${other.id}`} onclick={event => { event.preventDefault(); show(other.id) }}>{other.id}</a></li>
                     {/each}
@@ -315,6 +350,9 @@
                         {#if item.id && item.id !== row.id}<a class="link" href={`?q=${item.id}`} onclick={event => { event.preventDefault(); show(/** @type {string} */ (item.id)) }}>{item.id}</a>{/if}
                       </li>
                     {/each}
+                    {#if row.character}
+                      <li><span class="tag" data-source={row.character.in}>{t(`appendix.source.${row.character.in}`)}</span><span class="name" lang="ja">{row.character.text}</span><span class="tag" data-derived title={row.character.reason}>{t('appendix.status.editorial')}</span></li>
+                    {/if}
                     {#each row.yours as pair (pair.other)}<!-- one line per other side: formRows joins the notes -->
                       <li><span class="tag">{t('appendix.yours')}</span><span class="name" lang="ja">{pair.other}</span>{#if pair.note}<span class="by">{pair.note}</span>{/if}</li>
                     {/each}
@@ -331,8 +369,19 @@
                 <tr class="detail">
                   <td colspan="6">
                     <ul class="derived">
-                      {#each row.derived as one (one.char + one.in + one.text)}
-                        <li><span class="char" lang="ja">{one.char}</span><span class="tag" data-source={one.in}>{t(`appendix.source.${one.in}`)}</span>{@render written(one.text, row.id)}{@render mark(one.status === 'verified' ? 'confirmed' : 'candidate', false)}<span class="by" lang="ja">{@render written(one.of, row.id)}</span></li>
+                      {#each row.derived as one (one.char)}
+                        <li>
+                          <span class="char" lang="ja">{one.char}</span>
+                          <ul class="spellings">
+                            {#each one.spellings as spelling (spelling.in + spelling.text)}
+                              <li>
+                                <span class="tag" data-source={spelling.in} data-derived={spelling.attested ? undefined : ''} title={spelling.attested ? undefined : `${t('appendix.derivedFrom')} ${spelling.of ?? ''}`}>{t(`appendix.source.${spelling.in}`)}</span>
+                                {@render written(spelling.text, row.id)}
+                                {#if !spelling.attested && spelling.status}{@render mark(spelling.status, false)}{/if}
+                              </li>
+                            {/each}
+                          </ul>
+                        </li>
                       {/each}
                     </ul>
                   </td>
@@ -439,7 +488,14 @@
   .by{font-family:var(--ids-font),var(--ids-glyph-fallback);font-size:11px;color:var(--ui-color-ink-muted);overflow-wrap:anywhere}
   .num{text-align:end;white-space:nowrap;color:var(--ui-color-ink-muted);font-variant-numeric:tabular-nums}
   .detail td{background:var(--ui-color-surface-sunken)}
-  .derived{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:6px 18px}
+  .derived{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:10px 22px;align-items:start}
+  .derived > li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 10px;align-items:start}
+  .spellings{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+  .spellings li{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+  /* A description no table writes itself, reached from another table's: its tag is dashed. */
+  .tag[data-derived]{border-style:dashed}
+  .minus .tag{font-family:var(--ids-font);font-size:13px;line-height:1.2}
+  .minus{gap:4px 12px}
   .char{font-family:var(--ids-font);font-size:17px;line-height:1.2}
   .identity{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
   .name{font-family:var(--ids-font),ui-monospace,monospace;font-size:15px;line-height:1.3;overflow-wrap:anywhere}

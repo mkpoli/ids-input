@@ -34,6 +34,7 @@ describe('the message catalogues', () => {
     const data = [
       readFileSync(new URL('../demo/lib/sources.js', import.meta.url), 'utf8'),
       readFileSync(new URL('../src/svelte/IdsParts.svelte', import.meta.url), 'utf8'),
+      readFileSync(new URL('../demo/Strokes.svelte', import.meta.url), 'utf8'),
     ].join('\n')
     expect(config.usage.keysInUse.length).toBeGreaterThan(0)
     for (const listed of config.usage.keysInUse) {
