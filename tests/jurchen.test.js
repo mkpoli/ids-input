@@ -12,7 +12,6 @@ import { jurchenAdapter } from '../src/adapter/jurchen.js'
 import { characterOf, namedFor } from '../worker/render.js'
 import { codePoint } from '../worker/card.js'
 import { codePoint as pageCodePoint } from '../worker/page.js'
-import { load as loadSearchWorker, recovered } from '../src/adapter/search-worker.js'
 import { jurchenLabel, jurchenMatches, jurchenNames } from '../src/adapter/jurchen-data.js'
 
 const data = JSON.parse(gunzipSync(readFileSync(new URL('../data/jurchen.json.gz', import.meta.url))).toString())
@@ -194,26 +193,23 @@ describe('Jurchen editorial descriptions', () => {
     expect(jurchenLabel(data.parts.find(part => part.part === SAMPLE))).toContain(`⿱${TOP}${BOTTOM}`)
   })
 
-  it('carries them into the search worker, and survives a missing file', async () => {
+  it('carries them into the description search, and survives an unreadable file', async () => {
     const parts = [{ part: SAMPLE, ids: `⿱${TOP}${BOTTOM}` }, { part: TOP, ids: null }, { part: BOTTOM, ids: null }]
-    const search = await loadSearchWorker({ ids: 'data:text/plain,', jurchen: { format: 1, parts } })
-    expect(search.search(TOP, { limit: 3 }).hits.map(hit => hit.char)).toEqual([SAMPLE])
-    const other = await loadSearchWorker({ ids: 'data:text/plain,', jurchen: { format: 2, parts: [] } })
-    expect(other.search(TOP, { limit: 3 }).hits).toEqual([])
+    const search = babelStoneAdapter({ ids: 'data:text/plain,', jurchen: { format: 1, parts }, worker: null })
+    expect((await search.findByIds(TOP, { limit: 3 })).hits.map(hit => hit.char)).toEqual([SAMPLE])
+    const other = babelStoneAdapter({ ids: 'data:text/plain,', jurchen: /** @type {any} */ ({ format: 2, parts: [] }), worker: null })
+    expect((await other.findByIds(TOP, { limit: 3 })).hits).toEqual([])
   })
 
-  it('notices when a file the worker search went without comes back', async () => {
-    const good = Buffer.from(JSON.stringify({ format: 1, parts: [] })).toString('base64')
-    const realFetch = globalThis.fetch
+  it('searches them once a file the search went without comes back', async () => {
+    const parts = [{ part: SAMPLE, ids: `⿱${TOP}${BOTTOM}` }, { part: TOP, ids: null }, { part: BOTTOM, ids: null }]
     let up = false
-    globalThis.fetch = async (url, init) => String(url).endsWith('jurchen')
-      ? (up ? new Response(Buffer.from(good, 'base64')) : new Response('', { status: 404 })) : realFetch(url, init)
-    try {
-      await loadSearchWorker({ ids: 'data:text/plain,', jurchen: 'https://example.invalid/jurchen' })
-      expect(await recovered()).toBe(false)
-      up = true
-      expect(await recovered()).toBe(true)
-    } finally { globalThis.fetch = realFetch }
+    const adapter = babelStoneAdapter({ ids: 'data:text/plain,', jurchen: 'https://example.invalid/jurchen', worker: null,
+      fetch: async url => String(url).endsWith('jurchen')
+        ? (up ? new Response(JSON.stringify({ format: 1, parts })) : new Response('', { status: 404 })) : new Response('') })
+    expect((await adapter.findByIds(TOP, { limit: 3 })).hits).toEqual([])
+    up = true
+    expect((await adapter.findByIds(TOP, { limit: 3 })).hits.map(hit => hit.char)).toEqual([SAMPLE])
   })
 })
 
