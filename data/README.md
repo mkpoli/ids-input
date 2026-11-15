@@ -21,7 +21,7 @@ source states it. Rebuild with `bun scripts/build_custom_components.mjs`.
 
 `custom-forms.json`, `custom-forms.tsv` and `custom-forms.csv` are the same forms flat, one row
 each: `id`, `entity`, `char`, the name each source gives (`babelstone`, `chise`, `zi_tools`) or the
-`expression` of an unnamed form, BabelStone's `description`, `status`, `uses`, `used_in`,
+`expression` of an unnamed form, its `subtractions` (`㇯馬灬`), BabelStone's `description`, `status`, `uses`, `used_in`,
 `equivalents` (in the TSV and CSV as `notation:text:status:count`, joined by ` | `) and `of`. The
 appendix at <https://ids.mkpo.li/unencoded> offers them for download. Written by the same build.
 
