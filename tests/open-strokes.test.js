@@ -18,7 +18,7 @@ const point = char => `U+${char.codePointAt(0).toString(16).toUpperCase().padSta
 describe('the open stroke-order release', () => {
   it('names its format, sources and their terms', () => {
     expect(manifest.format).toBe('ids-input/open-strokes')
-    expect(manifest.version).toBe(2)
+    expect(manifest.version).toBe(3)
     expect(manifest.sources.map(source => source.key)).toEqual(['cns11643', 'rime-stroke', 'kanjivg', 'babelstone-ids', 'yi-bai-ids'])
     for (const source of manifest.sources) {
       expect(source.url).toMatch(/^https:/)
@@ -83,15 +83,27 @@ describe('the open stroke-order release', () => {
 
   it('marks every induced row with its basis and the source it is written from', () => {
     const tables = { 'rime-stroke': orders(rime), cns11643: orders(cns), kanjivg: orders(kanjivg) }
-    for (const [char, , written, basis, from, key, ids] of induced.slice(1)) {
+    const enteredFor = key => new Map(entered.slice(1).filter(row => row[5] === key).map(row => [row[0], row[2].split(' ')]))
+    const own = Object.fromEntries(Object.keys(tables).map(key => [key, new Map([...enteredFor(key), ...tables[key]])]))
+    const inSymbols = (code, key) => key === 'rime-stroke' ? [...code].map(symbol => 'hspnz'['12345'.indexOf(symbol)] ?? symbol).join('') : /[hspnz]/.test(code) ? digits(code) : code
+    for (const [char, , written, basis, from, key, ids, lent] of induced.slice(1)) {
       // A row written from a description names the dataset the description comes from.
       expect(ids).toMatch(basis === 'ids' ? /^(babelstone-ids|yi-bai-ids)( (babelstone-ids|yi-bai-ids))?$/ : /^$/)
       // An induced row never stands in for a character its source records.
       expect(tables[key].has(char)).toBe(false)
-      expect(['equivalent', 'ids']).toContain(basis)
+      expect(['equivalent', 'ids', 'borrowed']).toContain(basis)
+      // The sources a row borrows from are other than its own.
+      expect(lent).toMatch(/^$|^(cns11643|rime-stroke|kanjivg)( (cns11643|rime-stroke|kanjivg))?$/)
+      expect(lent.split(' ')).not.toContain(key)
       if (basis === 'equivalent') {
         expect(char.normalize('NFKC')).toBe(from)
         expect(written.split(' ')).toEqual(tables[key].get(from))
+        expect(lent).toBe('')
+      } else if (basis === 'borrowed') {
+        // A borrowed row repeats what its lender has, in the borrower's symbols.
+        expect(lent).toBe(from)
+        expect(written.split(' ')).toEqual([...new Set(own[from].get(char).map(code => inSymbols(code, key)))])
+        expect(own[key].has(char)).toBe(false)
       } else {
         expect(/[⿰-⿿]/u.test(from)).toBe(true)
         expect(from.startsWith('〾')).toBe(false)
@@ -101,7 +113,7 @@ describe('the open stroke-order release', () => {
     // A numbered component is read by its fragment, and the row keeps BabelStone's spelling.
     expect(induced.some(row => row[3] === 'ids' && /\{\d+\}/.test(row[4]))).toBe(true)
     const row = induced.find(row => row[0] === '⼀' && row[5] === 'cns11643')
-    expect(row?.slice(2)).toEqual(['1', 'equivalent', '一', 'cns11643', ''])
+    expect(row?.slice(2)).toEqual(['1', 'equivalent', '一', 'cns11643', '', ''])
     expect(induced.some(row => row[6] === 'yi-bai-ids')).toBe(true)
     // A BabelStone description whose component is read by one of Yi Bai's names both: 𫥎 is ⿱免⺀, and ⺀ is Yi Bai's ⿱丶丶.
     expect(induced.find(row => row[0] === '𫥎' && row[5] === 'cns11643')?.[6]).toBe('babelstone-ids yi-bai-ids')
@@ -121,6 +133,7 @@ describe('the open stroke-order release', () => {
       const rows = induced.slice(1).filter(entry => entry[5] === row.source)
       expect(rows.filter(entry => entry[3] === 'equivalent').length).toBe(row.equivalent)
       expect(rows.filter(entry => entry[3] === 'ids').length).toBe(row.ids)
+      expect(rows.filter(entry => entry[3] === 'borrowed').length).toBe(row.borrowed)
       expect(readme).toContain(row.recorded.toLocaleString('en'))
     }
     expect(manifest.coverage.find(row => row.source === 'rime-stroke').recorded).toBe(rime.length - 1)
@@ -154,8 +167,10 @@ describe('the open stroke-order release', () => {
       expect(row.entered).toBe(entered.slice(1).filter(entry => entry[5] === row.source).length)
       expect(Object.values(row.reasons).reduce((sum, count) => sum + count, 0)).toBe(row.none)
       const rows = wanted.slice(1).filter(entry => entry[2] === row.source)
-      // Every wanted component has no order from the source, and the list is ranked.
-      expect(rows.every(entry => !tables[row.source].has(entry[0]) && Number(entry[4]) <= Number(entry[3]))).toBe(true)
+      // Nothing wanted has an order in any source, and the list is ranked.
+      expect(rows.every(entry => Object.values(tables).every(table => !table.has(entry[0])) && Number(entry[4]) <= Number(entry[3]))).toBe(true)
+      // A character left without an order is wanted itself.
+      expect(rows.length).toBeGreaterThanOrEqual(row.none)
       expect(rows.every((entry, index) => !index || Number(rows[index - 1][4]) >= Number(entry[4]))).toBe(true)
     }
     expect(readme).toContain('data/stroke-orders-entered.tsv')

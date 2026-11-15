@@ -1330,7 +1330,7 @@ from `ids-parts.json`.
 
 The open stroke-order release served at <https://ids.mkpo.li/open-data#strokes>: Taiwan's standard order
 from CNS 全字庫, Rime's five-stroke dictionary, Japanese order from KanjiVG, and orders induced by equivalence or from
-BabelStone's and Yi Bai's IDS for characters a source lacks. Its own `README.md` gives the fields, rules, licences
+BabelStone's and Yi Bai's IDS, or borrowed from another of the three, for characters a source lacks. Its own `README.md` gives the fields, rules, licences
 and how often the rules agree with the sources. Built by `scripts/build_open_strokes.mjs`.
 
 ## `stroke-orders-entered.tsv`
@@ -1338,7 +1338,7 @@ and how often the rules agree with the sources. Built by `scripts/build_open_str
 Stroke orders entered by hand for characters and components the sources of `open-strokes/` do not
 record: `char`, `source`, `orders`, `basis`, `by`, `date`, tab-separated, one row per character and
 source. `basis` may be left empty. The build publishes the rows as `open-strokes/entered.tsv`;
-`open-strokes/wanted.tsv` ranks the components worth entering next.
+`open-strokes/wanted.tsv` lists what no source has an order for.
 
 The Stroke orders page (`demo/Strokes.svelte`) enters them: it lists the wanted components with what
 the other sources record for each, and its keys write the order. It is served by `bun run dev` at
