@@ -7,7 +7,7 @@ import { customsOf, isNode, leaves, parse, write } from './ids.js'
 /**
  * @typedef {{ in: string, text: string, count: number, characters: string[], status: 'verified' | 'candidate', basis: 'difference' | 'inverse' }} CustomEquivalent
  * @typedef {{ text: string, kind: import('./custom.js').CustomKind, source: string, description?: string, fragment?: string,
- *   uses: number, examples: string[], subtraction?: string, draw?: string, id?: string, char?: string, equivalents: CustomEquivalent[] }} CustomComponent
+ *   uses: number, examples: string[], subtractions?: string[], draw?: string, id?: string, char?: string, equivalents: CustomEquivalent[] }} CustomComponent
  * @typedef {{ id: string, char: string, names: string[] }} CustomForm One form under its identifier, with every name and confirmed expression it has.
  * @typedef {{ format: string, version: number, components: CustomComponent[], forms?: CustomForm[] }} CustomComponentsData
  */
@@ -42,17 +42,38 @@ export function createCustomComponents(data) {
     if (tree !== undefined) drawn.set(text, tree)
     return tree
   }
+  // A form written as a character less its other parts: ㇯馬灬 for {51}.
+  /** @type {Map<string, string>} */
+  const subtracted = new Map()
+  for (const row of data.components) for (const written of row.subtractions ?? []) if (row.id && !subtracted.has(written)) subtracted.set(written, `&${row.id};`)
+  /** `part` with each subtraction that names a form written as that form's identifier, innermost
+   * first. @param {import('./ids.js').Part} part @returns {import('./ids.js').Part} */
+  const named = part => {
+    if (!isNode(part)) return part
+    const inner = { ...part, parts: part.parts.map(named) }
+    return inner.op === '㇯' ? subtracted.get(write(inner)) ?? inner : inner
+  }
   /** @type {Map<string, CustomForm>} */
   const formOf = new Map((data.forms ?? []).flatMap(form => [[`&${form.id};`, form], .../** @type {[string, CustomForm][]} */ (form.names.map(name => [name, form]))]))
   /** @param {string} text @returns {{ text: string, leaves: number[] }} */
   const swapped = text => {
-    const read = /[{&#]/.test(text) ? parse(text, { open: true }) : null
+    const read = /[{&#㇯]/.test(text) ? parse(text, { open: true }) : null
     if (!read || read.problem) return { text, leaves: [] }
     /** @type {number[]} */
     const from = []
     let place = 0
     /** @param {import('./ids.js').Part} part @returns {import('./ids.js').Part} */
     const swap = part => {
+      // A subtraction that names a form draws as the form: its two parts are one place.
+      const form = isNode(part) && part.op === '㇯' ? subtracted.get(write(part)) : undefined
+      if (form !== undefined && isNode(part)) {
+        const drawn = drawTree(form)
+        if (drawn !== undefined) {
+          for (let k = leaves(drawn).length; k > 0; k--) from.push(place)
+          place += leaves(part).length
+          return drawn
+        }
+      }
       if (isNode(part)) return { ...part, parts: part.parts.map(swap) }
       const drawn = part !== null && isCustom(part) ? drawTree(part) ?? part : part
       for (let k = leaves(drawn).length; k > 0; k--) from.push(place)
@@ -77,6 +98,22 @@ export function createCustomComponents(data) {
      * @param {string} text @returns {string}
      */
     drawable: text => swapped(text).text,
+    /**
+     * `text` with each subtraction that names a form written as the form's identifier: ㇯馬灬 as
+     * &X-00051;, ⿰木㇯鸟一 as ⿰木&X-00053;. A text that does not read, or names none, is answered
+     * as it is.
+     * @param {string} text @returns {string}
+     */
+    normalize(text) {
+      if (!text.includes('㇯')) return text
+      const read = parse(text, { open: true })
+      if (read.problem) return text
+      const next = named(read.tree)
+      // Nothing named: the text as it was typed, slots unwritten and all.
+      return write(next) === write(read.tree) ? text : write(next)
+    },
+    /** The subtractions that name a form, each with the form's identifier as a component. */
+    subtractions: subtracted,
     /**
      * The same, with where each component of the answer comes from: `leaves[i]` is the place, in
      * reading order, of the component of `text` that the answer's component `i` draws. A custom

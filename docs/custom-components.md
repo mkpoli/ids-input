@@ -113,10 +113,15 @@ zi.tools' `ids_lv1.txt` at the pinned revision. GPL-2.0-or-later, since CHISE's 
 
 - `components`: one row per custom component — `text`, `kind`, `source`, BabelStone's
   `description` and `fragment`, `uses` (characters described with it), `examples`, `usedIn` (all
-  of those characters, as one string), `subtraction`
+  of those characters, as one string), `subtractions`
   (the component as a character less one part, `㇯凫几`), `draw` and `equivalents`.
 - `draw`: what a composer draws in the component's place — BabelStone's fragment, the private-use
   glyph of BabelStone Han PUA, or the best equivalent made of characters only. 972 have one.
+- `subtractions`: the component as a character less its other parts, `㇯馬灬` for `{51}`,
+  `㇯㇯𠙖冫几` where two are taken. Every character one of the form's sources describes with the
+  component beside one or two characters gives one; a spelling two forms would both claim is
+  dropped. `createCustomComponents(data).normalize(text)` writes such a subtraction as the form's
+  identifier, and `drawable` draws it as the form.
 - `equivalents`: what the component is in another table, `{ in, text, count, characters, status,
   basis, id, arrangements }`; `id` is the form the text is, and `arrangements` the same parts
   bracketed another way, each a form of its own. A component carries its form's `id` and `char`,

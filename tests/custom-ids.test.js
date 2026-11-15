@@ -91,3 +91,38 @@ describe('form identifiers in data/custom-components.json.gz', () => {
     expect(custom.drawable('⿹&X-99999;一')).toBe('⿹&X-99999;一')
   })
 })
+
+describe('a form written as a character less its other parts', () => {
+  const doc = JSON.parse(gunzipSync(readFileSync(new URL('../data/custom-components.json.gz', import.meta.url))).toString('utf8'))
+  const custom = createCustomComponents(doc)
+  const id = text => doc.components.find(row => row.text === text).id
+
+  it('lists every such spelling, with one or two parts taken', () => {
+    const horse = doc.components.find(row => row.text === '{51}').subtractions
+    expect(horse).toContain('㇯馬灬')
+    expect(horse).toContain('㇯㇯𠙖冫几')
+    expect(doc.components.find(row => row.text === '{53}').subtractions).toContain('㇯鸟一')
+    for (const row of doc.components) for (const written of row.subtractions ?? []) expect(parse(written).problem).toBeUndefined()
+  })
+  it('gives a spelling to one form only', () => {
+    const owner = new Map()
+    for (const row of doc.components) for (const written of row.subtractions ?? []) {
+      expect(owner.get(written) ?? row.id).toBe(row.id)
+      owner.set(written, row.id)
+    }
+  })
+  it('normalizes a subtraction to the form, alone or inside a description', () => {
+    expect(custom.normalize('㇯馬灬')).toBe(`&${id('{51}')};`)
+    expect(custom.normalize('⿰木㇯鸟一')).toBe(`⿰木&${id('{53}')};`)
+    expect(custom.normalize('⿰氵㇯㇯𠙖冫几')).toBe(`⿰氵&${id('{51}')};`)
+    // A subtraction that names no form, and a text with none, stay as they are.
+    expect(custom.normalize('㇯軍車')).toBe('㇯軍車')
+    expect(custom.normalize('⿰木木')).toBe('⿰木木')
+    expect(custom.normalize('㇯馬')).toBe('㇯馬')
+  })
+  it('draws a subtraction as the form it names', () => {
+    expect(custom.drawable('㇯鸟一')).toBe(custom.get('{53}').draw)
+    expect(custom.drawableLeaves('⿰木㇯馬灬')).toEqual({ text: `⿰木${custom.get('{51}').draw}`, leaves: [0, 1] })
+    expect(custom.drawable('㇯軍車')).toBe('㇯軍車')
+  })
+})

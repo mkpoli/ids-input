@@ -118,6 +118,16 @@ describe('the forms table as files', () => {
     expect(row.char).toBe(`U+${(0xf0000 + outside.number).toString(16).toUpperCase()}`)
     expect(row.equivalents[0]).toMatchObject({ in: 'zi-tools', text: '⿱丿⿴#(-𠃌㇉)丶', status: 'confirmed' })
     const line = read('custom-forms.tsv').split('\n').find(one => one.startsWith(`${outside.id}\t`))
-    expect(line.split('\t')[11]).toContain('zi-tools:⿱丿⿴#(-𠃌㇉)丶:confirmed')
+    expect(line.split('\t')[json.columns.indexOf('equivalents')]).toContain('zi-tools:⿱丿⿴#(-𠃌㇉)丶:confirmed')
+    expect(line.split('\t')[json.columns.indexOf('subtractions')]).toContain('㇯鸟一')
+  })
+})
+
+describe('a form found by its subtraction', () => {
+  it('is on the row, and a query for it finds the form', () => {
+    const horse = rows.find(row => row.names.some(name => name.text === '{51}'))
+    expect(horse.subtractions).toContain('㇯馬灬')
+    expect(find('㇯馬灬').map(row => row.id)).toEqual([horse.id])
+    expect(find('㇯鸟一').map(row => row.id)).toContain(outside.id)
   })
 })
