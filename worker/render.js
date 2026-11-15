@@ -156,12 +156,21 @@ async function drawDocument(env, sequence, document) {
   return { view: documentView(document, drawing, sketch, { renderer: { layerFrames, renderScopes } }), drawing }
 }
 
+/**
+ * What `cardSvg` is given for a card. The units are passed only where the card draws several, so a
+ * card of one drawing is laid out and labelled as a sequence.
+ * @param {string} sequence @param {any} drawing @param {string | null} char
+ * @param {{ units: string[], drawings: (any | null)[], codepoint?: string } | null} [shown] @param {any} [document]
+ */
+export const cardParts = (sequence, drawing, char, shown = null, document = null) =>
+  ({ sequence, drawing, char, units: shown?.units, drawings: shown?.drawings, codepoint: shown?.codepoint, document })
+
 /** Rasterized card PNG. @param {any} env @param {string} sequence @param {any} drawing @param {string | null} char */
 async function png(env, sequence, drawing, char, shown = null, document = null) {
   const Resvg = await ready()
   const units = shown?.units ?? [sequence]
   const { buffers, familyOf } = await facesFor(env, units.join('') + (char ?? '') + (shown?.codepoint ?? '') + (document?.title ?? ''))
-  const render = await Resvg.async(cardSvg({ sequence, drawing, char, familyOf, units, drawings: shown?.drawings, codepoint: shown?.codepoint, document }), {
+  const render = await Resvg.async(cardSvg({ ...cardParts(sequence, drawing, char, shown, document), familyOf }), {
     font: { fontBuffers: buffers, defaultFontFamily: 'Noto Sans CJK JP', sansSerifFamily: 'Noto Sans CJK JP', loadSystemFonts: false },
     fitTo: { mode: 'original' },
   })
