@@ -294,6 +294,60 @@ def huang_jin_wan(body, jin, band):
     bar = pathops.op(groups_path(body), rect_path(495, 0, 505, 1000), pathops.PathOp.INTERSECTION).bounds[1]
     return body + fitted_groups(jin, (*JIN_BOX, bar + 8)) + fitted_groups(band, WAN_BAND_BOX)
 
+# The hooked 壽 top of MOE A00836-011: a stem through three bars, the third ending in a hook, a dot
+# pair either side of the stem, and a full-width bar. Each description writes the same top, so one
+# drawing serves them all, cut into one group per component in reading order: a separated drawing
+# gives each its own. Noto's 壽 has this top with 工 for the dots: its contours are 士, the hooked
+# bar, 工, and the long bar (in Sans one contour with 寸), by index per face.
+SHOU_TOP_GROUPS = {
+    '⿻龶⿱乛丷': (('shi', 'upper', 'lower', 'bar'), ('hooked',), ('dots',)),
+    '⿱⿻韦丷一': (('shi', 'upper', 'hooked', 'lower'), ('dots',), ('bar',)),
+    '⿱⿱𰀁乛⿱⺌一': (('shi', 'upper'), ('hooked',), ('lower', 'dots'), ('bar',)),
+}
+SHOU_CONTOURS = {'sans': (1, 3, 4, 2), 'serif': (5, 4, 2, 0)}
+
+def hooked_shou_top(cs, style):
+    """壽's top from the face's own 壽, with 丷 for 工 and the stem run down to the long bar, as
+    groups for each description in `SHOU_TOP_GROUPS`."""
+    c = cs('壽')
+    shi, hooked, gong, long_bar = (outline_path([c[i]]) for i in SHOU_CONTOURS[style])
+    # The long bar alone: where it is joined to 寸, keep only what lies at the bar's height at its
+    # left end, which no other stroke reaches.
+    bar_bottom = pathops.op(long_bar, rect_path(0, 0, 150, 1000), pathops.PathOp.INTERSECTION).bounds[1]
+    long_bar = pathops.op(long_bar, rect_path(0, bar_bottom, 1000, 1000), pathops.PathOp.INTERSECTION)
+    # 工's stem, between its bars, gives the stem's column. The room between the bars is measured
+    # in that column: Serif's long bar rises to a serif at its right end.
+    g0, g1 = gong.bounds[1], gong.bounds[3]
+    stem = pathops.op(gong, rect_path(0, (g0 + g1) / 2 - 5, 1000, (g0 + g1) / 2 + 5), pathops.PathOp.INTERSECTION).bounds
+    column = lambda path: pathops.op(path, rect_path(stem[0], 0, stem[2], 1000), pathops.PathOp.INTERSECTION).bounds
+    room_top, room_bottom = column(hooked)[1], column(long_bar)[3]
+    # The stem is cut at the hooked bar's middle: above it belongs to the bars, below to the dots.
+    middle = (room_top + column(hooked)[3]) / 2
+    # 丷 fills 工's place, a sixth of the room clear of each bar, centred on the stem and as wide
+    # as 工 or as the hook allows: the hook bends back under the bar, inside 工's reach.
+    gap = (room_top - room_bottom) / 6
+    hook = pathops.op(hooked, rect_path((stem[0] + stem[2]) / 2, 0, 1000, room_top), pathops.PathOp.INTERSECTION).bounds
+    centre = (stem[0] + stem[2]) / 2
+    half = min(gong.bounds[2], hook[0] - gap / 2) - centre
+    sx0, sy0, sx1, sy1 = outline_path(cs('丷')).bounds
+    left, bottom, right, top = max(gong.bounds[0], centre - half), room_bottom + gap, centre + half, room_top - gap
+    kx, ky = (right - left) / (sx1 - sx0), (top - bottom) / (sy1 - sy0)
+    strokes = {
+        'shi': shi, 'hooked': hooked, 'bar': long_bar,
+        'upper': rect_path(stem[0], middle, stem[2], shi.bounds[1] + 5),
+        'lower': rect_path(stem[0], room_bottom - 5, stem[2], middle),
+        'dots': outline_path(cs('丷'), (kx, 0, 0, ky, left - sx0 * kx, bottom - sy0 * ky)),
+    }
+    def joined(names):
+        # Simplifying gives every group the same winding, whatever its donor contour had.
+        path = pathops.Path()
+        for name in names: path = pathops.op(path, strokes[name], pathops.PathOp.UNION)
+        path.simplify()
+        pen = RecordingPen()
+        path.draw(pen)
+        return group([pen.value])
+    return {key: [joined(names) for names in groups] for key, groups in SHOU_TOP_GROUPS.items()}
+
 def huang_body(cs):
     """黄 without its last two strokes, which 金's top stands in for.
 
@@ -628,6 +682,7 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     forms['⿱龷由'] = [group(huang_body(cs))]
     forms['⿱八⿻王丷'] = jin_with_ba(cs, style)
     forms[HUANG_JIN_WAN] = huang_jin_wan(forms['⿱龷由'], forms['⿱八⿻王丷'], forms['⿱田⿵冂山'])
+    forms.update(hooked_shou_top(cs, style))
     # The top of the KRM vulgar 處 (K07097330): ⺊'s dot as a bar, the stem centred on the cover
     # and joined to it. One component, reused as the top of ⿳⺊冖人 and its relatives.
     forms['⿱⺊冖'] = seal_dot_top(cs, style)
@@ -706,6 +761,16 @@ result['editorial'] = {
         'limitation': 'A photographed brush 揮春 sets the structure: 金 takes 黄\'s 八 for its roof, hanging from 由, over 萬\'s band. Outlines are the face\'s own 黄 body, 金 with ㇒ and ㇏ for its roof, and 萬 with 岡\'s 山 for 禸; the boxes are editorial.',
         'donors': {'sans': ['黄', '金', '㇒', '㇏', '萬', '岡'], 'serif': ['黄', '金', '㇒', '㇏', '萬', '岡']},
         'forms': [HUANG_JIN_WAN],
+    },
+    'MOE-A00836-011': {
+        'kind': 'editorial manuscript-informed donor composition',
+        'reference': 'MOE variant dictionary A00836-011, reviewed by 張文彬; cites 《碑別字新編》〈魏元騰墓誌〉',
+        'url': 'https://dict.variants.moe.edu.tw/dictView.jsp?ID=8882&q=1',
+        'image': 'https://dict.variants.moe.edu.tw/rbt/sword/sworda/sa00836/011.jpg',
+        'comparison': 'https://zi.tools/api/ids/lookupidsasync/%E2%BF%B1%E2%BF%BB%E9%BE%B6%E2%BF%B1%E4%B9%9B%E4%B8%B7%E5%90%8B?replace_token (zi.tools outline, upstream glyph revision unspecified); https://glyphwiki.org/json?name=twedu-a00836-011 (GlyphWiki version 9, a comparison witness, not an outline donor)',
+        'limitation': 'The witness, a 38×37-pixel scan, sets the arrangement: a stem through three bars, the third hooked, a dot pair either side of the stem, a full-width bar. Outlines are the face\'s own 壽 with its 丷 in place of 工 and the stem run down to the long bar; the dot placement is editorial. The form does not identify the character.',
+        'donors': {'sans': ['壽', '丷'], 'serif': ['壽', '丷']},
+        'forms': list(SHOU_TOP_GROUPS),
     },
 }
 # The table is the engine's: it is committed in a han-compose checkout, which `bun run data` copies
