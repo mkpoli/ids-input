@@ -32,6 +32,11 @@
 
   /** The sources an order is entered for, and the files that record what they do have. */
   const SOURCES = /** @type {const} */ (['cns11643', 'kanjivg'])
+  // The message naming each source, and each place a row is kept.
+  /** @type {Record<string, string>} */
+  const SOURCE_NAMES = { cns11643: 'strokes.source.cns11643', kanjivg: 'strokes.source.kanjivg', 'rime-stroke': 'strokes.source.rime-stroke' }
+  /** @type {Record<string, string>} */
+  const PLACES = { repository: 'strokes.where.repository', browser: 'strokes.where.browser' }
   /** Each stroke key's name in the components' catalogue; the digit is what the sources write. */
   const KEYS = STROKE_KEYS.map((key, index) => ({ digit: String(index + 1), stroke: key.stroke, name: `parts.first.${key.letter === 'n' ? 'd' : key.letter}` }))
   const DIGIT = /** @type {Record<string, string>} */ ({ h: '1', s: '2', p: '3', n: '4', z: '5' })
@@ -176,7 +181,7 @@
 
   <div class="body">
     <nav class="queue" aria-label={t('strokes.queue')}>
-      <Segmented label={t('strokes.sourceLabel')} value={source} options={SOURCES.map(key => ({ value: key, label: t(`strokes.source.${key}`) }))} onchange={setSource} />
+      <Segmented label={t('strokes.sourceLabel')} value={source} options={SOURCES.map(key => ({ value: key, label: t(SOURCE_NAMES[key]) }))} onchange={setSource} />
       <label class="other">
         <span class="ui-visually-hidden">{t('strokes.another')}</span>
         <input class="ui-input" lang="ja" bind:value={other} placeholder={t('strokes.another')} autocomplete="off" spellcheck="false"
@@ -209,7 +214,7 @@
                 <dd class="examples" lang="ja">{#each item.examples as example (example)}<a href={`./#${encodeURIComponent(example)}`}>{example}</a>{/each}</dd></div>
             {/if}
             {#each elsewhere as known (known.key)}
-              <div class="wide"><dt>{t(`strokes.source.${known.key}`)}</dt>
+              <div class="wide"><dt>{t(SOURCE_NAMES[known.key])}</dt>
                 <dd class="known">
                   <span class="written">{strokes(known.orders.join(' '))}</span><span class="mono">{known.orders.join(' ')}</span>
                   <button type="button" class="ui-button" data-size="xs" onclick={() => { orders = known.orders.join(' ') }}>{t('strokes.use')}</button>
@@ -236,7 +241,7 @@
             <div class="actions">
               <button type="submit" class="ui-button" data-variant="primary">{t('strokes.save')}</button>
               <button type="button" class="ui-button" data-variant="quiet" onclick={skip}>{t('strokes.skip')}</button>
-              <span class="where" title={writable ? 'data/stroke-orders-entered.tsv' : undefined}>{t(writable ? 'strokes.where.repository' : 'strokes.where.browser')}</span>
+              <span class="where" title={writable ? 'data/stroke-orders-entered.tsv' : undefined}>{t(PLACES[writable ? 'repository' : 'browser'])}</span>
             </div>
             {#if failed}<p class="ui-error" role="alert">{failed}</p>{/if}
           </form>
@@ -260,11 +265,11 @@
                 {#each rows as row (row.char + row.source)}
                   <tr>
                     <td><button type="button" class="pick" lang="ja" onclick={() => { source = row.source === 'kanjivg' ? 'kanjivg' : 'cns11643'; current = row.char }}>{row.char}</button></td>
-                    <td>{t(`strokes.source.${row.source}`)}</td>
+                    <td>{t(SOURCE_NAMES[row.source])}</td>
                     <td class="mono">{row.orders}</td>
                     <td class="basis">{row.basis}</td>
                     <td>{row.by}</td>
-                    <td><span class="tag" data-where={row.where}>{t(`strokes.where.${row.where}`)}</span></td>
+                    <td><span class="tag" data-where={row.where}>{t(PLACES[row.where])}</span></td>
                     <td>{#if row.where === 'browser' || writable}<button type="button" class="ui-button" data-variant="quiet" data-size="xs" aria-label={`${t('strokes.remove')} ${row.char}`} onclick={() => remove(row)}>{t('strokes.remove')}</button>{/if}</td>
                   </tr>
                 {/each}
