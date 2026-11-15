@@ -7,6 +7,7 @@ export const pages = t => [
   { id: 'component-atlas', icon: 'grid', label: t('app.atlas') },
   { id: 'ucv', icon: 'variants', label: t('ucv.title') },
   { id: 'normalization', icon: 'funnel', label: t('normalization.title') },
+  { id: 'baishi-cheatsheet', icon: 'list', label: t('cheatsheet.title') },
   { id: 'open-data', icon: 'download', label: t('app.openData') },
   { id: 'compare', icon: 'scales', label: t('app.compare') },
   { id: 'engines', icon: 'table', label: t('app.engines') },

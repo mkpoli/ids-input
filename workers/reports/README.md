@@ -127,8 +127,8 @@ issue, then six seconds after the dispatch and every four from there. Only the e
 since a reporter's text inside it may quote any mark.
 
 The `draw` job runs when the reporter sent a drawing. It opens the report's `link` in Chromium,
-photographs the output panel once the composer has composed it, commits the picture to
-`bug-attachments` and rewrites the issue's body to show it.
+photographs the preview once it has settled on a drawing or on a failure to compose, commits the
+picture to `bug-attachments` and rewrites the issue's body to show it.
 
 ## Configuration
 

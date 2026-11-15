@@ -169,7 +169,7 @@
   "ids.unwrap": "階層を外す",
   "ids.unwrapHint": "この階層を外し、空でない最初の部品をその位置に残す",
   "ids.unwrapNode": "{what}を外す",
-  "ids.variants.label": "{part}の異体字シーケンス",
+  "ids.variants.label": "{part}の字形",
   "ids.view.label": "表示",
   "ids.view.shape": "図",
   "ids.view.tree": "ツリー",
