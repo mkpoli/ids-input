@@ -513,6 +513,78 @@ weight the engine draws is still a stroke. Five forms fill a counter at those li
   hereby granted to use, copy, and distribute these files, with or without modification, either
   commercially or non-commercially." Copyright 2009 GlyphWiki Project.
 
+## `variant-descriptions.tsv.gz`
+
+A description for each variation sequence of an ideograph: the 29,642 sequences of the
+Ideographic Variation Database (version 2026-08-03, <https://www.unicode.org/ivd/data/2026-08-03/IVD_Sequences.txt>,
+39,509 registrations in the Adobe-Japan1, CAAPH, Hanyo-Denshi, KRName, Moji_Joho and MSARG
+collections, SHA-256 `2b466659c2bfde1c52e60bd9fc883ab14dfa5c583df024b80352420265d2cd87`) and the
+1,002 standardized sequences of the CJK compatibility ideographs (`StandardizedVariants.txt` of
+Unicode 18.0, SHA-256 `c7ae634a7e2bb0932258548a1e81df984fbb38e30cecf4269391d6a4f94581ac`). 30,644
+lines, 293 KB gzipped, 1.2 MB as text: `sequence<TAB>description<TAB>how<TAB>glyph`.
+
+No source describes a variation sequence. The descriptions are read from GlyphWiki, which registers
+a glyph for every one of them (`u7a81-ue0102`) in its dump, <https://glyphwiki.org/dump.tar.gz>
+(the files dated 2026-11-14 17:00 UTC; archive SHA-256
+`2c8014e56551dcdd321a307b21226f57bcf2f8b4d9cff32d0f5aeb2623033a85`). GlyphWiki draws a glyph from
+strokes and from other glyphs placed in frames, and a glyph made of other glyphs alone names its
+components. `scripts/build_variant_descriptions.mjs` takes the operators from a description
+`babelstone-ids.tsv.gz` or `yi-bai-ids.tsv.gz` gives the character, and matches the glyph's
+components against that description's parts: by character where they are the same, and by where
+their ink lies. `how` says which reading a line is:
+
+| `how` | Lines | The description |
+| --- | ---: | --- |
+| `named` | 20 | GlyphWiki names the glyph by it (`u2ff1-u65e5-u72ac`) |
+| `composed` | 23,890 | The glyph's components are the parts of a description the tables give the character |
+| `placed` | 1,777 | The components differ from such parts and lie where they stand: at least 0.6 of each one's ink inside its part's place, and no other description fitting within 0.1 as well. No table has this description |
+| `drawn` | 4,957 | The character's, by the source the glyph is of where the table tags one: the glyph is drawn from strokes, wholly or in part, or its components fit no description |
+
+A component's form is written, in this order, as:
+
+- another character whose plain glyph it is: ⻌ U+2ECC for the 辶 of one dot (辻 U+E0100 is `⿺⻌十`,
+  辻 U+E0101 `⿺辶十`), ⺿ U+2EBF for the 艹 of four strokes. A component stays its own character
+  where two characters share a glyph. A CJK compatibility ideograph or a Kangxi radical is never
+  written: where no other character has its glyph, the standardized sequence stands for it;
+- a variation sequence of the component, where the glyph is registered for one (坪 U+E0101 is
+  `⿰土平` with 平 U+E0101);
+- a form of a UCV entry (`ucv.json`), where the glyph is one (僧 U+E0103 is `⿰亻曽q1874`; 223 lines);
+- its own description, where the glyph is built of other parts than the component's plain glyph;
+- the component alone, where the glyph has the plain glyph's strokes with their ends in the same
+  places once both are fitted to one square (within 0.3 of its width and height): the same form,
+  placed differently;
+- the component and a source letter, where the glyph is a source's (`曷J`), as zi.tools writes a
+  source's form;
+- a reference to the glyph, `&GW-u66f7-var-002;`, for a form no notation writes: a numbered
+  variant, or a glyph of another glyph set (`aj1-`, `koseki-`) that is no other name of a
+  character's glyph. 2,575 lines hold one. A glyph named by a description with a variant number
+  is written as that description.
+
+Limits:
+
+- The descriptions are GlyphWiki's reading of the registered glyphs, which its contributors drew
+  after the collections' charts. A line is as right as that drawing: 埓 U+E0103 (Hanyo-Denshi
+  TK01035320) comes out as `⿰扌𪧷` because GlyphWiki builds it with 扌. `placed` lines differ from
+  every tabled description and deserve the most doubt.
+- The meaning of GlyphWiki's two-letter glyph suffixes (`-jn`, `-jv`) was not checked against its
+  naming guideline, which refuses automated requests; a component under one is compared by its
+  strokes and, where they differ, referred to by its glyph.
+- 15,435 characters have a sequence, 8,722 of them one. Of the 21,922 sequences of the others,
+  7,900 have a description no other sequence of the character has; 8,965 share one with a sequence
+  GlyphWiki registers the same glyph for (one shape in two collections); and 5,057 share one though
+  their glyphs differ, 3,303 of them `drawn`. What sets those apart is finer than a
+  component: a stroke's length, a hook, where two strokes meet.
+- The same-form test passes two forms that differ by a stroke's length alone (土 and 士).
+- `{n}` in a `drawn` line is BabelStone's numbered component, and `？` one it cannot represent.
+
+Licence: GlyphWiki's data licence (see `custom-outlines.json.gz` above), BabelStone's descriptions
+(public domain) and Yi Bai's (MIT); the sequences are the Unicode Consortium's data files, under
+the Unicode licence (`LICENSE-Unicode.txt`).
+
+Rebuild with `bun scripts/build_variant_descriptions.mjs --ivd IVD_Sequences.txt --standardized
+StandardizedVariants.txt --dump <folder of the unpacked dump>`. `readVariantDescriptions` in
+`src/core/variant-descriptions.js` reads the table.
+
 ## component-names.tsv
 
 The names, words and readings people use for components, for the parts finder's search: 絞絲 and
