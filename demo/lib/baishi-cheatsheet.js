@@ -384,6 +384,9 @@ export function bareOf(tokens, entry) {
   return own.filter(token => token.kind === 'op' || token.kind === 'part').map(token => token.stretches[0].text).join('')
 }
 
+/** An entry without its list: what a variant is drawn from. @param {string} entry */
+export const variantBody = entry => entry.replace(/(?<!#)\([^()]*\)$/u, '')
+
 /** The identifiers of an entry's list, or none where it has no list: the brackets of a chain are no list.
  * @param {string} entry @returns {string[]} */
 export const idsOf = entry => /(?<!#)\(([^()]*)\)$/u.exec(entry)?.[1].split(',') ?? []
