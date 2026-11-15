@@ -104,13 +104,18 @@ export function loadFallbackText(text, stack) {
     return
   }
   for (const char of text ?? '') {
-    const drawn = COVERED.get(`${stack}\u0000${char}`)
+    const key = `${stack}\u0000${char}`
+    const drawn = COVERED.get(key)
     if (drawn === false) loadFallback(char)
-    else if (drawn === undefined) waiting.push([char, stack])
+    else if (drawn === undefined && !queued.has(key)) {
+      queued.add(key)
+      waiting.push([char, stack])
+    }
   }
   if (!checking && waiting.length) {
     checking = true
-    whenIdle(check)
+    // The shards are known once `unicode.json` has been read: a check made before would skip every character.
+    ready.then(() => whenIdle(check))
   }
 }
 
@@ -119,23 +124,33 @@ export function loadFallbackText(text, stack) {
 // page is idle, so a panel paints before its shards are asked for.
 /** @type {[char: string, stack: string][]} */
 let waiting = []
+/** The checks waiting, by stack and character, so one asked for by many elements waits once. @type {Set<string>} */
+const queued = new Set()
 let checking = false
-/** In the next idle period, or 50 ms from now on a page that is never idle. @param {() => void} run */
+/** Runs `run` in the next idle period with the milliseconds it has, or with 16 ms after 50 ms on
+ *  a page that is never idle. @param {(budget: number) => void} run */
 const whenIdle = run => {
-  if (typeof requestIdleCallback === 'function') requestIdleCallback(() => run(), { timeout: 50 })
-  else setTimeout(run, 16)
+  if (typeof requestIdleCallback === 'function') requestIdleCallback(deadline => run(deadline.didTimeout ? 16 : Math.max(deadline.timeRemaining(), 1)), { timeout: 50 })
+  else setTimeout(() => run(16), 16)
 }
-/** One slice of the waiting checks, 16 ms at most, and the rest in the next. */
-function check() {
-  const until = performance.now() + 16
+/** One slice of the waiting checks, and the rest in the next. @param {number} budget */
+function check(budget) {
+  const until = performance.now() + budget
   let at = 0
-  for (; at < waiting.length && performance.now() < until; at++) {
-    const [char, stack] = waiting[at]
-    for (const missing of uncovered(char, stack)) loadFallback(missing)
+  let threw = true
+  try {
+    for (; at < waiting.length && performance.now() < until; at++) {
+      const [char, stack] = waiting[at]
+      queued.delete(`${stack}\u0000${char}`)
+      for (const missing of uncovered(char, stack)) loadFallback(missing)
+    }
+    threw = false
+  } finally {
+    // A check that throws is dropped, and the queue goes on after it.
+    waiting = waiting.slice(threw ? at + 1 : at)
+    checking = waiting.length > 0
+    if (checking) whenIdle(check)
   }
-  waiting = waiting.slice(at)
-  checking = waiting.length > 0
-  if (checking) whenIdle(check)
 }
 
 /** What the reader's own fonts drew, per stack and character, so a panel re-rendering asks once. */
