@@ -252,6 +252,9 @@ def huang_body(cs):
     eight = huang_eight(cs)
     return [contour for contour in cs('黄') if contour not in eight]
 
+# Each face's 萬 band without 艹, set aside by `wan_shan` for the description that leaves 艹 out.
+WAN_WITHOUT_CAO = {}
+
 def wan_shan(cs, style):
     if style in ('kaisho', 'fangsong'):
         return wan_shan_brush(cs, style)
@@ -326,7 +329,7 @@ def wan_shan(cs, style):
     assert pathops.op(overlap, allowed, pathops.PathOp.DIFFERENCE).area < 0.1, '山 runs into 萬 outside the stem'
     # 田 over 冂 around 山: the same band with 艹 left out, for a description whose 金
     # bottom already draws the stroke 艹 would.
-    globals().setdefault('WAN_WITHOUT_CAO', [group([band] + counters), group(shan)])
+    WAN_WITHOUT_CAO[style] = [group([band] + counters), group(shan)]
     return [group([band] + cao + counters), group(shan)]
 
 def wan_shan_brush(cs, style):
@@ -569,7 +572,7 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     # zi.tools stroke chains. 马 is written 𠃍, ㇉ and 一, and its 一 stands apart in both faces, so
     # the frame of 马 is the rest of the glyph.
     forms['#(-𠃍㇉)'] = chain_from(cs, '马', '一')
-    forms['⿱田⿵冂山'] = globals()['WAN_WITHOUT_CAO']
+    forms['⿱田⿵冂山'] = WAN_WITHOUT_CAO[style]
     forms['⿱龷由'] = [group(huang_body(cs))]
     forms['⿱八⿻王丷'] = jin_with_ba(cs, style)
     # The top of the KRM vulgar 處 (K07097330): ⺊'s dot as a bar, the stem centred on the cover
