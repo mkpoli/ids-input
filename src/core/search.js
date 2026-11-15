@@ -350,6 +350,30 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
     return holders
   }
 
+  /** A turn of the event loop, so whatever else waits on this thread runs. A message channel's turn
+   * is not held back as a timer's is. @returns {Promise<void>} */
+  const turn = () => new Promise(resolve => {
+    if (typeof MessageChannel === 'undefined') { setTimeout(resolve); return }
+    const channel = new MessageChannel()
+    channel.port1.onmessage = () => { channel.port1.close(); resolve() }
+    channel.port2.postMessage(0)
+  })
+  /**
+   * The index built in slices of about `slice` milliseconds with a turn of the event loop between
+   * them, for a thread with other callers to answer. It reads the characters in the order `index`
+   * does, so the index is the same one.
+   * @param {{ slice?: number, pause?: () => Promise<void> }} [options]
+   */
+  async function prepare({ slice = 40, pause = turn } = {}) {
+    let since = performance.now()
+    for (const char of table.keys()) {
+      if (holders) return
+      holdingsOf(char, new Set())
+      if (performance.now() - since >= slice) { await pause(); since = performance.now() }
+    }
+    index()
+  }
+
   /**
    * Keep nested alternate descriptions mutually exclusive. States count fulfilled query groups,
    * not distributions of Han components: all six イ alternatives are interchangeable when the
@@ -1040,5 +1064,5 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
     return { hits, total: all.size, characters }
   }
 
-  return { search, similar, structure: structural.search, unknownStructure, index: () => { index() }, fold }
+  return { search, similar, structure: structural.search, unknownStructure, index: () => { index() }, prepare, fold }
 }
