@@ -155,8 +155,8 @@
       }
     ],
     "inducedAgainstRime": {
-      "rows": 24689,
-      "agree": 12148
+      "rows": 24731,
+      "agree": 12169
     }
   },
   "induction": {
@@ -1819,14 +1819,14 @@
     {
       "source": "cns11643",
       "recorded": 76282,
-      "entered": 1,
+      "entered": 22,
       "equivalent": 722,
-      "ids": 24989,
-      "borrowed": 1281,
+      "ids": 25031,
+      "borrowed": 1239,
       "within": 61,
-      "none": 17,
+      "none": 0,
       "reasons": {
-        "undescribed": 17,
+        "undescribed": 0,
         "unreadable": 0,
         "operator": 0,
         "component": 0
@@ -1838,11 +1838,11 @@
       "entered": 0,
       "equivalent": 681,
       "ids": 3,
-      "borrowed": 8,
+      "borrowed": 25,
       "within": 61,
-      "none": 17,
+      "none": 0,
       "reasons": {
-        "undescribed": 17,
+        "undescribed": 0,
         "unreadable": 0,
         "operator": 0,
         "component": 0
@@ -1852,13 +1852,13 @@
       "source": "kanjivg",
       "recorded": 6728,
       "entered": 0,
-      "equivalent": 1121,
-      "ids": 91242,
-      "borrowed": 4184,
+      "equivalent": 1126,
+      "ids": 91746,
+      "borrowed": 3696,
       "within": 61,
-      "none": 17,
+      "none": 0,
       "reasons": {
-        "undescribed": 17,
+        "undescribed": 0,
         "unreadable": 0,
         "operator": 0,
         "component": 0
@@ -1900,7 +1900,7 @@
     },
     {
       "name": "induced.tsv.gz",
-      "rows": 124414,
+      "rows": 124452,
       "columns": [
         "char",
         "codepoint",
@@ -1911,11 +1911,11 @@
         "ids",
         "lent"
       ],
-      "bytes": 1926010
+      "bytes": 1928878
     },
     {
       "name": "entered.tsv",
-      "rows": 1,
+      "rows": 22,
       "columns": [
         "char",
         "codepoint",
@@ -1925,11 +1925,11 @@
         "source",
         "date"
       ],
-      "bytes": 179
+      "bytes": 1061
     },
     {
       "name": "wanted.tsv",
-      "rows": 51,
+      "rows": 0,
       "columns": [
         "char",
         "codepoint",
@@ -1938,7 +1938,7 @@
         "alone",
         "examples"
       ],
-      "bytes": 1407
+      "bytes": 44
     },
     {
       "name": "within.tsv",
