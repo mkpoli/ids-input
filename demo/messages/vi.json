@@ -787,7 +787,7 @@
   "cheatsheet.source.notationNote": "Một phần được dịch ngược; ngữ pháp chỉ mang tính tham khảo.",
   "cheatsheet.source.grammar": "Ngữ pháp",
   "cheatsheet.help.title": "Giới thiệu bảng tra này",
-  "cheatsheet.help.colour": "Một phần được viết và các nét mà nó chỉ định dùng chung một màu, và mỗi màu có kiểu gạch chân riêng. Di chuột vào một trong hai để làm nổi bật cả cặp.",
+  "cheatsheet.help.colour": "Một phần được viết và các nét mà nó chỉ định dùng chung một màu, và mỗi màu có kiểu gạch chân riêng. Trỏ vào một trong hai sẽ làm nổi bật cả cặp. Một phần tử sẽ cho biết nó là gì khi được trỏ vào, chạm vào, hoặc đi tới bằng phím Tab và các phím mũi tên.",
   "cheatsheet.help.glyphs": "Các tự hình là đường viền gốc của hai phông chữ Noto Sans CJK JP và Plangothic. Mỗi bộ phận lấy nguyên đường bao của các nét; không có phần nào được vẽ lại.",
   "cheatsheet.help.entry": "Mỗi chuỗi là mục tương ứng trên dòng của chữ đó cho dạng đang hiển thị: mục (J), hoặc mục mặc định nếu dòng đó không có mục (J).",
   "cheatsheet.help.open": "Các tài liệu vẫn bỏ ngỏ ý nghĩa của chữ số trong {?n…}, cách đọc những chuỗi chồng lấn có ký tự _, và ý nghĩa của các mã q dài.",

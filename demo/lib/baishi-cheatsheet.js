@@ -379,8 +379,9 @@ export function bareOf(tokens, entry) {
   return own.filter(token => token.kind === 'op' || token.kind === 'part').map(token => token.stretches[0].text).join('')
 }
 
-/** The identifiers of an entry's list, or none where it has no list. @param {string} entry @returns {string[]} */
-export const idsOf = entry => /\(([^()]*)\)$/u.exec(entry)?.[1].split(',') ?? []
+/** The identifiers of an entry's list, or none where it has no list: the brackets of a chain are no list.
+ * @param {string} entry @returns {string[]} */
+export const idsOf = entry => /(?<!#)\(([^()]*)\)$/u.exec(entry)?.[1].split(',') ?? []
 
 /** What kind of identifier a tag or a list item is, by the patterns the grammar gives, the first match winning.
  * @param {string} id @returns {'default' | 'source' | 'analogy' | 'ucv' | 'mirror' | 'position' | 'style' | 'other'} */

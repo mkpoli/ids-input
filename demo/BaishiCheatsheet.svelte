@@ -112,23 +112,33 @@
   const sheet = SHEET.map(section => ({ ...section, cards: (section.cards ?? []).map(shown), groups: (section.groups ?? []).map(group => ({ ...group, cards: (group.cards ?? []).map(shown) })) }))
   /** @typedef {ReturnType<typeof shown>} ShownCard */
 
-  // The token pointed at or focused: it inverts, its parts light in the drawing, and a tooltip says what it is.
+  // The token pointed at, focused or pressed: it inverts, its parts light in the drawing, and a tooltip
+  // says what it is. A press, or a tap, pins the tooltip until another press, Escape or a press elsewhere.
   /** @type {{ key: string, index: number, card: ShownCard, quote: Shown } | null} */
   let pointed = $state(null)
+  let pinned = $state(false)
   /** @type {{ left: number, top: number, bottom: number } | null} */
   let anchor = $state(null)
   /** @type {HTMLElement | null} */ let tipBox = $state(null)
   let place = $state({ left: 0, top: 0 })
   /** @type {HTMLElement | null} */ let pointedAt = null
-  /** @param {ShownCard} card @param {Shown} quote @param {number | null} index @param {HTMLElement | null} element */
-  function point(card, quote, index, element) {
-    if (index === null || !element) { if (pointed?.key === quote.key) forget() ; return }
+  /** @param {ShownCard} card @param {Shown} quote @param {number} index @param {HTMLElement | null} element @param {'hover' | 'focus' | 'pin'} how */
+  function point(card, quote, index, element, how) {
+    const same = pointed?.key === quote.key && pointed.index === index
+    if (!element) { if (same && (how === 'focus' || !pinned)) forget(); return }
+    if (how === 'pin') { if (pinned && same) { forget(); return } pinned = true }
+    else if (how === 'hover' && pinned) return
+    else pinned = false
     pointed = { key: quote.key, index, card, quote }
     pointedAt = element
     follow()
   }
-  const forget = () => { pointed = null; anchor = null; pointedAt = null }
-  // The tooltip stays with its token while the page scrolls under it.
+  const forget = () => { pointed = null; pinned = false; anchor = null; pointedAt = null }
+  // The tooltip stays with its token while the page, a card's sequence or a dialog scrolls under it.
+  $effect(() => {
+    addEventListener('scroll', follow, { capture: true, passive: true })
+    return () => removeEventListener('scroll', follow, { capture: true })
+  })
   function follow() {
     if (!pointedAt) return
     const rect = pointedAt.getBoundingClientRect()
@@ -198,14 +208,17 @@
       }) }
     }
   }
-  /** A component's own row: each entry with its identifiers, and whether the tag written names it.
+  /** A component's own row: each entry with its identifiers, whether the tag written names it, and
+   * whether it is the entry the font's outline is drawn for, the (J) entry or else the default.
    * @param {string} char @param {string | undefined} tag */
   function variantsOf(char, tag) {
     const row = ROWS[char]
     if (!row) return []
     const entries = entriesOf(`${char}\t${row}`).map(text => ({ text, ids: idsOf(text) }))
     // An entry without a list is the form a component without a tag, or with a dot, takes.
-    return entries.map(entry => ({ ...entry, named: tag ? entry.ids.includes(tag) || (tag === '.' && !entry.ids.length && !entries.some(other => other.ids.includes('.'))) : false }))
+    const plain = entries.find(entry => entry.ids.includes('.')) ?? entries.find(entry => !entry.ids.length)
+    const font = entries.find(entry => entry.ids.includes('J')) ?? plain
+    return entries.map(entry => ({ ...entry, font: entry === font, named: tag ? entry.ids.includes(tag) || (tag === '.' && entry === plain) : false }))
   }
   /** The drawing of a component's variant inside a character that has it, where a card gives one.
    * @param {string} char @param {string[]} ids */
@@ -215,9 +228,13 @@
     if (!pointed) return null
     const token = pointed.quote.tokens[pointed.index]
     const char = token.kind === 'part' ? token.stretches[0].text : ''
-    const variants = char ? variantsOf(char, token.stretches[1]?.text) : []
-    return { token, ...describe(token), char, glyph: char && GLYPHS[char] ? GLYPHS[char].join('') : '',
-      variants: variants.slice(0, 6).map(variant => ({ ...variant, tile: variantTile(char, variant.ids) })), more: Math.max(0, variants.length - 6),
+    const all = char ? variantsOf(char, token.stretches[1]?.text) : []
+    const glyph = char && GLYPHS[char] ? GLYPHS[char].join('') : ''
+    // Six entries at most, in the row's order: the one named and the one the font draws are always among them.
+    const kept = new Set([...all.filter(variant => variant.named || variant.font), ...all].slice(0, 6))
+    const variants = all.filter(variant => kept.has(variant))
+    return { token, ...describe(token), char, glyph: all.length ? '' : glyph,
+      variants: variants.map(variant => ({ ...variant, ink: variant.font ? glyph : '', tile: variantTile(char, variant.ids) })), more: all.length - variants.length,
       // The other quotations of the card stand beside an operator's bracket: with it and without.
       beside: token.kind === 'op' && pointed.card.quotes.length > 1 ? pointed.card.quotes : [] }
   })
@@ -225,7 +242,8 @@
   /** @type {{ card: ShownCard, quote: Shown } | null} */
   let zoomed = $state(null)
   let zoomOpen = $state(false)
-  $effect(() => { if (!zoomOpen) zoomed = null })
+  // The tooltip belongs to the sequence under the pointer: it goes when the enlarged glyph opens or closes.
+  $effect(() => { if (!zoomOpen) zoomed = null; forget() })
   let helpOpen = $state(false)
   /** @type {HTMLElement | null} */ let page = $state(null)
   $effect(() => { if (page) return watchFallback(page) })
@@ -234,14 +252,17 @@
 <svelte:head>
   <title>{t('cheatsheet.title')} — {t('app.title')}</title>
 </svelte:head>
-<svelte:window onscroll={follow} onresize={follow} onkeydown={event => { if (event.key === 'Escape' && pointed) forget() }} />
+<svelte:window onresize={follow} onkeydown={event => { if (event.key === 'Escape' && pointed) forget() }}
+  onpointerdown={event => { if (pinned && !(/** @type {Element} */ (event.target)).closest?.('[data-token]')) forget() }} />
 
 {#snippet cut(/** @type {Cut} */ piece)}
   {#if piece.box}<svg x={piece.box[0]} y={piece.box[1]} width={piece.box[2] - piece.box[0]} height={piece.box[3] - piece.box[1]} viewBox={`${piece.box[0]} ${piece.box[1]} ${piece.box[2] - piece.box[0]} ${piece.box[3] - piece.box[1]}`}><path d={piece.d} /></svg>{:else}<path d={piece.d} />{/if}
 {/snippet}
 
+<!-- The marks of a chain are larger in a card's small tile than in the enlarged glyph, where they are numbered. -->
 {#snippet drawing(/** @type {Shown['tiles'][number]} */ tile, /** @type {number[] | null} */ lights, /** @type {boolean} */ numbered)}
-  <svg class="glyph" viewBox="0 0 1000 1000" role="img" aria-label={tile.layers.length ? `${tile.char}: ${tile.layers.map(layer => layer.names).join(' ')}` : tile.char}>
+  {@const size = numbered ? 1 : 1.45}
+  <svg class="glyph" class:small={!numbered} viewBox="0 0 1000 1000" role="img" aria-label={tile.layers.length ? `${tile.char}: ${tile.layers.map(layer => layer.names).join(' ')}` : tile.char}>
     {#if tile.ink}<path class="ink" d={tile.ink} />{/if}
     <g class="rest">{#each tile.rest as piece, at (at)}{@render cut(piece)}{/each}</g>
     {#each tile.layers as layer (layer.slot)}
@@ -249,14 +270,43 @@
         <title>{layer.names}</title>{#each layer.cuts as piece, at (at)}{@render cut(piece)}{/each}
       </g>
     {/each}
-    {#if tile.cross}{#each ['halo', ''] as halo (halo)}<path class={['cross', halo]} d={`M${tile.cross[0] - 38} ${tile.cross[1] - 38}l76 76m0 -76l-76 76`} />{/each}{/if}
+    {#if tile.cross}{#each ['halo', ''] as halo (halo)}<path class={['cross', halo]} d={`M${tile.cross[0] - 38 * size} ${tile.cross[1] - 38 * size}l${76 * size} ${76 * size}m0 ${-76 * size}l${-76 * size} ${76 * size}`} />{/each}{/if}
     {#each tile.marks as mark (mark.order)}
-      {#if mark.broken}<rect class={['join', `s${mark.slot}`]} x={mark.x - 30} y={mark.y - 30} width="60" height="60" />
-      {:else}<circle class={['join', `s${mark.slot}`]} cx={mark.x} cy={mark.y} r="33" />{/if}
-      {#if mark.closed}<circle class={['closing', `s${mark.slot}`]} cx={mark.x} cy={mark.y} r="13" />{/if}
+      {#if mark.broken}<rect class={['join', `s${mark.slot}`]} x={mark.x - 30 * size} y={mark.y - 30 * size} width={60 * size} height={60 * size} />
+      {:else}<circle class={['join', `s${mark.slot}`]} cx={mark.x} cy={mark.y} r={33 * size} />{/if}
+      {#if mark.closed}<circle class={['closing', `s${mark.slot}`]} cx={mark.x} cy={mark.y} r={13 * size} />{/if}
       {#if numbered}<text class="order" x={mark.x} y={mark.y - 52}>{mark.order}</text>{/if}
     {/each}
   </svg>
+{/snippet}
+
+<!-- What the pointed token is. It is drawn in the page, or inside the enlarged glyph's dialog, which stands over the page. -->
+{#snippet tooltip()}
+  {#if tip && anchor}
+    <div class="tip" id="cheatsheet-tip" role="tooltip" bind:this={tipBox} style:left={`${place.left}px`} style:top={`${place.top}px`}>
+      <p class="kind"><code lang="ja">{tip.token.kind === 'tab' ? '⇥' : tip.token.text}</code>{tip.kind}</p>
+      {#each tip.lines as line, at (at)}<p>{line}</p>{/each}
+      {#if tip.variants.length}
+        <ul class="variants" lang="ja">
+          {#each tip.variants as variant (variant.text)}
+            <li class:named={variant.named}>
+              {#if variant.tile}<span class="mini">{@render drawing(variant.tile, null, false)}</span>
+              {:else if variant.ink}<svg class="mini" viewBox="0 0 1000 1000" role="img" aria-label={tip.char}><path class="ink" d={variant.ink} /></svg>{/if}
+              <code>{variant.text}</code>
+            </li>
+          {/each}
+          {#if tip.more}<li class="more">+{tip.more}</li>{/if}
+        </ul>
+      {:else if tip.glyph}
+        <div class="variants"><svg class="mini" viewBox="0 0 1000 1000" role="img" aria-label={tip.char}><path class="ink" d={tip.glyph} /></svg></div>
+      {/if}
+      {#if tip.beside.length}
+        <ul class="beside" lang="ja">
+          {#each tip.beside as quote (quote.key)}<li>{#if quote.tiles[0]}<span class="mini">{@render drawing(quote.tiles[0], null, false)}</span>{/if}<code>{quote.text}</code></li>{/each}
+        </ul>
+      {/if}
+    </div>
+  {/if}
 {/snippet}
 
 {#snippet about(/** @type {string | undefined} */ label, /** @type {string | undefined} */ hint, /** @type {string} */ subject, /** @type {string | undefined} */ link, /** @type {boolean | undefined} */ open, /** @type {string} */ lang)}
@@ -289,8 +339,8 @@
         <div class="text">
           <!-- A whole row opens with its character; an entry is named by the one it describes. -->
           {#if !quote.text.includes('\t')}<span class="char" lang="ja">{quote.char}</span>{/if}
-          <NotationSequence tokens={quote.tokens} numbered={quote.numbered} active={pointed?.key === quote.key ? pointed.index : null} lit={pointed?.key === quote.key ? pointed.quote.tokens[pointed.index].lights : null}
-            tip="cheatsheet-tip" onpoint={(index, element) => point(item, quote, index, element)} />
+          <NotationSequence tokens={quote.tokens} label={quote.text.replaceAll('\t', ' ')} numbered={quote.numbered} active={pointed?.key === quote.key ? pointed.index : null} lit={pointed?.key === quote.key ? pointed.quote.tokens[pointed.index].lights : null}
+            tip="cheatsheet-tip" onpoint={(index, element, how) => point(item, quote, index, element, how)} />
         </div>
       </div>
     {/each}
@@ -368,31 +418,7 @@
     </main>
   </div>
 
-  {#if tip && anchor}
-    <div class="tip" id="cheatsheet-tip" role="tooltip" bind:this={tipBox} style:left={`${place.left}px`} style:top={`${place.top}px`}>
-      <p class="kind"><code lang="ja">{tip.token.kind === 'tab' ? '⇥' : tip.token.text}</code>{tip.kind}</p>
-      {#each tip.lines as line, at (at)}<p>{line}</p>{/each}
-      {#if tip.variants.length || tip.glyph}
-        <div class="variants">
-          {#if tip.glyph}<svg class="mini" viewBox="0 0 1000 1000" aria-hidden="true"><path class="ink" d={tip.glyph} /></svg>{/if}
-          <ul lang="ja">
-            {#each tip.variants as variant (variant.text)}
-              <li class:named={variant.named}>
-                {#if variant.tile}<span class="mini">{@render drawing(variant.tile, null, false)}</span>{/if}
-                <code>{variant.text}</code>
-              </li>
-            {/each}
-            {#if tip.more}<li class="more">+{tip.more}</li>{/if}
-          </ul>
-        </div>
-      {/if}
-      {#if tip.beside.length}
-        <ul class="beside" lang="ja">
-          {#each tip.beside as quote (quote.key)}<li>{#if quote.tiles[0]}<span class="mini">{@render drawing(quote.tiles[0], null, false)}</span>{/if}<code>{quote.text}</code></li>{/each}
-        </ul>
-      {/if}
-    </div>
-  {/if}
+  {#if !zoomOpen}{@render tooltip()}{/if}
 
   <Dialog bind:open={zoomOpen} title={zoomed ? zoomed.quote.char : ''} closeLabel={t('app.close')} wide>
     {#if zoomed}
@@ -403,13 +429,14 @@
           {#each quote.tiles as tile (tile.entry)}<div class="big" class:composed={tile.composed}>{@render drawing(tile, lit(quote, tile.entry), true)}</div>{/each}
         </div>
         <div class="beside-zoom">
-          <NotationSequence tokens={quote.tokens} numbered={quote.numbered} large active={pointed?.key === quote.key ? pointed.index : null} lit={pointed?.key === quote.key ? pointed.quote.tokens[pointed.index].lights : null}
-            tip="cheatsheet-tip" onpoint={(index, element) => point(owner, quote, index, element)} />
+          <NotationSequence tokens={quote.tokens} label={quote.text.replaceAll('\t', ' ')} numbered={quote.numbered} large active={pointed?.key === quote.key ? pointed.index : null} lit={pointed?.key === quote.key ? pointed.quote.tokens[pointed.index].lights : null}
+            tip="cheatsheet-tip" onpoint={(index, element, how) => point(owner, quote, index, element, how)} />
           {#if owner.hint}<p>{t(`cheatsheet.hint.${owner.hint}`)}</p>{/if}
           {#if quote.tiles.some(tile => tile.composed)}<p class="weak">{t('cheatsheet.composed')}</p>{/if}
           <p class="weak"><code>{quote.file ?? 'ids_lv0.txt'}:{quote.row}</code></p>
         </div>
       </div>
+      {@render tooltip()}
     {/if}
   </Dialog>
 
@@ -491,6 +518,9 @@
   .glyph:has(.part:hover) .part:not(:hover){opacity:.2}
   /* Where a chain takes up each stroke, and where two of its strokes cross. */
   .join{fill:var(--ui-color-surface);stroke:var(--part);stroke-width:18}
+  .small .join{stroke-width:26}
+  .small .cross{stroke-width:20}
+  .small .cross.halo{stroke-width:46}
   .closing{fill:var(--part)}
   .cross{fill:none;stroke:var(--ui-color-ink);stroke-width:14;stroke-linecap:round}
   .cross.halo{stroke:var(--ui-color-surface);stroke-width:34}
@@ -504,17 +534,16 @@
   .legend dd[lang='ja']{font-family:var(--ids-font),var(--ids-glyph-fallback);font-size:17px;color:var(--ui-color-ink)}
 
   /* What a token is, under the token. */
-  .tip{position:fixed;z-index:var(--ui-z-toast);display:flex;flex-direction:column;gap:5px;width:max-content;max-width:min(340px,calc(100vw - 16px));padding:9px 11px;border:1px solid var(--ui-color-border-strong);border-radius:var(--ui-radius-lg);
+  .tip{position:fixed;z-index:var(--ui-z-hint);display:flex;flex-direction:column;gap:5px;width:max-content;max-width:min(340px,calc(100vw - 16px));padding:9px 11px;border:1px solid var(--ui-color-border-strong);border-radius:var(--ui-radius-lg);
     background:var(--ui-color-surface);box-shadow:var(--ui-shadow-2);font-size:12px;line-height:1.45;color:var(--ui-color-ink-soft);pointer-events:none}
   .tip p{margin:0}
   .tip .kind{display:flex;align-items:baseline;gap:7px;font-weight:var(--ui-weight-semibold);color:var(--ui-color-ink)}
   .tip code{font-family:var(--ids-font),var(--ids-glyph-fallback);font-size:15px;color:var(--ui-color-ink)}
-  .variants{display:flex;align-items:flex-start;gap:9px;padding-top:6px;border-top:1px solid var(--ui-color-border)}
-  .variants ul,.beside{display:flex;flex-direction:column;gap:2px;margin:0;padding:0;list-style:none;min-width:0}
-  .beside{padding-top:6px;border-top:1px solid var(--ui-color-border)}
-  .variants li,.beside li{display:flex;align-items:center;gap:6px;padding:0 4px;border-radius:4px;overflow-wrap:anywhere}
+  /* The entries of a component's row side by side, each under the drawing of its form where there is one. */
+  .variants,.beside{display:flex;flex-wrap:wrap;align-items:flex-end;gap:6px 8px;margin:0;padding:6px 0 0;border-top:1px solid var(--ui-color-border);list-style:none;min-width:0}
+  .variants li,.beside li{display:flex;flex-direction:column;align-items:center;gap:3px;padding:3px 5px;border-radius:5px;overflow-wrap:anywhere}
   .variants li.named{background:var(--mark)}
-  .variants li.more{color:var(--ui-color-ink-muted)}
+  .variants li.more{align-self:center;color:var(--ui-color-ink-muted)}
   .mini{flex:none;display:block;inline-size:34px;block-size:34px;border-radius:5px;background:var(--ui-color-surface-sunken)}
 
   .zoom{display:flex;flex-wrap:wrap;align-items:flex-start;gap:18px}

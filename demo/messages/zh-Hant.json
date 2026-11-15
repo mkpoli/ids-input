@@ -787,7 +787,7 @@
   "cheatsheet.source.notationNote": "部分內容經逆向工程推導；其語法僅供參考。",
   "cheatsheet.source.grammar": "語法",
   "cheatsheet.help.title": "關於本速查表",
-  "cheatsheet.help.colour": "寫出的部分與其所指的筆畫共用同一種顏色，每種顏色各有專屬底線。游標指向任一方即可突顯該組配對。",
+  "cheatsheet.help.colour": "寫出的部分與其所指的筆畫共用同一種顏色，每種顏色各有專屬底線。游標指向任一方即可突顯該組配對。以游標指向、輕觸，或使用Tab與方向鍵移至任一記號時，皆會顯示其說明。",
   "cheatsheet.help.glyphs": "字形取自Noto Sans CJK JP與Plangothic字型本身的輪廓。各部件皆為其筆畫的原始輪廓，未經重繪。",
   "cheatsheet.help.entry": "每個序列皆為所繪字形在其對應列中的條目：若有(J)條目則取之，若該列無(J)條目則取預設條目。",
   "cheatsheet.help.open": "現有文件尚未定案的部分包括{?n…}中的數字、含_的重疊字串之解讀方式，以及較長q代碼所代表的含義。",

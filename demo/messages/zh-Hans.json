@@ -787,7 +787,7 @@
   "cheatsheet.source.notationNote": "部分内容经逆向推导，其语法仅作参考。",
   "cheatsheet.source.grammar": "语法",
   "cheatsheet.help.title": "关于本速查表",
-  "cheatsheet.help.colour": "书写部件与其所指代的笔画同色，每种颜色各有对应的下划线。指向任一侧即可高亮显示该配对。",
+  "cheatsheet.help.colour": "书写部件与其所指代的笔画同色，每种颜色各有对应的下划线。指向任一侧即可高亮显示该配对。指向、轻触，或用Tab与方向键移至任一元素时，即会显示其说明。",
   "cheatsheet.help.glyphs": "字形直接取自Noto Sans CJK JP与Plangothic字体本身的轮廓。部件即其笔画的轮廓，未经任何重绘。",
   "cheatsheet.help.entry": "每条序列均取自该行对应所示字形的条目：有(J)条目则取(J)，否则取默认条目。",
   "cheatsheet.help.open": "现有文献尚未明确{?n…}中的数字含义、含_的叠合字符串读法，以及长q代码的所指。",

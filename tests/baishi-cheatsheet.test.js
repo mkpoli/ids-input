@@ -74,7 +74,9 @@ describe('reading a quotation of the zi.tools notation', () => {
   it('tells the kinds of identifier apart as the grammar does', () => {
     expect(['.', 'J', 'qq222', 'q3162', 'm', 'r', 't', '..p', 'jgh'].map(kindOf)).toEqual(['default', 'source', 'analogy', 'ucv', 'mirror', 'position', 'style', 'style', 'other'])
     expect(idsOf('⿻乚一(.,T)')).toEqual(['.', 'T'])
-    expect(idsOf('#(S)')).toEqual(['S'])
+    // The brackets of a chain are its own: only what follows them is a list.
+    expect(idsOf('#(S)')).toEqual([])
+    expect(idsOf('#(H)(.)')).toEqual(['.'])
     expect(idsOf('⿱一.亅')).toEqual([])
   })
 })

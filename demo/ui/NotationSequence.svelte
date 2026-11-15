@@ -1,6 +1,7 @@
 <script>
   // A quoted sequence of the zi.tools notation as tokens a reader can point at: each token is a
-  // button, a component with its identifier one token, a stroke with its marks one token. Under an
+  // button, a component with its identifier one token, a stroke with its marks one token. The
+  // sequence is one stop of the Tab order, and the arrow keys move along its tokens. Under an
   // entry of more than one operator run the scope lines of the workshop's own sequence field
   // (src/svelte/sequence-scopes.js): a lead from each operator and a segment under each operand. A
   // long sequence breaks only between the top-level operands of an entry, and each line keeps the
@@ -9,10 +10,14 @@
 
   /**
    * @typedef {import('../lib/baishi-cheatsheet.js').Token & { slot: number | null, subject: boolean[] }} Shown
-   * @type {{ tokens: Shown[], active?: number | null, lit?: number[] | null, numbered?: boolean, large?: boolean,
-   *   onpoint?: (index: number | null, element: HTMLElement | null) => void, tip?: string }}
+   * `onpoint` tells which token is pointed at (`hover`), focused (`focus`) or pressed (`pin`); without
+   * an element, that the pointer or the focus has left it.
+   * @type {{ tokens: Shown[], label: string, active?: number | null, lit?: number[] | null, numbered?: boolean, large?: boolean,
+   *   onpoint?: (index: number, element: HTMLElement | null, how: 'hover' | 'focus' | 'pin') => void, tip?: string }}
    */
-  let { tokens, active = null, lit = null, numbered = false, large = false, onpoint, tip } = $props()
+  let { tokens, label, active = null, lit = null, numbered = false, large = false, onpoint, tip } = $props()
+  // The token Tab lands on: the last one focused.
+  let stop = $state(0)
 
   // Where a line may break: after the row's character and each separator, and between the
   // top-level operands of an entry.
@@ -100,16 +105,41 @@
   })
 
   const pointed = $derived(active === null ? null : tokens[active])
+  /** @param {number} index */
+  const buttonOf = index => /** @type {HTMLElement | null} */ (root?.querySelector(`[data-token="${index}"]`) ?? null)
+  // The pointer leaves a token: a token the keyboard holds keeps its tooltip.
+  /** @param {number} index */
+  function leave(index) {
+    const held = /** @type {HTMLElement | null} */ (root?.querySelector('[data-token]:focus-visible') ?? null)
+    if (held && Number(held.dataset.token) !== index) onpoint?.(Number(held.dataset.token), held, 'focus')
+    else if (!held) onpoint?.(index, null, 'hover')
+  }
+  /** @param {KeyboardEvent} event @param {number} index */
+  function key(event, index) {
+    if (event.key === 'Escape') {
+      // Escape puts the tooltip away, and only then reaches a dialog around the sequence.
+      if (active !== index) return
+      event.preventDefault()
+      event.stopPropagation()
+      onpoint?.(index, null, 'focus')
+      return
+    }
+    const to = event.key === 'ArrowRight' ? index + 1 : event.key === 'ArrowLeft' ? index - 1 : event.key === 'Home' ? 0 : event.key === 'End' ? tokens.length - 1 : null
+    if (to === null || event.altKey || event.ctrlKey || event.metaKey) return
+    event.preventDefault()
+    buttonOf(Math.max(0, Math.min(tokens.length - 1, to)))?.focus()
+  }
   /** @param {number[]} path @param {number} entry */
   const hot = (path, entry) => Boolean(pointed && pointed.entry === entry && pointed.path && pointed.path.join('.') === path.join('.') && pointed.kind !== 'stroke')
 </script>
 
-<span class="sequence" class:large lang="ja" bind:this={root} style:--scope-height={`${scopeHeight}px`}>{#each chunks as chunk (chunk.key)}<span class="chunk">{#each chunk.items as { token, index } (index)}<button
+<span class="sequence" class:large lang="ja" role="group" aria-label={label} bind:this={root} style:--scope-height={`${scopeHeight}px`}>{#each chunks as chunk (chunk.key)}<span class="chunk">{#each chunk.items as { token, index } (index)}<button
   type="button" data-token={index} class={['token', token.kind, token.slot !== null && `s${token.slot}`]} class:active={active === index}
   class:related={active !== index && lit !== null && token.slot !== null && pointed?.entry === token.entry && lit.includes(token.slot)}
-  aria-describedby={active === index ? tip : undefined}
-  onpointerenter={event => onpoint?.(index, /** @type {HTMLElement} */ (event.currentTarget))} onpointerleave={() => onpoint?.(null, null)}
-  onfocus={event => onpoint?.(index, /** @type {HTMLElement} */ (event.currentTarget))} onblur={() => onpoint?.(null, null)}
+  tabindex={index === Math.min(stop, tokens.length - 1) ? 0 : -1} aria-describedby={active === index ? tip : undefined}
+  onpointerenter={event => onpoint?.(index, /** @type {HTMLElement} */ (event.currentTarget), 'hover')} onpointerleave={() => leave(index)}
+  onfocus={event => { stop = index; onpoint?.(index, /** @type {HTMLElement} */ (event.currentTarget), 'focus') }} onblur={() => onpoint?.(index, null, 'focus')}
+  onclick={event => onpoint?.(index, /** @type {HTMLElement} */ (event.currentTarget), 'pin')} onkeydown={event => key(event, index)}
   >{#if numbered && token.kind === 'stroke'}<ruby>{#each token.stretches as stretch, at (at)}<span class={['stretch', stretch.role]} class:subject={token.subject[at]}>{stretch.text}</span>{/each}<rt>{token.order}</rt></ruby>{:else}{#each token.stretches as stretch, at (at)}<span class={['stretch', stretch.role]} class:subject={token.subject[at]}>{token.kind === 'tab' ? '⇥' : stretch.text}</span>{/each}{/if}</button>{/each}</span>{/each}{#each lines as line (line.key)}{#if line.scopes.length}<svg
   class="sequence-scopes" style:top={`${line.top}px`} width="100%" height={line.height} aria-hidden="true">{#each line.scopes as scope (scope.path.join('.'))}{@const entry = Number(line.key.split('/')[0])}<g>{#if scope.lead}<path class="scope-lead" class:scope-hovered={hot(scope.path, entry)} d={scope.lead} />{/if}{#each scope.segments as segment (segment.path.join('.'))}<path class="scope-segment" class:scope-hovered={hot(segment.path, entry) || hot(scope.path, entry)} d={segment.d} />{/each}</g>{/each}</svg>{/if}{/each}</span>
 
@@ -135,7 +165,8 @@
   .token.related{background-color:color-mix(in srgb,var(--part) 16%,transparent)}
   .token.active,.token:focus-visible{background:var(--ui-color-ink);color:var(--ui-color-canvas);box-shadow:0 0 0 2px var(--ui-color-ink)}
   .token:is(.s0,.s1,.s2,.s3):is(.active,:focus-visible){background:var(--part);color:var(--ui-color-surface);box-shadow:0 0 0 2px var(--part)}
-  .token:is(.active,:focus-visible) .stretch{color:inherit;background:none;box-shadow:none}
+  /* The marker gives way too: a marked piece keeps to the inverted token's colour. */
+  .token.token:is(.active,:focus-visible) .stretch{color:inherit;background:none;box-shadow:none}
   ruby{ruby-position:over;ruby-align:center}
   rt{font-family:var(--ui-font-sans);font-size:10px;font-weight:600;line-height:1;color:var(--ui-color-ink-muted);user-select:none}
   .token:is(.active,:focus-visible) rt{color:inherit}

@@ -790,7 +790,7 @@
   "cheatsheet.source.notationNote": "Partly reverse-engineered; its grammar is marked as reference only.",
   "cheatsheet.source.grammar": "Grammar",
   "cheatsheet.help.title": "About this sheet",
-  "cheatsheet.help.colour": "A written part and the strokes it names share a colour, and each colour has its own underline. Point at either to pick out the pair.",
+  "cheatsheet.help.colour": "A written part and the strokes it names share a colour, and each colour has its own underline. Pointing at either picks out the pair. A token says what it is when pointed at, tapped, or reached with Tab and the arrow keys.",
   "cheatsheet.help.glyphs": "The glyphs are the font's own outlines, Noto Sans CJK JP and Plangothic. A part is the contours of its strokes; nothing is redrawn.",
   "cheatsheet.help.entry": "Each sequence is the entry of its row for the form drawn: the (J) entry, or the default where the row has none.",
   "cheatsheet.help.open": "The documents leave open the digit in {?n…}, the reading of overlap strings with _, and what the long q codes stand for.",

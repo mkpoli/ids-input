@@ -1,9 +1,10 @@
 // Run against a local devrun server with IDS_URL. The cheatsheet draws every card in both schemes
 // and at a phone's width without an error or a sideways scroll: every quotation has a drawing, every
 // coloured token has strokes of its colour beside it, and a sequence on a wide window stays on one
-// line. Pointing at a token, or focusing it, shows what it is and lights its strokes; a tile opens
-// enlarged. Every anchor the specification links to is on the page, and every link from the page to
-// the specification lands on an anchor there. IDS_PAGE_SHOTS saves each view.
+// line. Pointing at a token, focusing it or pressing it shows what it is and lights its strokes, in
+// the page and beside the enlarged glyph a tile opens; a sequence is one stop of the Tab order, its
+// tokens reached with the arrow keys; on a phone a tap does what pointing does. Every anchor the specification links to is on the page, and
+// every link from the page to the specification lands on an anchor there. IDS_PAGE_SHOTS saves each view.
 import { chromium } from 'playwright-core'
 import { strict as assert } from 'node:assert'
 import { anchorsOf, cardsOf } from './lib/baishi-cheatsheet.js'
@@ -20,7 +21,7 @@ try {
   await spec.close()
 
   for (const scheme of /** @type {const} */ (['light', 'dark'])) for (const [name, width] of /** @type {const} */ ([['desktop', 1360], ['phone', 400]])) {
-    const page = await browser.newPage({ viewport: { width, height: 900 }, deviceScaleFactor: 2, colorScheme: scheme })
+    const page = await browser.newPage({ viewport: { width, height: 900 }, deviceScaleFactor: 2, colorScheme: scheme, hasTouch: name === 'phone' })
     const errors = []
     page.on('pageerror', error => errors.push(error.message))
     await page.goto(`${base}/baishi-cheatsheet.html?lang=ja`, { waitUntil: 'networkidle' })
@@ -75,12 +76,32 @@ try {
       assert.ok((await tip.locator('.variants li').count()) >= 2, `${scheme}: the tooltip lists the component's entries`)
       assert.equal(await page.locator('#component-variant .card').first().locator('.part.dim').count(), 1, `${scheme}: the other part dims`)
       if (shots) await page.screenshot({ path: `${shots}/baishi-cheatsheet-tooltip-${scheme}.png` })
+      // The entries of the component's row stand side by side, the font's glyph over the entry it is drawn for.
+      const feet = await tip.locator('.variants li').evaluateAll(items => items.map(item => Math.round(item.getBoundingClientRect().bottom)))
+      assert.equal(feet[0], feet[1], `${scheme}: the entries stand side by side`)
+      assert.equal(await tip.locator('.variants li.named:has(.mini)').count(), 1, `${scheme}: the font's glyph stands over the entry it is drawn for`)
       await page.mouse.move(0, 0)
       assert.equal(await tip.count(), 0, `${scheme}: the tooltip leaves with the pointer`)
-      // Focus does the same.
-      await token.focus()
+      // A press pins the tooltip: it stays when the pointer leaves, and goes with a press elsewhere.
+      await token.click()
+      await page.mouse.move(0, 0)
+      assert.equal(await tip.count(), 1, `${scheme}: a pressed token keeps its tooltip`)
+      await page.mouse.click(4, 400)
+      assert.equal(await tip.count(), 0, `${scheme}: a press elsewhere puts the tooltip away`)
+      // Focus does the same as pointing, and the pointer passing over another token does not take the tooltip away.
+      const sequence = page.locator('#component-variant .sequence').first()
+      assert.equal(await sequence.locator('.token[tabindex="0"]').count(), 1, `${scheme}: a sequence is one stop of the Tab order`)
+      await sequence.locator('.token[tabindex="0"]').focus()
+      await page.keyboard.press('Home')
+      await page.keyboard.press('ArrowRight')
       await tip.waitFor()
-      assert.equal(await token.getAttribute('aria-describedby'), 'cheatsheet-tip', `${scheme}: the focused token is described by the tooltip`)
+      const held = sequence.locator('.token:focus')
+      assert.equal(await held.getAttribute('data-token'), '1', `${scheme}: the arrow keys move along the tokens`)
+      assert.equal(await held.getAttribute('aria-describedby'), 'cheatsheet-tip', `${scheme}: the focused token is described by the tooltip`)
+      assert.equal(await sequence.locator('.token[tabindex="0"]').getAttribute('data-token'), '1', `${scheme}: Tab comes back to the token last held`)
+      await sequence.locator('.token').last().hover()
+      await page.mouse.move(0, 0)
+      assert.equal(await held.getAttribute('aria-describedby'), 'cheatsheet-tip', `${scheme}: the focused token keeps its tooltip when the pointer leaves another`)
       await page.keyboard.press('Escape')
       assert.equal(await tip.count(), 0, `${scheme}: Escape closes the tooltip`)
       // A stroke's number stands over it as ruby, outside the sequence's text.
@@ -91,11 +112,47 @@ try {
       assert.equal(await dialog.locator('.big .glyph').count(), 1, `${scheme}: the glyph opens enlarged`)
       assert.ok(await dialog.locator('.sequence .token').count() > 3, `${scheme}: with its sequence beside it`)
       if (shots) await page.screenshot({ path: `${shots}/baishi-cheatsheet-zoom-${scheme}.png` })
+      // The tooltip stands over the dialog: it is drawn inside it, and nothing of the dialog covers it.
+      await dialog.locator('.token.stroke').first().hover()
+      const over = dialog.getByRole('tooltip')
+      await over.waitFor()
+      const covered = await over.evaluate(element => {
+        // The tooltip takes no pointer events: it is asked for them here, to see what lies on top at its middle.
+        const box = element.getBoundingClientRect()
+        const tip = /** @type {HTMLElement} */ (element)
+        tip.style.pointerEvents = 'auto'
+        const top = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2)
+        tip.style.pointerEvents = ''
+        return !element.contains(top)
+      })
+      assert.equal(covered, false, `${scheme}: the tooltip shows over the enlarged glyph`)
+      assert.equal(await dialog.locator('.big .part.dim').count(), 1, `${scheme}: the other stroke dims in the enlarged glyph`)
+      if (shots) await page.screenshot({ path: `${shots}/baishi-cheatsheet-zoom-tooltip-${scheme}.png` })
+      await page.mouse.move(0, 0)
+      // Escape first puts a focused token's tooltip away, then closes the dialog.
+      await dialog.locator('.token.stroke').first().focus()
+      await over.waitFor()
+      await page.keyboard.press('Escape')
+      assert.equal(await page.getByRole('tooltip').count(), 0, `${scheme}: Escape closes the tooltip beside the enlarged glyph`)
+      assert.equal(await page.locator('dialog[open]').count(), 1, `${scheme}: and leaves the enlarged glyph open`)
       await page.keyboard.press('Escape')
       assert.equal(await page.locator('dialog[open]').count(), 0, `${scheme}: Escape closes the enlarged glyph`)
       await page.getByRole('button', { name: 'この早見表について' }).click()
       assert.equal(await page.getByRole('dialog').locator('li').count(), 7, `${scheme}: the help dialog lists its notes`)
       await page.keyboard.press('Escape')
+    }
+    if (name === 'phone') {
+      // A tap shows what a token is and keeps it shown; a tap elsewhere puts it away.
+      const token = page.locator('#component-variant .token.part.s1').first()
+      await token.scrollIntoViewIfNeeded()
+      await token.tap()
+      const tip = page.getByRole('tooltip')
+      await tip.waitFor()
+      const box = /** @type {{ x: number, width: number }} */ (await tip.boundingBox())
+      assert.ok(box.x >= 0 && box.x + box.width <= width, `${view}: the tooltip stays inside the window`)
+      if (shots) await page.screenshot({ path: `${shots}/baishi-cheatsheet-tap-${scheme}.png` })
+      await page.locator('#component-variant h3').tap()
+      assert.equal(await tip.count(), 0, `${view}: a tap elsewhere puts the tooltip away`)
     }
     if (shots) await page.screenshot({ path: `${shots}/baishi-cheatsheet-${name}-${scheme}.png`, fullPage: true })
     assert.deepEqual(errors, [], `${view}: no page error`)
