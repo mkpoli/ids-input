@@ -1,0 +1,30 @@
+{
+  "format": "ids-input/custom-characters",
+  "version": 1,
+  "note": "Custom components this project reads as a form of an encoded character. No table states these; each row says what it rests on.",
+  "rows": [
+    {
+      "component": "#(-𠃍㇉)",
+      "char": "𢎘",
+      "variant": "z",
+      "in": "zi-tools",
+      "basis": "editorial",
+      "reason": "zi.tools gives 𢎘 a z form, ⿱𠃍㇉, and writes 马 as ⿹𢎘z一; the chain writes the same two strokes, joined where 𠃍 starts.",
+      "sources": [
+        {
+          "title": "Yi Bai IDS, ids_lv0.txt",
+          "author": "Yi Bai (白易)",
+          "url": "https://github.com/yi-bai/ids/blob/2597437b928e8d530b7ae09cf53fe5ec7868569c/ids_lv0.txt",
+          "edition": "2597437b928e8d530b7ae09cf53fe5ec7868569c",
+          "note": "Rows 𢎘 (⿱𠃌㇉(.);⿱𠃍㇉(z)) and 马 (⿹𢎘z一.). The table writes the chain and the character apart and nowhere says they are one shape."
+        },
+        {
+          "title": "Note to the project",
+          "author": "mkpoli",
+          "date": "2026-11-14",
+          "note": "Reads #(-𠃍㇉) as another zi.tools form of 𢎘. Unpublished; one reader's identification."
+        }
+      ]
+    }
+  ]
+}

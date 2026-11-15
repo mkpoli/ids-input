@@ -5,7 +5,7 @@ import { pathOf, routeFor } from '../worker/page.js'
 import worker from '../worker/index.js'
 
 const ORIGIN = 'https://ids.mkpo.li'
-const PAGES = ['/compare', '/engines', '/sources', '/open-data', '/unencoded', '/component-atlas', '/ucv', '/normalization', '/baishi', '/baishi-cheatsheet']
+const PAGES = ['/compare', '/engines', '/sources', '/open-data', '/unencoded', '/component-atlas', '/ucv', '/normalization', '/baishi', '/baishi-cheatsheet', '/components', '/history']
 const locs = [...sitemapXml().matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1])
 
 describe('the sitemap', () => {

@@ -1,18 +1,25 @@
 // Compile the IRG's unifiable and non-unifiable component variations from the IWDS source file,
 // with the outline of every component form the file names.
 //
-//   bun scripts/build_ucv.mjs [checkout]
+//   bun scripts/build_ucv.mjs [checkout] [--refresh]
 //
-// `checkout` is a local copy of the pinned revision; without it the files are fetched.
+// `checkout` is a local copy of the pinned revision; without it the files are fetched. An outline
+// already in `data/ucv-forms.json.gz` is kept as it is, so a rebuild asks only for the forms that
+// file lacks; `--refresh` reads every outline again. The forms no text writes are also drawn in
+// Gothic from their stroke data (`data/ucv-strokes.json.gz`, see `build_ucv_strokes.mjs`).
+import { Kage, Polygons } from '@kurgm/kage-engine'
 import { createHash } from 'node:crypto'
 import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { gzipSync } from 'node:zlib'
+import { gunzipSync, gzipSync } from 'node:zlib'
+import { SQUARE, area, cells, counters, enclosed, filled, polygonsOf } from './lib/outline.mjs'
 
 const revision = '8302302d615ff1c1f60ae335b118b10060be0ed4'
 const expected = '886b426ea3d1d329749e02b32cccd5082d31d6cf1b996ea37bdae5ac593ca491'
 const raw = `https://raw.githubusercontent.com/yi-bai/iwds/${revision}`
-const checkout = process.argv[2]
+const refresh = process.argv.includes('--refresh')
+const checkout = process.argv.slice(2).find(arg => !arg.startsWith('--'))
+const data = new URL('../data/', import.meta.url)
 
 /** @param {string} path */
 async function read(path) {
@@ -148,12 +155,19 @@ for (const match of xml.matchAll(/<(group|subgroup)\s([^>]*)>|<\/(group|subgroup
   }
 }
 
+// The outlines and the record of where each came from, as last compiled.
+/** @type {Record<string, string>} */
+const kept = refresh ? {} : await readFile(new URL('ucv-forms.json.gz', data)).then(bytes => JSON.parse(gunzipSync(bytes).toString('utf8')), () => ({}))
+/** @type {{ date: string, names: string[] }[]} */
+const batches = refresh ? [] : await readFile(new URL('ucv.json', data), 'utf8').then(text => [JSON.parse(text).source?.glyphs?.fetched ?? []].flat(), () => [])
 /** @type {Record<string, string>} */
 const outlines = {}
 const missing = []
 const names = [...new Set(entries.flatMap(entry => entry.forms.map((/** @type {{ glyph: string }} */ f) => f.glyph)))].sort()
-for (let i = 0; i < names.length; i += 24) {
-  await Promise.all(names.slice(i, i + 24).map(async name => {
+for (const name of names) if (kept[name]) outlines[name] = kept[name]
+const wanted = names.filter(name => !outlines[name])
+for (let i = 0; i < wanted.length; i += 24) {
+  await Promise.all(wanted.slice(i, i + 24).map(async name => {
     const svg = await read(`glyphs/${name}.svg`)
     const d = svg && outline(svg.toString('utf8'))
     if (d) outlines[name] = d
@@ -170,6 +184,138 @@ for (const name of missing.sort()) {
   await new Promise(resolve => setTimeout(resolve, 150))
 }
 const absent = missing.filter(name => !outlines[name])
+if (fetched.length) batches.push({ date: new Date().toISOString().slice(0, 10), names: fetched })
+// A form neither place draws says so, so nothing offers it as a drawing.
+for (const entry of entries) for (const form of entry.forms) if (!outlines[form.glyph]) form.undrawn = true
+
+/**
+ * An outline as a record of the drawing engine's exports, for a composer to place as a component:
+ * the 200-unit square, y down, on a 1000-unit em whose top is 880. The strokes overlap and are
+ * filled as one shape, so every polygon is wound the same way, and a counter the other way.
+ * @param {string} key @param {[number, number][][]} polygons
+ * @param {{ strokes?: boolean, heavy?: [number, number][][] }} [options] `strokes` says the polygons
+ *   are all strokes, none a counter; `heavy` gives each polygon in the heavy master, point for point.
+ */
+function record(key, polygons, { strokes = false, heavy } = {}) {
+  let xMin = Infinity, yMin = Infinity, xMax = -Infinity, yMax = -Infinity, ink = 0
+  const cut = strokes ? polygons.map(() => false) : counters(polygons)
+  const p = polygons.map((polygon, at) => {
+    /** @type {[number, number][]} */
+    let points = polygon.map(([x, y]) => [x * 5, 880 - y * 5])
+    /** @type {[number, number][]} */
+    let bold = (heavy?.[at] ?? polygon).map(([x, y]) => [x * 5, 880 - y * 5])
+    points.forEach(([x, y], i) => { const [nx, ny] = points[(i + 1) % points.length]; ink += Math.hypot(nx - x, ny - y) })
+    if ((area(points) < 0) !== cut[at]) { points = points.reverse(); bold = bold.reverse() }
+    const light = Buffer.alloc(points.length * 4), delta = Buffer.alloc(points.length * 4)
+    points.forEach(([x, y], i) => {
+      xMin = Math.min(xMin, x); xMax = Math.max(xMax, x); yMin = Math.min(yMin, y); yMax = Math.max(yMax, y)
+      const at = [Math.round(x * 4), Math.round(y * 4)]
+      light.writeInt16LE(at[0], i * 4); light.writeInt16LE(at[1], i * 4 + 2)
+      delta.writeInt16LE(Math.round(bold[i][0] * 4) - at[0], i * 4); delta.writeInt16LE(Math.round(bold[i][1] * 4) - at[1], i * 4 + 2)
+    })
+    return ['M' + 'L'.repeat(points.length - 1), light.toString('base64'), delta.toString('base64')]
+  })
+  const round = (/** @type {number} */ value) => +value.toFixed(4)
+  return { k: key, G: { v: 0, b: [xMin, yMin, xMax, yMax].map(round), p }, ink: round(ink), o: p.length }
+}
+// The forms no text writes, each under the reference a description names it by (&GW-u58ec-t;).
+/** @type {Record<string, object>} */
+const records = {}
+for (const entry of entries) for (const form of entry.forms) {
+  if (form.text || !outlines[form.glyph]) continue
+  const key = `&GW-${form.glyph};`
+  if ([...key].length > 48 || !/^&[A-Za-z][A-Za-z0-9+_-]*;$/.test(key)) throw new Error(`${key}: not a reference a description can name`)
+  records[key] = record(key, polygonsOf(outlines[form.glyph]))
+}
+
+// The same forms in Gothic, for a face of even strokes: each drawn from the stroke data that draws
+// its recorded outline, at the stroke widths the Sans export's two masters give a character with
+// as much stroke, so the composer weights it as it weights that export's parts. A form without
+// such data keeps its Mincho outline.
+/** @type {{ forms: Record<string, { version: number }>, glyphs: Record<string, string> } | null} */
+const strokes = await readFile(new URL('ucv-strokes.json.gz', data)).then(bytes => JSON.parse(gunzipSync(bytes).toString('utf8')), () => null)
+/**
+ * The width of a Gothic stroke in each master, in units of the 200-unit square, for a glyph with
+ * `length` units of stroke. A face thins its strokes as a character fills up: these lines are the
+ * least squares of ink over stroke length for 62 characters of the Sans export (see data/README.md),
+ * from 一 (17.0 and 34.6) to 鬱 (9.5 and 14.8).
+ * @param {number} length
+ */
+const gothicWidths = length => {
+  const light = Math.max(8, 19.028 - 5.6065e-3 * length)
+  return { light, heavy: Math.max(light + 3, 37.629 - 1.4314e-2 * length) }
+}
+/** The side of the box a whole character fills, in units of the 200-unit square. */
+const FULL = 170
+/** A glyph name that ends in a place in a character, before any variant: `u752c-03`, `u5c3f-05-var-001`. */
+const PLACED = /-(?:0[1-9]|1[0-5])(?:-(?:var|itaiji)-\d+)?$/
+/** The least width of a Gothic stroke, in units of the 200-unit square. */
+const GOTHIC_LEAST = 5
+/** A counter is a blank of at least `least` cells at a hairline, and open while `open` of them are blank. */
+const COUNTER = { least: 12, open: 6 }
+const kage = new Kage()
+kage.kShotai = kage.kGothic
+for (const [name, glyph] of Object.entries(strokes?.glyphs ?? {})) kage.kBuhin.push(name, glyph)
+/** A glyph's polygons, drawn in Gothic with strokes `width` wide. @param {string} name @param {number} width @returns {[number, number][][]} */
+function strokesOf(name, width) {
+  kage.kFont.kWidth = width / 2
+  const polygons = new Polygons()
+  kage.makeGlyph(polygons, name)
+  return polygons.array.map(polygon => polygon.array.map(point => {
+    if (point.off) throw new Error(`${name}: a drawing with curves`)
+    return /** @type {[number, number]} */ ([+point.x.toFixed(2), +point.y.toFixed(2)])
+  }))
+}
+/** @type {Record<string, object>} */
+const even = {}
+let gothic = 0
+const unweighted = []
+const clogged = []
+if (strokes) {
+  for (const [key, mincho] of Object.entries(records)) {
+    const name = key.slice('&GW-'.length, -1)
+    const kept = strokes.forms[name]
+    if (!kept) { even[key] = mincho; continue }
+    const glyph = `${name}@${kept.version}`
+    const inked = (/** @type {number} */ width) => cells(strokesOf(glyph, width).filter(polygon => polygon.length > 2).map(polygon => area(polygon) < 0 ? polygon.reverse() : polygon))
+    // How much stroke the form has: the ink of its strokes drawn two units wide, halved.
+    const hairline = inked(2)
+    // A form GlyphWiki names for a place in a character (`-03`, the top) fills part of the square:
+    // it is weighed as the character it is part of, which has that much more stroke.
+    let whole = 1
+    if (PLACED.test(name)) {
+      let left = SQUARE, top = SQUARE, right = -1, bottom = -1
+      hairline.forEach((cell, at) => {
+        if (!cell) return
+        const row = Math.floor(at / SQUARE), col = at % SQUARE
+        left = Math.min(left, col); right = Math.max(right, col); top = Math.min(top, row); bottom = Math.max(bottom, row)
+      })
+      whole = Math.min(3, Math.max(1, FULL * FULL / ((right - left + 1) * (bottom - top + 1))))
+    }
+    const widths = gothicWidths(whole * hairline.reduce((sum, cell) => sum + cell, 0) / 2)
+    // The stroke data is spaced for Mincho's hairline bars: a width that fills a counter of the
+    // form is narrowed, half a unit at a time, until every counter keeps some of its blank.
+    const inside = enclosed(hairline, COUNTER.least)
+    const fills = (/** @type {number} */ width) => filled(inked(width), inside, COUNTER.open) > 0
+    const narrowed = (/** @type {number} */ width, /** @type {number} */ least) => {
+      while (width - 0.5 >= least && fills(width)) width -= 0.5
+      return width
+    }
+    widths.light = narrowed(widths.light, GOTHIC_LEAST)
+    // The heavy master stays a pen wider than the light one, and near enough to it that the
+    // lightest weight the engine draws (0.6 of their difference below the light) is still a stroke.
+    widths.heavy = narrowed(Math.min(widths.heavy, 2.5 * widths.light), widths.light + 2)
+    if (fills(widths.light) || fills(widths.heavy)) clogged.push(name)
+    const thin = strokesOf(glyph, widths.light), thick = strokesOf(glyph, widths.heavy)
+    // The masters are one drawing at two widths only where each polygon keeps its points.
+    const paired = thin.length === thick.length && thin.every((polygon, at) => polygon.length === thick[at].length)
+    if (!paired) unweighted.push(name)
+    const drawn = thin.map((polygon, at) => ({ polygon, heavy: paired ? thick[at] : polygon })).filter(({ polygon }) => polygon.length > 2)
+    // The engine's polygons are strokes: none is a counter, so all are wound one way.
+    even[key] = record(key, drawn.map(({ polygon }) => polygon), { strokes: true, heavy: drawn.map(({ heavy }) => heavy) })
+    gothic++
+  }
+}
 
 const source = {
   name: 'IWDS data files (UCV and NUCV lists)',
@@ -179,10 +325,16 @@ const source = {
   sha256: expected,
   document: 'IRG N2978, UCV & NUCV Lists, version 2026-10-20',
   documentUrl: 'https://www.unicode.org/irg/docs/n2978-Complete.pdf',
-  glyphs: { name: 'GlyphWiki', url: 'https://glyphwiki.org/', snapshot: `glyphs/ at ${revision}`, fetched: { date: new Date().toISOString().slice(0, 10), names: fetched } },
+  glyphs: { name: 'GlyphWiki', url: 'https://glyphwiki.org/', snapshot: `glyphs/ at ${revision}`, fetched: batches },
 }
-const data = new URL('../data/', import.meta.url)
 await writeFile(new URL('ucv.json', data), JSON.stringify({ format: 'ids-input/ucv', version: 1, source, groups, entries }, null, 1) + '\n')
 await writeFile(new URL('ucv-forms.json.gz', data), gzipSync(JSON.stringify(Object.fromEntries(names.filter(name => outlines[name]).map(name => [name, outlines[name]])))))
-console.log(`${entries.filter(entry => entry.kind === 'unifiable').length} unifiable, ${entries.filter(entry => entry.kind !== 'unifiable').length} not unifiable; ${names.length} forms, ${fetched.length} fetched from GlyphWiki, ${absent.length} without an outline`)
+await writeFile(new URL('ucv-outlines.json.gz', data), gzipSync(JSON.stringify({ source: 'GlyphWiki glyphs of the IRG UCV and NUCV forms; see data/README.md', records })))
+if (strokes) {
+  await writeFile(new URL('ucv-outlines-sans.json.gz', data), gzipSync(JSON.stringify({ source: 'GlyphWiki glyphs of the IRG UCV and NUCV forms, drawn in Gothic from their stroke data; see data/README.md', records: even })))
+  console.log(`${gothic} forms drawn in Gothic, ${unweighted.length} of them at one width, ${Object.keys(even).length - gothic} kept in Mincho`)
+  if (unweighted.length) console.log(unweighted.join(' '))
+  if (clogged.length) console.log(`${clogged.length} with a counter filled at the least width of a master: ${clogged.join(' ')}`)
+}
+console.log(`${entries.filter(entry => entry.kind === 'unifiable').length} unifiable, ${entries.filter(entry => entry.kind !== 'unifiable').length} not unifiable; ${names.length} forms, ${wanted.length} asked for, ${fetched.length} fetched from GlyphWiki, ${absent.length} without an outline; ${Object.keys(records).length} records`)
 if (absent.length) console.log(absent.join(' '))

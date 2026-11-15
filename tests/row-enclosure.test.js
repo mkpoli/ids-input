@@ -13,7 +13,7 @@ const glyphOf = boxes => ({
   b: [Math.min(...boxes.map(b => b[0])), Math.min(...boxes.map(b => b[1])), Math.max(...boxes.map(b => b[2])), Math.max(...boxes.map(b => b[3]))],
   p: boxes.map(b => box(...b)),
 })
-const character = (key, boxes) => ({ k: key, G: glyphOf(boxes), ink: boxes.reduce((s, [x0, y0, x1, y1]) => s + 2 * (x1 - x0 + y1 - y0), 0), nl: boxes.length, o: boxes.length })
+const character = (key, boxes) => ({ G: glyphOf(boxes), ink: boxes.reduce((s, [x0, y0, x1, y1]) => s + 2 * (x1 - x0 + y1 - y0), 0), nl: boxes.length, o: boxes.length })
 
 // A 冂 frame, the two dots of ⺀ and the two strokes of 刂, each as its own glyph.
 const FRAME = [[100, 700, 900, 800], [100, 0, 180, 800], [820, 0, 900, 800]]
@@ -41,12 +41,12 @@ const extra = {
   ]),
   // A donor's whole left piece and a donor's whole row, each with enough contours to be taken.
   ...shards('p', [
-    [`L\t${ENCLOSURE}`, { place: 'L', operand: ENCLOSURE, hosts: [{ h: '剪', op: '⿰', ok: ['刂'], d: 1, j: 1, v: 1, r: 0, si: 2000, fr: DONOR,
-      b: DONOR_LEFT, p: [box(100, -80, 200, 840), box(300, -80, 400, 840), box(100, 700, 400, 840)] }] }],
-    [`R\t${ROW_KEY}`, { place: 'R', operand: ROW_KEY, hosts: [{ h: '剪', op: '⿰', ok: ['⿵冂⺀'], d: 1, j: 1, v: 1, r: 0, si: 2000, fr: DONOR,
-      b: DONOR_RIGHT, p: KNIFE_CUT }] }],
-    [`R\t刂`, { place: 'R', operand: '刂', hosts: [{ h: '剪', op: '⿰', ok: ['⿵冂⺀'], d: 1, j: 1, v: 1, r: 0, si: 2000, fr: DONOR,
-      b: DONOR_RIGHT, p: KNIFE_CUT }] }],
+    [`L\t${ENCLOSURE}`, [{ h: '剪', op: '⿰', ok: ['刂'], d: 1, j: 1, v: 1, r: 0, si: 2000, fr: DONOR,
+      b: DONOR_LEFT, p: [box(100, -80, 200, 840), box(300, -80, 400, 840), box(100, 700, 400, 840)] }]],
+    [`R\t${ROW_KEY}`, [{ h: '剪', op: '⿰', ok: ['⿵冂⺀'], d: 1, j: 1, v: 1, r: 0, si: 2000, fr: DONOR,
+      b: DONOR_RIGHT, p: KNIFE_CUT }]],
+    [`R\t刂`, [{ h: '剪', op: '⿰', ok: ['⿵冂⺀'], d: 1, j: 1, v: 1, r: 0, si: 2000, fr: DONOR,
+      b: DONOR_RIGHT, p: KNIFE_CUT }]],
   ]),
 }
 

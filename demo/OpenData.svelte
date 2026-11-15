@@ -88,13 +88,14 @@
 
     <h2 id="strokes">Stroke orders</h2>
     <p class="lead">The stroke order of Han characters from CNS 全字庫, Rime's five-stroke dictionary
-      and KanjiVG, with orders induced for the characters a source lacks and marked so.</p>
+      and KanjiVG, with orders induced or borrowed for the characters a source lacks and marked so.</p>
     <ul class="stats">
       <li><b>{cns?.recorded.toLocaleString('en')}</b><span>CNS, recorded</span></li>
       <li><b>{rime?.recorded.toLocaleString('en')}</b><span>Rime, recorded</span></li>
       <li><b>{kanjivg?.recorded.toLocaleString('en')}</b><span>KanjiVG, recorded</span></li>
       <li><b>{total('ids').toLocaleString('en')}</b><span>induced from IDS</span></li>
       <li><b>{total('equivalent').toLocaleString('en')}</b><span>by equivalence</span></li>
+      <li><b>{total('borrowed').toLocaleString('en')}</b><span>borrowed across sources</span></li>
     </ul>
     <ul class="files stroke-files">
       {#each [...strokes.files, { name: 'manifest.json', bytes: 0 }, ...strokes.texts.map(name => ({ name, bytes: 0 }))] as file (file.name)}

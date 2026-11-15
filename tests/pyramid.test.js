@@ -4,7 +4,7 @@ import { PYRAMID_LAYERS, compose, createSource, sketch, tooLarge } from '@han-co
 import { Composer } from '@han-compose/composer/compose'
 import { pyramidCells } from '@han-compose/composer/pyramid'
 import { groupParts } from '../src/core/preview.js'
-import { constants, files } from './fixtures/small-export.js'
+import { constants, files, shardOf } from './fixtures/small-export.js'
 
 const sourceOf = (fetched = []) => createSource(async name => {
   fetched.push(name)
@@ -397,7 +397,7 @@ describe('drawing a pyramid', () => {
     // The part's own record is read, and the whole-sequence key adds a second file; the source
     // caches by name, so a fetch per node would show up near the 78 leaves.
     const glyphs = fetched.filter(name => name.startsWith('g/'))
-    expect(glyphs).toContain('g/037.json')
+    expect(glyphs).toContain(shardOf('g', '口'))
     expect(glyphs.length).toBeLessThanOrEqual(2)
     expect(new Set(glyphs).size).toBe(glyphs.length)
     expect(fetched.some(name => name.startsWith('p/'))).toBe(false)
