@@ -75,7 +75,7 @@
 
   // The query lives in the address, so a search can be linked to.
   const SOURCES = /** @type {const} */ (['all', 'babelstone', 'chise', 'zi-tools', 'unnamed', 'yours'])
-  const STATUSES = /** @type {const} */ (['any', 'confirmed', 'candidate', 'none'])
+  const STATUSES = /** @type {const} */ (['any', 'confirmed', 'candidate', 'editorial', 'none'])
   /** @template {string} T @param {readonly T[]} list @param {string | null} value @returns {T} */
   const oneOf = (list, value) => list.find(item => item === value) ?? list[0]
   let hashed = ''
@@ -299,6 +299,9 @@
                     {#each row.names as name (name.text)}
                       <li><span class="tag" data-source={name.source}>{t(`appendix.source.${name.source}`)}</span>{@render written(name.text, row.id)}{#if name.description}<span class="desc" lang="ja">{name.description}</span>{/if}</li>
                     {/each}
+                    {#if row.subtractions.length}
+                      <li class="minus"><span class="tag">㇯</span>{#each row.subtractions.slice(0, 6) as one (one)}<span class="name" lang="ja">{one}</span>{/each}{#if row.subtractions.length > 6}<span class="by" title={row.subtractions.slice(6).join(' ')}>+{row.subtractions.length - 6}</span>{/if}</li>
+                    {/if}
                     {#each row.of as other (other.id + other.relation)}
                       <li><span class="tag">{t(`appendix.relation.${other.relation}`)}</span><a class="name" href={`?q=${other.id}`} onclick={event => { event.preventDefault(); show(other.id) }}>{other.id}</a></li>
                     {/each}
@@ -315,6 +318,9 @@
                         {#if item.id && item.id !== row.id}<a class="link" href={`?q=${item.id}`} onclick={event => { event.preventDefault(); show(/** @type {string} */ (item.id)) }}>{item.id}</a>{/if}
                       </li>
                     {/each}
+                    {#if row.character}
+                      <li><span class="tag" data-source={row.character.in}>{t(`appendix.source.${row.character.in}`)}</span><span class="name" lang="ja">{row.character.text}</span><span class="tag" data-derived title={row.character.reason}>{t('appendix.status.editorial')}</span></li>
+                    {/if}
                     {#each row.yours as pair (pair.other)}<!-- one line per other side: formRows joins the notes -->
                       <li><span class="tag">{t('appendix.yours')}</span><span class="name" lang="ja">{pair.other}</span>{#if pair.note}<span class="by">{pair.note}</span>{/if}</li>
                     {/each}
@@ -331,8 +337,19 @@
                 <tr class="detail">
                   <td colspan="6">
                     <ul class="derived">
-                      {#each row.derived as one (one.char + one.in + one.text)}
-                        <li><span class="char" lang="ja">{one.char}</span><span class="tag" data-source={one.in}>{t(`appendix.source.${one.in}`)}</span>{@render written(one.text, row.id)}{@render mark(one.status === 'verified' ? 'confirmed' : 'candidate', false)}<span class="by" lang="ja">{@render written(one.of, row.id)}</span></li>
+                      {#each row.derived as one (one.char)}
+                        <li>
+                          <span class="char" lang="ja">{one.char}</span>
+                          <ul class="spellings">
+                            {#each one.spellings as spelling (spelling.in + spelling.text)}
+                              <li>
+                                <span class="tag" data-source={spelling.in} data-derived={spelling.attested ? undefined : ''} title={spelling.attested ? undefined : `${t('appendix.derivedFrom')} ${spelling.of ?? ''}`}>{t(`appendix.source.${spelling.in}`)}</span>
+                                {@render written(spelling.text, row.id)}
+                                {#if !spelling.attested && spelling.status}{@render mark(spelling.status, false)}{/if}
+                              </li>
+                            {/each}
+                          </ul>
+                        </li>
                       {/each}
                     </ul>
                   </td>
@@ -439,7 +456,14 @@
   .by{font-family:var(--ids-font),var(--ids-glyph-fallback);font-size:11px;color:var(--ui-color-ink-muted);overflow-wrap:anywhere}
   .num{text-align:end;white-space:nowrap;color:var(--ui-color-ink-muted);font-variant-numeric:tabular-nums}
   .detail td{background:var(--ui-color-surface-sunken)}
-  .derived{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:6px 18px}
+  .derived{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:10px 22px;align-items:start}
+  .derived > li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 10px;align-items:start}
+  .spellings{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+  .spellings li{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+  /* A description no table writes itself, reached from another table's: its tag is dashed. */
+  .tag[data-derived]{border-style:dashed}
+  .minus .tag{font-family:var(--ids-font);font-size:13px;line-height:1.2}
+  .minus{gap:4px 12px}
   .char{font-family:var(--ids-font);font-size:17px;line-height:1.2}
   .identity{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
   .name{font-family:var(--ids-font),ui-monospace,monospace;font-size:15px;line-height:1.3;overflow-wrap:anywhere}

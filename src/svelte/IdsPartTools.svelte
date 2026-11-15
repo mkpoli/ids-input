@@ -22,7 +22,7 @@
   const search = $derived(editor.alternatives)
   // The search runs while the list is closed, so the tools know whether to offer it again.
   $effect(() => { search.load() })
-  const unifiable = createUnifiable(() => variations ? part : '')
+  const unifiable = createUnifiable(() => editor, () => variations)
   const replaceable = $derived(hasAlternatives(editor, unifiable.entries.length))
   const label = $derived(t('ids.swaps.label', { part: part || written }))
 

@@ -3,7 +3,7 @@
 // it, and the forms of the IRG's component variation entries (UCV, NUCV) it belongs to. A form of an
 // entry that is another character or a description is a sibling encoding; one no code point names
 // is written with zi.tools' variant identifier after the component (壬q0012, form 2 of UCV #1).
-import { variantIdentifier, variantOf } from './ids.js'
+import { isNode, parse, variantIdentifier, variantOf, write } from './ids.js'
 import { variationBase, variationOf } from './variation.js'
 
 /**
@@ -17,6 +17,13 @@ import { variationBase, variationOf } from './variation.js'
  * @property {number} [form] The form's place in the entry, from 1.
  * @property {string} [glyph] The GlyphWiki glyph the entry names for the form.
  */
+
+/**
+ * The reference a description names a GlyphWiki glyph by, where a composer is to draw that glyph:
+ * `&GW-u58ec-t;`, an entity as CHISE writes one, read as one component.
+ * @param {string} glyph
+ */
+export const glyphReference = glyph => `&GW-${glyph};`
 
 /**
  * The variant identifier of form `form` (from 1) of UCV entry `entry`, as zi.tools writes it: `q`,
@@ -42,7 +49,8 @@ export function ucvFormOf(ucv, part) {
   const read = variant ? variantIdentifier(variant) : null
   if (!read || read.kind !== 'ucv' || read.sign !== 'q' || read.other) return null
   const char = variationBase(base)
-  const entry = char === null ? undefined : ucv.formsOf(char).find(found => found.id === read.entry)
+  // The identifier names forms of the unifiable list only.
+  const entry = char === null ? undefined : ucv.formsOf(char).find(found => found.id === read.entry && found.kind === 'unifiable')
   const form = entry?.forms[read.form - 1]
   return entry && form ? { entry, form, place: read.form } : null
 }
@@ -53,7 +61,8 @@ export function ucvFormOf(ucv, part) {
  * variation lists. A form listed twice is given once, where it is first met.
  * @param {import('./ids.js').Part | undefined} part
  * @param {{ sequences?: Map<string, string[]> | null, ucv?: import('./ucv.js').UcvIndex | null, variants?: boolean }} [known]
- *   `variants` also offers the forms no code point names, written with a variant identifier.
+ *   `variants` also offers the forms no code point names that a source draws, written with a
+ *   variant identifier.
  * @returns {ComponentForm[]}
  */
 export function componentForms(part, { sequences = null, ucv = null, variants = false } = {}) {
@@ -74,7 +83,7 @@ export function componentForms(part, { sequences = null, ucv = null, variants = 
         // A slot in the text is a place in a character, which a component alone cannot be written as.
         if (form.text.includes('⬚')) return
         add({ write: form.text, kind: variationBase(form.text) === base ? 'sequence' : 'sibling', ...listed })
-      } else if (variants && unifiable) {
+      } else if (variants && unifiable && !form.undrawn) {
         const id = ucvIdentifier(entry.id, at + 1, entry.forms.length)
         if (id) add({ write: base + id, kind: 'variant', ...listed })
       }
@@ -87,4 +96,59 @@ export function componentForms(part, { sequences = null, ucv = null, variants = 
 export const writtenForm = (forms, part) => {
   const written = variationOf(part)
   return forms.find(form => form.write === written)
+}
+
+/**
+ * What a composer draws for a component whose variant identifier names an entry form: the form's
+ * glyph reference where no text writes it and a source draws it, the form itself where it is one
+ * character or variation sequence, else null (a description, or a form nothing draws).
+ * @param {import('./ucv.js').UcvIndex} ucv @param {string} part
+ * @returns {string | null}
+ */
+export function drawnForm(ucv, part) {
+  const found = ucvFormOf(ucv, part)
+  if (!found || found.form.undrawn) return null
+  if (!found.form.text) return glyphReference(found.form.glyph)
+  return variationBase(found.form.text) !== null ? found.form.text : null
+}
+
+/**
+ * A description as a composer draws its forms: each component whose variant identifier names an
+ * entry form is written as what draws that form (`drawnForm`), and every other identifier is
+ * dropped, since one glyph is drawn for each. `formed` says whether any component was written
+ * as its form, where the drawing is no longer that of the characters alone.
+ * @param {import('./ids.js').Part} tree @param {import('./ucv.js').UcvIndex | null} ucv
+ * @returns {{ tree: import('./ids.js').Part, formed: boolean }}
+ */
+export function formedTree(tree, ucv) {
+  let formed = false
+  /** @param {import('./ids.js').Part} part @returns {import('./ids.js').Part} */
+  const walk = part => {
+    if (isNode(part)) return { ...part, parts: part.parts.map(walk) }
+    if (part === null) return null
+    const { base, variant } = variantOf(part)
+    if (!variant) return part
+    const drawn = ucv ? drawnForm(ucv, part) : null
+    if (!drawn) return base
+    formed = true
+    return drawn + base.slice(variationOf(base).length)
+  }
+  return { tree: walk(tree), formed }
+}
+
+/**
+ * A description, or one component with its variant identifier (壬q0012 alone, which is no
+ * description), as a composer draws its forms: the text of `formedTree`'s answer, or null where no
+ * component is written as a glyph reference.
+ * @param {string} text @param {import('./ucv.js').UcvIndex | null} ucv
+ * @returns {string | null}
+ */
+export function formedText(text, ucv) {
+  const read = parse(text, { open: true })
+  const alone = variantOf(text)
+  const tree = !read.problem && read.tree !== null && read.tree !== undefined ? read.tree
+    : alone.variant && variationBase(alone.base) !== null ? text : null
+  if (tree === null) return null
+  const shaped = formedTree(tree, ucv)
+  return shaped.formed ? write(shaped.tree) : null
 }
