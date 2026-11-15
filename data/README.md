@@ -459,7 +459,7 @@ the least alike. The stroke data is drawn with `@kurgm/kage-engine` 0.7.0 (GPL-3
 build runs and the package does not ship.
 
 `ucv-outlines-sans.json.gz` is `ucv-outlines.json.gz` with every form drawn in Gothic from that
-stroke data, for the Sans face. No source shows these forms in a Gothic face: the strokes are
+stroke data, for the Sans face; the Worker that draws a share card reads it too. No source shows these forms in a Gothic face: the strokes are
 GlyphWiki's and the drawing is this build's. Each record has two masters, as the engine's exports
 do, so a form is weighted like the parts beside it. Their stroke widths follow the Sans export
 (`a83fc941166b-sans-compose-layout-v4-f7+variants`): over 62 characters from 一 to 鬱, ink divided

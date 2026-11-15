@@ -44,7 +44,7 @@ const read = async (env, path) => {
 const loadFor = (env, { forms = false } = {}) => {
   const SERVED = /^sources\/([a-z-]+)\/outlines\.json\.gz$|^unicode\/outlines\/([0-9a-f]+\.json\.gz)$|^numbered-sans-outlines\.json\.gz$/
   /** The deployment's name for a file the engine names; the numbered components' Sans cuts keep theirs. @param {string} path */
-  const served = path => path === HOST_OUTLINES ? 'ucv-outlines.json.gz'
+  const served = path => path === HOST_OUTLINES ? 'ucv-outlines-sans.json.gz'
     : path.replace(SERVED, (name, script, shard) => script ? `${script}-outlines.json.gz` : shard ? `unicode-outlines/${shard}` : name)
   /** @type {Record<string, string>} */
   const loaders = forms ? { [HOST_OUTLINES]: new URL(`/og/data/${served(HOST_OUTLINES)}`, 'https://assets/').href } : {}
