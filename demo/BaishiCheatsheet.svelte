@@ -17,7 +17,7 @@
   import { SECTIONS, sectionHref } from './lib/baishi-sections.js'
   import { readGrammar } from './lib/railroad.js'
   import ebnf from '../data/baishi-ids.ebnf?raw'
-  import { DRAFTS, GLOSS, GRAMMAR, GROUP_LABELS, SHEET, SOURCE, UNUSED, arityOf, bareOf, entriesOf, focusOf, idsOf, kindOf, tokenise, variantBody } from './lib/baishi-cheatsheet.js'
+  import { GLOSS, GRAMMAR, GROUP_LABELS, SHEET, SOURCE, UNUSED, arityOf, bareOf, entriesOf, focusOf, idsOf, kindOf, tokenise, variantBody } from './lib/baishi-cheatsheet.js'
   import { drawingOf } from './lib/baishi-drawing.js'
   import outlines from './lib/baishi-cheatsheet-outlines.json'
 
@@ -323,12 +323,11 @@
   {/if}
 {/snippet}
 
-{#snippet about(/** @type {string | undefined} */ label, /** @type {string | undefined} */ hint, /** @type {string} */ subject, /** @type {string | undefined} */ link, /** @type {boolean | undefined} */ open, /** @type {string} */ lang)}
+{#snippet about(/** @type {string | undefined} */ label, /** @type {string | undefined} */ hint, /** @type {string} */ subject, /** @type {string | undefined} */ link, /** @type {string} */ lang)}
   <header class="about">
     <span class="what">
       {#if subject}<code class="subject" lang="ja">{subject}</code>{/if}
       {#if label}{#if link}<a class="label" href={sectionHref('spec', link)} {lang}>{label}</a>{:else}<span class="label" {lang}>{label}</span>{/if}{/if}
-      {#if open}<span class="open">{t('cheatsheet.open')}</span>{/if}
     </span>
     {#if hint}<p class="hint">{hint}</p>{/if}
   </header>
@@ -341,7 +340,7 @@
   <article class="card" id={item.anchors?.[0]}>
     {#each item.anchors?.slice(1) ?? [] as id (id)}<span {id} class="anchor"></span>{/each}
     {@render about(operator ? t(`ids.op.${OP_NAMES[operator]}`) : item.label ? t(`cheatsheet.label.${item.label}`) : item.id.startsWith('worked-') ? first.char : undefined,
-      item.hint && t(`cheatsheet.hint.${item.hint}`), item.id.startsWith('worked-') || subject.length > 8 ? '' : subject === '\t' ? '⇥' : subject, item.anchors?.[0], item.open, item.label || operator ? '' : 'ja')}
+      item.hint && t(`cheatsheet.hint.${item.hint}`), item.id.startsWith('worked-') || subject.length > 8 ? '' : subject === '\t' ? '⇥' : subject, item.anchors?.[0], item.label || operator ? '' : 'ja')}
     {#each item.quotes as quote (quote.key)}
       <div class="quote">
         <div class="tiles">
@@ -367,7 +366,7 @@
 
 {#snippet legend(/** @type {import('./lib/baishi-cheatsheet.js').Legend} */ item)}
   <article class="card legend">
-    {@render about(t(`cheatsheet.label.${item.id}`), t(`cheatsheet.hint.${item.id}`), '', undefined, false, '')}
+    {@render about(t(`cheatsheet.label.${item.id}`), t(`cheatsheet.hint.${item.id}`), '', undefined, '')}
     <dl>{#each item.items as [letter, gloss] (letter)}<div><dt>{letter}</dt>{#if gloss !== letter}<dd lang={item.lang}>{gloss}</dd>{/if}</div>{/each}</dl>
   </article>
 {/snippet}
@@ -409,7 +408,7 @@
                 {#each group.legends ?? [] as item (item.id)}{@render legend(item)}{/each}
                 {#if group.id === 'unary-operator'}
                   <article class="card unused">
-                    {@render about(t('cheatsheet.unused'), t('cheatsheet.hint.unused'), '', undefined, false, '')}
+                    {@render about(t('cheatsheet.unused'), t('cheatsheet.hint.unused'), '', undefined, '')}
                     <div class="quote"><div class="text"><span class="idle" lang="ja">{UNUSED.join(' ')}</span></div></div>
                   </article>
                 {/if}
@@ -424,7 +423,6 @@
         <ul>
           <li><span class="what">{t('cheatsheet.source.data')}</span> <a href={SOURCE.repository} target="_blank" rel="noreferrer">yi-bai/ids</a> <a href={`${SOURCE.repository}/tree/${SOURCE.commit}`} target="_blank" rel="noreferrer"><code>{SOURCE.commit.slice(0, 8)}</code></a> · {SOURCE.date} · MIT</li>
           <li><span class="what">{t('cheatsheet.source.notation')}</span> <b class="key">{GRAMMAR.key}</b> <a href={GRAMMAR.url} target="_blank" rel="noreferrer" lang="zh-Hans">{GRAMMAR.title}</a> · {GRAMMAR.date} · {t('cheatsheet.source.notationBy')} <span class="weak">{t('cheatsheet.source.notationNote')}</span></li>
-          <li><span class="what">{t('cheatsheet.source.drafts')}</span> <b class="key">{DRAFTS.key}</b> {DRAFTS.author}, <span lang="zh-Hans">{DRAFTS.title}</span> {DRAFTS.versions} <span class="weak">{t('cheatsheet.source.draftsNote')}</span></li>
           <li><span class="what">{t('cheatsheet.source.grammar')}</span> <a href={sectionHref('spec', 'row')}>{t('baishi.title')}</a> · <a href={`./baishi-railroad.html?lang=${locale}`}>{t('railroad.title')}</a> · <code>data/baishi-ids.ebnf</code></li>
           <li><span class="what">{t('cheatsheet.source.outlines')}</span> <a href="https://github.com/notofonts/noto-cjk" target="_blank" rel="noreferrer">Noto Sans CJK JP</a> · <a href="https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project" target="_blank" rel="noreferrer">Plangothic</a> · <a href="https://github.com/mkpoli/han-compose" target="_blank" rel="noreferrer">han-compose</a> <code>{outlines.composer.commit}</code></li>
         </ul>
@@ -462,7 +460,6 @@
       <li>{t('cheatsheet.help.entry')}</li>
       <li>{t('cheatsheet.help.composed')}</li>
       <li>{t('cheatsheet.help.marks')}</li>
-      <li>{t('cheatsheet.help.open')}</li>
     </ul>
   </Dialog>
 </div>
@@ -504,7 +501,6 @@
   code.subject{padding:0 5px;border-radius:4px;background:var(--mark);font-family:var(--ids-font),var(--ids-glyph-fallback);font-size:14px;font-weight:700;color:var(--ui-color-ink)}
   /* The description takes no width of its own: it wraps inside what the sequence needs. */
   .hint{flex:1 1 0;width:0;min-width:15em;margin:0;font-size:11.5px;line-height:1.4;color:var(--ui-color-ink-muted);text-align:end;text-wrap:pretty}
-  .open{padding:0 6px;border:1px dashed var(--ui-color-control-border);border-radius:var(--ui-radius-pill);color:var(--ui-color-ink-muted);font-size:11px;font-weight:var(--ui-weight-medium);line-height:1.6}
 
   .quote{display:flex;align-items:center;gap:12px;min-width:0}
   .tiles{display:flex;flex:none;gap:6px}
