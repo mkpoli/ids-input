@@ -3,7 +3,8 @@
 //
 //   bun scripts/build_ids_corpus.mjs [--out FILE] [--cache DIR] [--check]
 //
-// It reads BabelStone, the CHISE UCS files and Yi Bai's zi.tools rows. A CHISE entity name
+// It reads BabelStone, the CHISE UCS files, Yi Bai's zi.tools rows and this project's own tables
+// (`ids-project.tsv`, the descriptions of `custom-ids.tsv`, `tangut-layers.json.gz`). A CHISE entity name
 // (`&GT-K01666;`) has no ontology resolution yet, so its component is a cid with a private-use form
 // and its descriptions stay `unresolved`: the catalogue records the part without pretending to know
 // how it is drawn.
@@ -147,6 +148,38 @@ for (const line of ziLines.slice(1)) {
 }
 emitZi(levels)
 
+// This project's own rows. The curated descriptions of `ids-project.tsv` are editorial: a reading
+// the project chose over a source's spelling. `custom-ids.tsv` is the ledger of forms no code point
+// names; a name in it that is an IDS describes the form, whose subject is its ledger cid
+// (`x:X-00001`, a number of its own ledger, not a private-use slot of this corpus). A retired number
+// describes nothing. `tangut-layers.json.gz` is computed from BabelStone's Tangut descriptions, so
+// its rows are derived.
+const own = async (name, title) => {
+  const bytes = await readFile(new URL(`../data/${name}`, import.meta.url))
+  const id = name.replace(/\..*$/, '')
+  return { bytes, prov: sourceIndex({ title, url: `https://github.com/mkpoli/ids-input/blob/main/data/${name}`,
+    date: '', edition: '', licence: 'MIT', sha256: digest(bytes) }, id) }
+}
+const lines = bytes => text(bytes).split(/\r?\n/).filter(line => line && !line.startsWith('#'))
+const OPERATOR_FIRST = /^[⿰-⿿㇯〾]/u
+const project = await own('ids-project.tsv', 'ids-input curated descriptions')
+for (const line of lines(project.bytes)) {
+  const [char, written] = line.split('\t')
+  if (!written || [...char].length !== 1) continue
+  rows.push({ subject: char.codePointAt(0), text: written, regions: '', prov: project.prov, role: 'editorial', core: false })
+}
+const ledger = await own('custom-ids.tsv', 'ids-input form ledger')
+const retired = new Set(lines(ledger.bytes).map(line => line.split('\t')).filter(([, , , note]) => note?.startsWith('merged into') || note === 'withdrawn').map(([id]) => id))
+for (const line of lines(ledger.bytes)) {
+  const [id, alias] = line.split('\t')
+  if (retired.has(id) || !alias || !OPERATOR_FIRST.test(alias)) continue
+  rows.push({ subject: `x:${id}`, text: alias, regions: '', prov: ledger.prov, role: 'source', core: false })
+}
+const layers = await own('tangut-layers.json.gz', 'ids-input Tangut layers')
+for (const [char, written] of Object.entries(JSON.parse(gunzipSync(layers.bytes).toString('utf8')).characters)) {
+  rows.push({ subject: char.codePointAt(0), text: written, regions: '', prov: layers.prov, role: 'derived', core: false })
+}
+
 // Equivalences: BabelStone names a part `{n}` where CHISE names it `&name;`. Aligning their
 // descriptions of one character, operator by operator, and keeping the operand positions where the
 // two differ gives the two names that stand for one component. A pair seen on several characters is
@@ -255,6 +288,10 @@ for (const { number } of numbered) {
   aliases.push([cid, 'char', `U+${char.toString(16).toUpperCase()}`, babelProv, 'codepoint', 'character', 'verified'])
 }
 
+// An entity name in this project's rows must be one CHISE or BabelStone already name: a new slot
+// would move the private-use forms every later release is read against.
+for (const row of rows) if (!row.core) for (const [, name] of row.text.matchAll(ENTITY)) if (!byName.has(name)) throw new Error(`${row.subject}: &${name}; names no known component`)
+
 // The equivalence table as its own small document, for the appendix page. Labels come from the
 // components' characters and note 6's descriptions, so a reader sees `CDP-8BD0` beside `top of 專惠`.
 const charOf = new Map(components.map(([cid, code]) => [cid, code ? String.fromCodePoint(Number.parseInt(code.slice(2), 16)) : null]))
@@ -297,7 +334,7 @@ for (const row of rows) {
   if (found) { if (!found.prov.includes(row.prov)) found.prov.push(row.prov); continue }
   const resolved = resolvedOf(row.text)
   seen.set(key, {
-    subject: `ucs:${row.subject.toString(16).toUpperCase()}`, text: row.text, resolved,
+    subject: typeof row.subject === 'string' ? row.subject : `ucs:${row.subject.toString(16).toUpperCase()}`, text: row.text, resolved,
     prov: [row.prov], regions: regions(row), role: row.role, status: statusOf(row.text, resolved),
   })
 }

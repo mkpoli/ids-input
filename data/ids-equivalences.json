@@ -200,6 +200,33 @@
    "edition": "2597437b928e8d530b7ae09cf53fe5ec7868569c",
    "licence": "MIT",
    "sha256": "b728e92679a9cb18a8f67f55f654f03875791dc34f6bab41ed1d4b4116bea7d6"
+  },
+  {
+   "id": "ids-project",
+   "title": "ids-input curated descriptions",
+   "url": "https://github.com/mkpoli/ids-input/blob/main/data/ids-project.tsv",
+   "date": "",
+   "edition": "",
+   "licence": "MIT",
+   "sha256": "74481df9bdba59175c5a62379e530993e830a6dfe590e0482aea9cda8c513cf2"
+  },
+  {
+   "id": "custom-ids",
+   "title": "ids-input form ledger",
+   "url": "https://github.com/mkpoli/ids-input/blob/main/data/custom-ids.tsv",
+   "date": "",
+   "edition": "",
+   "licence": "MIT",
+   "sha256": "b1c394894f726e240a1e574a2226a42dfb1759e06387f64db59d45eb9e577d92"
+  },
+  {
+   "id": "tangut-layers",
+   "title": "ids-input Tangut layers",
+   "url": "https://github.com/mkpoli/ids-input/blob/main/data/tangut-layers.json.gz",
+   "date": "",
+   "edition": "",
+   "licence": "MIT",
+   "sha256": "8c9b32e70b4a43dc2bb9ea1ae054673fe116d15a606780dc8ef41c67c73d50a6"
   }
  ],
  "provenance": [
@@ -334,6 +361,24 @@
    "licence": "MIT",
    "date": "2026-10-31",
    "edition": "2597437b928e8d530b7ae09cf53fe5ec7868569c"
+  },
+  {
+   "source": "ids-project",
+   "licence": "MIT",
+   "date": "",
+   "edition": ""
+  },
+  {
+   "source": "custom-ids",
+   "licence": "MIT",
+   "date": "",
+   "edition": ""
+  },
+  {
+   "source": "tangut-layers",
+   "licence": "MIT",
+   "date": "",
+   "edition": ""
   }
  ],
  "columns": [
