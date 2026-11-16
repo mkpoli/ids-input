@@ -4,6 +4,7 @@ import { describe, expect, it } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
 import { parse } from '../src/core/ids.js'
+import { readCorpus } from '../src/adapter/corpus.js'
 
 const corpus = JSON.parse(gunzipSync(readFileSync(new URL('../data/ids-corpus.json.gz', import.meta.url))).toString('utf8'))
 const equivalences = JSON.parse(readFileSync(new URL('../data/ids-equivalences.json', import.meta.url), 'utf8'))
@@ -101,5 +102,19 @@ describe('the merged corpus', () => {
   it('resolves every name its descriptions use', () => {
     const known = new Set(corpus.components.rows.map(row => row[0]))
     for (const row of rows) for (const [, name] of (row[text].matchAll(/&([^;]+);/g))) expect(known.has(`chise:${name}`)).toBe(true)
+  })
+
+  it('reads the same CHISE rows and labels as it did before other sources joined the corpus', () => {
+    // 101,919 characters with one CHISE description each in the corpus of 2026-11-09, all labelled
+    // `chise` alone: the workshop reads zi.tools and the project's rows from their own tables.
+    const table = readCorpus(gunzipSync(readFileSync(new URL('../data/ids-corpus.json.gz', import.meta.url))).toString('utf8'))
+    let count = 0
+    for (const sequences of table.values()) for (const sequence of sequences) {
+      count++
+      expect(sequence.sources).toEqual(['chise'])
+    }
+    expect(table.size).toBe(101919)
+    expect(count).toBe(101919)
+    expect(table.get('𠐑')).toEqual([{ text: '⿰亻𤴡', regions: '', sources: ['chise'] }])
   })
 })
