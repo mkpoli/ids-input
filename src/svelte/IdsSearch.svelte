@@ -3,8 +3,9 @@
   // description it matched in and the matched part marked. `query` comes from the host (in the
   // workshop, the selected part or the whole tree).
   // The query is asked once the editing settles, and an answer for a query since replaced is
-  // dropped. A hit opens its description (`onopen`), hands its character on (`ontake`), or is
-  // dragged as its character.
+  // dropped. Hits are paged by `limit`, and a stroke count loads all hits so every match across
+  // pages is counted and browsable. A hit opens its description (`onopen`), hands its character on
+  // (`ontake`), or is dragged as its character.
   import { untrack } from 'svelte'
   import { loadStrokes } from './strokes.js'
   import { translator } from './i18n.js'
@@ -14,13 +15,17 @@
   /** @type {{ adapter: import('../adapter/types.js').IdsAdapter, query?: string, messages?: Record<string, string>, locale?: string, limit?: number, delay?: number, mode?: 'ids' | 'structure' | 'unknown' | 'similar',
    *   onopen?: (hit: IdsHit) => void, ontake?: (hit: IdsHit) => void }} */
   let { adapter, query = '', messages, locale = 'en', limit = 60, delay = 250, mode = 'ids', onopen, ontake } = $props()
+  const ALL_LIMIT = Number.MAX_SAFE_INTEGER
   const t = $derived(translator(messages, locale))
   const uid = $props.id()
   const asked = $derived(query.trim())
+  const pageSize = $derived(Math.max(1, limit))
   // A stroke count narrows the hits; the palette's character counts load on first use.
   let strokeLimit = $state('')
   /** @type {HTMLElement | null} */
   let panel = $state(null)
+  /** @type {HTMLElement | null} */
+  let topAnchor = $state(null)
   // The hits and the descriptions draw characters the reader's fonts may lack.
   $effect(() => { if (panel) return watchFallback(panel) })
   /** @type {Map<string, number | null> | null} */
@@ -32,43 +37,113 @@
     loadStrokes().then(counts => { strokeCounts = counts }).catch(() => { strokeCounts = new Map() })
   })
   const wantedStrokes = $derived(strokeLimit === '' ? null : Number(strokeLimit))
-  const visibleHits = $derived.by(() => {
-    const counts = strokeCounts, wanted = wantedStrokes
-    if (wanted === null || !counts) return found.hits
-    return found.hits.filter(hit => counts.get(hit.char) === wanted)
-  })
-  let found = $state.raw(/** @type {{ status: 'idle' | 'loading' | 'ready' | 'failed' | 'extra' | 'pattern', hits: IdsHit[], total: number, characters: string }} */ ({ status: 'idle', hits: [], total: 0, characters: '' }))
+  const queryKey = $derived(`${asked}\0${mode}`)
+  let found = $state.raw(/** @type {{ key: string, find?: unknown, status: 'idle' | 'loading' | 'ready' | 'failed' | 'extra' | 'pattern', hits: IdsHit[], total: number, characters: string, askedLimit: number }} */ ({ key: '', status: 'idle', hits: [], total: 0, characters: '', askedLimit: 0 }))
   let asks = 0
-  let shown = $state(60)
+  let page = $state(0)
   let copied = $state(false)
   let copying = $state(false)
   let copyFailed = $state(false)
-  $effect(() => { void asked; void mode; void strokeLimit; shown = limit; copied = false; copyFailed = false })
+  $effect(() => { void asked; void mode; void strokeLimit; void pageSize; page = 0; copied = false; copyFailed = false })
+  const busy = $derived(found.status === 'loading' || (found.status === 'ready' && wantedStrokes !== null && strokeCounts === null && Boolean(asked)))
+  const filteredHits = $derived.by(() => {
+    if (found.key !== queryKey) return []
+    const counts = strokeCounts, wanted = wantedStrokes
+    if (wanted === null) return found.hits
+    if (!counts) return []
+    return found.hits.filter(hit => counts.get(hit.char) === wanted)
+  })
+  const totalCount = $derived.by(() => {
+    if (found.key !== queryKey) return 0
+    if (wantedStrokes !== null) return filteredHits.length
+    if (found.status === 'ready' && found.askedLimit >= found.total && found.hits.length < found.total) return found.hits.length
+    return found.total
+  })
+  let lastHits = $state.raw(/** @type {IdsHit[]} */ ([]))
+  let lastCount = $state(0)
+  const shownCount = $derived(!busy && found.key === queryKey ? totalCount : lastCount)
+  const pages = $derived(Math.max(1, Math.ceil(shownCount / pageSize)))
+  const currentPage = $derived(Math.min(page, pages - 1))
+  const pageHits = $derived.by(() => {
+    if (busy && found.key !== queryKey) return []
+    if (wantedStrokes !== null && !strokeCounts) return []
+    const start = currentPage * pageSize
+    return filteredHits.slice(start, start + pageSize)
+  })
+  $effect(() => {
+    if (!asked || found.status === 'failed' || found.status === 'pattern' || found.status === 'extra') {
+      lastHits = []
+      lastCount = 0
+    } else if (!busy && found.key === queryKey) {
+      lastHits = pageHits
+      lastCount = totalCount
+    }
+  })
+  const displayedHits = $derived(busy && !pageHits.length ? lastHits : pageHits)
+  /** @param {number} target @param {boolean} [scroll] */
+  function goToPage(target, scroll = false) {
+    const next = Math.max(0, Math.min(pages - 1, target))
+    page = next
+    if (scroll) topAnchor?.scrollIntoView({ block: 'nearest' })
+    return next
+  }
+  /** @param {HTMLInputElement} input @param {boolean} scroll */
+  function commitPage(input, scroll) {
+    const value = input.valueAsNumber
+    const next = Number.isFinite(value) ? goToPage(Math.floor(value) - 1, scroll) : currentPage
+    input.value = String(next + 1)
+  }
   async function copyAll() {
     const id = asks
+    const text = wantedStrokes === null ? found.characters : filteredHits.map(hit => hit.char).join('')
     copying = true
     try {
-      await navigator.clipboard.writeText(found.characters)
+      await navigator.clipboard.writeText(text)
       if (id === asks) copied = true
     } catch { if (id === asks) copyFailed = true }
     finally { copying = false }
   }
   $effect(() => {
-    const text = asked, find = mode === 'structure' ? adapter.findByStructure
+    const text = asked, key = queryKey
+    const find = mode === 'structure' ? adapter.findByStructure
       : mode === 'unknown' ? adapter.findByUnknownStructure
       : mode === 'similar' ? adapter.findSimilar : adapter.findByIds
-    const most = strokeLimit === '' ? shown : Math.max(shown, 600)
+    const needAll = wantedStrokes !== null
+    const targetLimit = needAll ? ALL_LIMIT : (page + 1) * pageSize
+    if (!text || !find) {
+      asks++
+      found = { key, find, status: 'idle', hits: [], total: 0, characters: '', askedLimit: 0 }
+      return
+    }
+    const current = untrack(() => found)
+    const sameQuery = current.key === key && current.find === find
+    const satisfied = sameQuery && (
+      (current.status === 'ready' && (current.hits.length >= current.total || current.askedLimit >= targetLimit))
+      || (!needAll && current.hits.length >= targetLimit && (current.status === 'ready' || current.status === 'loading'))
+    )
+    if (satisfied) {
+      if (current.status === 'loading') untrack(() => { found = { ...found, status: 'ready' } })
+      return
+    }
     const id = ++asks
-    if (!text || !find) { found = { status: 'idle', hits: [], total: 0, characters: '' }; return }
     const controller = new AbortController()
     untrack(() => { found = { ...found, status: 'loading' } })
-    const timer = setTimeout(() => find(text, { limit: most, signal: controller.signal }).then(
+    const wait = sameQuery && current.status === 'ready' && !needAll ? 0 : delay
+    const timer = setTimeout(() => find(text, { limit: targetLimit, signal: controller.signal }).then(
       result => {
         if (id !== asks) return
         const problem = 'problem' in result ? result.problem : undefined
-        found = { status: problem === 'extra' ? 'extra' : problem === 'pattern' ? 'pattern' : problem ? 'idle' : 'ready', hits: result.hits, total: result.total, characters: 'characters' in result && typeof result.characters === 'string' ? result.characters : '' }
+        found = {
+          key,
+          find,
+          status: problem === 'extra' ? 'extra' : problem === 'pattern' ? 'pattern' : problem ? 'idle' : 'ready',
+          hits: result.hits,
+          total: result.total,
+          characters: 'characters' in result && typeof result.characters === 'string' ? result.characters : '',
+          askedLimit: targetLimit,
+        }
       },
-      () => { if (id === asks && !controller.signal.aborted) found = { status: 'failed', hits: [], total: 0, characters: '' } }), delay)
+      () => { if (id === asks && !controller.signal.aborted) found = { key, find, status: 'failed', hits: [], total: 0, characters: '', askedLimit: 0 } }), wait)
     return () => { clearTimeout(timer); controller.abort() }
   })
   /** The description in pieces, each marked when a term matched it. @param {IdsHit} hit */
@@ -84,28 +159,40 @@
   const cp = char => `U+${/** @type {number} */ (char.codePointAt(0)).toString(16).toUpperCase().padStart(4, '0')}`
 </script>
 
-<section class="ids-search-results" aria-label={t('ids.search.title')} data-status={found.status} bind:this={panel}>
+{#snippet pager(/** @type {boolean} */ bottom)}
+  <div class="pages" role="group" aria-label={t('ids.search.pages')}>
+    <button type="button" disabled={currentPage === 0} onclick={() => goToPage(currentPage - 1, bottom)}>{t('ids.search.previous')}</button>
+    <input type="number" min="1" max={pages} value={currentPage + 1} aria-label={t('ids.search.pages')}
+      onchange={event => commitPage(event.currentTarget, bottom)}
+      onkeydown={event => { if (event.key === 'Enter') { event.preventDefault(); commitPage(event.currentTarget, bottom) } }} />
+    <span>{t('ids.search.page', { page: currentPage + 1, pages })}</span>
+    <button type="button" disabled={currentPage + 1 >= pages} onclick={() => goToPage(currentPage + 1, bottom)}>{t('ids.search.next')}</button>
+  </div>
+{/snippet}
+
+<section class="ids-search-results" aria-label={t('ids.search.title')} data-status={busy ? 'loading' : found.status} bind:this={panel}>
   <div class="stroke-limit">
     <label for={`${uid}-strokes`}>{t('ids.search.strokes')}</label>
     <input id={`${uid}-strokes`} type="number" min="1" max="40" inputmode="numeric" autocomplete="off"
       placeholder={t('ids.search.strokesAny')} value={strokeLimit}
       oninput={event => { strokeLimit = event.currentTarget.value }} />
   </div>
-  <p class="count" aria-live="polite">
+  <p class="count" aria-live="polite" bind:this={topAnchor}>
     {#if found.status === 'failed'}<span class="fault">{t('ids.search.failed')}</span>
     {:else if found.status === 'pattern'}<span class="fault">{t(mode === 'unknown' ? 'ids.structural.unknownInvalid' : 'ids.structural.invalid')}</span>
     {:else if found.status === 'extra'}<span class="fault">{t('ids.problem.extra')}</span>
-    {:else if asked && found.status !== 'idle' && found.status !== 'loading' || found.status === 'loading' && found.hits.length}{t('ids.search.count', { count: strokeLimit === '' ? found.total : visibleHits.length })}{/if}
+    {:else if asked && ((found.status === 'ready' && !busy) || displayedHits.length)}{t('ids.search.count', { count: shownCount })}{/if}
   </p>
-  {#if (mode === 'structure' || mode === 'unknown') && found.status === 'ready' && found.total > 0}
+  {#if (mode === 'structure' || mode === 'unknown') && shownCount > 0 && found.status !== 'idle' && found.status !== 'failed' && found.status !== 'pattern' && found.status !== 'extra'}
     <div class="result-actions">
-      <button type="button" disabled={copying} onclick={copyAll}>{t(copied ? 'ids.structural.copied' : 'ids.structural.copy')}</button>
+      <button type="button" disabled={copying || busy} onclick={copyAll}>{t(copied ? 'ids.structural.copied' : 'ids.structural.copy')}</button>
       {#if copyFailed}<span role="status">{t('ids.structural.copyFailed')}</span>{/if}
     </div>
   {/if}
-  {#if visibleHits.length}
-    <ol class="hits" class:stale={found.status === 'loading'}>
-      {#each visibleHits as hit (hit.char)}
+  {#if displayedHits.length}
+    {#if pages > 1}{@render pager(false)}{/if}
+    <ol class="hits" class:stale={busy}>
+      {#each displayedHits as hit (hit.char)}
         <li class="hit">
           <button type="button" class="open" data-character={hit.char} title={`${t('ids.search.open', { sequence: hit.sequence })} · ${cp(hit.char)}`} draggable="true"
             ondragstart={event => event.dataTransfer?.setData('text/plain', hit.char)} onclick={() => onopen?.(hit)}>
@@ -118,10 +205,8 @@
         </li>
       {/each}
     </ol>
-    {#if (mode === 'structure' || mode === 'unknown') && found.hits.length < found.total}
-      <button type="button" class="more" disabled={found.status === 'loading'} onclick={() => shown += limit}>{t('ids.structural.more')}</button>
-    {/if}
-  {:else if found.status !== 'loading'}
+    {#if pages > 1 && displayedHits.length > 12}{@render pager(true)}{/if}
+  {:else if !busy}
     <!-- Nothing found, or nothing asked: a drawing of an empty search. -->
     <svg class="empty" viewBox="0 0 120 80" aria-hidden="true"><rect x="18" y="14" width="44" height="44" rx="8" /><path d="M40 26v20M30 36h20" /><circle cx="84" cy="44" r="16" /><path d="m96 56 12 12" /></svg>
   {/if}
@@ -140,10 +225,16 @@
   .count{margin:0;min-height:18px;font-size:12px;color:var(--_muted)}
   .stroke-limit{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--_muted);justify-content:flex-end}
   .stroke-limit input{width:56px;padding:4px 6px;border:1px solid var(--_line);border-radius:6px;background:var(--_surface);color:var(--_ink);font:inherit;text-align:center}
-  .stroke-limit input:focus-visible{outline:2px solid var(--_focus);outline-offset:1px}
+  .stroke-limit input:focus-visible,.pages input:focus-visible{outline:2px solid var(--_focus);outline-offset:1px}
   .result-actions{display:flex;align-items:center;gap:8px;font-size:12px}
-  .result-actions button,.more{border:1px solid var(--_line);background:var(--_surface);color:var(--_ink);border-radius:6px;padding:5px 10px;font:inherit;cursor:pointer}
-  .more{align-self:center}
+  .result-actions button,.pages button,.pages input{border:1px solid var(--_line);background:var(--_surface);color:var(--_ink);border-radius:6px;padding:4px 8px;font:inherit}
+  .result-actions button{padding:5px 10px}
+  .result-actions button,.pages button{cursor:pointer}
+  .pages{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;font-size:12px;color:var(--_muted)}
+  .pages button:disabled{cursor:default;opacity:.55}
+  .pages button:not(:disabled):hover,.result-actions button:not(:disabled):hover{border-color:var(--_accent)}
+  .pages input{width:4.5em;text-align:center;font-variant-numeric:tabular-nums}
+  .pages span{font-variant-numeric:tabular-nums}
   .fault{color:var(--_fault)}
   .hits{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:6px;margin:0;padding:0;list-style:none;transition:opacity .15s}
   .hits.stale{opacity:.55}

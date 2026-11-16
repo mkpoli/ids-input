@@ -37,9 +37,14 @@ const tier = char => { const cp = /** @type {number} */ (char.codePointAt(0)); r
 export const OPEN_DEPTH = 6
 /** The most terms a query takes. */
 export const TERMS = 8
-/** What a whole-description match takes off a hit's score, and what each written shape matched only
- * through a lookalike adds: exact matches first, then hits holding the shape as written. */
-const EXACT = 1_000_000_000, LOOKALIKE = 1_000_000
+/** What a whole-description match takes off a hit's score, what each written shape matched only
+ * through a lookalike adds, and what each folded equivalent adds: exact matches first, then
+ * written shapes, then literal matches before folded equivalents. */
+const EXACT = 1_000_000_000, LOOKALIKE = 1_000_000, FOLD_PENALTY = 10_000
+
+/** Whether `data` matches `leaf` directly as typed, without form folding.
+ * @param {QueryLeaf} leaf @param {string} data */
+const literalMatch = (leaf, data) => typeof leaf === 'string' ? data === leaf : leaf.anyOf.includes(data)
 
 /** zi.tools' two wildcard expressions for looking up components.
  * @param {string} text @returns {{ kind: 'parts' | 'containing', char: string } | null} */
@@ -543,38 +548,58 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
 
   /**
    * `pattern` matched against `data`: the data subtree, components opened where the pattern needed
-   * them, or null. `opened` counts the components opened.
-   * @param {Pattern} pattern @param {Tree} data @param {number} depth @param {{ opened: number }} cost
+   * them, or null. `opened` counts the components opened and `folded` the leaves matched through
+   * form folding rather than literally as typed.
+   * @param {Pattern} pattern @param {Tree} data @param {number} depth @param {{ opened: number, folded: number }} cost
    * @returns {Tree | null}
    */
   function match(pattern, data, depth, cost) {
     if (pattern === null) return data
-    if (typeof pattern === 'string' || 'anyOf' in pattern) return typeof data === 'string' && choices(pattern).includes(fold(data)) ? data : null
+    if (typeof pattern === 'string' || 'anyOf' in pattern) {
+      if (typeof data !== 'string') return null
+      if (literalMatch(pattern, data)) return data
+      if (choices(pattern).includes(fold(data))) { cost.folded++; return data }
+      return null
+    }
     if (typeof data !== 'string') {
       if (data.op !== pattern.op || data.parts.length !== pattern.parts.length) return null
       // ⿻ lays its parts over each other, so either order is the same shape.
       if (pattern.op === '⿻') {
         const swapped = { op: pattern.op, parts: [pattern.parts[1], pattern.parts[0]] }
-        const trial = { opened: cost.opened }
+        const trial = { opened: cost.opened, folded: cost.folded }
         const straight = matchParts(pattern, data, depth, trial)
-        if (straight !== null) { cost.opened = trial.opened; return straight }
-        return matchParts(swapped, data, depth, cost)
+        if (straight !== null && trial.folded === cost.folded) { cost.opened = trial.opened; return straight }
+        const flipped = { opened: cost.opened, folded: cost.folded }
+        const swappedHit = matchParts(swapped, data, depth, flipped)
+        if (swappedHit !== null && (straight === null || flipped.folded < trial.folded)) {
+          cost.opened = flipped.opened; cost.folded = flipped.folded; return swappedHit
+        }
+        if (straight !== null) { cost.opened = trial.opened; cost.folded = trial.folded; return straight }
+        return null
       }
       return matchParts(pattern, data, depth, cost)
     }
     // A component standing where the pattern has structure: opened into its descriptions.
     if (depth >= OPEN_DEPTH) return null
+    /** @type {{ tree: Tree, opened: number, folded: number } | null} */
+    let best = null
     for (const tree of treesOf(data)) {
-      const trial = { opened: cost.opened + 1 }
+      const trial = { opened: cost.opened + 1, folded: cost.folded }
       const got = match(pattern, tree, depth + 1, trial)
-      if (got !== null) { cost.opened = trial.opened; return typeof got === 'string' ? got : { ...got, from: data } }
+      if (got !== null && (!best || trial.folded < best.folded || (trial.folded === best.folded && trial.opened < best.opened))) {
+        best = { tree: typeof got === 'string' ? got : { ...got, from: data }, opened: trial.opened, folded: trial.folded }
+        if (best.folded === cost.folded) break
+      }
     }
-    return null
+    if (!best) return null
+    cost.opened = best.opened
+    cost.folded = best.folded
+    return best.tree
   }
 
   /**
    * A node's parts matched in order.
-   * @param {{ op: string, parts: Pattern[] }} pattern @param {{ op: string, parts: Tree[], from?: string }} data @param {number} depth @param {{ opened: number }} cost
+   * @param {{ op: string, parts: Pattern[] }} pattern @param {{ op: string, parts: Tree[], from?: string }} data @param {number} depth @param {{ opened: number, folded: number }} cost
    * @returns {Tree | null}
    */
   function matchParts(pattern, data, depth, cost) {
@@ -588,27 +613,34 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
     return parts.some((p, i) => p !== data.parts[i]) ? { ...data, parts } : data
   }
 
+  /** Whether `a` ranks closer than `b`: literal matches first, then fewer openings and shallower depth.
+   * @param {{ depth: number, opened: number, folded: number }} a
+   * @param {{ depth: number, opened: number, folded: number }} b */
+  const closerFind = (a, b) => a.folded !== b.folded
+    ? a.folded < b.folded
+    : a.depth * 4 + a.opened * 2 < b.depth * 4 + b.opened * 2
+
   /**
    * The closest place `pattern` stands in `data`: the whole of it rebuilt with the match (and every
    * component opened on the way to it), the path to the match, and its cost.
    * @param {Pattern} pattern @param {Tree} data @param {number} depth
-   * @returns {{ tree: Tree, path: number[], depth: number, opened: number } | null}
+   * @returns {{ tree: Tree, path: number[], depth: number, opened: number, folded: number } | null}
    */
   function find(pattern, data, depth) {
-    const cost = { opened: 0 }
+    const cost = { opened: 0, folded: 0 }
     const here = match(pattern, data, depth, cost)
-    /** @type {{ tree: Tree, path: number[], depth: number, opened: number } | null} */
-    let best = here === null ? null : { tree: here, path: [], depth: 0, opened: cost.opened }
-    if (best && best.opened === 0) return best
+    /** @type {{ tree: Tree, path: number[], depth: number, opened: number, folded: number } | null} */
+    let best = here === null ? null : { tree: here, path: [], depth: 0, opened: cost.opened, folded: cost.folded }
+    if (best && best.opened === 0 && best.folded === 0) return best
     if (typeof data === 'string') {
       if (depth >= OPEN_DEPTH || data === UNKNOWN || unencoded(data) !== null) return best
-      // Inside a component: in its first description that holds the pattern.
+      // Inside a component: prefer a description that matches literally over one that folds.
       for (const tree of treesOf(data)) {
         const inner = find(pattern, tree, depth + 1)
         if (!inner) continue
-        if (!best || (inner.depth * 4 + (inner.opened + 1) * 2) < best.depth * 4 + best.opened * 2)
-          best = { tree: typeof inner.tree === 'string' ? inner.tree : { ...inner.tree, from: data }, path: inner.path, depth: inner.depth, opened: inner.opened + 1 }
-        break
+        const next = { tree: typeof inner.tree === 'string' ? inner.tree : { ...inner.tree, from: data }, path: inner.path, depth: inner.depth, opened: inner.opened + 1, folded: inner.folded }
+        if (!best || closerFind(next, best)) best = next
+        if (best.folded === 0) break
       }
       return best
     }
@@ -617,10 +649,12 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
     if (node.op === '㇯') return best
     node.parts.forEach((part, i) => {
       const inner = find(pattern, part, depth)
-      if (!inner || (best && best.depth * 4 + best.opened * 2 <= (inner.depth + 1) * 4 + inner.opened * 2)) return
+      if (!inner) return
+      const candidate = { depth: inner.depth + 1, opened: inner.opened, folded: inner.folded }
+      if (best && !closerFind(candidate, best)) return
       const parts = node.parts.slice()
       parts[i] = inner.tree
-      best = { tree: { ...node, parts }, path: [i, ...inner.path], depth: inner.depth + 1, opened: inner.opened }
+      best = { tree: { ...node, parts }, path: [i, ...inner.path], depth: inner.depth + 1, opened: inner.opened, folded: inner.folded }
     })
     return best
   }
@@ -636,28 +670,33 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
    * The first place a component stands in `data`, opening encoded components to reach it: the
    * data rebuilt with those openings, the path to the component, and how many were opened.
    * @param {string} char @param {Tree} data @param {number} depth
-   * @returns {{ tree: Tree, path: number[], opened: number } | null}
+   * @returns {{ tree: Tree, path: number[], opened: number, folded: number } | null}
    */
   function placeLeaf(char, data, depth) {
     if (typeof data === 'string') {
-      if (fold(data) === fold(char)) return { tree: data, path: [], opened: 0 }
+      if (fold(data) === fold(char)) return { tree: data, path: [], opened: 0, folded: data === char ? 0 : 1 }
       if (depth >= OPEN_DEPTH || data === UNKNOWN || unencoded(data) !== null) return null
+      /** @type {{ tree: Tree, path: number[], opened: number, folded: number } | null} */
+      let best = null
       for (const tree of treesOf(data)) {
         const inner = placeLeaf(char, tree, depth + 1)
-        if (inner) return { tree: typeof inner.tree === 'string' ? inner.tree : { ...inner.tree, from: data }, path: inner.path, opened: inner.opened + 1 }
+        if (!inner) continue
+        const next = { tree: typeof inner.tree === 'string' ? inner.tree : { ...inner.tree, from: data }, path: inner.path, opened: inner.opened + 1, folded: inner.folded }
+        if (!best || next.folded < best.folded || (next.folded === best.folded && next.opened < best.opened)) best = next
+        if (best.folded === 0) break
       }
-      return null
+      return best
     }
     // A subtraction's operands do not necessarily survive in the resulting character.
     if (data.op === '㇯') return null
-    /** @type {{ tree: Tree, path: number[], opened: number } | null} */
+    /** @type {{ tree: Tree, path: number[], opened: number, folded: number } | null} */
     let best = null
     data.parts.forEach((part, i) => {
       const inner = placeLeaf(char, part, depth)
-      if (!inner || (best && best.opened <= inner.opened)) return
+      if (!inner || (best && (inner.folded > best.folded || (inner.folded === best.folded && best.opened <= inner.opened)))) return
       const parts = data.parts.slice()
       parts[i] = inner.tree
-      best = { tree: { ...data, parts }, path: [i, ...inner.path], opened: inner.opened }
+      best = { tree: { ...data, parts }, path: [i, ...inner.path], opened: inner.opened, folded: inner.folded }
     })
     return best
   }
@@ -673,10 +712,10 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
     const keys = elements.map(element => typeof element === 'string' ? fold(element) : write(element))
     const repeated = new Set(keys.filter((key, at) => keys.indexOf(key) !== at))
     const ordered = [...elements].sort((a, b) => (typeof a === 'string' ? 1 : 0) - (typeof b === 'string' ? 1 : 0))
-    /** @type {{ text: string, spans: [number, number][], opened: number } | null} */
+    /** @type {{ text: string, spans: [number, number][], opened: number, folded: number } | null} */
     let best = null
     for (const description of treesOf(hit.char)) {
-      let root = description, opened = 0, ok = true
+      let root = description, opened = 0, folded = 0, ok = true
       /** @type {number[][]} */
       const paths = []
       /** @type {{ path: number[], original: Tree }[]} */
@@ -686,6 +725,7 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
         if (!found) { ok = false; break }
         root = found.tree
         opened += found.opened
+        folded += found.folded
         paths.push(found.path)
         // A repeated element takes a distinct occurrence: hide this one from the next placement.
         if (repeated.has(typeof element === 'string' ? fold(element) : write(element))) {
@@ -697,8 +737,8 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
       for (const { path, original } of marked) root = /** @type {Tree} */ (replaceAt(root, path, original))
       if (!ok) continue
       const shown = written(root, paths), length = [...shown.text].length
-      if (!best || opened < best.opened || (opened === best.opened && length < [...best.text].length))
-        best = { ...shown, opened }
+      if (!best || folded < best.folded || (folded === best.folded && (opened < best.opened || (opened === best.opened && length < [...best.text].length))))
+        best = { ...shown, opened, folded }
     }
     return best ? { ...hit, sequence: best.text, spans: best.spans } : hit
   }
@@ -806,37 +846,43 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
     const firstLeaf = parseQuery(part).terms[0]?.leaves[0]
     // A part never contains itself, though a kana may contain a lookalike of its own shape.
     const excludeSelf = !firstLeaf || (typeof firstLeaf === 'string' ? [firstLeaf] : firstLeaf.anyOf).map(fold).includes(fold(part))
-    /** @type {Map<string, string[]>} */
+    /** @type {Map<string, { char: string, exact: boolean }[]>} */
     const aliases = new Map()
     for (const [char, descriptions] of table) for (const text of descriptions) {
       const list = tokens(text)
       if (list.length !== 1 || list[0] === char || isSequence(text) || unencoded(list[0]) !== null || !isComponent(list[0])) continue
       const key = fold(list[0])
       if (!aliases.has(key)) aliases.set(key, [])
-      aliases.get(key)?.push(char)
+      aliases.get(key)?.push({ char, exact: list[0] === part })
     }
-    const queue = [part], seen = new Set([fold(part)])
+    /** @type {{ char: string, folded: boolean }[]} */
+    const queue = [{ char: part, folded: false }]
+    const seen = new Set([fold(part)])
     /** @type {Map<string, Hit>} */
     const found = new Map()
-    /** @param {string} key */
-    const addAliases = key => {
-      for (const char of aliases.get(key) ?? []) {
-        if ((char !== part || !excludeSelf) && !found.has(char)) found.set(char, { char, sequence: char, spans: [], score: 0 })
-        const folded = fold(char)
-        if (!seen.has(folded)) { seen.add(folded); queue.push(char) }
+    /** @param {string} key @param {boolean} [fromFolded] */
+    const addAliases = (key, fromFolded = false) => {
+      for (const { char, exact } of aliases.get(key) ?? []) {
+        const folded = fromFolded || !exact
+        const score = folded ? FOLD_PENALTY : 0
+        const old = found.get(char)
+        if ((char !== part || !excludeSelf) && (!old || score < old.score)) found.set(char, { char, sequence: char, spans: [], score })
+        const f = fold(char)
+        if (!seen.has(f)) { seen.add(f); queue.push({ char, folded }) }
       }
     }
     if (firstLeaf) for (const key of choices(firstLeaf)) addAliases(key)
     for (let i = 0; i < queue.length; i++) {
-      const current = queue[i]
+      const { char: current, folded } = queue[i]
       // An alias is a literal component in the source data, even when it looks like kana
       // that the ordinary query parser treats as a visual substitute.
       for (const hit of search(current, { limit: Infinity, literal: i > 0 }).hits) {
-        const old = found.get(hit.char)
-        if ((i === 0 || hit.char !== part || !excludeSelf) && (!old || hit.score < old.score)) found.set(hit.char, hit)
-        addAliases(fold(hit.char))
+        const entry = folded ? { ...hit, score: hit.score + FOLD_PENALTY } : hit
+        const old = found.get(entry.char)
+        if ((i === 0 || entry.char !== part || !excludeSelf) && (!old || entry.score < old.score)) found.set(entry.char, entry)
+        addAliases(fold(entry.char), folded || entry.score >= FOLD_PENALTY)
       }
-      addAliases(fold(current))
+      addAliases(fold(current), folded)
     }
     const sorted = [...found.values()].sort((a, b) => a.score - b.score || tier(a.char) - tier(b.char)
       || /** @type {number} */ (a.char.codePointAt(0)) - /** @type {number} */ (b.char.codePointAt(0)))
@@ -876,6 +922,67 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
       return all
     })
     if (required.some(needs => needs.some(ids => !ids.length))) return { hits: [], total: 0 }
+    // Literal target tokens requested by component-run terms, so matches using exact characters as
+    // typed rank ahead of characters reached only through form equivalents.
+    /** @type {Map<string, number>} */
+    const literalSlot = new Map()
+    /** @type {string[]} */
+    const slotToken = []
+    /** @type {Set<number>} */
+    const targetFoldIds = new Set()
+    const literalNeeds = terms.map(term => term.kind !== 'components' ? [] : term.leaves.map(leaf => {
+      const tokens = typeof leaf === 'string' ? [leaf] : leaf.anyOf
+      return tokens.map(tok => {
+        let slot = literalSlot.get(tok)
+        if (slot === undefined) { slot = slotToken.length; literalSlot.set(tok, slot); slotToken.push(tok) }
+        const fid = keyOf.get(fold(tok))
+        if (fid !== undefined) targetFoldIds.add(fid)
+        return slot
+      })
+    }))
+    const slotCount = slotToken.length
+    const ZERO_SLOTS = new Int32Array(slotCount)
+    /** @type {Map<string, Int32Array>} */
+    const literalCache = new Map()
+    /** @type {Set<string>} */
+    const literalCut = new Set()
+    /** @param {string} c @param {Set<string>} path @returns {Int32Array} */
+    function literalOf(c, path) {
+      const cached = literalCache.get(c)
+      if (cached) return cached
+      if (path.has(c) || path.size > 12) { for (const p of path) literalCut.add(p); return ZERO_SLOTS }
+      const holds = held.get(c) ?? EMPTY_HELD
+      let possible = false
+      for (const fid of targetFoldIds) if (countIn(holds, fid)) { possible = true; break }
+      if (!possible) { literalCache.set(c, ZERO_SLOTS); return ZERO_SLOTS }
+      path.add(c)
+      const best = new Int32Array(slotCount)
+      for (const t of treesOf(c)) {
+        const got = literalIn(t, c, path)
+        for (let j = 0; j < slotCount; j++) if (got[j] > best[j]) best[j] = got[j]
+      }
+      path.delete(c)
+      if (literalCut.has(c) && path.size) literalCut.delete(c)
+      else { literalCut.delete(c); literalCache.set(c, best) }
+      return best
+    }
+    /** @param {Tree} t @param {string} owner @param {Set<string>} path @returns {Int32Array} */
+    function literalIn(t, owner, path) {
+      const counts = new Int32Array(slotCount)
+      /** @param {Tree} node */
+      const walk = node => {
+        if (typeof node !== 'string') { if (node.op !== '㇯') node.parts.forEach(walk); return }
+        if (node === UNKNOWN || unencoded(node) !== null || node === owner) return
+        const slot = literalSlot.get(node)
+        if (slot !== undefined) counts[slot]++
+        const inner = literalOf(node, path)
+        for (let j = 0; j < slotCount; j++) counts[j] += inner[j]
+      }
+      walk(t)
+      const selfSlot = literalSlot.get(owner)
+      if (selfSlot !== undefined) counts[selfSlot] = 0
+      return counts
+    }
     // Start with the rarest union of alternative postings, never their Cartesian product.
     const groups = new Map(required.flat().map(ids => [ids.join(','), ids]))
     const rarest = [...groups.values()].sort((a, b) =>
@@ -904,12 +1011,12 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
       const char = by.chars[c], holds = /** @type {Int32Array} */ (held.get(char))
       if (required.some(needs => !allocate(needs, id => countIn(holds, id)))) continue
       // Every structure term placed in one of the character's descriptions; the closest wins.
-      /** @type {{ tree: Tree, paths: number[][], score: number, lookalikes: number } | null} */
+      /** @type {{ tree: Tree, paths: number[][], score: number, lookalikes: number, folded: number } | null} */
       let best = null
       for (const tree of treesOf(char)) {
         /** @param {Tree} t @returns {number} */
         const count = t => typeof t === 'string' ? 1 : t.parts.reduce((n, p) => n + count(p), 0)
-        let root = tree, score = 0, lookalikes = 0, ok = true
+        let root = tree, score = 0, lookalikes = 0, folded = 0, ok = true
         /** @type {number[][]} */
         const paths = []
         for (const [i, term] of terms.entries()) {
@@ -921,6 +1028,7 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
           score += found.depth * 4 + found.opened * 2
           const matched = /** @type {Tree} */ (partAt(root, found.path))
           lookalikes += unwritten(shapes[i], id => bears(matched, id))
+          folded += found.folded
         }
         if (!ok) continue
         // Every components term held by this one description, not by several together. A component
@@ -931,48 +1039,88 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
           if (terms.some((term, i) => term.kind === 'components'
             && (!allocate(requested[i], id => holds.get(id) ?? 0) || consistent[i]?.(tree, char) === false))) continue
           terms.forEach((term, i) => { if (term.kind === 'components') lookalikes += unwritten(shapes[i], id => holds.get(id) ?? 0) })
+          if (slotCount) {
+            const lit = literalIn(tree, char, new Set([char]))
+            for (let i = 0; i < terms.length; i++) {
+              if (terms[i].kind !== 'components') continue
+              const assigned = allocate(literalNeeds[i], slot => lit[slot], true) ?? []
+              for (const id of assigned) if (id === -1) folded++
+            }
+          }
         }
-        // Match top-level components with the same allocation used for counts. An ambiguous
-        // alias cannot consume a component needed by a more specific request.
+        // Match top-level components with the same allocation used for counts, preferring literal
+        // top-level components before folded equivalents.
         terms.forEach((term, i) => {
           if (term.kind !== 'components') return
           /** @type {Map<number, number>} */
           const top = new Map()
+          const topLit = new Int32Array(slotCount)
           /** @param {Tree} t */
           const collect = t => {
-            if (typeof t === 'string') { const id = keyOf.get(fold(t)); if (id !== undefined) top.set(id, (top.get(id) ?? 0) + 1) }
-            else t.parts.forEach(collect)
+            if (typeof t === 'string') {
+              const slot = literalSlot.get(t)
+              if (slot !== undefined) topLit[slot]++
+              const id = keyOf.get(fold(t))
+              if (id !== undefined) top.set(id, (top.get(id) ?? 0) + 1)
+            } else t.parts.forEach(collect)
           }
           collect(tree)
-          const assigned = allocate(requested[i], id => top.get(id) ?? 0, true)
-          score += (assigned ?? []).filter(id => id === -1).length
+          const foldAssigned = allocate(requested[i], id => top.get(id) ?? 0, true)
+          const litAssigned = slotCount ? allocate(literalNeeds[i], slot => topLit[slot], true) : []
+          score += (foldAssigned ?? []).filter(id => id === -1).length
+            + (litAssigned ?? []).filter(id => id === -1).length
         })
         score = score * 10 + count(tree)
-        if (best === null || lookalikes < best.lookalikes || lookalikes === best.lookalikes && score < best.score) best = { tree: root, paths, score, lookalikes }
+        if (best === null || lookalikes < best.lookalikes || (lookalikes === best.lookalikes
+          && (folded < best.folded || (folded === best.folded && score < best.score))))
+          best = { tree: root, paths, score, lookalikes, folded }
       }
       if (!best) continue
       // The whole description matched exactly comes first; a description with more parts, later.
       const exact = terms.length === 1 && terms[0].kind === 'structure' && best.paths[0]?.length === 0 && !EMPTY_MARKS.some(mark => terms[0].text.includes(mark)) && !terms[0].text.includes(UNKNOWN)
-      found.push({ char, tree: best.tree, paths: best.paths, score: (exact ? -EXACT : 0) + best.lookalikes * LOOKALIKE + best.score + tier(char) * 15 })
+      found.push({ char, tree: best.tree, paths: best.paths, score: (exact ? -EXACT : 0) + best.lookalikes * LOOKALIKE + best.folded * FOLD_PENALTY + best.score + tier(char) * 15 })
     }
     found.sort((a, b) => a.score - b.score || tier(a.char) - tier(b.char) || /** @type {number} */ (a.char.codePointAt(0)) - /** @type {number} */ (b.char.codePointAt(0)))
     // Only the hits handed back are written out, with their spans.
     const hits = found.slice(0, limit).map(({ char, tree, paths, score }) => {
       const { text, spans } = written(tree, paths)
-      // Allocate highlighted occurrences too, so overlapping alias families do not reuse a leaf.
+      // Allocate highlighted occurrences too, preferring literal matches before folded equivalents
+      // so overlapping alias families do not reuse a leaf or highlight an equivalent over a literal.
       terms.forEach((term, i) => {
         if (term.kind !== 'components') return
         const writtenTokens = tokens(text)
+        const litCounts = new Int32Array(slotCount)
         /** @type {Map<number, number>} */
         const counts = new Map()
-        for (const token of writtenTokens) { const id = keyOf.get(fold(token)); if (id !== undefined) counts.set(id, (counts.get(id) ?? 0) + 1) }
-        const assigned = allocate(requested[i], id => counts.get(id) ?? 0, true) ?? []
-        const wanted = new Map()
-        for (const id of assigned) if (id !== -1) wanted.set(id, (wanted.get(id) ?? 0) + 1)
+        for (const token of writtenTokens) {
+          const slot = literalSlot.get(token)
+          if (slot !== undefined) litCounts[slot]++
+          const id = keyOf.get(fold(token))
+          if (id !== undefined) counts.set(id, (counts.get(id) ?? 0) + 1)
+        }
+        const litAssigned = allocate(literalNeeds[i], slot => litCounts[slot], true) ?? []
+        /** @type {Map<string, number>} */
+        const literalWanted = new Map()
+        /** @type {number[][]} */
+        const remainingNeeds = []
+        litAssigned.forEach((slot, j) => {
+          if (slot === -1) remainingNeeds.push(requested[i][j])
+          else {
+            const tok = slotToken[slot]
+            literalWanted.set(tok, (literalWanted.get(tok) ?? 0) + 1)
+            const fid = keyOf.get(fold(tok))
+            if (fid !== undefined) counts.set(fid, (counts.get(fid) ?? 0) - 1)
+          }
+        })
+        const foldedAssigned = allocate(remainingNeeds, id => counts.get(id) ?? 0, true) ?? []
+        /** @type {Map<number, number>} */
+        const foldedWanted = new Map()
+        for (const id of foldedAssigned) if (id !== -1) foldedWanted.set(id, (foldedWanted.get(id) ?? 0) + 1)
         let at = 0
         for (const token of writtenTokens) {
           const len = [...token].length, id = keyOf.get(fold(token))
-          if (id !== undefined && wanted.get(id)) { spans.push([at, at + len]); wanted.set(id, wanted.get(id) - 1) }
+          if (literalWanted.get(token)) { spans.push([at, at + len]); literalWanted.set(token, /** @type {number} */ (literalWanted.get(token)) - 1) }
+          else if (id !== undefined && foldedWanted.get(id)) { spans.push([at, at + len]); foldedWanted.set(id, /** @type {number} */ (foldedWanted.get(id)) - 1) }
           at += len
         }
       })
@@ -993,7 +1141,7 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
     /** Each character once, with the best score any operand pattern gave it. @type {Map<string, Hit>} */
     const byChar = new Map()
     for (const pattern of similarStructures(text)) {
-      for (const hit of search(pattern, { limit }).hits) {
+      for (const hit of search(pattern, { limit: Infinity }).hits) {
         if (exactly(hit.char)) continue
         const prior = byChar.get(hit.char)
         if (!prior || hit.score < prior.score) byChar.set(hit.char, hit)
@@ -1004,7 +1152,7 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
     const hits = [...byChar.values()]
       .sort((a, b) => a.score - b.score || tier(a.char) - tier(b.char)
         || /** @type {number} */ (a.char.codePointAt(0)) - /** @type {number} */ (b.char.codePointAt(0)))
-      .slice(0, limit)
+      .slice(0, Math.max(0, limit))
     return { hits, total: byChar.size }
   }
 

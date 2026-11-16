@@ -50,6 +50,12 @@ describe('similar structures', () => {
     // 森 is exactly ⿱木林, so it stays out of its own similar list; 杏 shares 木 on top.
     expect(search.similar('⿱木林', { limit: 10 }).hits.map(hit => hit.char)).toEqual(['杏'])
     expect(search.similar('木')).toEqual({ hits: [], total: 0 })
+    const paged = createSearch(new Map([
+      ['甲', ['⿱木口']], ['戊', ['⿱木口']],
+      ['乙', ['⿱木日']], ['丙', ['⿱木目']], ['丁', ['⿱禾口']],
+    ]))
+    expect(paged.similar('⿱木口', { limit: 1 })).toMatchObject({ hits: [{ char: '丁' }], total: 3 })
+    expect(paged.similar('⿱木口', { limit: 0 })).toEqual({ hits: [], total: 3 })
   })
 })
 
@@ -582,5 +588,60 @@ describe('subtraction queries', () => {
   it('normalizes an unknown-structure pattern too', () => {
     expect(index.unknownStructure('㇯軍車').hits.map(hit => hit.char))
       .toEqual(index.unknownStructure('冖').hits.map(hit => hit.char))
+  })
+})
+
+describe('literal-first ranking', () => {
+  it('ranks literal matches ahead of folded equivalents', () => {
+    const netForms = readForms(
+      'form\tchar\tsource\tdetail\n𦉪\t网\tcjkvi-variants\tradical-variant\n罒\t网\tcjkvi-variants\tradical-variant top\n',
+    )
+    const net = createSearch(new Map([
+      ['甲', ['⿱罒一']],
+      ['奐', ['⿱𦉪大']],
+      ['丁', ['⿱罒奐']],
+      ['𠀀', ['⿱口⿱口𦉪']],
+      ['乙', ['⿱𦉪一']],
+    ]), { forms: netForms })
+    const netHits = net.search('𦉪').hits.map(hit => hit.char)
+    expect(netHits[netHits.length - 1]).toBe('甲')
+    expect(netHits.indexOf('乙')).toBeLessThan(netHits.indexOf('丁'))
+    expect(netHits.indexOf('𠀀')).toBeLessThan(netHits.indexOf('甲'))
+
+    const water = createSearch(new Map([
+      ['A', ['⿰⺡⺡']],
+      ['B', ['⿰水⺡']],
+      ['C', ['⿰⺡水']],
+    ]), { forms })
+    expect(water.search('⺡水').hits.map(hit => hit.char)).toEqual(['B', 'C', 'A'])
+
+    const tree = createSearch(new Map([
+      ['A', ['⿰水木']],
+      ['B', ['⿱艹⿰⺡木']],
+      ['C', ['⿰⺡木']],
+    ]), { forms })
+    expect(tree.search('⿰⺡木').hits.map(hit => hit.char)).toEqual(['C', 'B', 'A'])
+
+    const overlay = createSearch(new Map([
+      ['A', ['⿻水水']],
+      ['B', ['⿻水⺡']],
+      ['C', ['⿻⺡水']],
+    ]), { forms })
+    const overlayHits = overlay.search('⿻⺡水').hits.map(hit => hit.char)
+    expect(overlayHits.slice(0, 2).sort()).toEqual(['B', 'C'])
+    expect(overlayHits[2]).toBe('A')
+
+    const parts = createSearch(new Map([
+      ['A', ['⿱罒大']],
+      ['B', ['⿱𦉪大']],
+    ]), { forms: netForms })
+    expect(parts.search('㇯⬚𦉪').hits.map(hit => hit.char)).toEqual(['B', 'A'])
+    expect(parts.unknownStructure('𦉪大').hits.map(hit => hit.char)).toEqual(['B', 'A'])
+
+    const highlight = createSearch(new Map([
+      ['A', ['⿱罒𦉪']],
+    ]), { forms: netForms })
+    const [hit] = highlight.search('𦉪').hits
+    expect(hit.spans.map(([start, end]) => [...hit.sequence].slice(start, end).join(''))).toEqual(['𦉪'])
   })
 })
