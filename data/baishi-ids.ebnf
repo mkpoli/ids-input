@@ -5,16 +5,15 @@
    https://github.com/yi-bai/ids at commit 2597437b928e8d530b7ae09cf53fe5ec7868569c
    (2026-10-31), 306,102 rows, except 4 malformed ones.
 
-   Source: the EBNF on pp.31-33 of （白式）IDS 延展语法导论, 2026-03-20 ("I26"),
+   Source: the EBNF in §9 of （白式）IDS 延展语法导论, 2026-11-16 ("I26"),
    compiled by NightFurySL2001 from the design of 白易 (Yi Bai, zi.tools),
-   https://github.com/NightFurySL2001/bai-ids. I26 calls its EBNF reference only,
+   https://github.com/NightFurySL2001/bai-ids at commit
+   0ca5ed48f51821d4d54246196f1f5f38c9d6bd6a. I26 calls its EBNF reference only,
    not a formal definition ("仅供参考，并非正式定义").
 
-   Corrections against I26, tagged CHANGE in the comments below:
-     C1  the third column (the alternative group) is optional;
-     C2  CJK strokes run through U+31E5.
-   Rewrites that keep the accepted language and only remove ambiguity are tagged
-   SAME-LANGUAGE. The rule names of I26 are given as [I26: ...].
+   This file accepts the same rows as the grammar of I26. Rewrites that only remove
+   ambiguity are tagged SAME-LANGUAGE. The rule names of I26 are given as
+   [I26: ...].
 
    Special sequences: ? Ideographic ? and ? Radical ? are the properties of those
    names in Unicode 18.0.0 PropList.txt; ? CJK stroke ? is U+31C0..U+31E5;
@@ -27,11 +26,7 @@
 (* ================= 1. Rows ================= *)
 
 (* One line of ids_lv0/1/2.txt: the character, a TAB, its primary entries,
-   and optionally a TAB and alternative entries. [I26: IDS_Definition_Row]
-   CHANGE C1: the alternative group is optional. I26 prints
-   "(TAB IDS_Alternative_Definition)" without "?", which rejects every
-   two-column row (95043 of 102034 rows in lv0); its own prose (§3.1) and the
-   README say the third column is optional. *)
+   and optionally a TAB and alternative entries. [I26: IDS_Definition_Row] *)
 row = headword, tab, primary group, [tab, alternative group] ;
 
 (* The described character. [I26: Ideograph_Char] *)
@@ -64,7 +59,7 @@ ids = stroke chain
     | ternary operator, component, component, component ;
 
 (* An operand. [I26: IDS_Component]
-   SAME-LANGUAGE: I26 also lists Stroke_Sequence (already an IDS) and 〢 〣
+   SAME-LANGUAGE: I26 also lists Stroke_Chain (already an IDS) and 〢 〣
    (already Ideographic, so already a taggable char). *)
 component = ids | taggable char, [component variant] | curve | "リ" | "コ" ;
 
@@ -77,8 +72,8 @@ binary operator = "⿰" | "⿱" | "⿸" | "⿹" | "⿺" | "⿽" ;
 (* Overlap. [I26: IDS_BinaryOverlapOperator] *)
 overlap operator = "⿻" ;
 
-(* Enclosures and subtraction, which may take an index. ㇯ (U+31EF) is
-   documented but unused in the data. [I26: IDS_BinaryAmbiguousOperator] *)
+(* Enclosures and subtraction, which may take an index. ㇯ (U+31EF) is for
+   searching zi.tools and stands in no row. [I26: IDS_BinaryAmbiguousOperator] *)
 indexed operator = "⿴" | "⿵" | "⿶" | "⿷" | "⿼" | "㇯" ;
 
 (* Three-operand operators. [I26: IDS_TrinaryOperator] *)
@@ -124,7 +119,7 @@ index modifier = "[", number, "]" ;
 (* ================= 5. Stroke chains #(...) ================= *)
 
 (* Strokes joined end to start, with optional closing z.
-   [I26: Stroke_Sequence] *)
+   [I26: Stroke_Chain] *)
 stroke chain = "#", "(", stroke part, {stroke part}, ["z"], ")" ;
 
 (* One link: optional reversal "-", a stroke, optional crossing or break.
@@ -188,8 +183,9 @@ tag char = "." | digit | lower letter ;
 (* ================= 7. Uniqueness prefix {...} ================= *)
 
 (* Braces naming the character whose abstract shape this entry has, so the
-   IDS maps back to one code point; "?" (and a digit) marks a source form far
-   from the other sources of the character; a trailing source letter restricts it.
+   IDS maps back to one code point; "?" marks a source form far from the other
+   sources of the character that has the shape of another code point, and its
+   digit rises with each repeat; a trailing source letter restricts it.
    [I26: Unique_Sequence_Separator] *)
 uniqueness prefix = "{", ["?", [digit]], taggable char, [source letter], "}" ;
 
@@ -204,15 +200,11 @@ ideograph char = taggable char | curve | "リ" | "コ" ;
    [I26: Ideograph_Char_with_Variant] *)
 taggable char = hanzi | cjk stroke | "ユ" | "ス" ;
 
-(* Ideographs and radicals. [I26: Hanzi]
-   SAME-LANGUAGE: the trailing "|" of I26 (an empty alternative) is dropped. *)
+(* Ideographs and radicals. [I26: Hanzi] *)
 hanzi = ? Ideographic ? | ? Radical ? ;
 
-(* CJK Strokes block.
-   CHANGE C2: U+31C0..U+31E5. I26 stops at U+31E3 and says U+31E4/U+31E5 are not
-   in the zi.tools stroke set (its comment prints "U+30E4 和 U+30E5", evidently
-   U+31E4/U+31E5). The data has row "㇥ {㇥}#(SHP)" with U+31E5 as headword and
-   inside braces. [I26: CJK_Stroke] *)
+(* CJK Strokes block, U+31C0..U+31E5. I26 notes that U+31E4 is not in the
+   zi.tools stroke set. [I26: CJK_Stroke] *)
 cjk stroke = ? CJK stroke ? ;
 
 (* The four clockwise quarter arcs. [I26: Curves] *)
