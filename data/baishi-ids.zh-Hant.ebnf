@@ -5,16 +5,14 @@
    2597437b928e8d530b7ae09cf53fe5ec7868569c（2026-10-31）中的ids_lv0.txt、
    ids_lv1.txt與ids_lv2.txt，共306,102列，僅4列格式錯誤者除外。
 
-   來源：《（白式）IDS 延展语法导论》（2026-03-20，以下簡稱「I26」）第31–33頁
+   來源：《（白式）IDS 延展语法导论》（2026-11-16，以下簡稱「I26」）§9
    的EBNF，由NightFurySL2001根據白易（Yi Bai，zi.tools）之設計整理，見
-   https://github.com/NightFurySL2001/bai-ids。I26聲明其EBNF僅作參考用途，
+   https://github.com/NightFurySL2001/bai-ids（commit
+   0ca5ed48f51821d4d54246196f1f5f38c9d6bd6a）。I26聲明其EBNF僅作參考用途，
    並非正式定義（「仅供参考，并非正式定义」）。
 
-   相對於I26的修正處於下列註解中標註為CHANGE：
-     C1：第三欄（備選群組）可以省略；
-     C2：CJK筆畫區段涵蓋至U+31E5。
-   維持所接受語言不變、僅消除歧義的改寫標註為SAME-LANGUAGE。I26的規則名稱
-   以[I26: ...]標示。
+   本檔案接受的資料列與I26的語法相同。僅消除歧義的改寫標註為SAME-LANGUAGE。
+   I26的規則名稱以[I26: ...]標示。
 
    特殊序列：? Ideographic ?與? Radical ?對應Unicode 18.0.0 PropList.txt
    中的同名屬性；? CJK stroke ?為U+31C0..U+31E5；? TAB ?為U+0009。
@@ -25,10 +23,7 @@
 (* ================= 1.資料列 ================= *)
 
 (* ids_lv0/1/2.txt的單一資料列：字元、一個TAB、主要條目，以及可選的TAB
-   與備選條目。[I26: IDS_Definition_Row]
-   CHANGE C1：備選群組為可選。I26印作"(TAB IDS_Alternative_Definition)"
-   而未加"?"，這會拒絕所有兩欄的資料列（lv0共102034列中有95043列）；
-   其正文（§3.1）與README皆指出第三欄為可選。*)
+   與備選條目。[I26: IDS_Definition_Row] *)
 row = headword, tab, primary group, [tab, alternative group] ;
 
 (*所描述的字元。[I26: Ideograph_Char] *)
@@ -59,7 +54,7 @@ ids = stroke chain
     | ternary operator, component, component, component ;
 
 (*運算元。[I26: IDS_Component]
-   SAME-LANGUAGE：I26亦列出Stroke_Sequence（已屬於IDS）以及 〢 〣
+   SAME-LANGUAGE：I26亦列出Stroke_Chain（已屬於IDS）以及 〢 〣
    （已具Ideographic屬性，故已屬於taggable char）。*)
 component = ids | taggable char, [component variant] | curve | "リ" | "コ" ;
 
@@ -72,7 +67,7 @@ binary operator = "⿰" | "⿱" | "⿸" | "⿹" | "⿺" | "⿽" ;
 (*重疊。[I26: IDS_BinaryOverlapOperator] *)
 overlap operator = "⿻" ;
 
-(*包圍與減法，可附帶索引。㇯ (U+31EF)見於文件但資料中尚未使用。
+(*包圍與減法，可附帶索引。㇯ (U+31EF)用於在字統網查詢，資料中沒有任何一列使用。
    [I26: IDS_BinaryAmbiguousOperator] *)
 indexed operator = "⿴" | "⿵" | "⿶" | "⿷" | "⿼" | "㇯" ;
 
@@ -118,7 +113,7 @@ index modifier = "[", number, "]" ;
 (* ================= 5.筆畫鏈#(...) ================= *)
 
 (*首尾相接的筆畫，可選以z閉合。
-   [I26: Stroke_Sequence] *)
+   [I26: Stroke_Chain] *)
 stroke chain = "#", "(", stroke part, {stroke part}, ["z"], ")" ;
 
 (*單一筆畫鏈結：可選的反轉標記"-"、一個筆畫、可選的交叉或斷開標記。
@@ -181,7 +176,8 @@ tag char = "." | digit | lower letter ;
 (* ================= 7.唯一性前綴{...} ================= *)
 
 (*大括號內標明與此條目具相同抽象字形的字元，使IDS能對應回單一碼位；
-   "?"（及數字）標示與該字元其他來源差異較大的字形；結尾的來源字母則加以限定。
+   "?"標示與該字元其他來源差異較大、且與另一碼位撞形的字形，其後的數字按重複出現的次數增加；
+   結尾的來源字母則加以限定。
    [I26: Unique_Sequence_Separator] *)
 uniqueness prefix = "{", ["?", [digit]], taggable char, [source letter], "}" ;
 
@@ -196,14 +192,11 @@ ideograph char = taggable char | curve | "リ" | "コ" ;
    [I26: Ideograph_Char_with_Variant] *)
 taggable char = hanzi | cjk stroke | "ユ" | "ス" ;
 
-(*表意文字與部首。[I26: Hanzi]
-   SAME-LANGUAGE：已移除I26結尾多餘的"|"（空選項）。*)
+(*表意文字與部首。[I26: Hanzi] *)
 hanzi = ? Ideographic ? | ? Radical ? ;
 
 (*中日韓筆畫（CJK Strokes）區段。
-   CHANGE C2：U+31C0..U+31E5。I26僅止於U+31E3，並稱U+31E4/U+31E5不在
-   zi.tools筆畫集中（其註解印作"U+30E4和U+30E5"，顯然實指U+31E4/U+31E5）。
-   然而資料中存在"㇥ {㇥}#(SHP)"一列，將U+31E5作為詞頭字並置於大括號內。
+   U+31C0..U+31E5。I26註明U+31E4實際未收錄進zi.tools的筆畫庫。
    [I26: CJK_Stroke] *)
 cjk stroke = ? CJK stroke ? ;
 

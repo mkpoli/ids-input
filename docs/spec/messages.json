@@ -25,10 +25,7 @@
     "spec.font.role.emoji": "🔄",
     "spec.font.role.mono": "Grammar, diagrams and ◜◝◞◟",
     "spec.font.glyphwiki": "Jigmo's glyphs are GlyphWiki's, whose data-and-article licence (Japanese original of 2008-10-08) permits free use, copying and modification. Text as kept with Mozilla's reftest data in Debian's thunderbird 78.8.0 source package:",
-    "baishi.data.body": "The grammar in this document was checked on every row of yi-bai/ids at {commit} ({date}): {rows} rows of ids_lv0, ids_lv1 and ids_lv2. I26's grammar with two corrections accepts all of them except {rejected} malformed rows.",
-    "baishi.database.checked": "The grammar in this document was checked at the commit of {date}.",
-    "baishi.heading.diagrams": "Railroad diagrams",
-    "baishi.heading.documents": "Sources and licences"
+    "baishi.heading.diagrams": "Railroad diagrams"
   },
   "zh-Hans": {
     "spec.title": "zi.tools IDS Extension——规范",
@@ -56,10 +53,7 @@
     "spec.font.role.emoji": "🔄",
     "spec.font.role.mono": "语法、图示与◜◝◞◟",
     "spec.font.glyphwiki": "Jigmo的字形来自GlyphWiki，其数据与文章许可协议（2008-10-08日文原版）允许自由使用、复制和修改。Debian的thunderbird 78.8.0源码包中随Mozilla的reftest数据保存的文本：",
-    "baishi.data.body": "本文档语法已在yi-bai/ids的{commit}（{date}）提交上逐行验证，共检查ids_lv0、ids_lv1与ids_lv2的{rows}行数据。对I26语法作两处修正后，除{rejected}行格式有误的数据外，其余均可匹配通过。",
-    "baishi.database.checked": "本文档语法已基于{date}的提交完成验证。",
-    "baishi.heading.diagrams": "铁路图",
-    "baishi.heading.documents": "文献来源与许可协议"
+    "baishi.heading.diagrams": "铁路图"
   },
   "zh-Hant": {
     "spec.title": "zi.tools IDS Extension——規範",
@@ -87,9 +81,6 @@
     "spec.font.role.emoji": "🔄",
     "spec.font.role.mono": "語法、圖示與◜◝◞◟",
     "spec.font.glyphwiki": "Jigmo的字形來自GlyphWiki，其資料與文章授權條款（2008-10-08日文原版）允許自由使用、複製和修改。Debian的thunderbird 78.8.0原始碼套件中隨Mozilla的reftest資料保存的文本：",
-    "baishi.data.body": "本文件語法已使用yi-bai/ids於{commit}（{date}）的每一筆資料列進行驗證，涵蓋ids_lv0、ids_lv1與ids_lv2共{rows}列。將I26語法套用兩項修正後，除了{rejected}列格式異常的資料列外，其餘皆可通過。",
-    "baishi.database.checked": "本文件語法已於{date}的提交版本完成驗證。",
-    "baishi.heading.diagrams": "鐵路圖",
-    "baishi.heading.documents": "文獻來源與授權條款"
+    "baishi.heading.diagrams": "鐵路圖"
   }
 }

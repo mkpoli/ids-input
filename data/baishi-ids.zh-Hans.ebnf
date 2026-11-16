@@ -4,14 +4,12 @@
    2597437b928e8d530b7ae09cf53fe5ec7868569c（2026-10-31）下
    ids_lv0.txt、ids_lv1.txt与ids_lv2.txt共306,102行中的全部行（4行格式错误者除外）。
 
-   参考来源：《（白式）IDS 延展语法导论》（2026-03-20，下文简称“I26”）第31–33页的EBNF，
+   参考来源：《（白式）IDS 延展语法导论》（2026-11-16，下文简称“I26”）§9的EBNF，
    由NightFurySL2001根据白易（Yi Bai，zi.tools）的设计整理，见
-   https://github.com/NightFurySL2001/bai-ids。I26声明其EBNF“仅供参考，并非正式定义”。
+   https://github.com/NightFurySL2001/bai-ids（提交
+   0ca5ed48f51821d4d54246196f1f5f38c9d6bd6a）。I26声明其EBNF“仅供参考，并非正式定义”。
 
-   相对I26的修订（在下文注释中以CHANGE标注）：
-     C1：第三列（备选拆分组）可以省略；
-     C2：中日韩笔画区段延续至U+31E5。
-   仅消除歧义而不改变所接受语言的重写以SAME-LANGUAGE标注。
+   本文件接受的行与I26的语法相同。仅消除歧义的重写以SAME-LANGUAGE标注。
    I26的原规则名以[I26: ...]标出。
 
    特殊序列：? Ideographic ?与? Radical ?分别为Unicode 18.0.0 PropList.txt中的同名属性；
@@ -22,9 +20,7 @@
 
 (* ================= 1.行 ================= *)
 
-(* ids_lv0/1/2.txt中的一行：字头、一个TAB、主条目，以及可选的一个TAB和备选条目。[I26: IDS_Definition_Row]
-   CHANGE C1：备选拆分组可以省略。I26写作"(TAB IDS_Alternative_Definition)"而未加"?"，
-   这会拒绝所有两列的行（lv0的102034行中有95043行）；其正文（§3.1）与README均说明第三列可选。*)
+(* ids_lv0/1/2.txt中的一行：字头、一个TAB、主条目，以及可选的一个TAB和备选条目。[I26: IDS_Definition_Row] *)
 row = headword, tab, primary group, [tab, alternative group] ;
 
 (*被描述的字符。[I26: Ideograph_Char] *)
@@ -53,7 +49,7 @@ ids = stroke chain
     | ternary operator, component, component, component ;
 
 (*一个操作数（部件）。[I26: IDS_Component]
-   SAME-LANGUAGE：I26还列出了Stroke_Sequence（已属于IDS）以及 〢 〣（已属于Ideographic，因而已是taggable char）。*)
+   SAME-LANGUAGE：I26还列出了Stroke_Chain（已属于IDS）以及 〢 〣（已属于Ideographic，因而已是taggable char）。*)
 component = ids | taggable char, [component variant] | curve | "リ" | "コ" ;
 
 (*单目运算符：镜像、旋转。[I26: IDS_UnaryOperator] *)
@@ -65,7 +61,7 @@ binary operator = "⿰" | "⿱" | "⿸" | "⿹" | "⿺" | "⿽" ;
 (*重叠运算符。[I26: IDS_BinaryOverlapOperator] *)
 overlap operator = "⿻" ;
 
-(*包围与减法运算符，可带索引修饰。㇯（U+31EF）见于文档说明，但数据中尚未使用。[I26: IDS_BinaryAmbiguousOperator] *)
+(*包围与减法运算符，可带索引修饰。㇯（U+31EF）用于在字统网查询，数据中没有任何一行使用。[I26: IDS_BinaryAmbiguousOperator] *)
 indexed operator = "⿴" | "⿵" | "⿶" | "⿷" | "⿼" | "㇯" ;
 
 (*三目运算符。[I26: IDS_TrinaryOperator] *)
@@ -106,7 +102,7 @@ index modifier = "[", number, "]" ;
 
 (* ================= 5.笔画链#(...) ================= *)
 
-(*首尾相接的笔画序列，末尾可选闭合标记z。[I26: Stroke_Sequence] *)
+(*首尾相接的笔画序列，末尾可选闭合标记z。[I26: Stroke_Chain] *)
 stroke chain = "#", "(", stroke part, {stroke part}, ["z"], ")" ;
 
 (*笔画链中的一节：可选的反向标记"-"、一个笔画、可选的交叉或断开标记。[I26: Stroke_Part] *)
@@ -161,7 +157,8 @@ tag char = "." | digit | lower letter ;
 (* ================= 7.唯一性前缀{...} ================= *)
 
 (*花括号内指明该条目所属抽象字形的对应字符，从而使IDS能够映射回唯一码位；
-   "?"（及可选数字）标记与该字其他字源差异较大的字源字形；末尾可选的字源字母用于进一步限定。
+   "?"标记与该字其他字源差异较大、且与另一码位撞形的字源字形，其后的数字按重复出现的次数增加；
+   末尾可选的字源字母用于进一步限定。
    [I26: Unique_Sequence_Separator] *)
 uniqueness prefix = "{", ["?", [digit]], taggable char, [source letter], "}" ;
 
@@ -174,14 +171,11 @@ ideograph char = taggable char | curve | "リ" | "コ" ;
 (*可附带部件变体标签的字符。[I26: Ideograph_Char_with_Variant] *)
 taggable char = hanzi | cjk stroke | "ユ" | "ス" ;
 
-(*汉字与部首。[I26: Hanzi]
-   SAME-LANGUAGE：删去了I26末尾的"|"（空备选项）。*)
+(*汉字与部首。[I26: Hanzi] *)
 hanzi = ? Ideographic ? | ? Radical ? ;
 
 (*中日韩笔画区段。
-   CHANGE C2：U+31C0..U+31E5。I26止于U+31E3，并称U+31E4/U+31E5不在zi.tools的笔画集中
-   （其注释误印为“U+30E4和U+30E5”，显然指U+31E4/U+31E5）。数据中实际存在行
-   "㇥ {㇥}#(SHP)"，将U+31E5用作字头及花括号内字符。[I26: CJK_Stroke] *)
+   U+31C0..U+31E5。I26注明U+31E4实际未收录进zi.tools的笔画库。[I26: CJK_Stroke] *)
 cjk stroke = ? CJK stroke ? ;
 
 (*四种顺时针四分之一圆弧。[I26: Curves] *)
