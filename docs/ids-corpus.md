@@ -92,11 +92,13 @@ description keeps the notation its source wrote.
 `positional-form` (cjkvi-variants' radical variants, at the place the row names; a row with no place
 folds nothing), `unifiable-variant` (the IRG's UCV list at level 1, read as the first form an entry
 names, and two characters of an entry only where Unihan's variants or the radical variants also give
-them as variants) and `radical-index` (Unihan `kRSUnicode` with no residual strokes, for a form the
-radical variants do not list). A row with a `place` holds there only; `source` rows are stated by a
+them as variants; a positional form is never a placeless member) and `radical-index` (Unihan
+`kRSUnicode` with no residual strokes, only for a member with the radical's stroke count and no
+definition of its own, so 曱 is no form of 田). The radical variants overrule it for a form they list,
+compatibility ideographs included. A row with a `place` holds there only; `source` rows are stated by a
 table and `derived` rows inferred. `data/ids-class-conflicts.tsv` lists the rows that disagree:
-members that lead back to themselves or to two canonical members, and Unihan's radical rows that the
-radical variants overrule.
+members that lead back to themselves or to two canonical members, a pair one table gives at a place
+and another everywhere, and Unihan's radical rows that the radical variants overrule.
 
 Every description row carries `subject` (a cid; `x:X-nnnnn` for a form of `custom-ids.tsv`), the source's `text`, a `resolved` form in which
 unencoded leaves are `&cid;`, the provenance indexes of every attestation, region tags, a `role`

@@ -1551,7 +1551,7 @@ domain, `babelstone-ids.tsv.gz`, pinned above), 102,894 CHISE's, 275,523 Yi Bai'
 levels of `zi-tools-rows.tsv.gz` (MIT), and 991 from `ids-project.tsv`, 646 from `custom-ids.tsv` and
 2,408 Tangut layers; a description several sources give is one row, and every row carries them all.
 It also holds 1,517 components — 1,396 CHISE entities and BabelStone's 121 numbered parts as
-`bsp:n` — 62 alignments between them, 48 of them seen on two or more characters, and 571
+`bsp:n` — 62 alignments between them, 48 of them seen on two or more characters, and 493
 `class-member` rows built from `component-forms.tsv`, `ucv.json` and Unihan `kRSUnicode`.
 `ids-class-conflicts.tsv` lists the class rows that disagree.
 
