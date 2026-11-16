@@ -64,21 +64,74 @@ const READINGS = 64
  * index (null). @param {string | undefined} note @returns {number | null} */
 export const subtractionIndex = note => !note ? 0 : /^\d+$/.test(note) ? Number(note) : null
 
+/** Whether `part` is what `target` names: the same description, and no stroke chain, whose part is
+ * neither counted nor taken (zi.tools IDS Extension §6.7). @param {SubtractionPart} part @param {SubtractionPart} target */
+const names = (part, target) => equal(part, target) && !(typeof part === 'string' && part.startsWith('#('))
+
+/** What stands in `part`'s place once its child at `index` became `result`. @param {import('./ids.js').Node} part @param {number} index @param {Taken} result @returns {Taken} */
+function replaced(part, index, result) {
+  if (result === UNWRITTEN) return result
+  const parts = part.parts.slice()
+  if (result === GONE) parts.splice(index, 1)
+  else parts[index] = result
+  if (parts.length === 0) return GONE
+  if (parts.length === 1) return parts[0]
+  return parts.length === arity(part.op) ? { ...part, parts } : UNWRITTEN
+}
+
 /**
- * The ways of taking one occurrence of `target` out of `tree`, following each character's
- * descriptions, at most `maxDepth` characters deep. Each reading is one way `tree` and the
- * characters in it are spelled, and lists, for each occurrence of `target` in reading order (an
- * occurrence that is `target` whole is not looked into), what stands in `tree`'s place once that one
- * is taken: `GONE` when the whole tree was taken, `UNWRITTEN` where a node's parts can no longer be
- * written with its operator (two parts left of three), since the description would no longer mean
- * the same shape.
+ * Every result of taking one occurrence of `target` out of `tree`, through each character's
+ * descriptions, at most `maxDepth` characters deep: `GONE` when the whole tree was taken, and
+ * nothing for a node whose parts can no longer be written with its operator (two parts left of
+ * three), since the description would no longer mean the same shape.
  * @param {SubtractionPart} tree
  * @param {SubtractionPart} target
  * @param {(char: string) => readonly (SubtractionPart | string | { text: string })[]} describe
- * @param {number} [maxDepth]
+ * @param {number} maxDepth
+ * @returns {(SubtractionPart | typeof GONE)[]}
+ */
+function subtractAny(tree, target, describe, maxDepth) {
+  /** @param {SubtractionPart} part @param {Set<string>} seen @param {number} depth @returns {Map<string, SubtractionPart | typeof GONE>} */
+  function walk(part, seen, depth) {
+    /** @type {Map<string, SubtractionPart | typeof GONE>} */
+    const out = new Map()
+    /** @param {Taken} result */
+    const add = result => {
+      if (result === UNWRITTEN) return
+      const key = result === GONE ? '\u0000' : write(result)
+      if (!out.has(key)) out.set(key, result)
+    }
+    if (names(part, target)) { add(GONE); return out }
+    if (typeof part === 'string') {
+      if (depth >= maxDepth || seen.has(part) || !plain(part)) return out
+      const inner = new Set(seen).add(part)
+      for (const description of readDescriptions(part, describe)) for (const result of walk(description, inner, depth + 1).values()) add(result)
+      return out
+    }
+    // What ㇯ takes away, and what it takes it from, do not stand in the character: a description
+    // that is itself a subtraction is not a sequence of parts to take one out of.
+    if (part === null || !plain(part) || part.op === '㇯') return out
+    part.parts.forEach((child, index) => { for (const result of walk(child, seen, depth).values()) add(replaced(part, index, result)) })
+    return out
+  }
+  return [...walk(tree, new Set(), 0).values()]
+}
+
+/**
+ * The ways of taking one occurrence of `target` out of `tree`, counted in reading order. Each
+ * reading is one way `tree` and the characters in it are spelled, and lists, for each occurrence in
+ * reading order (an occurrence that is `target` whole is not looked into), what stands in `tree`'s
+ * place once that one is taken: `GONE` when the whole tree was taken, `UNWRITTEN` where a node's
+ * parts can no longer be written with its operator. Of a character's spellings only those showing
+ * the most occurrences are read, so a spelling that hides some (尖 as ⿱𡭔大, with no 小) does not
+ * shift the count.
+ * @param {SubtractionPart} tree
+ * @param {SubtractionPart} target
+ * @param {(char: string) => readonly (SubtractionPart | string | { text: string })[]} describe
+ * @param {number} maxDepth
  * @returns {Taken[][]}
  */
-function subtractOnce(tree, target, describe, maxDepth = 8) {
+function subtractOrdered(tree, target, describe, maxDepth) {
   /** @param {Taken} result */
   const keyOf = result => result === GONE ? '\u0000' : result === UNWRITTEN ? '\u0001' : write(result)
   /** The readings with their duplicates left out, at most `READINGS` of them. @param {Taken[][]} readings */
@@ -91,35 +144,22 @@ function subtractOnce(tree, target, describe, maxDepth = 8) {
     }
     return [...out.values()]
   }
-  /**
-   * @param {SubtractionPart} part
-   * @param {Set<string>} seen characters already opened on this branch
-   * @param {number} depth characters opened so far
-   * @returns {Taken[][]}
-   */
+  /** @param {SubtractionPart} part @param {Set<string>} seen @param {number} depth @returns {Taken[][]} */
   function walk(part, seen, depth) {
-    if (equal(part, target)) return [[GONE]]
+    if (names(part, target)) return [[GONE]]
     if (typeof part === 'string') {
       if (depth >= maxDepth || seen.has(part) || !plain(part)) return [[]]
       const inner = new Set(seen).add(part)
       const readings = readDescriptions(part, describe).flatMap(description => walk(description, inner, depth + 1))
-      return readings.length ? distinct(readings) : [[]]
+      const most = Math.max(0, ...readings.map(reading => reading.length))
+      const fullest = readings.filter(reading => reading.length === most)
+      return fullest.length ? distinct(fullest) : [[]]
     }
-    // What ㇯ takes away, and what it takes it from, do not stand in the character: a description
-    // that is itself a subtraction is not a sequence of parts to take one out of.
     if (part === null || !plain(part) || part.op === '㇯') return [[]]
     /** @type {Taken[][]} */
     let readings = [[]]
     part.parts.forEach((child, index) => {
-      const own = walk(child, seen, depth).map(reading => reading.map(result => {
-        if (result === UNWRITTEN) return result
-        const parts = part.parts.slice()
-        if (result === GONE) parts.splice(index, 1)
-        else parts[index] = result
-        if (parts.length === 0) return GONE
-        if (parts.length === 1) return parts[0]
-        return parts.length === arity(part.op) ? { ...part, parts } : UNWRITTEN
-      }))
+      const own = walk(child, seen, depth).map(reading => reading.map(result => replaced(part, index, result)))
       readings = distinct(readings.flatMap(before => own.map(after => [...before, ...after])))
     })
     return readings
@@ -129,8 +169,8 @@ function subtractOnce(tree, target, describe, maxDepth = 8) {
 
 /**
  * The remainders of a subtraction `㇯S X`: for each way S decomposes into a sequence holding X, what
- * is left once X is taken. With `index`, only the occurrence of X it names is taken, counted from 0
- * in reading order, as `㇯[1]王一` takes the middle 一 of 王; without it, each occurrence is. `GONE`
+ * is left once X is taken. With `index`, only the occurrence it names is taken, counted from 0 in
+ * reading order, as `㇯[1]王一` takes the middle 一 of 王; without it, each occurrence is. `GONE`
  * is left out, since an empty description is not a spelling to offer.
  * @param {SubtractionPart} tree the first operand, S
  * @param {SubtractionPart} target the second operand, X
@@ -140,13 +180,11 @@ function subtractOnce(tree, target, describe, maxDepth = 8) {
  */
 export function subtractionRemainders(tree, target, describe, { index, maxDepth = 8 } = {}) {
   if (!plain(tree) || !plain(target)) return []
+  const results = index === undefined ? subtractAny(tree, target, describe, maxDepth)
+    : subtractOrdered(tree, target, describe, maxDepth).flatMap(reading => reading.slice(index, index + 1))
   /** @type {Map<string, SubtractionPart>} */
   const out = new Map()
-  for (const reading of subtractOnce(tree, target, describe, maxDepth)) {
-    for (const result of index === undefined ? reading : reading.slice(index, index + 1)) {
-      if (result !== GONE && result !== UNWRITTEN && !out.has(write(result))) out.set(write(result), result)
-    }
-  }
+  for (const result of results) if (result !== GONE && result !== UNWRITTEN && !out.has(write(result))) out.set(write(result), result)
   return [...out.values()]
 }
 

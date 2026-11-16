@@ -94,6 +94,22 @@ describe('subtraction normalization', () => {
     expect(normalizeSubtractionText('㇯日一', char => described[char] ?? [])).toBe('口')
   })
 
+  it('counts through the spelling of a character that shows the most occurrences', () => {
+    // 尖 is also written ⿱𡭔大, which shows no 小: that spelling does not shift the count.
+    const described = { 尜: ['⿱小尖'], 尖: ['⿱𡭔大', '⿱小大'] }
+    const read = text => normalizeSubtractionText(text, char => described[char] ?? [])
+    expect(read('㇯尜小')).toBe('尖')
+    expect(read('㇯[1]尜小')).toBe('⿱小大')
+  })
+
+  it('does not take a stroke chain out whole', () => {
+    // A chain the grammar does not name stays a chain (a named one reads as its character).
+    const described = { 甲: ['⿴#(-丨𠃍x0)一'] }
+    expect(subtractionRemainders(tree('甲'), '#(-丨𠃍x0)', char => described[char] ?? [], { index: 0 })).toEqual([])
+    expect(subtractionRemainders(tree('甲'), '#(-丨𠃍x0)', char => described[char] ?? [])).toEqual([])
+    expect(subtractionRemainders(tree('甲'), '一', char => described[char] ?? [], { index: 0 }).map(write)).toEqual(['#(-丨𠃍x0)'])
+  })
+
   it('offers each occurrence without an index, and the named one with it', () => {
     const described = { 王: ['⿱一土'], 土: ['⿱十一'], 十: ['⿻一丨'] }
     const describe = char => described[char] ?? []
