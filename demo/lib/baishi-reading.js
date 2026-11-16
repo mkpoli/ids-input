@@ -124,9 +124,9 @@ export function readVariant(id) {
     const [, source, region] = /** @type {readonly [string, string, string]} */ (SOURCES.find(([letter]) => letter === id))
     return { kind, id, source, region }
   }
-  if (kind === 'imaginary') return { kind, id, rules: id.slice(2).match(/\d{3}[a-z]?/gu) ?? [] }
+  if (kind === 'imaginary') return { kind, id, rules: id.slice(2).match(/\d{3}(?:z[a-z]|[a-z])?/gu) ?? [] }
   if (kind === 'ucv') {
-    const [, lead, rule, glyph, suffix] = /** @type {RegExpExecArray} */ (/^([qpxy])(\d{3}[a-z]?)([1-9]|\d{2})([xy]?)$/u.exec(id))
+    const [, lead, rule, glyph, suffix] = /** @type {RegExpExecArray} */ (/^([qpxy])(\d{3}(?:z[a-z]|[a-z])?)([1-9]|\d{2})([xy]?)$/u.exec(id))
     return { kind, id, lead, rule, glyph, suffix }
   }
   return { kind, id, letters: [...id] }

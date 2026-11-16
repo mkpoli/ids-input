@@ -152,7 +152,6 @@
       <span>{read.source}</span>{#if region}<span class="muted" lang="zh-Hans">{region.startsWith('@') ? '' : region}</span>{/if}
     {:else if read.kind === 'ucv'}
       <span title={meaning(QUOTES.ucv, 'ucv')}><code>{read.lead}</code> {t('baishi.parser.ucv', { rule: read.rule, glyph: read.glyph })}{#if read.suffix} <code>{read.suffix}</code>{/if}</span>
-      {#if read.lead !== 'q' || read.suffix}<a class="open" href="#unsettled">{t('baishi.open')}</a>{/if}
     {:else if read.kind === 'imaginary'}
       <span>{t('baishi.parser.ucvRules', { rules: (read.rules ?? []).join(' · ') })}</span>
     {:else if read.kind === 'style'}
@@ -324,7 +323,6 @@
   .read:focus-visible,.tree-tools button:focus-visible,summary:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}
   .variant{display:inline-flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px}
   .letter{white-space:nowrap}
-  .open{font-size:11px;padding:0 6px;border:1px dashed var(--ui-color-border-strong);border-radius:var(--ui-radius-xs);color:var(--ui-color-ink-soft);text-decoration:none}
   .strokes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;width:100%}
   .strokes li{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px}
   .strokes .index{font-family:var(--ui-font-mono);font-size:11px;color:var(--ui-color-ink-muted);min-width:1.5em}

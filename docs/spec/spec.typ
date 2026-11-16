@@ -149,7 +149,7 @@
   mono(size: 6.8pt, fill: accent, cite.at(0) + " " + cite.at(1)),
 ))
 
-/// A badge's word: proposal, inference, history and the like.
+/// A badge's word: proposal, draft, inference and the like.
 #let kind-name(kind) = t("baishi." + kind)
 #let badge(kind) = box(
   inset: (x: 3pt, y: 1.5pt),
@@ -180,7 +180,7 @@
   below: 0.9em,
   {
     set par(spacing: 0.45em)
-    hans(D.QUOTES.at(id))
+    hans(D.QUOTES.at(id, default: D.OTHER_QUOTES.at(id, default: "")))
     let rendering = gloss(id)
     if rendering != "" {
       parbreak()
@@ -224,7 +224,7 @@
 )
 
 /// An example: the character, the text as printed and what it becomes, a quotation about it, a
-/// label and where it is printed. `current` is false for superseded notation, framed dashed.
+/// label and where it is printed. `current` is false for what another document writes, framed dashed.
 #let example(one, current) = block(
   width: 100%,
   breakable: false,
@@ -268,7 +268,7 @@
 )
 #let examples(key, current: true) = block(width: 100%, grid(
   columns: (1fr, 1fr), gutter: 5pt,
-  ..D.EXAMPLES.at(key).map(one => example(one, current)),
+  ..(if current { D.EXAMPLES } else { D.OTHER_EXAMPLES }).at(key).map(one => example(one, current)),
 ))
 
 #let rule-of(name) = {
@@ -353,10 +353,10 @@
     (t("spec.date"), sys.inputs.at("date", default: "")),
     (
       t("spec.data"),
-      link(D.DATABASE.checked.url, mono(
-        "yi-bai/ids " + D.DATABASE.checked.commit,
+      link(D.DATABASE.tree, mono(
+        "yi-bai/ids " + D.DATABASE.commit,
       ))
-        + [ (#D.DATABASE.checked.date)],
+        + [ (#D.DATABASE.date)],
     ),
     (
       t("spec.source"),
@@ -372,7 +372,7 @@
       ))
       .flatten())
   v(14mm)
-  block(width: 100%, text(size: 10.5pt, t("baishi.lead")))
+  block(width: 100%, text(size: 10.5pt, t("baishi.lead", date: D.GUIDE.date)))
   v(1fr)
   text(size: 8pt, fill: muted, t(
     "spec.follows",
@@ -394,12 +394,12 @@
   "alternative group",
   "entry",
 ))
-#said("rowGroups", ("I26", "p.4 §3.1"))
-#said("rowVariants", ("I26", "p.6 §4.2"))
+#said("rowGroups", ("I26", "§3.1"))
+#said("rowVariants", ("I26", "§4.2"))
 #examples("row")
 
 = #t("baishi.heading.operators") <operators>
-#t("baishi.operators.body") #at(("I26", "pp.2–3 §2.1"))
+#t("baishi.operators.body") #at(("I26", "§2.1"))
 
 #table(
   columns: (auto, auto, 1fr, auto, auto),
@@ -427,9 +427,6 @@
       written(example-text),
     ))
     .flatten(),
-  text(fill: muted, char("〾", size: 13pt)),
-  text(fill: muted, code("U+303E")),
-  table.cell(colspan: 3, text(fill: muted, t("baishi.operators.ivi"))),
 )
 #t("baishi.operators.arity")
 #grammar((
@@ -441,30 +438,14 @@
   "indexed operator",
   "ternary operator",
 ))
-#said("nest", ("I26", "p.3 §2.3"))
-#said("u31ef", ("I26", "p.3 §2.1"))
-
-== #t("baishi.heading.angles") #badge("proposal") <angles>
-#t("baishi.angles.body")
-
-#table(
-  columns: (1fr, auto, auto),
-  head(t("baishi.angles.form"), link(<doc-R101>)[R101], link(<doc-R102>)[R102]),
-  ..D
-    .ANGLES
-    .map(((form, first, second)) => (written(form), code(first), code(second)))
-    .flatten(),
-)
-#said("omit180", ("R101", "slide 4"))
-#said("omitPm180", ("R102", "slide 4"))
-#text(fill: soft)[#badge("inference") #t("baishi.angles.inference")]
+#said("nest", ("I26", "§2.3"))
+#said("u31ef", ("I26", "§2.1"))
 
 = #t("baishi.heading.variants") <variants>
 #t("baishi.variants.body")
 #grammar(("component variant", "sequence variants"))
-#said("tagAfter", ("D1", "p.1"))
-#said("tagEnd", ("D1", "p.1"))
-#said("tagOmit", ("I26", "p.8 §4.2"))
+#said("tagUse", ("I26", "§4.2"))
+#said("tagOmit", ("I26", "§4.2"))
 #examples("tags")
 #examples("lists")
 
@@ -476,7 +457,7 @@
   columns: (auto, 1fr),
   head(
     t("baishi.kind.name"),
-    [#t("baishi.kind.pattern") #at(("DB", "2597437b"))],
+    t("baishi.kind.pattern"),
     repeat: false,
   ),
   ..D
@@ -492,7 +473,7 @@
   head(
     t("baishi.sources.letter"),
     t("baishi.sources.source"),
-    [#t("baishi.sources.region") #at(("I26", "p.8 §4.3.1"))],
+    [#t("baishi.sources.region") #at(("I26", "§4.3.1"))],
     repeat: false,
   ),
   ..D
@@ -513,25 +494,25 @@
     ))
     .flatten(),
 )
-#said("precedence", ("I26", "p.9 §4.3.1"))
+#said("precedence", ("I26", "§4.3.1"))
 #text(fill: muted, t("baishi.sources.order")) #code("Q>G>H>T>J>K>P>V>M>U>S>B")
 #examples("precedence")
 
 == #t("baishi.heading.ucv") <ucv-position>
-#said("ucv", ("I26", "pp.9–10 §4.3.2"))
+#said("ucv", ("I26", "§4.3.2"))
 #examples("ucv")
 
 == #t("baishi.heading.imaginary") <imaginary-ucv>
-#said("imaginary", ("I26", "p.11 §4.3.2"))
+#said("imaginary", ("I26", "§4.3.2"))
 #examples("imaginary")
 
 == #t("baishi.heading.alternate") <alternate>
-#said("alternate", ("I26", "p.12 §4.3.3"))
+#said("alternate", ("I26", "§4.3.3"))
 #table(
   columns: (auto, 1fr),
   head(
     t("baishi.alternate.letter"),
-    [#t("baishi.alternate.gloss") #at(("I26", "pp.12–13 §4.3.3"))],
+    [#t("baishi.alternate.gloss") #at(("I26", "§4.3.3"))],
     repeat: false,
   ),
   ..D
@@ -549,18 +530,18 @@
     ))
     .flatten(),
 )
-#said("compose", ("I26", "p.13 §4.3.3"))
+#said("compose", ("I26", "§4.3.3"))
 #examples("alternate")
 
 == #t("baishi.heading.other") <other>
 #examples("other")
-#said("custom", ("I26", "p.14 §4.3.5"))
+#said("custom", ("I26", "§4.3.5"))
 
 = #t("baishi.heading.chains") <chains>
-#said("chainWhy", ("I26", "p.14 §5.1"))
+#said("chainWhy", ("I26", "§5.1"))
 #t("baishi.chains.body")
 #grammar(("stroke chain", "stroke part", "stroke"))
-#said("chain", ("I26", "p.14 §5.2"))
+#said("chain", ("I26", "§5.2"))
 
 == #t("baishi.heading.letters") <letters>
 #grammar(("stroke letter",))
@@ -569,7 +550,7 @@
   head(
     t("baishi.letters.letter"),
     t("baishi.letters.stroke"),
-    [#t("baishi.alternate.gloss") #at(("I26", "pp.14–15 §5.3"))],
+    [#t("baishi.alternate.gloss") #at(("I26", "§5.3"))],
     repeat: false,
   ),
   ..D
@@ -586,26 +567,22 @@
             text(fill: soft, rendering)
           }
         }
-        if letter == "T" {
-          [ ]
-          link(<change-t>)[†]
-        }
       },
     ))
     .flatten(),
 )
-#said("clockwise", ("I26", "p.15 §5.3"))
+#said("clockwise", ("I26", "§5.3"))
 
 == #t("baishi.heading.modifiers") <modifiers>
 #examples("modifiers")
 
 == #t("baishi.heading.characters") <characters>
-#t("baishi.characters.body") #at(("I26", "p.32"))
+#t("baishi.characters.body") #at(("I26", "§9"))
 #grammar(("ideograph char", "taggable char", "hanzi", "cjk stroke", "curve"))
 #examples("katakana")
 
 == #t("baishi.heading.compounds") <compounds>
-#at(("I26", "p.16"))
+#at(("I26", "§5.3"))
 #grid(
   columns: (1fr,) * 5, gutter: 4pt,
   ..D.COMPOUNDS.map(((c, chain)) => block(
@@ -624,46 +601,28 @@
 
 == #raw("-") #t("baishi.heading.reverse") <reverse>
 #grammar(("reversal",))
-#said("reverse", ("I26", "p.15 §5.3"))
+#said("reverse", ("I26", "§5.3"))
 #examples("reverse")
 
 == #raw("x") #t("baishi.heading.cross") <cross>
 #grammar(("crossing",))
-#said("cross", ("I26", "p.15 §5.3"))
+#said("cross", ("I26", "§5.3"))
 #examples("cross")
 
 == #raw("b") #t("baishi.heading.break") <break-mark>
 #grammar(("break",))
-#said("break", ("I26", "p.15 §5.3"))
+#said("break", ("I26", "§5.3"))
 #examples("break")
 
 == #raw("z") #t("baishi.heading.closed") <closing>
-#said("closed", ("I26", "p.15 §5.3"))
+#said("closed", ("I26", "§5.3"))
 #examples("closed")
 
 == #t("baishi.heading.curves") <curves>
-#t("baishi.curves.body") #at(("I26", "pp.14–15 §5.3"))
-#said("curveStart", ("D1", "p.2"))
-#said("curveReverse", ("D1", "p.2"))
-
-#block(width: 100%, inset: 8pt, radius: 2pt, stroke: (
-  paint: rule-strong,
-  thickness: 0.6pt,
-  dash: "dashed",
-))[
-  == #kind-name("history") <chains-history>
-  #t("baishi.chainsHistory.letters")
-  #said("oldLetters", ("D1", "p.1"))
-  #said("oldConnector", ("D1", "p.2"))
-  #t("baishi.chainsHistory.first")
-  #said("firstLetters", ("J22", "p.1"))
-  #said("firstJoins", ("J22", "p.1"))
-  #said("firstCurves", ("J22", "pp.1–2"))
-  #examples("firstChains", current: false)
-]
+#t("baishi.curves.body") #at(("I26", "§5.3"))
 
 = #t("baishi.heading.overlap") <overlap>
-#said("roles", ("I26", "p.17 §6.1"))
+#said("roles", ("I26", "§6.1"))
 #t("baishi.overlap.body")
 #grammar(("overlap modifier", "overlap spec"))
 
@@ -676,15 +635,17 @@
   "nonzero digit",
   "digit",
 ))
-#said("slice", ("I26", "p.17 §6.2"))
-#said("sliceTouch", ("I26", "p.18 §6.2.1"))
-#said("virtual", ("I26", "p.19 §6.2.5"))
-#said("sign", ("I26", "p.18 §6.2.2"))
+#said("slice", ("I26", "§6.2"))
+#said("sliceTouch", ("I26", "§6.2.1"))
+#said("sliceCount", ("I26", "§6.2.1"))
+#said("sign", ("I26", "§6.2.2"))
+#said("sliceTop", ("I26", "§6.2.3"))
+#said("sliceBottom", ("I26", "§6.2.3"))
 #table(
   columns: (auto, auto, 1fr),
   head(
     t("baishi.slice.char"),
-    [#t("baishi.slice.written") #at(("I26", "p.18"))],
+    [#t("baishi.slice.written") #at(("I26", "§6.2.4"))],
     t("baishi.slice.wrong"),
     repeat: false,
   ),
@@ -697,12 +658,12 @@
     ))
     .flatten(),
 )
-#said("you", ("I26", "p.4 §3.1"))
-#examples("sliceMore")
+#said("you", ("I26", "§3.1"))
+#said("slicePython", ("I26", "§6.3"))
 
 == #t("baishi.heading.matrix") <matrix>
 #grammar(("crossing matrix", "matrix row", "matrix cell"))
-#t("baishi.matrix.body") #at(("I26", "p.20 §6.3"))
+#t("baishi.matrix.body") #at(("I26", "§6.3"))
 
 #table(
   columns: (auto, 1fr),
@@ -722,48 +683,37 @@
     ))
     .flatten(),
 )
-#t("baishi.matrix.simplify") #at(("I26", "p.20 §6.3"))
+#t("baishi.matrix.simplify") #at(("I26", "§6.3"))
 
 #block[
   #text(fill: muted, t("baishi.matrix.qu"))
   #D.QU_STEPS.map(code).join(text(fill: muted, " → "))
-  #at(("I26", "pp.21–23"))
+  #at(("I26", "§6.3"))
 ]
-#said("qu", ("I26", "p.23"))
+#said("qu", ("I26", "§6.3"))
 #examples("segments")
 #examples("matrix")
 
 == #t("baishi.heading.reverseMatrix") <reverse-matrix>
 #t("baishi.reverseMatrix.body")
-#said("reverseMatrix", ("I26", "p.23 §6.4"))
+#said("reverseMatrix", ("I26", "§6.4"))
 #examples("reverseMatrix")
 
 == #t("baishi.heading.curveCase") <curveCase>
 #examples("curveCase")
 
-#block(width: 100%, inset: 8pt, radius: 2pt, stroke: (
-  paint: rule-strong,
-  thickness: 0.6pt,
-  dash: "dashed",
-))[
-  == #kind-name("history") <overlap-history>
-  #t("baishi.overlapHistory")
-  #said("oldMarks", ("D2", "p.4"))
-  #examples("oldMarks", current: false)
-]
-
 = #t("baishi.heading.index") <index>
 #grammar(("index modifier",))
-#said("index", ("I26", "pp.24–25 §6.6"))
-#said("indexHalf", ("I26", "p.25 §6.6"))
+#said("index", ("I26", "§6.6"))
+#said("indexHalf", ("I26", "§6.6"))
 #examples("index")
 
 = #t("baishi.heading.subtract") #badge("searchOnly") <subtract>
-#said("subtract", ("I26", "p.26 §6.7"))
+#said("subtract", ("I26", "§6.7"))
 #table(
   columns: (auto, auto, 1fr),
   head(
-    [#t("baishi.subtract.ids") #at(("I26", "p.26"))],
+    [#t("baishi.subtract.ids") #at(("I26", "§6.7"))],
     t("baishi.subtract.char"),
     t("baishi.subtract.which"),
     repeat: false,
@@ -784,80 +734,48 @@
     ))
     .flatten(),
 )
-#said("subtractSearch", ("I26", "p.26"))
-#said("subtractChain", ("I26", "p.26"))
+#said("subtractSearch", ("I26", "§6.7"))
+#said("subtractChain", ("I26", "§6.7"))
 
 = #t("baishi.heading.prefix") <prefix>
 #grammar(("uniqueness prefix",))
-#said("unique", ("I26", "pp.26–27 §7.1"))
-#said("uniqueRare", ("I26", "p.27 §7.1"))
-#said("uniqueStroke", ("I26", "p.27 §7.1"))
-#said("uniqueQuestion", ("I26", "p.27 §7.1"))
-#said("uniqueSource", ("I26", "p.27 §7.1"))
-#said("abstract", ("I26", "p.27 §7.1"))
-#link(D.DATABASE.abstractShape) #at(("I26", "p.27"))
+#said("unique", ("I26", "§7.1"))
+#said("uniqueRare", ("I26", "§7.1"))
+#said("uniqueStroke", ("I26", "§7.1"))
+#said("uniqueQuestion", ("I26", "§7.1"))
+#said("uniqueSource", ("I26", "§7.1"))
+#said("abstract", ("I26", "§7.1"))
+#link(D.DATABASE.abstractShape) #at(("I26", "§7.1"))
 #examples("unique")
 
 = #hans-sans("🔄") #t("baishi.heading.replace") #badge("searchOnly") <replace>
-#said("replace", ("I26", "p.5 §3.2"))
+#said("replace", ("I26", "§3.2"))
 #examples("replace")
 
 = #t("baishi.heading.levels") <levels>
-#t("baishi.levels.body") #at(("I26", "p.5 §3.3"))
-#said("lv0", ("I26", "p.5 §3.3"))
-#said("lv1", ("I26", "p.5 §3.3"))
-#said("lv2", ("I26", "p.5 §3.3"))
-#said("lv1Merge", ("I26", "pp.27–28 §7.2"))
+#t("baishi.levels.body") #at(("I26", "§3.3"))
+#said("lv0", ("I26", "§3.3"))
+#said("lv1", ("I26", "§3.3"))
+#said("lv2", ("I26", "§3.3"))
+#said("lv1Merge", ("I26", "§7.2"))
 #examples("merge")
-#said("lv2Merge", ("I26", "p.28 §7.3"))
+#said("lv2Merge", ("I26", "§7.3"))
 #examples("levels")
-
-= #t("baishi.heading.changes") <history>
-#enum(..D.CHANGES.map(((id, cites, ..inferred)) => {
-  if inferred.len() > 0 and inferred.first() {
-    badge("inference")
-    [ ]
-  }
-  t("baishi.change." + id)
-  [ ]
-  cites.map(at).join(h(3pt))
-  if id == "t" { [#metadata(none) <change-t>] }
-}))
 
 = #t("baishi.heading.data") <differences>
 #t(
   "baishi.data.body",
-  commit: D.DATABASE.checked.commit.slice(0, 8),
-  date: D.DATABASE.checked.date,
-  rows: D.DATABASE.checked.rows,
-  rejected: D.DATABASE.checked.rejected,
+  commit: D.DATABASE.commit.slice(0, 8),
+  date: D.DATABASE.date,
+  rows: D.DATABASE.rows,
+  rejected: D.DATABASE.rejected,
 )
-#link(D.DATABASE.checked.url, mono(
+#link(D.DATABASE.tree, mono(
   size: 7.6pt,
-  "yi-bai/ids@" + D.DATABASE.checked.commit.slice(0, 8),
+  "yi-bai/ids@" + D.DATABASE.commit.slice(0, 8),
 ))
-
-== #t("baishi.heading.corrections")
-#table(
-  columns: (auto, 1fr, auto),
-  ..D
-    .CORRECTIONS
-    .map(((id, rule, evidence)) => (
-      strong-code(id),
-      {
-        t("baishi.correction." + id)
-        block(
-          above: 4pt,
-          fill: sunken,
-          inset: (x: 5pt, y: 3pt),
-          radius: 2pt,
-          raw(rule),
-        )
-      },
-      hans-sans(code(evidence)),
-    ))
-    .flatten(),
-)
+#link(D.DATABASE.verified, mono(size: 7.6pt, "check_out.txt"))
+#said("verify", ("I26", "§9"))
 
 == #t("baishi.heading.malformed")
 #table(
@@ -879,32 +797,11 @@
     cites.map(at).join(h(3pt))
   )]))
 
-== #t("baishi.heading.exampleDifferences")
-#table(
-  columns: (auto, 1fr, 1fr),
-  head(
-    [],
-    t("baishi.exampleDiff.document"),
-    [#t("baishi.exampleDiff.data") #at(("DB", "2597437b"))],
-    repeat: false,
-  ),
-  ..D
-    .EXAMPLE_DIFFERENCES
-    .map(((c, printed, cite, ..rest)) => (
-      char(c, size: 13pt),
-      written(printed, after: at(cite)),
-      written(rest.at(0), after: if rest.len() > 1 {
-        mono(size: 6.8pt, fill: muted, "lv" + str(rest.at(1)))
-      }),
-    ))
-    .flatten(),
-)
-
 = #t("baishi.heading.unsettled") <unsettled>
 #list(..D.UNSETTLED.map(id => [#badge("open") #t("baishi.unsettled." + id)]))
 
 = #t("baishi.heading.ebnf") <ebnf>
-#t("baishi.formal") #at(("DB", "2597437b"))
+#t("baishi.formal") #at(("I26", "§9"))
 
 #block(width: 100%, fill: sunken, inset: 8pt, radius: 2pt, raw(
   read(
@@ -931,69 +828,53 @@
   }) #label("rule-" + rule.file)
 ]
 
-== #t("baishi.i26grammar") · I26 pp.31–33 <i26-grammar>
-#said("ebnf", ("I26", "p.31"))
+== #t("baishi.i26grammar") · I26 §9 <i26-grammar>
+#said("ebnf", ("I26", "§9"))
 #block(width: 100%, fill: sunken, inset: 8pt, radius: 2pt, raw(
   D.EBNF,
   block: true,
 ))
 
 = #t("baishi.heading.documents") <sources>
+#let entry(key, body, shown: none) = [
+  #block(
+    width: 100%,
+    inset: (x: 7pt, y: 6pt),
+    radius: 2pt,
+    stroke: 0.6pt + rule-color,
+    breakable: false,
+    grid(
+      columns: (11mm, 1fr),
+      column-gutter: 6pt,
+      mono(size: 7.6pt, weight: "bold", fill: accent, if shown == none {
+        key
+      } else { shown }),
+      body,
+    ),
+  ) #label("doc-" + key)
+]
 #{
-  let entry(key, body, shown: none) = [
-    #block(
-      width: 100%,
-      inset: (x: 7pt, y: 6pt),
-      radius: 2pt,
-      stroke: 0.6pt + rule-color,
-      breakable: false,
-      grid(
-        columns: (11mm, 1fr),
-        column-gutter: 6pt,
-        mono(size: 7.6pt, weight: "bold", fill: accent, if shown == none {
-          key
-        } else { shown }),
-        body,
-      ),
-    ) #label("doc-" + key)
-  ]
-  for doc in D.DOCUMENTS {
-    entry(doc.key, {
-      set par(spacing: 0.4em, justify: false)
-      text(weight: "bold", hans(doc.title))
-      parbreak()
-      text(fill: soft, hans(if doc.people.len() > 0 {
-        doc.people.join(" · ")
-      } else { "—" }))
-      parbreak()
-      let facts = ()
-      if doc.version != "" {
-        facts.push([#text(fill: muted, t("baishi.doc.version")) #hans(
-            doc.version,
-          )])
-      }
-      facts.push([#text(fill: muted, t("baishi.doc.date")) #doc.date#if (
-          doc.key != "I26"
-        ) [ #text(fill: muted)[(#t("baishi.doc.fromFile"))]]])
-      facts.push(doc.extent)
-      facts.join(h(10pt))
-      for url in doc.links {
-        parbreak()
-        link(url, text(size: 8pt, url))
-      }
-      if "edition" in doc and doc.edition != none {
-        parbreak()
-        link(doc.edition.url, text(size: 8pt, doc.edition.url))
-        [ ]
-        text(fill: muted)[#t(
-            "baishi.doc.edition",
-            date: doc.edition.read,
-          ) #hans(doc.edition.printed)]
-      }
-      parbreak()
-      text(fill: soft, t("baishi.doc.note." + doc.key))
-    })
-  }
+  entry(D.GUIDE.key, {
+    set par(spacing: 0.4em, justify: false)
+    text(weight: "bold", hans(D.GUIDE.title))
+    parbreak()
+    text(fill: soft, hans(D.GUIDE.people.join(" · ")))
+    parbreak()
+    (
+      [#text(fill: muted, t("baishi.doc.version")) #hans(D.GUIDE.version)],
+      link(D.GUIDE.repository + "/tree/" + D.GUIDE.commit, mono(
+        size: 7.6pt,
+        D.GUIDE.commit.slice(0, 8),
+      )),
+      D.GUIDE.licence,
+    ).join(h(10pt))
+    parbreak()
+    link(D.GUIDE.url, text(size: 8pt, D.GUIDE.url))
+    parbreak()
+    link(D.GUIDE.repository, text(size: 8pt, D.GUIDE.repository))
+    parbreak()
+    text(fill: soft, t("baishi.doc.note.I26"))
+  })
   entry("tools", shown: "EBNF", {
     set par(spacing: 0.4em, justify: false)
     for (title, url) in D.TOOLS {
@@ -1010,37 +891,98 @@
     text(fill: soft)[#t(
         "baishi.database.note",
         version: D.DATABASE.version,
-      ) #link(D.DATABASE.tree, mono(size: 7.6pt, "8a585351"))]
-    parbreak()
-    text(fill: soft)[#t(
-        "baishi.database.checked",
-        date: D.DATABASE.checked.date,
-      ) #link(D.DATABASE.checked.url, mono(
+        date: D.DATABASE.date,
+      ) #link(D.DATABASE.tree, mono(
         size: 7.6pt,
-        D.DATABASE.checked.commit.slice(0, 8),
+        D.DATABASE.commit.slice(0, 8),
       ))]
   })
 }
 
+= #t("baishi.heading.otherSources") <other-sources>
+#t("baishi.other.body")
+#for doc in D.OTHER_DOCUMENTS {
+  entry(doc.key, {
+    set par(spacing: 0.4em, justify: false)
+    text(weight: "bold", hans(doc.title))
+    [ ]
+    badge(doc.kind)
+    parbreak()
+    text(fill: soft, hans(if doc.people.len() > 0 {
+      doc.people.join(" · ")
+    } else { "—" }))
+    parbreak()
+    let facts = ()
+    if doc.version != "" {
+      facts.push([#text(fill: muted, t("baishi.doc.version")) #hans(
+          doc.version,
+        )])
+    }
+    facts.push([#text(fill: muted, t("baishi.doc.date")) #doc.date #text(
+        fill: muted,
+      )[(#t("baishi.doc.fromFile"))]])
+    facts.push(doc.extent)
+    facts.join(h(10pt))
+    parbreak()
+    text(fill: soft, t("baishi.doc.note." + doc.key))
+  })
+}
+
+== #t("baishi.heading.angles") #badge("proposal") <angles>
+#t("baishi.angles.body")
+
+#table(
+  columns: (1fr, auto, auto),
+  head(t("baishi.angles.form"), link(<doc-R101>)[R101], link(<doc-R102>)[R102]),
+  ..D
+    .ANGLES
+    .map(((form, first, second)) => (written(form), code(first), code(second)))
+    .flatten(),
+)
+#said("omit180", ("R101", "slide 4"))
+#said("omitPm180", ("R102", "slide 4"))
+#text(fill: soft)[#badge("inference") #t("baishi.angles.inference")]
+
+== #t("baishi.heading.drafts") #badge("draft") <drafts>
+#enum(..D.CHANGES.map(((id, cites)) => [#t("baishi.change." + id) #(
+    cites.map(at).join(h(3pt))
+  )]))
+#t("baishi.drafts.variants")
+#said("tagAfter", ("D1", "p.1"))
+#said("tagEnd", ("D1", "p.1"))
+#t("baishi.chainsHistory.letters")
+#said("oldLetters", ("D1", "p.1"))
+#said("oldConnector", ("D1", "p.2"))
+#said("curveStart", ("D1", "p.2"))
+#said("curveReverse", ("D1", "p.2"))
+#t("baishi.chainsHistory.first")
+#said("firstLetters", ("J22", "p.1"))
+#said("firstJoins", ("J22", "p.1"))
+#said("firstCurves", ("J22", "pp.1–2"))
+#examples("firstChains", current: false)
+#t("baishi.overlapHistory")
+#said("oldMarks", ("D2", "p.4"))
+#examples("oldMarks", current: false)
+
 // ---------------------------------------------------------------- the edition's own sections
 // The page ends above; the build compares the placements up to this line.
 
-== #t("spec.licences") <licences>
+= #t("spec.licences") <licences>
 #list(
   t("spec.licence.edition"),
   [#t("spec.licence.i26") #quoted("本文以 MIT 协议授权发布。") #at((
       "I26",
-      "p.33",
+      "§10",
     ))],
   [#t("spec.licence.drafts") #quoted(
       "Copyright © 2024 Losketch, Yi-Bai, 等 | QQ群: 668364339",
     ) #at(("D3", "pp.1–5"))],
   [#t("spec.licence.data") #link(
       "https://github.com/yi-bai/ids/blob/2597437b928e8d530b7ae09cf53fe5ec7868569c/LICENSE",
-    )[LICENSE] #at(("I26", "p.2"))],
+    )[LICENSE] #at(("I26", "§1"))],
 )
 
-== #t("spec.typesetting") <typesetting>
+= #t("spec.typesetting") <typesetting>
 #t("spec.typeset", version: typst-version) #link(
   "https://github.com/typst/typst/releases/tag/v" + typst-version,
   text(
