@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'bun:test'
-import { readFileSync } from 'node:fs'
 import { LIMITS, fitToDispatch } from '../demo/lib/report.js'
 
 const TAB = (n, size = 1024) => ({ id: `t${n}`, sequence: '⿰木口', document: { layer: 'x'.repeat(size), n } })
@@ -30,10 +29,8 @@ const fitted = ({ workspace = { tabs: [TAB(1), TAB(2)], active: 't1' }, context 
 
 describe('a report fitted to the dispatch', () => {
   it('is fitted to the size the intake will dispatch', () => {
-    const worker = readFileSync(new URL('../workers/reports/src/index.js', import.meta.url), 'utf8')
-    const size = /const MAX_DISPATCH = ([\d_]+)/.exec(worker)?.[1]
-    expect(size).toBeDefined()
-    expect(LIMITS.dispatch).toBe(Number(size?.replaceAll('_', '')))
+    // `MAX_DISPATCH` in `workers/reports/src/index.js` of mkpoli/han-compose.
+    expect(LIMITS.dispatch).toBe(30_000)
   })
   it('keeps a report that already fits as it is', () => {
     const entries = [{ at: 1, level: 'warn', text: 'a warning' }]

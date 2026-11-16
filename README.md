@@ -1542,9 +1542,10 @@ looks unused. Those keys go in `usage.keysInUse` of `x18n.config.json`, and
 CI runs verification and builds the workshop and share-card Worker. Production deployment is
 gated to `main` through `.github/workflows/deploy.yml`.
 
-The workshop's bug report form posts to `ids-reports`, a Cloudflare Worker in `workers/reports/`
-that turns a report into an issue on this repository. `workers/reports/README.md` has the endpoint's
-fields, the secrets it needs and how to run and deploy it.
+The workshop's bug report form posts to `ids-reports`, a Cloudflare Worker that turns a report into
+an issue on [mkpoli/han-compose](https://github.com/mkpoli/han-compose). Its code and
+[its README](https://github.com/mkpoli/han-compose/blob/main/workers/reports/README.md) with the endpoint's
+fields, the secrets it needs and how to run and deploy it live there.
 
 ### The demo's browser checks
 

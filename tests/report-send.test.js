@@ -16,7 +16,7 @@ describe('sending a report', () => {
     let init
     globalThis.fetch = (async (url, options) => {
       init = options
-      return new Response(JSON.stringify({ number: 7, url: 'https://github.com/mkpoli/ids-input/issues/7' }), { status: 201 })
+      return new Response(JSON.stringify({ number: 7, url: 'https://github.com/mkpoli/han-compose/issues/7' }), { status: 201 })
     })
     const answer = await sendReport('https://ids.mkpo.li/api/report', report('it broke'))
     expect(answer.number).toBe(7)
