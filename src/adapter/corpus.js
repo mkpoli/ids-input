@@ -31,6 +31,7 @@ export function readCorpus(text) {
   /** @type {string[]} */
   const sources = (document.sources ?? []).map((/** @type {{ id?: string }} */ source) => {
     if (source?.id === 'babelstone') return 'babelstone'
+    if (String(source?.id ?? '').startsWith('yibai-')) return 'zitools'
     return /^chise/.test(source?.id ?? '') ? 'chise' : String(source?.id ?? '')
   })
   const subject = at('subject'), textAt = at('text'), prov = at('prov'), regions = at('regions'), status = at('status')
