@@ -993,7 +993,7 @@ export const SOURCES = [
     people: ['NightFurySL2001 (夜煞之乐)'],
     url: 'https://nightfurysl2001.github.io/bai-ids/',
     licence: 'MIT',
-    date: 'updated 2026-09-30',
+    date: 'updated 2026-11-16',
     summary: {
       en: 'The unique separator and glyph-variant definition parse reads, the overlap and index modifiers a description keeps with its operators, and the stroke chains that name a character.',
       ja: 'parseが読む一意な区切りと字形異体の定義、記述が演算子とともに保つ重なり・索引の修飾、字を名指す画の連鎖。',

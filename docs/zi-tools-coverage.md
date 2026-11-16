@@ -108,5 +108,6 @@ component of its own, drawn through `data/custom-components.json.gz` where that 
 - Yi Bai's IDS dataset, <https://github.com/yi-bai/ids>, MIT: the table measured here, at
   `da1e9f8a09e2ec8faaf176bac99203f978282041`.
 - NightFurySL2001, （白式）IDS 延展语法导论, <https://nightfurysl2001.github.io/bai-ids/>, MIT,
-  updated 2026-09-30: the notation named above and the chains the grammar names.
+  updated 2026-11-16 (commit `0ca5ed48`, read 2026-11-17): the notation named above, the chains the
+  grammar names, and the subtraction index of §6.7, which the search resolves.
 - 字統网 (zi.tools), <https://zi.tools/?secondary=ids>: what its composer accepts.
