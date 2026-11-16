@@ -12,7 +12,7 @@
 // Alongside the corpus the build writes data/ids-corpus-sources.tar.gz: the CHISE inputs it read,
 // their digests and the licence, so the GPL source offer does not depend on the pinned URLs.
 import { createHash } from 'node:crypto'
-import { gzipSync } from 'node:zlib'
+import { gzipSync, inflateRawSync } from 'node:zlib'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { gunzipSync } from 'node:zlib'
@@ -244,7 +244,7 @@ for (const [subject, group] of bySubject) {
     }
   }
 }
-const equivalences = [...aligned.values()]
+const alignments = [...aligned.values()]
   .map(found => {
     // One character's regional descriptions may give the same pair several times; the count is of
     // characters, not descriptions.
@@ -254,6 +254,227 @@ const equivalences = [...aligned.values()]
       `${characters.length} ${characters.length === 1 ? 'character' : 'characters'}: ${characters.join(' ')}`]
   })
   .sort((a, b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]))
+
+// Class membership. A class row says that `a`, the member, is the component `b`, the target, drawn
+// another way: ⺭ is 礻, and 礻 at the left is 示. Each row names its basis, the place it holds at
+// (empty: anywhere) and a tier: `source` where a table states it, `derived` where the build infers
+// it. A member resolves by following its rows to a component that is no member of anything, the
+// class's canonical member; the build reports a member that resolves to two canonicals at one
+// place, and a pair given at one place by one table and everywhere by another. A pair with no row
+// is never merged.
+const PLACES = new Set(['left', 'right', 'top', 'bottom', 'middle', 'partial'])
+// IRG entry 23 reads 䒑 as 丷 over 一 at the top of 前, 羊 and 益, so its row for 艸 is not read.
+const UNREAD = new Set(['䒑'])
+const ucsOf = char => `ucs:${char.codePointAt(0).toString(16).toUpperCase()}`
+const bareChar = value => [...value].filter(char => !/[\u{FE00}-\u{FE0F}\u{E0100}-\u{E01EF}]/u.test(char)).join('')
+/** @type {{ member: string, target: string, basis: string, place: string, tier: string, prov: number, note: string }[]} */
+const classRows = []
+const addClass = (member, target, basis, place, tier, prov, note) => {
+  if (member !== target) classRows.push({ member, target, basis, place, tier, prov, note })
+}
+
+const formsBytes = await readFile(new URL('../data/component-forms.tsv', import.meta.url))
+const ucdProv = sourceIndex({ title: 'Unicode EquivalentUnifiedIdeograph.txt 18.0.0, as copied into component-forms.tsv',
+  url: 'https://www.unicode.org/Public/18.0.0/ucd/EquivalentUnifiedIdeograph.txt', date: '', edition: '18.0.0',
+  licence: 'Unicode-3.0', sha256: digest(formsBytes) }, 'unicode-equivalent-ideographs')
+const cjkviProv = sourceIndex({ title: 'cjkvi-variants radical-variants.txt, as copied into component-forms.tsv',
+  url: 'https://github.com/cjkvi/cjkvi-variants/blob/e4f1da248c9737a243f9930b5dc497cef5d5ae16/radical-variants.txt',
+  date: '', edition: 'e4f1da248c9737a243f9930b5dc497cef5d5ae16', licence: 'Public Domain', sha256: digest(formsBytes) }, 'cjkvi-radical-variants')
+/** The character a Kangxi radical form is, by the form: ⽰ is 示. */
+const equivalentOf = new Map()
+/** What the radical variants say of each form, whether they fold it or not: 忄 names no place and stays 忄. */
+const variantOf = new Map()
+/** The pairs component-forms.tsv states, either way round, as variants of one another. */
+const variantPairs = new Set()
+const edge = (a, b) => { variantPairs.add(`${a}\0${b}`); variantPairs.add(`${b}\0${a}`) }
+for (const line of lines(formsBytes)) {
+  const [form, char, origin, detail = ''] = line.split('\t')
+  if (form === 'form' || [...form].length !== 1 || [...char].length !== 1) continue
+  edge(form, char)
+  if (origin === 'unicode-ucd') {
+    equivalentOf.set(form, char)
+    addClass(ucsOf(form), ucsOf(char), 'radical-form', '', 'source', ucdProv, detail)
+  } else if (origin === 'cjkvi-variants') {
+    const place = PLACES.has(detail.split(' ').at(-1) ?? '') ? detail.split(' ').at(-1) : ''
+    variantOf.set(form, { target: char, place })
+    if (place && !UNREAD.has(form)) addClass(ucsOf(form), ucsOf(char), 'positional-form', place, 'source', cjkviProv, detail)
+  }
+}
+
+/** The Unihan.zip member `name`, read with the central directory. @param {Buffer} zip @param {string} name */
+function unzip(zip, name) {
+  let end = zip.length - 22
+  while (end >= 0 && zip.readUInt32LE(end) !== 0x06054b50) end--
+  if (end < 0) throw new Error('Unihan.zip: no end of central directory')
+  let at = zip.readUInt32LE(end + 16)
+  for (let entries = zip.readUInt16LE(end + 10); entries > 0; entries--) {
+    const length = zip.readUInt16LE(at + 28), extra = zip.readUInt16LE(at + 30), comment = zip.readUInt16LE(at + 32)
+    if (zip.toString('utf8', at + 46, at + 46 + length) === name) {
+      const method = zip.readUInt16LE(at + 10), size = zip.readUInt32LE(at + 20), local = zip.readUInt32LE(at + 42)
+      const start = local + 30 + zip.readUInt16LE(local + 26) + zip.readUInt16LE(local + 28)
+      const data = zip.subarray(start, start + size)
+      return method === 8 ? inflateRawSync(data).toString('utf8') : data.toString('utf8')
+    }
+    at += 46 + length + extra + comment
+  }
+  throw new Error(`Unihan.zip: no ${name}`)
+}
+const UNIHAN = { file: 'Unihan.zip', url: 'https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip',
+  sha256: '4c93ea9c1f636451729a840978f1667a53886af37ba854fdcce109721c63d43e' }
+await mkdir(resolve(CACHE, '../unihan'), { recursive: true })
+const unihanPath = resolve(CACHE, '../unihan', UNIHAN.file)
+let unihanBytes = await readFile(unihanPath).catch(() => null)
+if (!unihanBytes || digest(unihanBytes) !== UNIHAN.sha256) {
+  const response = await fetch(UNIHAN.url)
+  if (!response.ok) throw new Error(`${UNIHAN.file}: ${response.status}`)
+  unihanBytes = Buffer.from(await response.arrayBuffer())
+  if (digest(unihanBytes) !== UNIHAN.sha256) throw new Error(`${UNIHAN.file}: pinned ${UNIHAN.sha256}, fetched ${digest(unihanBytes)}`)
+  await writeFile(unihanPath, unihanBytes)
+}
+const unihanProv = sourceIndex({ title: 'Unihan 18.0.0', url: UNIHAN.url, date: '', edition: '18.0.0',
+  licence: 'Unicode-3.0', sha256: UNIHAN.sha256 }, 'unihan')
+for (const line of unzip(unihanBytes, 'Unihan_Variants.txt').split('\n')) {
+  const [code, field, value] = line.split('\t')
+  if (!/^U\+[0-9A-F]+$/.test(code ?? '') || !/^k(?:Z|Semantic|SpecializedSemantic|Simplified|Traditional|JapaneseNew|JapaneseOld)Variant$/.test(field ?? '')) continue
+  const char = String.fromCodePoint(Number.parseInt(code.slice(2), 16))
+  for (const one of value.split(' ')) {
+    const match = /^U\+([0-9A-F]+)/.exec(one)
+    if (match) edge(char, String.fromCodePoint(Number.parseInt(match[1], 16)))
+  }
+}
+// A character whose radical is the whole of it (`113.0`, with no residual strokes) can be the
+// radical drawn another way. Unihan files characters of their own the same way (曱 `102.0` is a
+// cockroach, not 田), so a row is written only for a member that is a form of the radical: it has
+// the radical's stroke count and no definition of its own. A primed number is the simplified
+// radical's form (`149'.0` is 讠 for 言). A form the radical variants list, or a compatibility
+// ideograph of one, is read as they say, at the place they name or not at all: Unihan files 忄 and 䒑
+// under their radicals, and reading that anywhere would fold what they leave apart. Such a row is
+// not written and goes in the conflict report.
+const strokes = new Map(), defined = new Set(), radicalValues = []
+for (const line of unzip(unihanBytes, 'Unihan_IRGSources.txt').split('\n')) {
+  const [code, field, value] = line.split('\t')
+  if (!/^U\+[0-9A-F]+$/.test(code ?? '')) continue
+  const char = String.fromCodePoint(Number.parseInt(code.slice(2), 16))
+  if (field === 'kTotalStrokes') strokes.set(char, Number(value.split(' ')[0]))
+  else if (field === 'kRSUnicode') radicalValues.push([char, value.split(' ')])
+}
+for (const line of unzip(unihanBytes, 'Unihan_Readings.txt').split('\n')) {
+  const [code, field] = line.split('\t')
+  if (field === 'kDefinition' && /^U\+[0-9A-F]+$/.test(code)) defined.add(String.fromCodePoint(Number.parseInt(code.slice(2), 16)))
+}
+const overridden = []
+for (const [member, values] of radicalValues) for (const one of values) {
+  const match = /^(\d+)'*\.0$/.exec(one)
+  const target = match ? equivalentOf.get(String.fromCodePoint(0x2F00 + Number(match[1]) - 1)) : undefined
+  if (!target) continue
+  const listed = variantOf.get(member.normalize('NFC'))
+  if (listed) overridden.push({ member: ucsOf(member), target: ucsOf(target), listed, note: `kRSUnicode ${one}` })
+  else if (member.normalize('NFC') !== target && !defined.has(member) && strokes.has(member) && strokes.get(member) === strokes.get(target)) {
+    addClass(ucsOf(member), ucsOf(target), 'radical-index', '', 'derived', unihanProv, `kRSUnicode ${one}`)
+  }
+}
+
+// The IRG's unifiable list at level 1, read as the first form each entry names. The list unifies
+// shapes where they vary, and two of its shapes can be different characters elsewhere (主 and 龶), so
+// two characters of an entry are one component only where a variant table, Unihan's or the radical
+// variants above, also gives them as variants. Entries that share a shape are one class, read as the
+// first shape of the entry that first joined two of them. Level 2 pairs shapes that are different
+// characters elsewhere (土 and 士) and is not read, and neither is a shape written as a description.
+const ucv = JSON.parse(await readFile(new URL('../data/ucv.json', import.meta.url), 'utf8'))
+const ucvProv = sourceIndex({ title: ucv.source.document, url: ucv.source.documentUrl, date: '2026-10-20',
+  edition: `${ucv.source.name}, ${ucv.source.revision}`, licence: 'Public Domain', sha256: ucv.source.sha256 }, 'irg-ucv')
+const heads = new Map(), formed = new Map(), joined = new Map()
+const headOf = shape => { while (heads.get(shape) !== shape) shape = heads.get(shape); return shape }
+for (const [number, entry] of ucv.entries.entries()) {
+  if (entry.kind !== 'unifiable' || entry.level !== 1) continue
+  const shapes = [...new Set(entry.forms.map(form => bareChar(form.text ?? form.of ?? '')).filter(shape => [...shape].length === 1))]
+  for (const shape of shapes) if (!heads.has(shape)) heads.set(shape, shape)
+  for (const [index, shape] of shapes.entries()) for (const earlier of shapes.slice(0, index)) {
+    if (!variantPairs.has(`${shape}\0${earlier}`)) continue
+    let first = headOf(earlier), second = headOf(shape)
+    if (first === second) continue
+    if ((formed.get(second) ?? number) < (formed.get(first) ?? number)) [first, second] = [second, first]
+    heads.set(second, first)
+    joined.set(second, entry.id)
+    if (!formed.has(first)) formed.set(first, number)
+  }
+}
+// A positional form, or the character it is the form of, is no placeless member: 礻 is 示 at the left
+// only, and 攵 is 攴 at the right, not 攴 anywhere.
+const positional = (member, target) => variantOf.get(member.normalize('NFC'))?.place && variantOf.get(member.normalize('NFC')).target === target
+for (const shape of heads.keys()) {
+  const target = headOf(shape)
+  if (target !== shape && !positional(shape, target) && !positional(target, shape)) addClass(ucsOf(shape), ucsOf(target), 'unifiable-variant', '', 'source', ucvProv, `entry ${joined.get(shape) ?? ''}, level 1`)
+}
+
+// A pair attested under two bases, at the same place, is verified, under one a candidate.
+const basesOf = new Map()
+for (const row of classRows) {
+  const key = `${row.member}\0${row.target}\0${row.place}`
+  basesOf.set(key, (basesOf.get(key) ?? new Set()).add(row.basis))
+}
+const classMembers = classRows
+  .map(row => ['class-member', row])
+  .map(([kind, row]) => [row.member, row.target, kind, row.basis, row.place, row.tier,
+    basesOf.get(`${row.member}\0${row.target}\0${row.place}`).size >= 2 ? 'verified' : 'candidate', [row.prov], row.note])
+  .sort((a, b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]) || a[3].localeCompare(b[3]) || a[4].localeCompare(b[4]))
+
+// The conflict report: members that resolve to two canonicals at one place, rows that make a cycle,
+// and the Unihan radical rows the radical variants overrule.
+const outgoing = new Map()
+for (const row of classMembers) outgoing.set(row[0], [...(outgoing.get(row[0]) ?? []), row])
+const cidChar = cid => String.fromCodePoint(Number.parseInt(cid.slice(4), 16))
+const conflicts = []
+/** @type {Map<string, Set<string>>} */
+const cycles = new Map()
+const canonicalsOf = (char, place, path) => {
+  if (path.includes(char)) {
+    // One cycle, written from its smallest member, whichever member reached it.
+    const members = path.slice(path.indexOf(char))
+    const from = members.indexOf([...members].sort()[0])
+    const loop = [...members.slice(from), ...members.slice(0, from), members[from]].map(cidChar).join(' > ')
+    cycles.set(loop, (cycles.get(loop) ?? new Set()).add(place || 'anywhere'))
+    return new Set()
+  }
+  const next = (outgoing.get(char) ?? []).filter(row => row[4] === '' || row[4] === place)
+  if (!next.length) return new Set([char])
+  return new Set(next.flatMap(row => [...canonicalsOf(row[1], place, [...path, char])]))
+}
+for (const [member, rows] of [...outgoing].sort(([a], [b]) => a.localeCompare(b))) {
+  /** @type {Map<string, string[]>} */
+  const byTargets = new Map()
+  for (const place of ['', ...PLACES]) {
+    const terminals = [...canonicalsOf(member, place, [])].sort()
+    if (terminals.length > 1) byTargets.set(terminals.map(cidChar).join(' '), [...(byTargets.get(terminals.map(cidChar).join(' ')) ?? []), place || 'anywhere'])
+  }
+  for (const [targets, places] of byTargets) {
+    conflicts.push(['two-canonicals', member, places.join(' '), targets, [...new Set(rows.map(row => row[3]))].join(' '), ''])
+  }
+}
+for (const [member, rows] of outgoing) {
+  /** @type {Map<string, typeof rows>} */
+  const pairs = new Map()
+  for (const row of rows) pairs.set(row[1], [...(pairs.get(row[1]) ?? []), row])
+  for (const [target, pair] of pairs) {
+    if (pair.some(row => row[4] === '') && pair.some(row => row[4] !== '')) {
+      conflicts.push(['place', member, pair.filter(row => row[4]).map(row => row[4]).join(' '), cidChar(target),
+        pair.map(row => `${row[3]}${row[4] ? `@${row[4]}` : ''}`).join(' '), 'a table gives this pair at a place, another anywhere'])
+    }
+  }
+}
+for (const [loop, places] of cycles) conflicts.push(['cycle', loop.split(' > ')[0], [...places].join(' '), loop, '', 'rows lead a member back to itself'])
+for (const { member, target, listed, note } of overridden) {
+  conflicts.push(['radical-index', member, listed.place, cidChar(target), 'unihan',
+    `${note}: the radical variants give ${listed.target} ${listed.place ? `at ${listed.place}` : 'at no place'}${UNREAD.has(cidChar(member)) ? ', a row not read' : ''}`])
+}
+const conflictText = ['# Class rows that disagree, from scripts/build_ids_corpus.mjs. kind, member, place, targets, bases, note.',
+  ...conflicts.map(([kind, member, place, targets, bases, note]) => [kind, cidChar(member), place, targets, bases, note].join('\t'))
+    .sort()].join('\n') + '\n'
+const CONFLICTS = new URL('../data/ids-class-conflicts.tsv', import.meta.url)
+const equivalences = [
+  ...alignments.map(([a, b, basis, status, prov, note]) => [a, b, 'alignment', basis, '', 'derived', status, prov, note]),
+  ...classMembers,
+]
 
 // Component identities: every entity name CHISE uses that no codepoint covers.
 const components = []
@@ -304,7 +525,7 @@ const equivalenceDoc = {
   sources,
   provenance,
   columns: ['a', 'b', 'aChar', 'bChar', 'aDescription', 'bDescription', 'basis', 'status', 'prov', 'note'],
-  rows: equivalences.map(([a, b, basis, status, prov, note]) => [
+  rows: alignments.map(([a, b, basis, status, prov, note]) => [
     a, b, charOf.get(a) ?? null, charOf.get(b) ?? null,
     descriptionOf.get(a) ?? null, descriptionOf.get(b) ?? null, basis, status, prov, note,
   ]),
@@ -363,7 +584,7 @@ for (const row of descriptions) {
 }
 /** @type {Map<string, { cid: string, status: string, note: string }[]>} */
 const equivalentsOf = new Map()
-for (const [a, b, , status, , note] of equivalences) {
+for (const [a, b, , status, , note] of alignments) {
   for (const [one, two] of [[a, b], [b, a]]) {
     const list = equivalentsOf.get(one) ?? []
     list.push({ cid: two, status, note })
@@ -419,7 +640,7 @@ const corpus = {
   provenance,
   components: { columns: ['cid', 'char', 'type', 'class', 'label', 'uses', 'strokes', 'strokesDerived', 'first'], rows: components },
   aliases: { columns: ['cid', 'ns', 'value', 'prov', 'basis', 'scope', 'status'], rows: aliases },
-  equivalences: { columns: ['a', 'b', 'basis', 'status', 'prov', 'note'], rows: equivalences },
+  equivalences: { columns: ['a', 'b', 'kind', 'basis', 'place', 'tier', 'status', 'prov', 'note'], rows: equivalences },
   merges: { columns: ['kept', 'absorbed', 'basis', 'prov', 'note'], rows: [] },
   descriptions: { columns: ['subject', 'text', 'resolved', 'prov', 'regions', 'role', 'status'], rows: descriptions },
   counts: {
@@ -428,6 +649,8 @@ const corpus = {
     unresolved: descriptions.filter(row => row[6] === 'unresolved').length,
     ready: descriptions.filter(row => row[6] === 'ready').length,
     equivalences: equivalences.length,
+    alignments: alignments.length,
+    classMembers: classMembers.length,
   },
 }
 
@@ -458,7 +681,7 @@ const archive = gzipSync(tar(inputs), { level: 9, mtime: 0 })
 const ARCHIVE = new URL('../data/ids-corpus-sources.tar.gz', import.meta.url)
 
 if (CHECK) {
-  for (const [path, expected] of [[OUT, bytes], [ARCHIVE, archive], [EQUIVALENCES, equivalenceBytes], [INDEX, indexBytes]]) {
+  for (const [path, expected] of [[OUT, bytes], [ARCHIVE, archive], [EQUIVALENCES, equivalenceBytes], [INDEX, indexBytes], [CONFLICTS, Buffer.from(conflictText)]]) {
     const committed = await readFile(path).catch(() => null)
     if (!committed || !committed.equals(expected)) throw new Error(`${path} is not what this build writes`)
   }
@@ -469,7 +692,8 @@ if (CHECK) {
   await writeFile(ARCHIVE, archive)
   await writeFile(EQUIVALENCES, equivalenceBytes)
   await writeFile(INDEX, indexBytes)
+  await writeFile(CONFLICTS, conflictText)
   console.log(`${OUT}: ${corpus.counts.descriptions} descriptions, ${corpus.counts.components} components, ${corpus.counts.unresolved} unresolved, ${bytes.length} bytes`)
-  console.log(`${EQUIVALENCES}: ${equivalences.length} equivalences, ${equivalenceBytes.length} bytes`)
+  console.log(`${EQUIVALENCES}: ${alignments.length} alignments, ${equivalenceBytes.length} bytes`)
   console.log(`${INDEX}: ${indexRows.length} components, ${indexBytes.length} bytes`)
 }
