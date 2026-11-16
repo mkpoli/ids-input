@@ -153,6 +153,19 @@
       "zihai-101007"
      ]
     }
+   ],
+   "traced": [
+    "u2218d-var-001",
+    "u2ff0-u25608-u7c74",
+    "u2ff0-u4e3f-u81e3",
+    "u2ff1-cdp-85a8-u4e00",
+    "u2ff1-u2b1a-cdp-8dc1",
+    "u2ff1-u2ffa-u200ca-u53e3-u76ee",
+    "u2ff1-u37a2-u513f",
+    "u2ff1-u4e3f-cdp-876e",
+    "u2ff3-cdp-89e3-u4e00-u51e0",
+    "u2ff3-u91cc-u516b-u571f",
+    "u6c3a-01"
    ]
   }
  },
@@ -3526,8 +3539,7 @@
    "group": "b-1",
    "forms": [
     {
-     "glyph": "u2ff1-u2b1a-cdp-8dc1",
-     "undrawn": true
+     "glyph": "u2ff1-u2b1a-cdp-8dc1"
     },
     {
      "glyph": "u2ff1-u2b1a-u4ea1",
@@ -4314,8 +4326,7 @@
     },
     {
      "glyph": "u2218d-var-001",
-     "of": "𢆍",
-     "undrawn": true
+     "of": "𢆍"
     }
    ],
    "components": "臿𢆍𦥛",
@@ -7987,8 +7998,7 @@
     },
     {
      "glyph": "u2ff0-u4e3f-u81e3",
-     "text": "⿰丿臣",
-     "undrawn": true
+     "text": "⿰丿臣"
     }
    ],
    "components": "𦣝𦣞⿰㇓臣",
@@ -9446,8 +9456,7 @@
     },
     {
      "glyph": "u2ff3-u91cc-u516b-u571f",
-     "text": "⿳里八土",
-     "undrawn": true
+     "text": "⿳里八土"
     }
    ],
    "components": "墨𱗐",
@@ -11306,8 +11315,7 @@
     },
     {
      "glyph": "u2ff1-u37a2-u513f",
-     "text": "⿱㞢儿",
-     "undrawn": true
+     "text": "⿱㞢儿"
     },
     {
      "glyph": "u2ff1-u37a2-u516b",
@@ -13479,8 +13487,7 @@
      "text": "𡵉"
     },
     {
-     "glyph": "u2ff3-cdp-89e3-u4e00-u51e0",
-     "undrawn": true
+     "glyph": "u2ff3-cdp-89e3-u4e00-u51e0"
     },
     {
      "glyph": "u2ff3-cdp-884a-u4e00-u51e0"
@@ -18247,8 +18254,7 @@
     },
     {
      "glyph": "u2ff0-u25608-u7c74",
-     "text": "⿰𥘈籴",
-     "undrawn": true
+     "text": "⿰𥘈籴"
     }
    ],
    "components": "𥻳⿰𥘈籴",
@@ -22806,8 +22812,7 @@
      "text": "乖"
     },
     {
-     "glyph": "u2ff1-u4e3f-cdp-876e",
-     "undrawn": true
+     "glyph": "u2ff1-u4e3f-cdp-876e"
     }
    ],
    "components": "乖⿱丿",
@@ -22915,8 +22920,7 @@
      "text": "𡍮"
     },
     {
-     "glyph": "u2ff1-cdp-85a8-u4e00",
-     "undrawn": true
+     "glyph": "u2ff1-cdp-85a8-u4e00"
     }
    ],
    "components": "𡍮⿱一",
@@ -23046,8 +23050,7 @@
     },
     {
      "glyph": "u2ff1-u2ffa-u200ca-u53e3-u76ee",
-     "text": "⿱⿺𠃊口目",
-     "undrawn": true
+     "text": "⿱⿺𠃊口目"
     }
    ],
    "components": "𦙃⿱⿺𠃊口目",
@@ -23397,8 +23400,7 @@
     },
     {
      "glyph": "u6c3a-01",
-     "of": "氺",
-     "undrawn": true
+     "of": "氺"
     }
    ],
    "components": "氵氺",

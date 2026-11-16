@@ -27,6 +27,11 @@ try {
     if (shots) await page.screenshot({ path: join(shots, `ucv-page-${scheme}.png`) })
 
     const search = page.locator('.ids-ucv input[type="search"]')
+    // A form the source has only as an image is drawn like the others, and no form shows its name.
+    await search.fill('82a')
+    await page.locator('.ids-ucv-entry[data-entry="82a"] .ids-ucv-form[data-form="u2ff1-u2b1a-cdp-8dc1"] svg path').waitFor()
+    assert.equal(await page.locator('.ids-ucv-entry[data-entry="82a"] .ids-ucv-form svg path').count(), 2)
+    assert.equal(await page.locator('.ids-ucv-name').count(), 0)
     await search.fill('213a')
     await page.locator('.ids-ucv-entry[data-entry="213a"]').waitFor()
     assert.equal(await page.locator('.ids-ucv-entry[data-entry="213a"] .ids-ucv-form').count(), 13, 'an entry that repeats a glyph draws every form')

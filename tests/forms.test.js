@@ -85,10 +85,17 @@ it('writes a form only an outline draws as its glyph reference, and drops other 
   expect(write(/** @type {any} */ (plain.tree))).toBe('⿰氵壬')
 })
 
-it('leaves a form no source draws, and an identifier of another entry, as the plain component', () => {
-  expect(componentForms('氵', { ucv, variants: true })).toEqual([])
-  expect(formedTree('氵q4302', ucv)).toEqual({ tree: '氵', formed: false })
-  expect(formedTree('壬q3212', ucv)).toEqual({ tree: '壬', formed: false })
+it('offers a form the source has only as an image', () => {
+  expect(componentForms('氵', { ucv, variants: true }).map(form => form.write)).toEqual(['氵', '氵q4302'])
+  const shaped = formedTree(/** @type {any} */ (parse('⿰氵q4302壬').tree), ucv)
+  expect(shaped.formed).toBe(true)
+  expect(write(/** @type {any} */ (shaped.tree))).toBe('⿰&GW-u6c3a-01;壬')
+})
+
+it('leaves an identifier of another entry as the plain component', () => {
+  const plain = formedTree(/** @type {any} */ (parse('⿰氵壬q3212').tree), ucv)
+  expect(plain.formed).toBe(false)
+  expect(write(/** @type {any} */ (plain.tree))).toBe('⿰氵壬')
 })
 
 it('asks the preview for the formed description, and for no final image of it', async () => {

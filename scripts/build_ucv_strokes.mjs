@@ -22,9 +22,11 @@ const data = new URL('../data/', import.meta.url)
 const ucv = JSON.parse(await readFile(new URL('ucv.json', data), 'utf8'))
 /** @type {Record<string, string>} */
 const recorded = JSON.parse(gunzipSync(await readFile(new URL('ucv-forms.json.gz', data))).toString('utf8'))
+// A form traced from an image is under no name in the dump.
+const traced = new Set(ucv.source.glyphs.traced)
 /** @type {string[]} */
 const forms = [...new Set(ucv.entries.flatMap((/** @type {any} */ entry) => entry.forms)
-  .filter((/** @type {any} */ form) => !form.text && !form.undrawn).map((/** @type {any} */ form) => form.glyph))].sort()
+  .filter((/** @type {any} */ form) => !form.text && !traced.has(form.glyph)).map((/** @type {any} */ form) => form.glyph))].sort()
 
 /** The least share of each drawing's ink that must lie on or beside the other's for one form. */
 const SAME_FORM = Number(process.env.SAME_FORM ?? 0.97)

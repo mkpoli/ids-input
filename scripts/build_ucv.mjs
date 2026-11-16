@@ -5,7 +5,8 @@
 //
 // `checkout` is a local copy of the pinned revision; without it the files are fetched. An outline
 // already in `data/ucv-forms.json.gz` is kept as it is, so a rebuild asks only for the forms that
-// file lacks; `--refresh` reads every outline again. The forms no text writes are also drawn in
+// file lacks; `--refresh` reads every outline again. A form that has no vector drawing is traced
+// from the snapshot's image of it. The forms no text writes are also drawn in
 // Gothic from their stroke data (`data/ucv-strokes.json.gz`, see `build_ucv_strokes.mjs`).
 import { Kage, Polygons } from '@kurgm/kage-engine'
 import { createHash } from 'node:crypto'
@@ -13,6 +14,7 @@ import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { gunzipSync, gzipSync } from 'node:zlib'
 import { SQUARE, area, cells, counters, enclosed, filled, polygonsOf } from './lib/outline.mjs'
+import { inkOf, trace } from './lib/trace.mjs'
 
 const revision = '8302302d615ff1c1f60ae335b118b10060be0ed4'
 const expected = '886b426ea3d1d329749e02b32cccd5082d31d6cf1b996ea37bdae5ac593ca491'
@@ -158,8 +160,9 @@ for (const match of xml.matchAll(/<(group|subgroup)\s([^>]*)>|<\/(group|subgroup
 // The outlines and the record of where each came from, as last compiled.
 /** @type {Record<string, string>} */
 const kept = refresh ? {} : await readFile(new URL('ucv-forms.json.gz', data)).then(bytes => JSON.parse(gunzipSync(bytes).toString('utf8')), () => ({}))
+const before = refresh ? null : await readFile(new URL('ucv.json', data), 'utf8').then(text => JSON.parse(text).source?.glyphs, () => null)
 /** @type {{ date: string, names: string[] }[]} */
-const batches = refresh ? [] : await readFile(new URL('ucv.json', data), 'utf8').then(text => [JSON.parse(text).source?.glyphs?.fetched ?? []].flat(), () => [])
+const batches = [before?.fetched ?? []].flat()
 /** @type {Record<string, string>} */
 const outlines = {}
 const missing = []
@@ -183,10 +186,23 @@ for (const name of missing.sort()) {
   if (d) { outlines[name] = d; fetched.push(name) }
   await new Promise(resolve => setTimeout(resolve, 150))
 }
-const absent = missing.filter(name => !outlines[name])
 if (fetched.length) batches.push({ date: new Date().toISOString().slice(0, 10), names: fetched })
-// A form neither place draws says so, so nothing offers it as a drawing.
-for (const entry of entries) for (const form of entry.forms) if (!outlines[form.glyph]) form.undrawn = true
+// A name GlyphWiki no longer draws has only the snapshot's image, a bitmap of the drawing square,
+// which is traced.
+/** @type {string[]} */
+const traced = (before?.traced ?? []).filter((/** @type {string} */ name) => outlines[name])
+for (const name of missing.filter(name => !outlines[name]).sort()) {
+  const image = await read(`glyphs/${name}.png`)
+  if (!image) continue
+  const bitmap = inkOf(image)
+  const scale = SQUARE / bitmap.width
+  if (bitmap.width !== bitmap.height) throw new Error(`${name}: an image that is not square`)
+  const d = trace(bitmap).map(polygon => 'M' + polygon.map(([x, y]) => `${+(x * scale).toFixed(1)} ${+(y * scale).toFixed(1)}`).join('L') + 'Z').join('')
+  if (d) { outlines[name] = d; traced.push(name) }
+}
+traced.sort()
+const absent = names.filter(name => !outlines[name])
+if (absent.length) throw new Error(`no drawing of ${absent.join(' ')}`)
 
 /**
  * An outline as a record of the drawing engine's exports, for a composer to place as a component:
@@ -222,7 +238,7 @@ function record(key, polygons, { strokes = false, heavy } = {}) {
 /** @type {Record<string, object>} */
 const records = {}
 for (const entry of entries) for (const form of entry.forms) {
-  if (form.text || !outlines[form.glyph]) continue
+  if (form.text) continue
   const key = `&GW-${form.glyph};`
   if ([...key].length > 48 || !/^&[A-Za-z][A-Za-z0-9+_-]*;$/.test(key)) throw new Error(`${key}: not a reference a description can name`)
   records[key] = record(key, polygonsOf(outlines[form.glyph]))
@@ -325,10 +341,10 @@ const source = {
   sha256: expected,
   document: 'IRG N2978, UCV & NUCV Lists, version 2026-10-20',
   documentUrl: 'https://www.unicode.org/irg/docs/n2978-Complete.pdf',
-  glyphs: { name: 'GlyphWiki', url: 'https://glyphwiki.org/', snapshot: `glyphs/ at ${revision}`, fetched: batches },
+  glyphs: { name: 'GlyphWiki', url: 'https://glyphwiki.org/', snapshot: `glyphs/ at ${revision}`, fetched: batches, traced },
 }
 await writeFile(new URL('ucv.json', data), JSON.stringify({ format: 'ids-input/ucv', version: 1, source, groups, entries }, null, 1) + '\n')
-await writeFile(new URL('ucv-forms.json.gz', data), gzipSync(JSON.stringify(Object.fromEntries(names.filter(name => outlines[name]).map(name => [name, outlines[name]])))))
+await writeFile(new URL('ucv-forms.json.gz', data), gzipSync(JSON.stringify(Object.fromEntries(names.map(name => [name, outlines[name]])))))
 await writeFile(new URL('ucv-outlines.json.gz', data), gzipSync(JSON.stringify({ source: 'GlyphWiki glyphs of the IRG UCV and NUCV forms; see data/README.md', records })))
 if (strokes) {
   await writeFile(new URL('ucv-outlines-sans.json.gz', data), gzipSync(JSON.stringify({ source: 'GlyphWiki glyphs of the IRG UCV and NUCV forms, drawn in Gothic from their stroke data; see data/README.md', records: even })))
@@ -336,5 +352,4 @@ if (strokes) {
   if (unweighted.length) console.log(unweighted.join(' '))
   if (clogged.length) console.log(`${clogged.length} with a counter filled at the least width of a master: ${clogged.join(' ')}`)
 }
-console.log(`${entries.filter(entry => entry.kind === 'unifiable').length} unifiable, ${entries.filter(entry => entry.kind !== 'unifiable').length} not unifiable; ${names.length} forms, ${wanted.length} asked for, ${fetched.length} fetched from GlyphWiki, ${absent.length} without an outline; ${Object.keys(records).length} records`)
-if (absent.length) console.log(absent.join(' '))
+console.log(`${entries.filter(entry => entry.kind === 'unifiable').length} unifiable, ${entries.filter(entry => entry.kind !== 'unifiable').length} not unifiable; ${names.length} forms, ${wanted.length} asked for, ${fetched.length} fetched from GlyphWiki, ${traced.length} traced from an image; ${Object.keys(records).length} records`)

@@ -455,7 +455,7 @@ with an ellipsis, `note`, `references` and the `review` links are the source's.
 A form is the GlyphWiki glyph the source names. `text` is given when that name is a character, a
 description or a character with a variation selector; `of` gives the character a named form
 belongs to (`u540c-08-var-001` is a form of 同); other names (`cdp-`, `aj1-`, `koseki-`, `twedu-`,
-a numbered variant of a description) carry neither. `undrawn` marks a form no source draws.
+a numbered variant of a description) carry neither.
 
 The forms stand in the source's order, which zi.tools' variant identifiers count in: `q008a2` is
 the second form of entry 8a. Its `ids_lv0.txt` (revision `2597437`, SHA-256 `af5a0de3aae85ee1…`)
@@ -466,10 +466,12 @@ character; 44 name a glyph or a description with a slot, which cannot be compare
 
 `ucv-forms.json.gz` maps a glyph name to its outline, one SVG path in a 200-unit square: 1,461
 from the snapshot's `glyphs/` directory and 134 fetched from <https://glyphwiki.org/> on
-2026-11-13, listed with their dates under `source.glyphs.fetched`. Eleven names have no drawing in
-either place.
+2026-11-13, listed with their dates under `source.glyphs.fetched`. Eleven names GlyphWiki no longer
+draws are traced from the snapshot's image of each, a one-bit bitmap of 200 pixels a side
+(`glyphs/<name>.png`), and listed under `source.glyphs.traced`. `scripts/lib/trace.mjs` follows the
+edge of the ink, so a curve of these eleven is the image's steps joined by lines.
 
-`ucv-outlines.json.gz` holds the 632 forms no text writes as records of the drawing engine's
+`ucv-outlines.json.gz` holds the 638 forms no text writes as records of the drawing engine's
 export format, for a composer to place as components: `{ records: { "&GW-u58ec-t;": record } }`,
 each under the reference a description names the glyph by, `&GW-` and its GlyphWiki name. The
 200-unit square is scaled to a 1000-unit em with its top at 880. A drawing made of overlapping
@@ -477,7 +479,7 @@ strokes has every polygon wound the same way; one that is a single shape keeps i
 the other way, so they stay open. The workshop hands the file to the engine as the host's outlines; a component written
 with a variant identifier (`壬q0012`) is drawn from it.
 
-`ucv-strokes.json.gz` holds the stroke data (KAGE) of the same 632 forms, with the 679 glyphs
+`ucv-strokes.json.gz` holds the stroke data (KAGE) of the 632 of them GlyphWiki draws, with the 679 glyphs
 they are built from: `{ source, forms: { name: { version, same } }, glyphs: { name: strokes } }`.
 `scripts/build_ucv_strokes.mjs` reads it from GlyphWiki's dump,
 <https://glyphwiki.org/dump.tar.gz> (the files dated 2026-11-14 17:00 UTC; archive SHA-256
@@ -488,7 +490,7 @@ the least alike. The stroke data is drawn with `@kurgm/kage-engine` 0.7.0 (GPL-3
 build runs and the package does not ship.
 
 `ucv-outlines-sans.json.gz` is `ucv-outlines.json.gz` with every form drawn in Gothic from that
-stroke data, for the Sans face; the Worker that draws a share card reads it too. No source shows these forms in a Gothic face: the strokes are
+stroke data, for the Sans face, and the six traced forms as they are; the Worker that draws a share card reads it too. No source shows these forms in a Gothic face: the strokes are
 GlyphWiki's and the drawing is this build's. Each record has two masters, as the engine's exports
 do, so a form is weighted like the parts beside it. Their stroke widths follow the Sans export
 (`a83fc941166b-sans-compose-layout-v4-f7+variants`): over 62 characters from 一 to 鬱, ink divided
