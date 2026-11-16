@@ -20,12 +20,13 @@ try {
     await page.goto(`${url}/?lang=en&ids=${encodeURIComponent('⿰氵壬')}`, { waitUntil: 'networkidle' })
     assert.deepEqual(await page.locator('.ids-pick-tabs [role="tab"]').allInnerTexts(), ['Parts', 'Templates', 'Take parts from', 'Find'])
 
-    // A component whose entries hold no form that can be written gets no row.
+    // A form the source has only as an image is offered like the others.
     // The forms arrow on 壬 says the lists are read.
     await page.locator('.ids-tree .ids-cell[data-index="1"] .ids-forms-toggle').waitFor()
     await page.locator('.ids-tree .ids-part').nth(0).click()
-    await page.waitForTimeout(800)
-    assert.equal(await page.locator('.ids-swaps .ids-unified').count(), 0, '氵 has only an undrawn, unwritten form')
+    const traced = page.locator('.ids-swaps .ids-unified[data-ucv="430"] button.ids-unified-form[data-form="u6c3a-01"]')
+    await traced.locator('svg path').waitFor()
+    assert.equal(await traced.getAttribute('title'), '氵 → 氵q4302')
 
     // A chosen component with unifiable forms lists them beside its other alternatives.
     await page.locator('.ids-tree .ids-part').nth(1).click()

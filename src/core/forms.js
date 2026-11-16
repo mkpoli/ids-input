@@ -83,7 +83,7 @@ export function componentForms(part, { sequences = null, ucv = null, variants = 
         // A slot in the text is a place in a character, which a component alone cannot be written as.
         if (form.text.includes('⬚')) return
         add({ write: form.text, kind: variationBase(form.text) === base ? 'sequence' : 'sibling', ...listed })
-      } else if (variants && unifiable && !form.undrawn) {
+      } else if (variants && unifiable) {
         const id = ucvIdentifier(entry.id, at + 1, entry.forms.length)
         if (id) add({ write: base + id, kind: 'variant', ...listed })
       }
@@ -100,14 +100,14 @@ export const writtenForm = (forms, part) => {
 
 /**
  * What a composer draws for a component whose variant identifier names an entry form: the form's
- * glyph reference where no text writes it and a source draws it, the form itself where it is one
- * character or variation sequence, else null (a description, or a form nothing draws).
+ * glyph reference where no text writes it, the form itself where it is one character or variation
+ * sequence, else null (a description).
  * @param {import('./ucv.js').UcvIndex} ucv @param {string} part
  * @returns {string | null}
  */
 export function drawnForm(ucv, part) {
   const found = ucvFormOf(ucv, part)
-  if (!found || found.form.undrawn) return null
+  if (!found) return null
   if (!found.form.text) return glyphReference(found.form.glyph)
   return variationBase(found.form.text) !== null ? found.form.text : null
 }

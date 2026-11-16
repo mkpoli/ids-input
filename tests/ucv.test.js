@@ -3,6 +3,7 @@ import { expect, it } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { gunzipSync } from 'node:zlib'
+import { polygonsOf } from '../scripts/lib/outline.mjs'
 
 const data = JSON.parse(await readFile(new URL('../data/ucv.json', import.meta.url), 'utf8'))
 const outlines = JSON.parse(gunzipSync(await readFile(new URL('../data/ucv-forms.json.gz', import.meta.url))).toString('utf8'))
@@ -67,14 +68,15 @@ it('reads a group title the source quotes either way', () => {
   for (const group of data.groups) expect(group.en).toBeTruthy()
 })
 
-it('marks the forms no source draws, and gives every other textless form an outline record', () => {
-  const forms = data.entries.flatMap((/** @type {{ forms: { glyph: string, text?: string, undrawn?: boolean }[] }} */ row) => row.forms)
-  expect(new Set(forms.filter((/** @type {{ undrawn?: boolean }} */ form) => form.undrawn).map((/** @type {{ glyph: string }} */ form) => form.glyph)).size).toBe(11)
-  for (const form of forms) expect(Boolean(form.undrawn)).toBe(!outlines[form.glyph])
+it('draws every form, and gives each textless one an outline record', () => {
+  const forms = data.entries.flatMap((/** @type {{ forms: { glyph: string, text?: string }[] }} */ row) => row.forms)
+  for (const form of forms) expect(outlines[form.glyph], form.glyph).toMatch(/^M[\d. ]+L/)
+  expect(data.source.glyphs.traced).toHaveLength(11)
+  for (const name of data.source.glyphs.traced) expect(polygonsOf(outlines[name]).length, name).toBeGreaterThan(0)
   const { records } = JSON.parse(gunzipSync(readFileSync(new URL('../data/ucv-outlines.json.gz', import.meta.url))).toString('utf8'))
-  const wanted = new Set(forms.filter((/** @type {{ text?: string, undrawn?: boolean }} */ form) => !form.text && !form.undrawn).map((/** @type {{ glyph: string }} */ form) => `&GW-${form.glyph};`))
+  const wanted = new Set(forms.filter((/** @type {{ text?: string }} */ form) => !form.text).map((/** @type {{ glyph: string }} */ form) => `&GW-${form.glyph};`))
   expect(new Set(Object.keys(records))).toEqual(wanted)
-  expect(wanted.size).toBe(632)
+  expect(wanted.size).toBe(638)
   const record = records['&GW-u58ec-t;']
   expect(record.k).toBe('&GW-u58ec-t;')
   expect(record.o).toBe(record.G.p.length)
@@ -130,12 +132,13 @@ it('keeps the counters of a form open in its outline record', () => {
   expect(new Set(strokes)).toEqual(new Set([1]))
 })
 
-it('draws every textless form in Gothic too, from stroke data that draws its recorded outline', () => {
+it('draws every textless form in Gothic too, from stroke data that draws its recorded outline, or keeps a traced one', () => {
   const read = (/** @type {string} */ name) => JSON.parse(gunzipSync(readFileSync(new URL(`../data/${name}`, import.meta.url))).toString('utf8'))
   const mincho = read('ucv-outlines.json.gz').records, sans = read('ucv-outlines-sans.json.gz').records, strokes = read('ucv-strokes.json.gz')
   expect(Object.keys(sans).sort()).toEqual(Object.keys(mincho).sort())
   for (const key of Object.keys(sans)) {
     const name = key.slice('&GW-'.length, -1)
+    if (data.source.glyphs.traced.includes(name)) { expect(sans[key]).toEqual(mincho[key]); continue }
     const kept = strokes.forms[name]
     expect(kept.same).toBeGreaterThanOrEqual(strokes.source.same)
     expect(strokes.glyphs[`${name}@${kept.version}`]).toBeTruthy()
@@ -170,7 +173,9 @@ it('draws every textless form in Gothic too, from stroke data that draws its rec
         for (let i = 0; i < at.length; i += 4) { const [x, y] = point(i), [nx, ny] = point((i + 4) % at.length); sum += x * ny - nx * y }
         return Math.sign(sum)
       }
-      if (turn(0) !== 1 || turn(-0.6) !== 1 || turn(1) !== 1) throw new Error(`${key}: a contour turns over between weights`)
+      // A traced form is one shape, whose counters are wound against it.
+      const stroke = !data.source.glyphs.traced.includes(key.slice('&GW-'.length, -1))
+      if ((stroke && turn(0) !== 1) || turn(-0.6) !== turn(0) || turn(1) !== turn(0)) throw new Error(`${key}: a contour turns over between weights`)
     }
   }
 })

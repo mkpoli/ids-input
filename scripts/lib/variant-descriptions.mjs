@@ -72,7 +72,7 @@ export function rowsOf(data) {
  * @param {Map<string, Glyph>} glyphs GlyphWiki's rows by name, every glyph the sequences reach.
  * @param {(char: string, source?: string) => string[]} descriptionsOf A character's descriptions as
  *   the tables write them, the first one first; with a source letter, those of that source first.
- * @param {{ entries: { id: string, kind: string, forms: { glyph: string, text?: string, of?: string, undrawn?: boolean }[] }[] } | null} [ucv]
+ * @param {{ entries: { id: string, kind: string, forms: { glyph: string, text?: string, of?: string }[] }[] } | null} [ucv]
  * @param {Map<string, string>} [standardized] The standardized variation sequence of each CJK
  *   compatibility ideograph, which writes its form.
  */
@@ -81,7 +81,7 @@ export function createDescriber(glyphs, descriptionsOf, ucv = null, standardized
   const forms = new Map()
   for (const entry of ucv?.entries ?? []) {
     entry.forms.forEach((form, at) => {
-      if (forms.has(form.glyph) || form.undrawn) return
+      if (forms.has(form.glyph)) return
       forms.set(form.glyph, { text: form.text, of: form.of, id: entry.kind === 'unifiable' ? ucvIdentifier(entry.id, at + 1, entry.forms.length) : null })
     })
   }

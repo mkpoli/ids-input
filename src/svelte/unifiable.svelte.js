@@ -23,7 +23,7 @@ export function createUnifiable(of, wanted = () => true) {
     const named = Boolean(editor.adapter.formed) && (editor.chosen?.length ?? 0) > 0
     return ucv.formsOf(base).filter(entry => entry.kind === 'unifiable')
       .map(entry => ({ id: entry.id, forms: entry.forms.map((form, at) => {
-        const id = form.text || !named || form.undrawn ? null : ucvIdentifier(entry.id, at + 1, entry.forms.length)
+        const id = form.text || !named ? null : ucvIdentifier(entry.id, at + 1, entry.forms.length)
         return { ...form, write: form.text ?? (id ? base + id : null) }
       }).filter(form => form.write !== part) }))
       .filter(entry => entry.forms.some(form => form.write))
