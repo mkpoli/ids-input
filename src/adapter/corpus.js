@@ -21,7 +21,7 @@ const checkFormat = document => {
 /**
  * The descriptions CHISE attests, by character. A subject is the corpus's `ucs:XXXX` cid; a row is
  * kept when one of the sources that attest it is a CHISE file, and only when it carries a
- * description (`ready` or `unresolved`); `empty` rows name the character itself and say nothing new.
+ * description (`ready`, `unresolved` or `unsupported`); `empty` rows name the character itself and say nothing new.
  * @param {string} text
  * @returns {Map<string, Sequence[]>}
  */
@@ -31,7 +31,9 @@ export function readCorpus(text) {
   /** @type {string[]} */
   const sources = (document.sources ?? []).map((/** @type {{ id?: string }} */ source) => {
     if (source?.id === 'babelstone') return 'babelstone'
-    return /^chise/.test(source?.id ?? '') ? 'chise' : String(source?.id ?? '')
+    // Only the two sources this table has always carried are labels. The workshop reads zi.tools
+    // and the project's rows from their own tables, so a row another source also gives stays as it was.
+    return /^chise/.test(source?.id ?? '') ? 'chise' : null
   })
   const subject = at('subject'), textAt = at('text'), prov = at('prov'), regions = at('regions'), status = at('status')
   /** @type {Map<string, Sequence[]>} */
@@ -40,8 +42,8 @@ export function readCorpus(text) {
   const seen = new Map()
   for (const row of rows) {
     const state = row[status]
-    if (state !== 'ready' && state !== 'unresolved') continue
-    const attested = [...new Set((row[prov] ?? []).map((/** @type {number} */ index) => sources[index]))]
+    if (state !== 'ready' && state !== 'unresolved' && state !== 'unsupported') continue
+    const attested = [...new Set((row[prov] ?? []).map((/** @type {number} */ index) => sources[index]).filter(Boolean))]
     if (!attested.includes('chise')) continue
     const cid = String(row[subject] ?? '')
     const match = /^ucs:([0-9A-Fa-f]{4,6})$/.exec(cid)

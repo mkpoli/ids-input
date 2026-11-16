@@ -173,6 +173,33 @@
    "date": "",
    "edition": "main@2026-11-04",
    "licence": "GPL-2.0-or-later"
+  },
+  {
+   "id": "yibai-lv0",
+   "title": "Yi Bai IDS level 0 (zi.tools)",
+   "url": "https://github.com/yi-bai/ids/blob/2597437b928e8d530b7ae09cf53fe5ec7868569c/ids_lv0.txt",
+   "date": "2026-10-31",
+   "edition": "2597437b928e8d530b7ae09cf53fe5ec7868569c",
+   "licence": "MIT",
+   "sha256": "af5a0de3aae85ee1a69001918a78d4060d9a334c508ad2c6ac5854786791d474"
+  },
+  {
+   "id": "yibai-lv1",
+   "title": "Yi Bai IDS level 1 (zi.tools)",
+   "url": "https://github.com/yi-bai/ids/blob/2597437b928e8d530b7ae09cf53fe5ec7868569c/ids_lv1.txt",
+   "date": "2026-10-31",
+   "edition": "2597437b928e8d530b7ae09cf53fe5ec7868569c",
+   "licence": "MIT",
+   "sha256": "aa9ba7e394d8fd5cf797b6b9bd6ae5b4546f5222d10f15158c656f099b35c0cf"
+  },
+  {
+   "id": "yibai-lv2",
+   "title": "Yi Bai IDS level 2 (zi.tools)",
+   "url": "https://github.com/yi-bai/ids/blob/2597437b928e8d530b7ae09cf53fe5ec7868569c/ids_lv2.txt",
+   "date": "2026-10-31",
+   "edition": "2597437b928e8d530b7ae09cf53fe5ec7868569c",
+   "licence": "MIT",
+   "sha256": "b728e92679a9cb18a8f67f55f654f03875791dc34f6bab41ed1d4b4116bea7d6"
   }
  ],
  "provenance": [
@@ -289,6 +316,24 @@
    "licence": "GPL-2.0-or-later",
    "date": "",
    "edition": "main@2026-11-04"
+  },
+  {
+   "source": "yibai-lv0",
+   "licence": "MIT",
+   "date": "2026-10-31",
+   "edition": "2597437b928e8d530b7ae09cf53fe5ec7868569c"
+  },
+  {
+   "source": "yibai-lv1",
+   "licence": "MIT",
+   "date": "2026-10-31",
+   "edition": "2597437b928e8d530b7ae09cf53fe5ec7868569c"
+  },
+  {
+   "source": "yibai-lv2",
+   "licence": "MIT",
+   "date": "2026-10-31",
+   "edition": "2597437b928e8d530b7ae09cf53fe5ec7868569c"
   }
  ],
  "columns": [

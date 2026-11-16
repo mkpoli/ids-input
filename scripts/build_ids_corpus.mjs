@@ -3,7 +3,7 @@
 //
 //   bun scripts/build_ids_corpus.mjs [--out FILE] [--cache DIR] [--check]
 //
-// The first increment reads BabelStone and the CHISE UCS files. A CHISE entity name
+// It reads BabelStone, the CHISE UCS files and Yi Bai's zi.tools rows. A CHISE entity name
 // (`&GT-K01666;`) has no ontology resolution yet, so its component is a cid with a private-use form
 // and its descriptions stay `unresolved`: the catalogue records the part without pretending to know
 // how it is drawn.
@@ -85,7 +85,9 @@ const babelProv = sourceIndex({ title: 'BabelStone IDS', url: 'https://www.babel
   sha256: digest(await readFile(new URL('../data/babelstone-ids.tsv.gz', import.meta.url))) }, 'babelstone')
 const chiseProv = manifest.files.map(entry => sourceIndex({ ...entry, licence: manifest.licence }, `chise-${entry.file}`))
 
-/** Rows collected as (subject, text) with the provenance of the source that says it. */
+/** Rows collected as (subject, text) with the provenance of the source that says it. `core` marks the
+ * BabelStone and CHISE rows: the components, the alignment and the use counts are read off those
+ * alone, so a source added beside them leaves them as they were. */
 const rows = []
 const regions = row => row.regions ?? ''
 for (const line of gunzipSync(await readFile(new URL('../data/babelstone-ids.tsv.gz', import.meta.url))).toString('utf8').split('\n')) {
@@ -95,7 +97,7 @@ for (const line of gunzipSync(await readFile(new URL('../data/babelstone-ids.tsv
   for (const sequence of rest.split(' ')) {
     const match = sequence.match(/^([^()]+)\((.*)\)$/)
     if (!match) continue
-    rows.push({ subject: char.codePointAt(0), text: match[1], regions: match[2], prov: babelProv, role: 'source' })
+    rows.push({ subject: char.codePointAt(0), text: match[1], regions: match[2], prov: babelProv, role: 'source', core: true })
   }
 }
 
@@ -106,9 +108,44 @@ for (const [i, entry] of manifest.files.entries()) {
     const fields = line.split('\t')
     // CHISE writes a character as `U+4E00` in some files and `U-0002A700` in others; both name it.
     if (fields.length < 3 || !/^U[+-][0-9A-F]+$/i.test(fields[0]) || [...fields[1]].length !== 1) continue
-    rows.push({ subject: fields[1].codePointAt(0), text: fields[2], regions: '', prov: chiseProv[i], role: 'source' })
+    rows.push({ subject: fields[1].codePointAt(0), text: fields[2], regions: '', prov: chiseProv[i], role: 'source', core: true })
   }
 }
+
+// Yi Bai's zi.tools rows, one provenance per level. `zi-tools-rows.tsv.gz` writes level 0 for every
+// line of ids_lv0.txt and levels 1 and 2 only where they differ from the level before, so a level
+// that writes a line as the one before it attests the same descriptions. A description stays as
+// zi.tools writes it, entry notes and stroke chains included.
+const ziBytes = await readFile(new URL('../data/zi-tools-rows.tsv.gz', import.meta.url))
+const ziLines = gunzipSync(ziBytes).toString('utf8').split('\n')
+const ziHeader = /^# yi-bai\/ids ([0-9a-f]{40}); MIT, Copyright \(c\) 2021 Yi Bai; ids_lv0\.txt ([0-9a-f]{64}), ids_lv1\.txt ([0-9a-f]{64}), ids_lv2\.txt ([0-9a-f]{64})\.$/.exec(ziLines[0])
+if (!ziHeader) throw new Error('data/zi-tools-rows.tsv.gz: unexpected header')
+const ziProv = [0, 1, 2].map(level => sourceIndex({
+  title: `Yi Bai IDS level ${level} (zi.tools)`,
+  url: `https://github.com/yi-bai/ids/blob/${ziHeader[1]}/ids_lv${level}.txt`,
+  date: '2026-10-31', edition: ziHeader[1], licence: 'MIT', sha256: ziHeader[2 + level],
+}, `yibai-lv${level}`))
+const emitZi = levels => {
+  if (!levels[0]) return
+  const char = levels[0].split('\t')[0]
+  if ([...char].length !== 1) return
+  for (let level = 0; level < 3; level++) {
+    levels[level] ??= levels[level - 1]
+    for (const column of levels[level].split('\t').slice(1)) for (const part of column.split(';')) {
+      const written = part.trim()
+      if (written) rows.push({ subject: char.codePointAt(0), text: written, regions: '', prov: ziProv[level], role: 'source', core: false })
+    }
+  }
+}
+/** @type {(string | undefined)[]} */
+let levels = []
+for (const line of ziLines.slice(1)) {
+  if (!line) continue
+  const level = Number(line[0])
+  if (level === 0) { emitZi(levels); levels = [] }
+  levels[level] = line.slice(2)
+}
+emitZi(levels)
 
 // Equivalences: BabelStone names a part `{n}` where CHISE names it `&name;`. Aligning their
 // descriptions of one character, operator by operator, and keeping the operand positions where the
@@ -135,6 +172,7 @@ const tokenize = value => [...expand(value).matchAll(TOKEN)].map(match => match[
 /** @type {Map<number, { babel: typeof rows, chise: typeof rows }>} */
 const bySubject = new Map()
 for (const row of rows) {
+  if (!row.core) continue
   let group = bySubject.get(row.subject)
   if (!group) bySubject.set(row.subject, group = { babel: [], chise: [] })
   ;(row.prov === babelProv ? group.babel : group.chise).push(row)
@@ -190,7 +228,7 @@ const aliases = []
 const byName = new Map()
 let nextSlot = 0
 const entityNames = new Set()
-for (const row of rows) for (const [, name] of row.text.matchAll(ENTITY)) entityNames.add(name)
+for (const row of rows) if (row.core) for (const [, name] of row.text.matchAll(ENTITY)) entityNames.add(name)
 for (const name of [...entityNames].sort()) {
   const cid = `chise:${name}`
   const char = PUA_BASE + nextSlot++
@@ -247,6 +285,8 @@ const statusOf = (value, resolved) => {
   if (resolved) return 'unresolved'
   if (![...value].some(ch => OPERATORS.has(ch))) return 'empty'
   if ([...value].some(ch => ENTITY.test(ch))) return 'unresolved'
+  // A row the composer's parser reports a problem with is kept as written and not drawn.
+  if (parse(value).problem) return 'unsupported'
   return 'ready'
 }
 
@@ -273,7 +313,9 @@ const descriptions = [...seen.values()]
 // one is known.
 const uses = new Map()
 const use = cid => uses.set(cid, (uses.get(cid) ?? 0) + 1)
+const coreProv = new Set([babelProv, ...chiseProv])
 for (const row of descriptions) {
+  if (!row[3].some(index => coreProv.has(index))) continue
   const text = row[1].replace(/\[[^\]]*\]/g, '')
   for (const match of text.matchAll(/\{(\d+)\}|&([^;]+);|./gsu)) {
     const [whole, number, entity] = match
@@ -331,7 +373,8 @@ const corpus = {
   version: 1,
   licence: { spdx: manifest.licence, perSource: true,
     note: 'Every description here is a source row: the CHISE ones are GPL-2.0-or-later by CHISE-IDS'
-      + ' (MORIOKA Tomohiko and contributors), the BabelStone ones are public domain. The CHISE rows'
+      + ' (MORIOKA Tomohiko and contributors), the BabelStone ones are public domain,'
+      + ' the Yi Bai ones MIT (Copyright (c) 2021 Yi Bai). The CHISE rows'
       + ` were converted to cids and merged with BabelStone on ${manifest.retrieved}.`
       + ' data/COPYING-chise-ids.txt is the text; data/ids-corpus-sources.tar.gz holds the sources.' },
   pua: { base: PUA_BASE, next: nextSlot },
@@ -352,10 +395,12 @@ const corpus = {
 }
 
 // Every ready row must parse with the parser the composer uses; an unresolved row is not parsed,
-// since its entity token stands for a part the catalogue has no form for yet.
+// since its entity token stands for a part the catalogue has no form for yet. `parse` reports a
+// problem instead of throwing, so the report is what fails the build.
 for (const [subject, value, , , , , status] of descriptions) {
   if (status !== 'ready') continue
-  try { parse(value) } catch (error) { throw new Error(`${subject}: ${error.message}`) }
+  const { problem } = parse(value)
+  if (problem) throw new Error(`${subject}: ${value}: ${problem}`)
 }
 const bytes = gzipSync(Buffer.from(JSON.stringify(corpus)), { level: 9, mtime: 0 })
 
