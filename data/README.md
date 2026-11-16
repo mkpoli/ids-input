@@ -1545,11 +1545,15 @@ dictionary under LGPL-3.0 (see `data/licences/rime-stroke-LGPL-3.0.txt`).
 ## `ids-corpus.json.gz`
 
 One catalogue of component identities and the descriptions that name them, built by
-`scripts/build_ids_corpus.mjs` from BabelStone IDS and CHISE-IDS. It holds 211,319 descriptions,
-108,425 of them BabelStone's (public domain, `babelstone-ids.tsv.gz`, pinned above) and 102,894
-CHISE's, and every row carries the source it came from. It also holds 1,517 components — 1,396 CHISE
-entities and BabelStone's 121 numbered parts as `bsp:n` — and 62 `equivalences` between them, 48 of
-them seen on two or more characters.
+`scripts/build_ids_corpus.mjs` from BabelStone IDS, CHISE-IDS, Yi Bai's zi.tools rows and this
+project's own descriptions. It holds 438,656 descriptions: 108,425 of them BabelStone's (public
+domain, `babelstone-ids.tsv.gz`, pinned above), 102,894 CHISE's, 275,523 Yi Bai's at the three
+levels of `zi-tools-rows.tsv.gz` (MIT), and 991 from `ids-project.tsv`, 646 from `custom-ids.tsv` and
+2,408 Tangut layers; a description several sources give is one row, and every row carries them all.
+It also holds 1,517 components — 1,396 CHISE entities and BabelStone's 121 numbered parts as
+`bsp:n` — 62 alignments between them, 48 of them seen on two or more characters, and 571
+`class-member` rows built from `component-forms.tsv`, `ucv.json` and Unihan `kRSUnicode`.
+`ids-class-conflicts.tsv` lists the class rows that disagree.
 
 - Licence: **GPL-2.0-or-later** for the file as a whole, because CHISE's rows are
   (`COPYING-chise-ids.txt`). The code stays MIT.
@@ -1564,7 +1568,8 @@ them seen on two or more characters.
   leaf. A component is not equated with a character it resembles, and two characters that differ are
   variants or slips, not identities. Built on 2026-11-09 from the sources pinned on 2026-11-04.
 - Use: `babelStoneAdapter({ chise })` adds the CHISE rows to the description table, each with
-  `sources: ['chise']`; a host that cannot take GPL leaves the option out.
+  `sources: ['chise']`; a host that cannot take GPL leaves the option out. han-decompose reads the
+  whole file at a fixed digest.
 - Format: columnar JSON, gzipped; the design behind the identity model is in
   [the corpus note](../docs/ids-corpus.md).
 

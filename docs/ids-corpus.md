@@ -4,10 +4,10 @@ A design for one merged catalogue of components and descriptions, fusing BabelSt
 zi.tools forms and this project's own rows, so that a character can be built from parts that no
 Unicode block names.
 
-Status: the artifact, its build script and the adapter option exist (`data/ids-corpus.json.gz`,
-`scripts/build_ids_corpus.mjs`, `babelStoneAdapter({ chise })`), and the workshop loads it so its
-CHISE rows sit beside BabelStone's with their source. What is built is the first increment:
-BabelStone and the CHISE UCS files, with every CHISE entity still unresolved.
+Status: built. `data/ids-corpus.json.gz` merges BabelStone IDS, the CHISE UCS files, Yi Bai's zi.tools
+rows at all three levels, ids-input's own descriptions (`ids-project.tsv`, the descriptions in
+`custom-ids.tsv`, the Tangut layers) and class-member rows. The workshop loads it so its CHISE rows
+sit beside BabelStone's with their source. Every CHISE entity is still unresolved.
 
 ## Why
 
@@ -73,21 +73,35 @@ uses: `components`, `aliases`, `equivalences`, `merges`, `descriptions`, plus `s
 The build also writes `data/ids-equivalences.json`, the same table with each side's display character and
 BabelStone's description, for the components page at `/unencoded`.
 
-An `equivalences` row names two cids, a `basis` (`alignment`), a `status` (`verified` where two or more
-characters attest the pair, `candidate` where one does), the provenance indexes of the descriptions
-that carry it, and a note listing the characters. One kind is recorded: a BabelStone number against a
-CHISE entity (`bsp:7` / `chise:CDP-8BD0`). A component is not equated with a Unicode character: the
+An `equivalences` row names two cids, a `kind`, a `basis`, a `place`, a `tier`, a `status`, the
+provenance indexes of its sources and a note. Two kinds are recorded.
+
+`alignment` rows pair a BabelStone number with a CHISE entity, `verified` where two or more
+characters attest the pair and `candidate` where one does, the note listing the characters (`bsp:7` / `chise:CDP-8BD0`). A component is not equated with a Unicode character: the
 part BabelStone numbers `{7}` looks like 叀, but a part is not the character 叀, and the alignment
-cannot tell a shared shape from an identity. Two characters that differ between the sources are
+cannot tell a shared shape from an identity.
+
+Two characters that differ between the sources are
 variants or slips in a description, and are left out. A number with a known note 6 fragment is
 compared as that fragment, so a composite such as `{2}` (`⿱⺈𫩏`) cannot be taken for a leaf it
 contains. The table is inferred, not asserted by either source: it never merges the two cids, and a
 description keeps the notation its source wrote.
 
-Every description row carries `subject` (a cid), the source's `text`, a `resolved` form in which
+`class-member` rows say that a character, the member, is another character drawn another way (⺭ is
+礻, and 礻 at the left is 示). The bases are `radical-form` (Unicode's EquivalentUnifiedIdeograph),
+`positional-form` (cjkvi-variants' radical variants, at the place the row names; a row with no place
+folds nothing), `unifiable-variant` (the IRG's UCV list at level 1, read as the first form an entry
+names, and two characters of an entry only where Unihan's variants or the radical variants also give
+them as variants) and `radical-index` (Unihan `kRSUnicode` with no residual strokes, for a form the
+radical variants do not list). A row with a `place` holds there only; `source` rows are stated by a
+table and `derived` rows inferred. `data/ids-class-conflicts.tsv` lists the rows that disagree:
+members that lead back to themselves or to two canonical members, and Unihan's radical rows that the
+radical variants overrule.
+
+Every description row carries `subject` (a cid; `x:X-nnnnn` for a form of `custom-ids.tsv`), the source's `text`, a `resolved` form in which
 unencoded leaves are `&cid;`, the provenance indexes of every attestation, region tags, a `role`
-(all of them `source` today; `alternative`, `apparent`, `derived` and `editorial` are the rest of
-the vocabulary) and a `status` (ready, unresolved, unsupported, empty). A row is never invented: an
+(`source`, `editorial` for the project's curated descriptions and `derived` for the Tangut layers;
+`alternative` and `apparent` are the rest of the vocabulary) and a `status` (ready, unresolved, unsupported, empty). A row is never invented: an
 unresolved designator stays unresolved rather than becoming `？`, and an IDS a source gives stays in
 `text` while its unencoded leaves are tokenised in `resolved`, since both are what a transcriber
 renders. BabelStone lines without a region tag are the exception: the parse skips them, and with them
@@ -120,13 +134,11 @@ their descriptions operator by operator and keeps the operand positions where a 
 differ. It finds 62 pairs, 48 seen on two or more characters and `verified`. BabelStone's `{7}` is
 CHISE's `CDP-8BD0` on eight characters: 惠 `⿱{7}心` / `⿱&CDP-8BD0;心`, 專, 䦄 and five more.
 
-## First increment
+## Build
 
-Built: `data/ids-corpus.json.gz` from BabelStone and the eighteen CHISE files (102,894 CHISE rows
-beside 108,425 BabelStone ones), with 1,517 components (1396 CHISE entities and 121 BabelStone
-numbers) and 62 equivalences between them; `data/chise-sources.json` as the pinned-source manifest,
-`data/ids-corpus-sources.tar.gz` as the offered source, `data/COPYING-chise-ids.txt`, and a check
-that every `ready` row parses and that `bun scripts/build_ids_corpus.mjs --check` reproduces the
-committed bytes.
-
-Out of scope for it: outlines, the webfont, the palette and adapter wiring.
+`bun scripts/build_ids_corpus.mjs` reads BabelStone, the eighteen CHISE files, `zi-tools-rows.tsv.gz`,
+`ids-project.tsv`, `custom-ids.tsv`, `tangut-layers.json.gz`, `component-forms.tsv`, `ucv.json` and
+Unihan 18.0.0, each pinned by digest. It writes the corpus, `data/ids-corpus-sources.tar.gz`,
+`ids-equivalences.json`, `ids-components-index.json.gz` and `ids-class-conflicts.tsv`; `--check`
+reproduces the committed bytes. A description keeps the text its source wrote, so a zi.tools row
+keeps its entry notes and stroke chains.
