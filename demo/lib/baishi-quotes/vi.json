@@ -134,5 +134,5 @@
   "stroke.Wg": "cong móc (W không bao giờ đứng một mình; luôn là Wg)",
   "sliceTop": "Khi lược bỏ số đứng trước dấu hai chấm (⿻[:b]字₁字₂), đầu trên của các nét sổ thuộc 字₁ nhô lên trên nét ngang đầu tiên của 字₂ (đầu dưới tuân theo b); có thể coi như nó chạm vào nét ngang a = 0, một đường ảo nằm phía trên nét ngang đầu tiên.",
   "sliceBottom": "Khi lược bỏ số đứng sau dấu hai chấm (⿻[a:]字₁字₂), phần dưới của 字₁ nhô xuống dưới nét ngang cuối cùng của 字₂ (phần trên tuân theo a); có thể coi như nó chạm vào nét ngang b = -0, một đường ảo nằm phía dưới nét ngang cuối cùng.",
-  "slicePython": "Trên thực tế, cách đếm này tuân theo cú pháp slice của Python: các nét ngang được đếm từ trên xuống dưới, và 0 là nét đầu tiên."
+  "slicePython": "Trên thực tế, cách đếm này tuân theo cú pháp slice của Python: các nét ngang được đếm từ trên xuống dưới, và 0 là nét đầu tiên, chứ không phải “từ 1” như §6.2 nói."
 }

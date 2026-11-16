@@ -377,7 +377,6 @@
             </table>
           </div>
           {@render said('you', ['I26', '§3.1'])}
-          {@render said('slicePython', ['I26', '§6.3'])}
         </section>
 
         <section id="matrix" aria-labelledby="matrix-title">
@@ -396,6 +395,7 @@
             </table>
           </div>
           <p>{t('baishi.matrix.simplify')} {@render at(['I26', '§6.3'])}</p>
+          {@render said('slicePython', ['I26', '§6.3'])}
           <div class="steps">
             <span class="muted">{t('baishi.matrix.qu')}</span>
             {#each QU_STEPS as step, i (i)}{#if i}<span class="arrow">→</span>{/if}<code>{step}</code>{/each}

@@ -659,7 +659,6 @@
     .flatten(),
 )
 #said("you", ("I26", "§3.1"))
-#said("slicePython", ("I26", "§6.3"))
 
 == #t("baishi.heading.matrix") <matrix>
 #grammar(("crossing matrix", "matrix row", "matrix cell"))
@@ -684,6 +683,7 @@
     .flatten(),
 )
 #t("baishi.matrix.simplify") #at(("I26", "§6.3"))
+#said("slicePython", ("I26", "§6.3"))
 
 #block[
   #text(fill: muted, t("baishi.matrix.qu"))

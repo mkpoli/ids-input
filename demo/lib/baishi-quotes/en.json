@@ -134,5 +134,5 @@
   "stroke.Wg": "bending hook (W never stands alone; it is always Wg)",
   "sliceTop": "With the number before the colon left out (⿻[:b]字₁字₂), the top of the verticals of 字₁ sticks out above the first horizontal of 字₂ (the bottom follows b); it can be seen as touching horizontal a = 0, a virtual line above the first.",
   "sliceBottom": "With the number after the colon left out (⿻[a:]字₁字₂), the bottom of 字₁ sticks out below the last horizontal of 字₂ (the top follows a); it can be seen as touching horizontal b = -0, a virtual line below the last.",
-  "slicePython": "The counting in fact follows Python's slice syntax: horizontals are counted top down, and 0 is the first."
+  "slicePython": "The counting in fact follows Python's slice syntax: horizontals are counted top down and 0 is the first, not “from 1” as §6.2 has it."
 }
