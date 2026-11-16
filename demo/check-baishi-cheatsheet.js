@@ -146,7 +146,7 @@ try {
       await page.keyboard.press('Escape')
       assert.equal(await page.locator('dialog[open]').count(), 0, `${scheme}: Escape closes the enlarged glyph`)
       await page.getByRole('button', { name: 'この早見表について' }).click()
-      assert.equal(await page.getByRole('dialog').locator('li').count(), 7, `${scheme}: the help dialog lists its notes`)
+      assert.equal(await page.getByRole('dialog').locator('li').count(), 6, `${scheme}: the help dialog lists its notes`)
       await page.keyboard.press('Escape')
     }
     if (name === 'phone') {

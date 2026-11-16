@@ -4,8 +4,8 @@
 // character's outline each written part is. Every sequence is quoted from
 // <https://github.com/yi-bai/ids> at `SOURCE.commit`; the build
 // (demo/scripts/build-baishi-cheatsheet.mjs) checks each one against the row it names and stores the
-// outlines. The notation is that of （白式）IDS 延展语法导论 (2026-03-20),
-// <https://nightfurysl2001.github.io/bai-ids/>; the section ids are those of
+// outlines. The notation is that of （白式）IDS 延展语法导论 (2026-11-16),
+// <https://nightfurysl2001.github.io/bai-ids/>, the guide the data's commit is named in; the section ids are those of
 // demo/lib/baishi-sections.js, which the specification page shares.
 //
 // A glyph is drawn in the form the font has (Noto Sans CJK JP, Plangothic beyond it). A quoted entry
@@ -14,7 +14,7 @@
 // entry by eye. A variant the font does not draw alone is shown where the data names it: 子t in 孩,
 // 土t in 地, 凵y in 世, whose own entries carry those tags. An entry for a form no outline has is
 // drawn by the workshop's composer from the sequence, without its tags, and marked as composed.
-// 𱤻 stands for ⿾止 as I26 gives it (p.2), though its row's default entry spells it otherwise.
+// 𱤻 stands for ⿾止 as the guide gives it (§2.1), though its row's default entry spells it otherwise.
 import { chainStrokes } from '../../src/core/chain-shape.js'
 
 /** The data every sequence is quoted from. */
@@ -28,9 +28,7 @@ export const SOURCE = {
   },
 }
 /** The document the notation is read from. */
-export const GRAMMAR = { key: 'I26', title: '（白式）IDS 延展语法导论', date: '2026-03-20', url: 'https://nightfurysl2001.github.io/bai-ids/' }
-/** The earlier drafts that read an overlap bracket mark by mark: PDF exports with no address of their own, dated from their metadata. */
-export const DRAFTS = { key: 'D2–D3', author: 'Losketch', title: 'IDS说明文档', versions: '2.0 beta (2024-04-13), 3.0 beta (2024-06-04)' }
+export const GRAMMAR = { key: 'I26', title: '（白式）IDS 延展语法导论', date: '2026-11-16', url: 'https://nightfurysl2001.github.io/bai-ids/' }
 
 /**
  * A piece of an outline: a contour by its number, or the part of one inside a box
@@ -54,9 +52,9 @@ export const DRAFTS = { key: 'D2–D3', author: 'Losketch', title: 'IDS说明文
  *   focus?: (string | [number, number])[], strokes?: boolean }} Quote
  */
 /**
- * A card: its quotations, the shared anchors it stands for, its label and its one-sentence
- * description (message keys), and whether the documents leave its construct open.
- * @typedef {{ id: string, anchors?: string[], label?: string, hint?: string, open?: boolean, quotes: Quote[] }} Card
+ * A card: its quotations, the shared anchors it stands for, and its label and its one-sentence
+ * description (message keys).
+ * @typedef {{ id: string, anchors?: string[], label?: string, hint?: string, quotes: Quote[] }} Card
  */
 /** Letters of an identifier or a stroke with what each stands for. @typedef {{ id: string, lang?: string, items: [string, string][] }} Legend */
 /** A group of cards under an anchor of its own, with the grammar's rules for it. @typedef {{ id: string, rules?: string[], cards?: Card[], legends?: Legend[] }} Group */
@@ -65,8 +63,8 @@ export const DRAFTS = { key: 'D2–D3', author: 'Losketch', title: 'IDS说明文
 /** An operator's card: the operator is what it shows. @param {string} op @param {string} char @param {string} text @param {number} row @param {Piece[][]} parts @returns {Card} */
 const operator = (op, char, text, row, parts) => ({ id: `op-${(op.codePointAt(0) ?? 0).toString(16)}`, quotes: [{ char, text, row, glyphs: [{ char, parts }], focus: [op] }] })
 
-/** The operators no row of the data uses. */
-export const UNUSED = ['㇯', '〾']
+/** The operator no row of the data uses: the guide gives it to searches on zi.tools (§6.7). */
+export const UNUSED = ['㇯']
 
 /**
  * The stroke letters with the stroke each spells, as the stroke's own row gives it: letters,
@@ -78,7 +76,7 @@ export const STROKE_LETTERS = [
   ['Wg', '㇁', 102019], ['SZ', '㇘', 102031], ['Qa', '◝', 101999], ['Qb', '◞', 102000], ['Qc', '◟', 102001], ['Qd', '◜', 101998],
 ]
 
-/** The letters of an identifier with the gloss the grammar prints for each (pp.8, 12–13), in the language it prints it in. */
+/** The letters of an identifier with the gloss the guide prints for each (§4.3.1, §4.3.3), in the language it prints it in. */
 const SOURCE_LETTERS = /** @type {Legend} */ ({ id: 'sourceLetters', items: [['B', 'UK'], ['G', 'G'], ['H', 'H'], ['J', 'J'], ['K', 'K'], ['M', 'M'], ['P', 'KP'], ['Q', 'UCS2003'], ['S', 'SAT'], ['T', 'T'], ['U', 'UTC'], ['V', 'V']] })
 const STYLE_LETTERS = /** @type {Legend} */ ({ id: 'styleLetters', lang: 'zh-Hans', items: [['d', '点'], ['g', '钩'], ['h', '横'], ['n', '捺'], ['p', '撇'], ['s', '竖'], ['t', '提'], ['w', '弯'], ['x', '更多交叉'], ['y', '更少交叉'], ['z', '折']] })
 const POSITION_LETTERS = /** @type {Legend} */ ({ id: 'positionLetters', lang: 'zh-Hans', items: [['u', '上'], ['l', '左'], ['r', '右']] })
@@ -107,7 +105,7 @@ export const SHEET = [
         { char: '士', text: '{士}⿱十.一.(.)', row: 2796, glyphs: [{ char: '士', parts: [[1, 2], [0]] }], focus: ['{士}'] },
         { char: '土', text: '⿱十.一.(.)', row: 2336, glyphs: [{ char: '土', parts: [[0, 2], [1]] }] },
       ] },
-      { id: 'prefix-distant', label: 'distant', hint: 'prefixDistant', open: true, quotes: [
+      { id: 'prefix-distant', label: 'distant', hint: 'prefixDistant', quotes: [
         { char: '径', text: '{?0径}⿰彳圣(T)', row: 4485, glyphs: ['composed'], focus: ['{?0径}'] },
         { char: '叱', text: '{?叱}⿰口.七.(V)', row: 1522, glyphs: ['composed'], focus: ['{?叱}'] },
       ] },
@@ -202,7 +200,7 @@ export const SHEET = [
       { char: '申', text: '⿻丨日', row: 10036, glyphs: [{ char: '申', parts: [[3], [0, 1, 2]] }] },
       { char: '甲', text: '⿻[1:]丨日', row: 10035, glyphs: [{ char: '甲', parts: [[0], [1, 2, 3]] }], focus: ['[1:]'] },
     ] },
-    { id: 'overlap-matrix', anchors: ['crossing-matrix'], label: 'matrix', hint: 'matrix', open: true, quotes: [
+    { id: 'overlap-matrix', anchors: ['crossing-matrix'], label: 'matrix', hint: 'matrix', quotes: [
       { char: '及', text: '⿻[l,b]㇋人.(.)', row: 1483, glyphs: [{ char: '及', parts: [[1, 3, 4, 2], [5, 0]] }], focus: ['[l,b]'] },
       { char: '包', text: '⿻[l,l,.]勹己.(J)', row: 1286, glyphs: [{ char: '包', parts: [[0, 1, 2], [3, 4]] }], focus: ['[l,l,.]'] },
     ] },
@@ -246,7 +244,7 @@ export const SHEET = [
     { id: 'worked-che', hint: 'workedChe', quotes: [
       { char: '車', text: '車\t⿻十.旦.\t⿻丨亘.', row: 16587, glyphs: [{ char: '車', parts: [[0, 2], [5, 4, 3, 1]] }, { char: '車', parts: [[2], [0, 5, 4, 3, 1]] }], focus: [[7, 8]] },
     ] },
-    { id: 'worked-gui', hint: 'workedGui', open: true, quotes: [
+    { id: 'worked-gui', hint: 'workedGui', quotes: [
       { char: '龜', text: '⿱⺈⿴[4]⿻[.,.__,r,,bxx]⿹⿺乚.丨⿱ココ⿱#(一-𠃍丨b一)コ乂d(J)', row: 20893, slots: [0, 1, 1, 1, 1, 1, 1, 2],
         glyphs: [{ char: '龜', parts: [[0, 1, 15], [2, 3, 4, 5, 6, 7, 8, 11, 12, 13, 14], [9, 10]] }], focus: ['[4]'] },
     ] },
@@ -266,8 +264,7 @@ export const linkedOf = () => SHEET.filter(section => section.id !== 'worked').f
 const UNARY = '⿾⿿', TERNARY = '⿲⿳', BINARY = '⿰⿱⿴⿵⿶⿷⿸⿹⿺⿻⿼⿽㇯'
 /** The katakana components that take no tag. */
 const UNTAGGED = 'コリ'
-/** How many parts an operator of the grammar takes, 0 for what is none: 〾, which the grammar does not have, is none.
- * @param {string} char */
+/** How many parts an operator of the grammar takes, 0 for what is none. @param {string} char */
 export const arityOf = char => UNARY.includes(char) ? 1 : TERNARY.includes(char) ? 3 : BINARY.includes(char) ? 2 : 0
 
 /**
@@ -404,8 +401,8 @@ export const idsOf = entry => /(?<!#)\(([^()]*)\)$/u.exec(entry)?.[1].split(',')
 export function kindOf(id) {
   if (id === '.') return 'default'
   if (/^[BGHJKMPQSTUV]$/.test(id)) return 'source'
-  if (/^qq(?:\d{3}[a-z]?)+$/.test(id)) return 'analogy'
-  if (/^[qpxy]\d{3}[a-z]?(?:[1-9]|\d{2})[xy]?$/.test(id)) return 'ucv'
+  if (/^qq(?:\d{3}(?:z[a-z]|[a-z])?)+$/.test(id)) return 'analogy'
+  if (/^[qpxy]\d{3}(?:z[a-z]|[a-z])?(?:[1-9]|\d{2})[xy]?$/.test(id)) return 'ucv'
   if (id === 'm') return 'mirror'
   if (/^[ulr]$/.test(id)) return 'position'
   if (/^[dghnpstwxyz.]+$/.test(id)) return 'style'
