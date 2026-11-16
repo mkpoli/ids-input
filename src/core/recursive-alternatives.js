@@ -1,7 +1,7 @@
 // @ts-check
 import { decomposable, lookupChar } from './decompose.js'
 import { isNode, partAt, parse, paths, replaceAt, splitMarks, withMarks, write } from './ids.js'
-import { subtractionRemainders } from './subtraction.js'
+import { subtractionIndex, subtractionRemainders } from './subtraction.js'
 
 /** @typedef {import('./ids.js').Part} Part */
 /** @typedef {'results' | 'states' | 'depth' | 'work' | 'lookups' | 'lookup'} AlternativeCut */
@@ -154,11 +154,13 @@ export async function* recursiveAlternatives(part, adapter, { maxResults = 128, 
       let step = null
       let normalized = false
       try {
-        if (isNode(current) && current.op === '㇯' && !current.note && !current.marks
+        const index = isNode(current) && current.op === '㇯' ? subtractionIndex(current.note) : null
+        if (isNode(current) && index !== null && !current.marks
           && current.parts.length === 2 && current.parts[0] !== null && current.parts[1] !== null) {
           const [from, take] = current.parts
           const described = await describeParts(from)
-          const remainders = subtractionRemainders(from, take, char => described.get(char) ?? [])
+          // An index names one occurrence; without one, each occurrence is a choice.
+          const remainders = subtractionRemainders(from, take, char => described.get(char) ?? [], current.note ? { index } : {})
           if (remainders.length) {
             step = 'normalize'
             normalized = true

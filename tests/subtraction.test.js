@@ -66,6 +66,41 @@ describe('subtraction normalization', () => {
     expect(normalizeSubtractionText('⿰光㇯甲木', char => ({ 甲: ['⿱？木'] })[char] ?? [])).toBe('⿰光㇯甲木')
   })
 
+  it('takes the occurrence its index names, counted in reading order (zi.tools IDS Extension §6.7)', () => {
+    // The examples of §6.7, on the descriptions zi.tools gives these characters.
+    const described = { 王: ['⿱一土'], 土: ['⿱十一'], 十: ['⿻一丨'], 品: ['⿱口吅'], 吅: ['⿰口口'] }
+    const read = text => normalizeSubtractionText(text, char => described[char] ?? [])
+    expect(read('㇯王一')).toBe('土')
+    expect(read('㇯[0]王一')).toBe('土')
+    expect(read('㇯[1]王一')).toBe('⿱一⿱丨一')
+    expect(read('㇯[2]王一')).toBe('⿱一十')
+    expect(read('㇯品口')).toBe('吅')
+    expect(read('㇯[1]品口')).toBe('⿱口口')
+    expect(read('㇯[2]品口')).toBe('⿱口口')
+    expect(read('⿰木㇯[2]王一')).toBe('⿰木⿱一十')
+  })
+
+  it('leaves an index past the last occurrence, or one that is no number', () => {
+    const described = { 品: ['⿱口吅'], 吅: ['⿰口口'] }
+    expect(normalizeSubtractionText('㇯[3]品口', char => described[char] ?? [])).toBe('㇯[3]品口')
+    expect(subtractionRemainders(tree('品'), '口', char => described[char] ?? [], { index: 3 })).toEqual([])
+  })
+
+  it('neither counts nor takes the strokes of a stroke chain', () => {
+    // 日 is 口 drawn as a chain with 一 inside: ㇯[1]日一 names no 一, and ㇯日一 is the chain, which
+    // reads as the 口 it names.
+    const described = { 日: ['⿴#(-丨𠃍-一z)一'] }
+    expect(normalizeSubtractionText('㇯[1]日一', char => described[char] ?? [])).toBe('㇯[1]日一')
+    expect(normalizeSubtractionText('㇯日一', char => described[char] ?? [])).toBe('口')
+  })
+
+  it('offers each occurrence without an index, and the named one with it', () => {
+    const described = { 王: ['⿱一土'], 土: ['⿱十一'], 十: ['⿻一丨'] }
+    const describe = char => described[char] ?? []
+    expect(subtractionRemainders(tree('王'), '一', describe).map(write)).toEqual(['土', '⿱一⿱丨一', '⿱一十'])
+    expect(subtractionRemainders(tree('王'), '一', describe, { index: 2 }).map(write)).toEqual(['⿱一十'])
+  })
+
   it('stops on a cycle of descriptions', () => {
     const cyclic = { 甲: ['⿰甲乙'], 乙: ['⿱甲口'] }
     const result = normalizeSubtractions(tree('㇯甲口'), char => cyclic[char] ?? [])
