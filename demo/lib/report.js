@@ -16,7 +16,7 @@ import { DESKTOP, SITE } from './desktop.js'
 
 /** The sizes the intake accepts; the request is held to them here too. The dispatch GitHub takes is
  *  smaller than any field's, so `dispatch` is the real bound: the workspace and the context share
- *  what the other fields leave of it (`MAX_DISPATCH` in `workers/reports/src/index.js`). */
+ *  what the other fields leave of it (`MAX_DISPATCH` in han-compose's `workers/reports/src/index.js`). */
 export const LIMITS = { symptom: 4000, sequence: 2000, contact: 200, link: 4000, dispatch: 30_000, image: 5 * 1024 * 1024 }
 // What the Worker adds to the dispatch, and the room the estimate leaves itself.
 const DISPATCH_ROOM = 512

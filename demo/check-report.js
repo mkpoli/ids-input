@@ -51,7 +51,7 @@ async function open(viewport, scheme, deepLink = false, sequence = '%E2%BF%B0%E6
   await page.route(INTAKE, async route => {
     sent = route.request().postDataBuffer() ?? Buffer.alloc(0)
     boundary = /boundary=(?:"([^"]+)"|([^;]+))/.exec(route.request().headers()['content-type'] ?? '')?.slice(1).find(Boolean) ?? ''
-    await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({ number: 123, url: 'https://github.com/mkpoli/ids-input/issues/123', duplicate: false }) })
+    await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({ number: 123, url: 'https://github.com/mkpoli/han-compose/issues/123', duplicate: false }) })
   })
   if (clean) await page.addInitScript(() => { localStorage.clear(); sessionStorage.clear() })
   if (seed) await page.addInitScript(seed)
