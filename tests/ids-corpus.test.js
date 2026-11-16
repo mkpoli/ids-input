@@ -54,24 +54,63 @@ describe('the merged corpus', () => {
 
   it('records the equivalences its alignment finds between numbers and entities', () => {
     const known = new Set(corpus.components.rows.map(row => row[0]))
-    expect(corpus.equivalences.rows.length).toBe(corpus.counts.equivalences)
-    for (const row of corpus.equivalences.rows) {
-      const [a, b, basis, status, prov, note] = row
+    const alignments = corpus.equivalences.rows.filter(row => row[2] === 'alignment')
+    expect(alignments.length).toBe(corpus.counts.alignments)
+    for (const row of alignments) {
+      const [a, b, , basis, , tier, status, prov, note] = row
       expect(a.startsWith('bsp:') && b.startsWith('chise:')).toBe(true)
       expect(known.has(a) && known.has(b)).toBe(true)
       expect(basis).toBe('alignment')
+      expect(tier).toBe('derived')
       expect(['verified', 'candidate']).toContain(status)
       expect(prov.length).toBeGreaterThan(0)
       expect(note).toMatch(/^\d+ characters?: /)
     }
-    expect(corpus.equivalences.rows.find(row => row[0] === 'bsp:7' && row[1] === 'chise:CDP-8BD0')?.[3]).toBe('verified')
-    expect(corpus.equivalences.rows.some(row => row[0].startsWith('ucs:') || row[1].startsWith('ucs:'))).toBe(false)
+    expect(alignments.find(row => row[0] === 'bsp:7' && row[1] === 'chise:CDP-8BD0')?.[6]).toBe('verified')
+    expect(alignments.some(row => row[0].startsWith('ucs:') || row[1].startsWith('ucs:'))).toBe(false)
+  })
+
+  it('records class membership between characters, each row with its basis, place and tier', () => {
+    const members = corpus.equivalences.rows.filter(row => row[2] === 'class-member')
+    expect(members.length).toBe(corpus.counts.classMembers)
+    expect(corpus.counts.equivalences).toBe(corpus.equivalences.rows.length)
+    const bases = { 'radical-form': 'source', 'positional-form': 'source', 'unifiable-variant': 'source', 'radical-index': 'derived' }
+    const ucs = char => `ucs:${char.codePointAt(0).toString(16).toUpperCase()}`
+    const find = (member, target, basis) => members.find(row => row[0] === `ucs:${member.codePointAt(0).toString(16).toUpperCase()}`
+      && row[1] === `ucs:${target.codePointAt(0).toString(16).toUpperCase()}` && row[3] === basis)
+    for (const row of members) {
+      const [a, b, , basis, place, tier, status, prov] = row
+      expect(a).toMatch(/^ucs:[0-9A-F]{4,6}$/)
+      expect(b).toMatch(/^ucs:[0-9A-F]{4,6}$/)
+      expect(a).not.toBe(b)
+      expect(tier).toBe(bases[basis])
+      expect(['verified', 'candidate']).toContain(status)
+      expect(prov.length).toBe(1)
+      if (basis === 'positional-form') expect(place).not.toBe('')
+      else expect(place).toBe('')
+    }
+    expect(find('⺭', '礻', 'radical-form')?.[4]).toBe('')
+    expect(find('礻', '示', 'positional-form')?.[4]).toBe('left')
+    expect(find('户', '戶', 'unifiable-variant')).toBeDefined()
+    expect(find('𱍐', '示', 'radical-index')?.[5]).toBe('derived')
+    // 忄 names no place in the radical variants, so no positional row folds it.
+    expect(members.some(row => row[0] === 'ucs:5FC4' && row[3] === 'positional-form')).toBe(false)
+    // A positional form is a member at its place only, and a verified pair agrees on the place.
+    for (const [member, target] of [['礻', '示'], ['朩', '木'], ['糹', '糸'], ['訁', '言'], ['氺', '水'], ['𦍌', '羊'], ['攵', '攴'], ['攴', '攵']]) {
+      expect(members.some(row => row[0] === ucs(member) && row[1] === ucs(target) && row[4] === '')).toBe(false)
+    }
+    // Compatibility ideographs of a listed radical form are read as the form is, and a character
+    // of its own is no form of its radical (曱 is a cockroach, not 田).
+    for (const code of ['FA49', 'FA5E', 'FA66', '66F1']) expect(members.some(row => row[0] === `ucs:${code}` && row[3] === 'radical-index')).toBe(false)
+    expect(members.filter(row => row[6] === 'verified').every(row => members.filter(other => other[0] === row[0] && other[1] === row[1] && other[4] === row[4]).length >= 2)).toBe(true)
+    // 䒑 is 丷 over 一 in some characters and no row reads it as 艸.
+    expect(members.some(row => row[0] === 'ucs:4491')).toBe(false)
   })
 
   it('publishes the equivalence table the appendix reads, with display characters and descriptions', () => {
     expect(equivalences.format).toBe('ids-input/equivalences')
     expect(equivalences.licence).toBe('GPL-2.0-or-later')
-    expect(equivalences.rows.length).toBe(corpus.counts.equivalences)
+    expect(equivalences.rows.length).toBe(corpus.counts.alignments)
     for (const row of equivalences.rows) {
       const [a, b, aChar, bChar, aDescription] = row
       expect(a.startsWith('bsp:') && b.startsWith('chise:')).toBe(true)

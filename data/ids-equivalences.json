@@ -227,6 +227,42 @@
    "edition": "",
    "licence": "MIT",
    "sha256": "8c9b32e70b4a43dc2bb9ea1ae054673fe116d15a606780dc8ef41c67c73d50a6"
+  },
+  {
+   "id": "unicode-equivalent-ideographs",
+   "title": "Unicode EquivalentUnifiedIdeograph.txt 18.0.0, as copied into component-forms.tsv",
+   "url": "https://www.unicode.org/Public/18.0.0/ucd/EquivalentUnifiedIdeograph.txt",
+   "date": "",
+   "edition": "18.0.0",
+   "licence": "Unicode-3.0",
+   "sha256": "7e12d79da41b18f5fbf8fb0eae2adc31aa9f57e6e2eabe79836804c072008c38"
+  },
+  {
+   "id": "cjkvi-radical-variants",
+   "title": "cjkvi-variants radical-variants.txt, as copied into component-forms.tsv",
+   "url": "https://github.com/cjkvi/cjkvi-variants/blob/e4f1da248c9737a243f9930b5dc497cef5d5ae16/radical-variants.txt",
+   "date": "",
+   "edition": "e4f1da248c9737a243f9930b5dc497cef5d5ae16",
+   "licence": "Public Domain",
+   "sha256": "7e12d79da41b18f5fbf8fb0eae2adc31aa9f57e6e2eabe79836804c072008c38"
+  },
+  {
+   "id": "unihan",
+   "title": "Unihan 18.0.0",
+   "url": "https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip",
+   "date": "",
+   "edition": "18.0.0",
+   "licence": "Unicode-3.0",
+   "sha256": "4c93ea9c1f636451729a840978f1667a53886af37ba854fdcce109721c63d43e"
+  },
+  {
+   "id": "irg-ucv",
+   "title": "IRG N2978, UCV & NUCV Lists, version 2026-10-20",
+   "url": "https://www.unicode.org/irg/docs/n2978-Complete.pdf",
+   "date": "2026-10-20",
+   "edition": "IWDS data files (UCV and NUCV lists), 8302302d615ff1c1f60ae335b118b10060be0ed4",
+   "licence": "Public Domain",
+   "sha256": "886b426ea3d1d329749e02b32cccd5082d31d6cf1b996ea37bdae5ac593ca491"
   }
  ],
  "provenance": [
@@ -379,6 +415,30 @@
    "licence": "MIT",
    "date": "",
    "edition": ""
+  },
+  {
+   "source": "unicode-equivalent-ideographs",
+   "licence": "Unicode-3.0",
+   "date": "",
+   "edition": "18.0.0"
+  },
+  {
+   "source": "cjkvi-radical-variants",
+   "licence": "Public Domain",
+   "date": "",
+   "edition": "e4f1da248c9737a243f9930b5dc497cef5d5ae16"
+  },
+  {
+   "source": "unihan",
+   "licence": "Unicode-3.0",
+   "date": "",
+   "edition": "18.0.0"
+  },
+  {
+   "source": "irg-ucv",
+   "licence": "Public Domain",
+   "date": "2026-10-20",
+   "edition": "IWDS data files (UCV and NUCV lists), 8302302d615ff1c1f60ae335b118b10060be0ed4"
   }
  ],
  "columns": [
