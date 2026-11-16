@@ -281,13 +281,12 @@ const resolvedOf = value => {
   const out = value.replace(ENTITY, (_, name) => { changed = true; return `&chise:${name};` })
   return changed ? out : null
 }
-const statusOf = (value, resolved, core) => {
+const statusOf = (value, resolved) => {
   if (resolved) return 'unresolved'
   if (![...value].some(ch => OPERATORS.has(ch))) return 'empty'
   if ([...value].some(ch => ENTITY.test(ch))) return 'unresolved'
-  // The composer's parser reads the notation of BabelStone and CHISE; a zi.tools row it cannot
-  // read, a stroke chain or a modifier it does not know, is kept as written and not drawn.
-  if (!core && parse(value).problem) return 'unsupported'
+  // A row the composer's parser reports a problem with is kept as written and not drawn.
+  if (parse(value).problem) return 'unsupported'
   return 'ready'
 }
 
@@ -299,7 +298,7 @@ for (const row of rows) {
   const resolved = resolvedOf(row.text)
   seen.set(key, {
     subject: `ucs:${row.subject.toString(16).toUpperCase()}`, text: row.text, resolved,
-    prov: [row.prov], regions: regions(row), role: row.role, status: statusOf(row.text, resolved, row.core),
+    prov: [row.prov], regions: regions(row), role: row.role, status: statusOf(row.text, resolved),
   })
 }
 // A character's descriptions lead with the Japanese-tagged reading: the face draws the Japanese
@@ -396,10 +395,12 @@ const corpus = {
 }
 
 // Every ready row must parse with the parser the composer uses; an unresolved row is not parsed,
-// since its entity token stands for a part the catalogue has no form for yet.
+// since its entity token stands for a part the catalogue has no form for yet. `parse` reports a
+// problem instead of throwing, so the report is what fails the build.
 for (const [subject, value, , , , , status] of descriptions) {
   if (status !== 'ready') continue
-  try { parse(value) } catch (error) { throw new Error(`${subject}: ${error.message}`) }
+  const { problem } = parse(value)
+  if (problem) throw new Error(`${subject}: ${value}: ${problem}`)
 }
 const bytes = gzipSync(Buffer.from(JSON.stringify(corpus)), { level: 9, mtime: 0 })
 
