@@ -620,6 +620,22 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
     ? a.folded < b.folded
     : a.depth * 4 + a.opened * 2 < b.depth * 4 + b.opened * 2
 
+  /** Whether `data` writes `pattern` as typed: a kana may stand for its lookalike components, but
+   * no component may stand in through the forms table.
+   * @param {Pattern} pattern @param {Tree} data @returns {boolean} */
+  function literally(pattern, data) {
+    if (pattern === null) return false
+    if (typeof pattern === 'string' || 'anyOf' in pattern) {
+      if (typeof data !== 'string') return false
+      return typeof pattern === 'string' ? data === pattern : data === pattern.shape || pattern.anyOf.includes(data)
+    }
+    if (typeof data === 'string' || data.op !== pattern.op || data.parts.length !== pattern.parts.length) return false
+    const parts = data.parts
+    /** @param {Pattern[]} patternParts @returns {boolean} */
+    const same = patternParts => patternParts.every((part, i) => literally(part, /** @type {Tree} */ (parts[i])))
+    return same(pattern.parts) || pattern.op === '⿻' && same([pattern.parts[1], pattern.parts[0]])
+  }
+
   /**
    * The closest place `pattern` stands in `data`: the whole of it rebuilt with the match (and every
    * component opened on the way to it), the path to the match, and its cost.
@@ -1076,8 +1092,11 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
           best = { tree: root, paths, score, lookalikes, folded }
       }
       if (!best) continue
-      // The whole description matched exactly comes first; a description with more parts, later.
-      const exact = terms.length === 1 && terms[0].kind === 'structure' && best.paths[0]?.length === 0 && !EMPTY_MARKS.some(mark => terms[0].text.includes(mark)) && !terms[0].text.includes(UNKNOWN)
+      // The whole description matched literally comes first; a description with more parts, later,
+      // and a whole description reached only through folding ranks with the other folded matches.
+      const exact = terms.length === 1 && terms[0].kind === 'structure' && best.paths[0]?.length === 0
+        && literally(terms[0].tree, best.tree)
+        && !EMPTY_MARKS.some(mark => terms[0].text.includes(mark)) && !terms[0].text.includes(UNKNOWN)
       found.push({ char, tree: best.tree, paths: best.paths, score: (exact ? -EXACT : 0) + best.lookalikes * LOOKALIKE + best.folded * FOLD_PENALTY + best.score + tier(char) * 15 })
     }
     found.sort((a, b) => a.score - b.score || tier(a.char) - tier(b.char) || /** @type {number} */ (a.char.codePointAt(0)) - /** @type {number} */ (b.char.codePointAt(0)))
