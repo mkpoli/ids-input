@@ -8,7 +8,7 @@ export const COMPOSER_BASE = 'https://ids-input-composer.mkpoli.workers.dev/a83f
 export const COMPOSER_BASES = {
   sans: COMPOSER_BASE,
   serif: 'https://ids-input-composer.mkpoli.workers.dev/8156f838798c-serif-compose-layout-v4-serif-f7+variants/',
-  regular: 'https://ids-input-composer.mkpoli.workers.dev/f87b0f71228e-regular-compose-layout-v4-regular-f7/',
+  regular: 'https://ids-input-composer.mkpoli.workers.dev/c14ee5e08798-regular-compose-layout-v4-regular-f7/',
   fangsong: 'https://ids-input-composer.mkpoli.workers.dev/9f797e2322d2-fangsong-compose-layout-v4-fangsong-f7/',
   'pen-writing': 'https://ids-input-composer.mkpoli.workers.dev/ce3eaafda8f9-kaisho-compose-layout-v4-kaisho-f7/',
 }
