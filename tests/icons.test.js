@@ -20,3 +20,29 @@ test('a drawing is cached, and a waiting sequence is asked once', async () => {
   expect(await draw('⿱木林')).toEqual({ d: 'M0 0' })
   expect(calls).toBe(1)
 })
+
+test('an aborted request leaves the queue before it is drawn', async () => {
+  const calls = []
+  const draw = createIconDrawings(async (sequence) => {
+    calls.push(sequence)
+    await Bun.sleep(5)
+    return { d: sequence }
+  })
+  const first = draw('⿰木口')
+  const controller = new AbortController()
+  const second = draw('⿱木林', { signal: controller.signal })
+  controller.abort()
+  expect(await second).toBeNull()
+  expect(await first).toEqual({ d: '⿰木口' })
+  expect(calls).toEqual(['⿰木口'])
+})
+
+test('an aborted drawing in progress answers null', async () => {
+  const draw = createIconDrawings((sequence, { signal } = {}) => new Promise((resolve, reject) => {
+    signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')), { once: true })
+  }))
+  const controller = new AbortController()
+  const answer = draw('⿰木口', { signal: controller.signal })
+  controller.abort()
+  expect(await answer).toBeNull()
+})

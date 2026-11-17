@@ -8,7 +8,7 @@
   // the same SVG the rest of the app uses: emoji in their boxes, ㇯ cuts masked, and the path of the
   // face's ink.
   import { drawingSvg } from '@han-compose/composer/drawing-svg'
-  /** @type {{ sequence: string, draw: (sequence: string) => Promise<{ d: string } | null>, label?: string, fallback?: string | null }} */
+  /** @type {{ sequence: string, draw: (sequence: string, options?: { signal?: AbortSignal }) => Promise<{ d: string } | null>, label?: string, fallback?: string | null }} */
   let { sequence, draw, label = '', fallback = null } = $props()
   const uid = `font-drawing-${++next}`
   // The shared renderer sizes an Emoji for Noto Emoji's 0.73-em ink. system-ui picks the colour face
@@ -20,9 +20,10 @@
   let failed = $state(false)
   $effect(() => {
     let live = true
+    const controller = new AbortController()
     svg = fallback ? drawingSvg({ d: fallback }, { ink: 'currentColor' }) : ''
     failed = false
-    draw(sequence).then(drawing => {
+    draw(sequence, { signal: controller.signal }).then(drawing => {
       if (!live) return
       if (drawing) {
         svg = fitEmoji(drawingSvg(drawing, { ink: 'currentColor', idPrefix: `${uid}-` }))
@@ -30,8 +31,8 @@
         failed = true
         svg = ''
       }
-    }).catch(() => { if (live) failed = true })
-    return () => { live = false }
+    }).catch(() => { if (live && !controller.signal.aborted) failed = true })
+    return () => { live = false; controller.abort() }
   })
 </script>
 
