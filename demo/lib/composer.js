@@ -1,6 +1,7 @@
 // The han-compose export the demo draws from. `?composer=`, VITE_COMPOSER_BASE or Preferences point
 // the preview elsewhere; the prepared example drawings are made from this export, so a new export
-// means a new COMPOSER_BASE and `bun run build:example-drawings`.
+// means a new COMPOSER_BASE and `bun run build:example-drawings`. The other faces' card art reads
+// the matching COMPOSER_BASES entry.
 import { LOCAL_SANS } from './desktop.js'
 
 export const COMPOSER_BASE = 'https://ids-input-composer.mkpoli.workers.dev/a83fc941166b-sans-compose-layout-v4-f7+variants/'

@@ -237,6 +237,31 @@
   const preparedReady = import('./lib/example-drawings.json')
     .then(({ default: data }) => { prepared = new Map(Object.entries(data.drawings).map(([sequence, entry]) => [sequence, entry.drawn])) })
     .catch(() => { /* Each example is composed instead. */ })
+  // A card draws the path alone, so the other faces get a card-sized map instead of a second full
+  // drawing set. A face's chunk arrives when that face is chosen; until then the Sans drawing stands
+  // in. The panel's drawings already compose in the chosen face.
+  const FACE_ART_LOADS = /** @type {const} */ ({
+    serif: () => import('./lib/example-art-serif.json'),
+    fangsong: () => import('./lib/example-art-fangsong.json'),
+    regular: () => import('./lib/example-art-regular.json'),
+    'pen-writing': () => import('./lib/example-art-pen-writing.json'),
+  })
+  /** @typedef {{ d?: string, emoji?: { text: string, box: number[] }[] }} ExampleArt */
+  let faceArt = $state.raw(/** @type {Map<string, Map<string, ExampleArt>>} */ (new Map()))
+  /** @type {Set<string>} */
+  const loadingFaceArt = new Set()
+  /** @param {string} style */
+  function loadFaceArt(style) {
+    const load = FACE_ART_LOADS[style]
+    if (!load || faceArt.has(style) || loadingFaceArt.has(style)) return
+    loadingFaceArt.add(style)
+    load().then(({ default: data }) => {
+      const next = new Map(faceArt)
+      next.set(style, new Map(Object.entries(data.art)))
+      faceArt = next
+    }).catch(() => { /* The Sans drawing stands in. */ }).finally(() => loadingFaceArt.delete(style))
+  }
+  $effect(() => { const style = face; untrack(() => loadFaceArt(style)) })
   /** An example's prepared drawing once the chunk has arrived; null for any other sequence, or where
    *  the chunk failed. @param {string} sequence */
   const preparedFor = async sequence => {
@@ -1285,7 +1310,7 @@
       readingLang,
       unencoded: !example.char,
       lang,
-      drawing: prepared.get(example.sequence),
+      drawing: (face === 'sans' ? undefined : faceArt.get(face)?.get(example.sequence)) ?? prepared.get(example.sequence),
       hint: [groupKey === 'erjian' && example.char ? `${example.sequence}　${point}${replaces ? `　${replaces}` : ''}` : replaces ? `${example.sequence}　${replaces}　${t('app.examples.none')}` : example.abbreviates ? `${example.abbreviates}　${example.sequence}　${t('app.examples.abbreviation')}` : example.char ? `${example.char}${example.sequence === example.char ? '' : `　${example.sequence}`}　${point}` : `${example.sequence}　${t('app.examples.none')}`, citation].filter(Boolean).join('　'),
       run: () => addTab(example.sequence),
     }

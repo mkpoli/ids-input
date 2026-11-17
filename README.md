@@ -1535,7 +1535,7 @@ bun run dev             # the demo on a dev server
 bun run build:demo      # the demo into dist/
 bun run build:site      # assets into dist/, share-card Worker into dist-worker/
 bun run dev:worker      # the worker and dist/ locally, on port 8787
-bun run build:example-drawings   # the examples' drawings, after COMPOSER_BASE changes
+bun run build:example-drawings   # the examples' drawings and cards, after a composer export changes
 bun run build:baishi-cheatsheet  # the cheatsheet's outlines, after COMPOSER_BASE or its cards change
 bun run build:sketch-parts       # the drawing search's glyph masks, after a font change
 ```
@@ -1598,9 +1598,11 @@ the `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository secrets. The w
 reads the sequence out of the path, writes the tags a link preview needs, and leaves every other
 request to the assets.
 
-The prepared drawings in `demo/lib/example-drawings.json` are composed once from the export at
-`demo/lib/composer.js`'s `COMPOSER_BASE`; `bun run build:example-drawings` rebuilds them, and
-`tests/example-drawings.test.js` fails while the file and the export disagree.
+The prepared drawings in `demo/lib/example-drawings.json` are composed once from the Sans export at
+`demo/lib/composer.js`'s `COMPOSER_BASE`. The other faces' example cards read their paths from
+`demo/lib/example-art-<face>.json`, composed from each face's export and loaded when that face is
+chosen. `bun run build:example-drawings` rebuilds both, and `tests/example-drawings.test.js` and
+`tests/example-art.test.js` fail while the files and the exports disagree.
 
 The zi.tools IDS cheatsheet (`demo/lib/baishi-cheatsheet.js`) quotes Yi Bai's data at one commit and
 colours the contours of real outlines. `bun run build:baishi-cheatsheet` looks every quotation up in
