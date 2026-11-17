@@ -1,6 +1,7 @@
 <script>
   // Five faces side by side for the same characters and descriptions: the sets are 千字文, four
   // classical poems, the workshop's examples, and the records unencoded-db holds.
+  import { onMount } from 'svelte'
   import PageHeader from './ui/PageHeader.svelte'
   import FontDrawing from './ui/FontDrawing.svelte'
   import { translator } from '../src/svelte/index.js'
@@ -67,6 +68,16 @@
 
   let setId = $state(SETS[0].id)
   let page = $state(1)
+  let headTop = $state(0)
+  onMount(() => {
+    const bar = document.querySelector('header.bar')
+    const measure = () => { headTop = bar?.getBoundingClientRect().height ?? 0 }
+    measure()
+    const observer = bar ? new ResizeObserver(measure) : null
+    if (bar && observer) observer.observe(bar)
+    window.addEventListener('resize', measure)
+    return () => { observer?.disconnect(); window.removeEventListener('resize', measure) }
+  })
   const PAGE_SIZE = 20
   const set = $derived(SETS.find(entry => entry.id === setId) ?? SETS[0])
   const pages = $derived(Math.max(1, Math.ceil(set.rows.length / PAGE_SIZE)))
@@ -108,7 +119,7 @@
     </div>
 
     <div class="table" role="table" aria-label={t('fontCompare.title')}>
-      <div class="head" role="row">
+      <div class="head" role="row" style:top={`${headTop}px`}>
         <span class="label" role="columnheader">{t('fontCompare.row')}</span>
         {#each FACES as face (face.key)}<span role="columnheader">{t(face.label)}</span>{/each}
       </div>
@@ -150,9 +161,9 @@
   .count{font-size:12px;color:var(--ui-color-ink-muted);margin-inline-start:auto}
   .pager{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ui-color-ink-muted)}
   .pager.bottom{margin-top:16px;justify-content:center}
-  .table{border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-lg);overflow:hidden;background:var(--ui-color-surface)}
+  .table{border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-lg);overflow:clip;background:var(--ui-color-surface)}
   .head,.row{display:grid;grid-template-columns:minmax(110px,1.1fr) repeat(5,1fr);align-items:center}
-  .head{padding:8px;border-bottom:1px solid var(--ui-color-border);font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--ui-color-ink-muted);text-align:center}
+  .head{position:sticky;top:0;z-index:2;padding:8px;border-bottom:1px solid var(--ui-color-border);background:var(--ui-color-surface);font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--ui-color-ink-muted);text-align:center}
   .head .label{text-align:start;padding-inline-start:6px}
   .row{border-bottom:1px solid var(--ui-color-border-faint)}
   .row:last-child{border-bottom:0}
