@@ -1,5 +1,5 @@
 // Exercise the preview worker for every accepted non-private scalar.
-// bun scripts/audit_render_coverage.mjs CACHE_DIR OUTPUT_JSON [sans|serif|fangsong|klee]
+// bun scripts/audit_render_coverage.mjs CACHE_DIR OUTPUT_JSON [sans|serif|regular|fangsong|pen-writing]
 import { mkdir, readFile, writeFile, rename } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { resolve } from 'node:path'
@@ -11,7 +11,7 @@ import { coverageSources } from './lib/coverage-sources.mjs'
 import { COMPOSER_BASES } from '../demo/lib/composer.js'
 
 const [cacheArg, output, style = 'sans'] = process.argv.slice(2)
-if (!cacheArg || !output || !COMPOSER_BASES[style]) throw Error('Usage: bun scripts/audit_render_coverage.mjs CACHE_DIR OUTPUT_JSON [sans|serif|fangsong|klee]')
+if (!cacheArg || !output || !COMPOSER_BASES[style]) throw Error('Usage: bun scripts/audit_render_coverage.mjs CACHE_DIR OUTPUT_JSON [sans|serif|regular|fangsong|pen-writing]')
 const base = COMPOSER_BASES[style], cache = resolve(cacheArg)
 await mkdir(cache, { recursive: true })
 const digest = bytes => createHash('sha256').update(bytes).digest('hex')
@@ -87,7 +87,7 @@ for (let cp = 0; cp <= 0x10FFFF; cp++) {
   if (privateUse(cp)) { privateCount++; continue }
   accepted.push(cp)
   messages = []
-  await self.onmessage({ data: { id: cp, sequence: char, base, separate: true, fontStyle: style === 'klee' ? 'kaisho' : style } })
+  await self.onmessage({ data: { id: cp, sequence: char, base, separate: true, fontStyle: style } })
   const answer = messages.at(-1)
   if (answer?.unavailable) throw Error(`Source unavailable at U+${cp.toString(16)}: ${answer.error}`)
   if (answer?.drawn) {

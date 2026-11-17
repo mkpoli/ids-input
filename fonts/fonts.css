@@ -37,6 +37,10 @@
    4.8 MB face. */
 @font-face{font-family:"Zhuque Label";src:url("./Zhuque-label.woff2") format("woff2");font-display:swap;
   unicode-range:U+0020-007E,U+1ECF,U+1ED1,U+4EFF,U+5B8B}
+@font-face{font-family:"TW-Kai";src:url("./TWKai-Regular.woff2") format("woff2");font-display:swap}
+/* The glyphs TW-Kai draws for the Regular Kai option's name, so the switch avoids the 15 MB face. */
+@font-face{font-family:"TW-Kai Label";src:url("./TWKai-label.woff2") format("woff2");font-display:swap;
+  unicode-range:U+0020-007E,U+6B63,U+6587,U+6977}
 @font-face{font-family:"GenZui Sans";src:url("./GenZuiSans-Regular.woff2") format("woff2");font-display:swap}
 @font-face{font-family:"IDS Tangut";src:url("./NotoSerifTangut-Regular.woff2") format("woff2");font-display:swap;
   unicode-range:U+17000-18AFF,U+18D00-18DFF}

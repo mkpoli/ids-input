@@ -5,9 +5,9 @@ import { readFileSync } from 'node:fs'
 const read = path => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8')
 
 /** @param {string} css */
-const stacks = css => Object.fromEntries([...css.matchAll(/--cjk-(sans|serif|fangsong|klee):\s*([^;]+);/g)].map(([, name, value]) => [name, value]))
+const stacks = css => Object.fromEntries([...css.matchAll(/--cjk-(sans|serif|regular|fangsong|pen-writing):\s*([^;]+);/g)].map(([, name, value]) => [name, value]))
 /** @param {string} css */
-const labelStacks = css => Object.fromEntries([...css.matchAll(/--cjk-label-(sans|serif|fangsong|klee):\s*([^;]+);/g)].map(([, name, value]) => [name, value]))
+const labelStacks = css => Object.fromEntries([...css.matchAll(/--cjk-label-(sans|serif|regular|fangsong|pen-writing):\s*([^;]+);/g)].map(([, name, value]) => [name, value]))
 
 // The installed fonts draw the common characters; Jigmo and the bundled shards fill only what they
 // lack. A stack that names the fallback first draws a serif Jigmo in the Sans face.
@@ -16,7 +16,7 @@ describe('the workshop font stacks', () => {
     it(`${path} puts the chosen face before the fallback`, () => {
       const face = stacks(read(path))
       for (const [name, stack] of Object.entries(face)) {
-        const installed = name === 'serif' || name === 'fangsong' ? 'Noto Serif CJK JP' : 'Noto Sans CJK JP'
+        const installed = name === 'serif' || name === 'regular' || name === 'fangsong' ? 'Noto Serif CJK JP' : 'Noto Sans CJK JP'
         expect([path, name, stack.includes(installed)]).toEqual([path, name, true])
         expect([path, name, stack.split('--ids-glyph-fallback').length - 1]).toEqual([path, name, 1])
         expect([path, name, stack.indexOf(installed) < stack.indexOf('--ids-glyph-fallback')]).toEqual([path, name, true])
@@ -29,20 +29,20 @@ describe('the workshop font stacks', () => {
 // stacks: the fallback outlines would draw a common character before the named face.
 describe('the font switch label stacks', () => {
   const face = labelStacks(read('demo/app.css'))
-  it('covers the four faces', () => {
-    expect(Object.keys(face).sort()).toEqual(['fangsong', 'klee', 'sans', 'serif'])
+  it('covers the five faces', () => {
+    expect(Object.keys(face).sort()).toEqual(['fangsong', 'pen-writing', 'regular', 'sans', 'serif'])
   })
-  for (const [name, installed] of [['sans', 'Noto Sans CJK JP'], ['serif', 'Noto Serif CJK JP'], ['fangsong', 'Zhuque Label'], ['klee', 'Kureedo Label']]) {
+  for (const [name, installed] of [['sans', 'Noto Sans CJK JP'], ['serif', 'Noto Serif CJK JP'], ['regular', 'TW-Kai Label'], ['fangsong', 'Zhuque Label'], ['pen-writing', 'Kureedo Label']]) {
     it(`${name} starts from its own face`, () => {
       const stack = face[name]
       expect(stack.includes(installed)).toBe(true)
       expect(stack.indexOf(installed) < stack.indexOf('--ids-glyph-fallback')).toBe(true)
     })
   }
-  it('keeps the Kaisho name in one face where Kureedo lacks its glyphs', () => {
+  it('keeps the Wen Kai name in one face where Kureedo lacks its glyphs', () => {
     const app = read('demo/App.svelte')
-    expect(app).toContain('.font-choice .wide.klee:lang(zh-Hans)')
-    expect(app).toContain('.font-choice .wide.klee:lang(vi)')
+    expect(app).toContain('.font-choice .wide.pen-writing:lang(zh-Hans)')
+    expect(app).toContain('.font-choice .wide.pen-writing:lang(vi)')
   })
 })
 
@@ -63,7 +63,7 @@ describe('the Fangsong face', () => {
   })
 })
 
-describe('the Kaisho label subset', () => {
+describe('the Wen Kai label subset', () => {
   const css = read('fonts/fonts.css')
   it('registers the subset for the name and the Aa sample', () => {
     const face = css.match(/@font-face\{font-family:"Kureedo Label";src:url\("\.\/Kureedo-label\.woff2"\)[^}]*unicode-range:([^}]*)\}/)
@@ -74,5 +74,18 @@ describe('the Kaisho label subset', () => {
     const bytes = readFileSync(new URL('../fonts/Kureedo-label.woff2', import.meta.url))
     const digest = createHash('sha256').update(bytes).digest('hex')
     expect(read('fonts/README.md')).toContain(digest)
+  })
+})
+
+describe('the Regular Kai face', () => {
+  const css = read('fonts/fonts.css')
+  it('registers the label subset for the name it draws', () => {
+    const face = css.match(/@font-face\{font-family:"TW-Kai Label";src:url\("\.\/TWKai-label\.woff2"\)[^}]*unicode-range:([^}]*)\}/)
+    expect(face).not.toBeNull()
+    for (const range of ['U+0020-007E', 'U+6B63', 'U+6587', 'U+6977']) expect(face[1]).toContain(range)
+  })
+  for (const file of ['TWKai-Regular.woff2', 'TWKai-label.woff2']) it(`ships the ${file} whose digest the README records`, () => {
+    const bytes = readFileSync(new URL(`../fonts/${file}`, import.meta.url))
+    expect(read('fonts/README.md')).toContain(createHash('sha256').update(bytes).digest('hex'))
   })
 })

@@ -941,7 +941,7 @@ which are laid out as equal cells. Under Vite, keep both packages out of depende
 `composerPreview({ base, worker })` takes a function making the Worker for other bundlers.
 
 The demo draws Sans from `https://ids-input-composer.mkpoli.workers.dev/a83fc941166b-sans-compose-layout-v4-f7+variants/`,
-Serif from the serif export, Fangsong from the Zhuque Fangsong export, and Kaisho from the Kureedo export; `?composer=<url>` or
+Serif from the serif export, Regular Kai from the TW-Kai export, Fangsong from the Zhuque Fangsong export, and Wen Kai from the Kureedo export; `?composer=<url>` or
 `VITE_COMPOSER_BASE` points every face at another copy of one export. A face that cannot draw a
 description draws the encoded character it names in that face, else the Sans export's drawing.
 
@@ -1097,9 +1097,11 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   1.1.
 - Noto Serif Tangut 2.168, Google LLC, SIL OFL 1.1,
   <https://github.com/notofonts/noto-fonts/tree/main/unhinted/ttf/NotoSerifTangut>: Tangut text.
+- TW-Kai, 數位發展部 (Ministry of Digital Affairs), Open Government Data License 1.0,
+  <https://www.cns11643.gov.tw>: the Regular Kai glyph face.
 - Kureedo v0.4.3, Copyright The Klee Project Authors, SIL OFL 1.1,
-  <https://github.com/mkpoli/kureedo>: the Kaisho glyph face.
-- GenZui Sans 0.105, SIL OFL 1.1, <https://github.com/mkpoli/GenZui>: the Kaisho fallback.
+  <https://github.com/mkpoli/kureedo>: the Wen Kai glyph face.
+- GenZui Sans 0.105, SIL OFL 1.1, <https://github.com/mkpoli/GenZui>: the Wen Kai fallback.
 - han-compose, mkpoli, MIT, <https://github.com/mkpoli/han-compose>: the composing engine
   `@han-compose/composer`, which draws the preview, and the `export-web` files it reads. Its export
   draws on Noto Sans CJK JP and Plangothic (SIL OFL 1.1), BabelStone IDS, hfhchan/ids (MIT) and
@@ -1357,7 +1359,7 @@ draft; text built from a sequence's letters goes on to the editor first. A docum
 than its sequence rides along as `?doc=`, so copying the location keeps a placement and opening such
 a link keeps the token. Tabs use
 `sessionStorage` to keep each browser window's working set separate through reloads, and
-`localStorage` to seed a new window. The toolbar’s Sans/Serif/Fangsong/Kaisho switch
+`localStorage` to seed a new window. The toolbar’s Sans/Serif/Regular Kai/Fangsong/Wen Kai switch
 chooses the face for Han text and Sans/Serif bundled component forms, and shows the description
 being built in each face. Other composed outlines use the configured export’s font. Settings,
 the recent sequences, the theme and font choice stay in `localStorage`; the keys use the
@@ -1435,7 +1437,7 @@ parse.
 `desktop/` wraps the workshop in a [Tauri](https://tauri.app/) window for Windows, macOS and Linux.
 The installers are on the [releases page](https://github.com/mkpoli/ids-input/releases). The app
 carries a copy of the Sans composer export (`COMPOSER_BASE`, about 135 MB) and serves it under its
-own `atlas` scheme, so the workshop draws in Sans with no connection. Serif and Kaisho still load
+own `atlas` scheme, so the workshop draws in Sans with no connection. Serif, Regular Kai and Wen Kai still load
 from glyphatlas.org. Share links name <https://ids.mkpo.li/>, reports go to its `/api/report`, the
 context of a report carries `desktop: true`, and any address outside the app opens in the system's
 browser. A download lands in the Downloads folder, which then opens on it.

@@ -49,7 +49,7 @@ const implementationPaths = ['scripts/audit_glyph_layout.mjs', ...['glyph-audit-
 const hashesOf = async paths => Object.fromEntries(await Promise.all(paths.map(async path => [path, digest(await readFile(new URL(`../${path}`, import.meta.url)))])))
 const report = {
   schema: 1, commit: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), style,
-  scope: 'Direct composer audit of the bundled BabelStone and Yi Bai tables plus demo examples, in the selected Sans or Serif export. Dense descriptions (eight or more leaves) are rendered first, then remaining overlay descriptions, without recursive expansion. Demo routing, Kaisho, script-specific worker sources and document transforms are outside this scan. Placement-box flags and selected-export raster differences require visual review; operands may use fallback fonts. Unflagged cases are not certified correct.',
+  scope: 'Direct composer audit of the bundled BabelStone and Yi Bai tables plus demo examples, in the selected Sans or Serif export. Dense descriptions (eight or more leaves) are rendered first, then remaining overlay descriptions, without recursive expansion. Demo routing, Wen Kai, script-specific worker sources and document transforms are outside this scan. Placement-box flags and selected-export raster differences require visual review; operands may use fallback fonts. Unflagged cases are not certified correct.',
   thresholds: { ...GLYPH_AUDIT_THRESHOLDS, minLeaves: 8, lowIou: 0.35, lowInkRatio: 0.55, highInkRatio: 1.8 },
   catalogue: { records: entries.length + rejected.length, parseable: entries.length, rejected: rejected.length,
     overlay: pools.overlay.length, dense: pools.dense.length, denseEnclosure: pools.enclosureDense.length,

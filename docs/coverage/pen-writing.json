@@ -1,6 +1,6 @@
 {
   "unicode": "18.0.0",
-  "style": "klee",
+  "style": "pen-writing",
   "base": "https://ids-input-composer.mkpoli.workers.dev/ce3eaafda8f9-kaisho-compose-layout-v4-kaisho-f6/",
   "implementationHashes": {
     "data/unicode-properties.json": "20763faa888f696bd7cf17d7f569a726c30f95f41528df15407bba0278a02722",
