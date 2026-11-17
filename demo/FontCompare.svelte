@@ -72,8 +72,12 @@
   const pages = $derived(Math.max(1, Math.ceil(set.rows.length / PAGE_SIZE)))
   const shown = $derived(set.rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE))
 
+  const toTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
   /** @param {number} next */
-  const go = next => { page = Math.min(pages, Math.max(1, next)) }
+  const go = next => {
+    page = Math.min(pages, Math.max(1, next))
+    toTop()
+  }
 </script>
 
 <svelte:head>
@@ -90,7 +94,7 @@
       <label class="select">
         <span>{t('fontCompare.setLabel')}</span>
         <span class="ui-select-wrap">
-          <select class="ui-select" bind:value={setId} onchange={() => { page = 1 }}>
+          <select class="ui-select" bind:value={setId} onchange={() => { page = 1; toTop() }}>
             {#each SETS as entry (entry.id)}<option value={entry.id}>{t(entry.label)} · {entry.rows.length}</option>{/each}
           </select>
         </span>
