@@ -189,13 +189,14 @@ component at any depth of all its descriptions; these are dictionary coverage co
 frequencies.
 
 The sequence field accepts zi.tools replacement expressions with three IDS operands, such as
-`🔄林木火` or `RP林木火`. It opens the source character's descriptions and converts the expression
-to an editable IDS (`⿰木火`). An optional `[n]` before the source picks an occurrence in reading
-order, and a source-region letter after the source keeps descriptions from that region:
-`🔄[1]喵H十喵` resolves to `⿰口⿱⿰十喵田`. The lookup opens as few components as possible, then
-replaces the shallowest occurrence; where several are equally shallow, the last is used. If the
-target cannot be found in the available descriptions, the entered text remains in the field.
-Resolution is bounded to eight opened components and 128 candidate trees.
+`🔄林木火` or `RP林木火`. It opens the source character's descriptions and shows the result
+(`⿰木火`) in the tree and preview while the field keeps the expression. An optional `[n]` before
+the source picks an occurrence in reading order, and a source-region letter after the source keeps
+descriptions from that region: `🔄[1]喵H十喵` shows `⿰口⿱⿰十喵田`. The lookup opens as few
+components as possible, then replaces the shallowest occurrence; where several are equally shallow,
+the last is used. If the target cannot be found in the available descriptions, the field keeps its
+text and the tree keeps its last result. Resolution is bounded to eight opened components and 128
+candidate trees.
 
 `IdsVariations` (`t`, bindable `query`, and `href(text)` or `ontake(text)`) lists the IRG's unifiable
 and non-unifiable component variations from `data/ucv.json`, each form drawn from
