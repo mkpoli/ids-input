@@ -3,9 +3,9 @@
 // before reaching the editor, so the rest of the editor continues to work with its usual tree.
 import { EMPTY_MARKS, LONGEST, UNKNOWN, arity, isComponent, isSelector, isSequence, nextEmpty, parse, write } from './ids.js'
 import { unalias } from './aliases.js'
-import { replacementPrefix, resolveReplacement } from './replacement.js'
+import { SOURCE_VARIANTS, replacementPrefix, resolveReplacement } from './replacement.js'
 
-/** @typedef {string | { empty: true } | { op: string, parts: Expression[] } | { replace: [Expression, Expression, Expression] }} Expression */
+/** @typedef {string | { empty: true } | { op: string, parts: Expression[] } | { replace: [Expression, Expression, Expression], index?: number, variant?: string }} Expression */
 
 /** Replacement text stays literal while its operands are being typed. RP inside an IDS can also
  * be literal Latin components; keeping the text literal does not change how a completed plain IDS
@@ -98,7 +98,22 @@ export function replacementExpression(input) {
     if (char === '🔄' || named) {
       let start = at + (named ? 2 : 1)
       if (!named && (chars[start] === '\uFE0E' || chars[start] === '\uFE0F')) start++
-      for (const child of children(start, 3, true)) result.push({ tree: { replace: /** @type {[Expression, Expression, Expression]} */ (child.parts) }, end: child.end, replaced: true })
+      /** @type {number | undefined} */
+      let index
+      const indexed = /^\[(\d{1,2})\]/u.exec(chars.slice(start).join(''))
+      if (indexed) { index = Number(indexed[1]); start += [...indexed[0]].length }
+      for (const first of read(start, true)) {
+        // A region letter makes a variant when two operands still follow it; otherwise it stays the
+        // target or replacement. Both readings are kept, and the caller takes the one that ends.
+        if (typeof first.tree === 'string' && [...first.tree].length === 1 && SOURCE_VARIANTS.includes(chars[first.end] ?? '')) {
+          for (const tail of children(first.end + 1, 2, true)) {
+            result.push({ tree: { replace: /** @type {[Expression, Expression, Expression]} */ ([first.tree, ...tail.parts]), index, variant: chars[first.end] }, end: tail.end, replaced: true })
+          }
+        }
+        for (const tail of children(first.end, 2, true)) {
+          result.push({ tree: { replace: /** @type {[Expression, Expression, Expression]} */ ([first.tree, ...tail.parts]), index }, end: tail.end, replaced: true })
+        }
+      }
       // RP can be two literal Latin components; a Unicode replacement symbol cannot.
       if (char === '🔄') { memo.set(key, result); return result }
     }
@@ -141,7 +156,7 @@ export async function resolveReplacementExpression(expression, structure, { sign
       if (b == null) return undefined
       const c = await resolve(replacement)
       if (c == null) return undefined
-      return (await resolveReplacement({ source: write(a), target: write(b), replacement: write(c) }, lookup, { signal })) ?? undefined
+      return (await resolveReplacement({ source: write(a), target: write(b), replacement: write(c), index: node.index, variant: node.variant }, lookup, { signal })) ?? undefined
     }
     /** @type {import('./ids.js').Part[]} */
     const parts = []
