@@ -12,6 +12,7 @@
   import { composerPreview } from '@han-compose/composer'
   import { COMPOSER_BASES } from './lib/composer.js'
   import { createIconDrawings } from './lib/icons.js'
+  import engineOutlines from 'ids-engine-outlines'
 
   const params = new URLSearchParams(location.search)
   const wanted = String(params.get('lang') ?? load('locale', null) ?? navigator.language ?? '')
@@ -46,7 +47,7 @@
   const drawings = new Map()
   /** @param {string} style */
   const drawFor = style => {
-    if (!drawings.has(style)) drawings.set(style, createIconDrawings(composerPreview({ base: COMPOSER_BASES[style], fontStyle: style })))
+    if (!drawings.has(style)) drawings.set(style, createIconDrawings(composerPreview({ base: COMPOSER_BASES[style], fontStyle: style, loaders: engineOutlines })))
     return /** @type {ReturnType<typeof createIconDrawings>} */ (drawings.get(style))
   }
   const SIDE = new Set(['⿰', '⿲'])

@@ -11,6 +11,7 @@
   import { COMPOSER_BASES } from './lib/composer.js'
   import { EXAMPLES } from './lib/examples.js'
   import { createIconDrawings } from './lib/icons.js'
+  import engineOutlines from 'ids-engine-outlines'
   import qianziwen from './lib/font-compare/qianziwen.json'
   import poems from './lib/font-compare/poems.json'
   import unencoded from './lib/font-compare/unencoded.json'
@@ -38,7 +39,7 @@
   const drawings = new Map()
   /** @param {string} style */
   const drawOf = style => {
-    if (!drawings.has(style)) drawings.set(style, createIconDrawings(composerPreview({ base: COMPOSER_BASES[style], fontStyle: style })))
+    if (!drawings.has(style)) drawings.set(style, createIconDrawings(composerPreview({ base: COMPOSER_BASES[style], fontStyle: style, loaders: engineOutlines })))
     return /** @type {ReturnType<typeof createIconDrawings>} */ (drawings.get(style))
   }
 
