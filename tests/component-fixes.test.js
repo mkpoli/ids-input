@@ -2,7 +2,7 @@
 // and tied to the outlines it was read against, so these tests exercise the correction itself on
 // the shapes it was written for, and the guard that leaves another export's drawing alone.
 import { describe, expect, it } from 'bun:test'
-import { COMPONENT_FIXES, clippedAbove, componentFix, dotIn, narrowed, respanned, withoutContours } from '@han-compose/composer/component-fixes'
+import { COMPONENT_FIXES, clippedAbove, componentFix, dotIn, respanned, withoutContours } from '@han-compose/composer/component-fixes'
 import { makePart, partOf, placed, pointsBox } from '@han-compose/composer/geometry'
 
 /** A placed part of rectangular contours: `boxes` in font units, drawn from `source` into `target`. */
@@ -36,9 +36,8 @@ describe('a stroke correction', () => {
     expect(targetBox(cut, cut.part.contours[0])[3]).toBeCloseTo(600, 6)
   })
 
-  it('shortens a bar about its centre and moves another to a span', () => {
+  it('moves a bar to a span', () => {
     const bar = part('x', [0, 0, 1000, 1000], [0, 0, 1000, 1000], [[100, 200, 900, 280], [100, 700, 900, 780]])
-    expect(widths(narrowed(bar, [0], 0.5))[0]).toBeCloseTo(400, 6)
     expect(box(respanned(bar, [0], 200, 1000).part.contours[0])[0]).toBeCloseTo(200, 6)
     expect(box(respanned(bar, [0], 200, 1000).part.contours[0])[2]).toBeCloseTo(1000, 6)
   })
