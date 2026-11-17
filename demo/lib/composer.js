@@ -4,7 +4,7 @@
 import { LOCAL_SANS } from './desktop.js'
 
 export const COMPOSER_BASE = 'https://ids-input-composer.mkpoli.workers.dev/a83fc941166b-sans-compose-layout-v4-f7+variants/'
-// The Wen Kai, Fangsong and Serif exports (han-compose `export-web`) are uploaded beside the sans one.
+// The Serif, Regular Kai, Fangsong and Wen Kai exports (han-compose `export-web`) are uploaded beside the sans one.
 export const COMPOSER_BASES = {
   sans: COMPOSER_BASE,
   serif: 'https://ids-input-composer.mkpoli.workers.dev/8156f838798c-serif-compose-layout-v4-serif-f7+variants/',

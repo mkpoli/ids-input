@@ -120,8 +120,10 @@
   // What a share names: this page, or the published site for the desktop app, whose own address
   // opens nothing outside it.
   const shareFrom = DESKTOP ? new URL(SITE) : location
+  const FACE_KEYS = /** @type {const} */ (['sans', 'serif', 'regular', 'fangsong', 'pen-writing'])
+  const storedFace = load('font', 'sans')
   /** @type {'sans' | 'serif' | 'regular' | 'fangsong' | 'pen-writing'} */
-  let face = $state(load('font', 'sans'))
+  let face = $state(FACE_KEYS.includes(storedFace) ? storedFace : 'sans')
   $effect(() => save('font', face === 'sans' ? undefined : face))
   $effect(() => { document.documentElement.dataset.font = face })
   // The han-compose export the preview draws from; `?composer=`, VITE_COMPOSER_BASE or Preferences point it elsewhere.
@@ -1757,6 +1759,7 @@
   .font-choice .aa.pen-writing,.font-choice .wide.pen-writing{font-family:var(--cjk-label-pen-writing)}
   /* Kureedo draws neither 书 nor ả/ư; keep those names in one face. */
   .font-choice .wide.pen-writing:lang(zh-Hans),.font-choice .wide.pen-writing:lang(vi){font-family:var(--cjk-label-sans)}
+  .font-choice .wide.regular:lang(ko),.font-choice .wide.regular:lang(vi){font-family:var(--cjk-label-sans)}
   .font-choice:hover{color:var(--ui-color-ink)}
   .font-choice[aria-pressed="true"]{background:var(--ui-color-accent-soft);color:var(--ui-color-accent)}
   .font-choice:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}

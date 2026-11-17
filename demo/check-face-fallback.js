@@ -12,7 +12,7 @@ try {
   await page.locator('.ids-field input').fill(sequence)
   await page.getByRole('button', { name: 'Large view' }).click({ timeout: 120000 })
   await page.waitForSelector('dialog#large-preview[open]')
-  await page.locator('dialog#large-preview').getByRole('button', { name: 'Kaisho' }).click()
+  await page.locator('dialog#large-preview').getByRole('button', { name: 'Wen Kai' }).click()
   const note = page.locator('dialog#large-preview .ids-preview-fallback')
   await note.waitFor({ timeout: 120000 })
   assert.match((await note.textContent()) ?? '', /another face/, 'the fallback is explained')
