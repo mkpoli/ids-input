@@ -14,5 +14,6 @@ export const pages = t => [
   { id: 'baishi-cheatsheet', icon: 'list', label: t('cheatsheet.title') },
   { id: 'open-data', icon: 'download', label: t('app.openData') },
   { id: 'compare', icon: 'scales', label: t('app.compare') },
+  { id: 'font-compare', icon: 'variants', label: t('fontCompare.title') },
   { id: 'engines', icon: 'table', label: t('app.engines') },
 ]

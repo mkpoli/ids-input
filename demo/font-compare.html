@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <title>IDS Workshop — Font comparison</title>
+  <meta name="description" content="The same characters and descriptions drawn in the workshop's five faces: Sans, Serif, Fangsong, Regular and Pen.">
+  <link rel="canonical" href="https://ids.mkpo.li/font-compare">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="IDS Workshop">
+  <meta property="og:title" content="IDS Workshop — Font comparison">
+  <meta property="og:description" content="The same characters and descriptions drawn in five faces.">
+  <meta property="og:url" content="https://ids.mkpo.li/font-compare.html">
+  <meta name="twitter:card" content="summary">
+  <script>
+    // The theme kept from the last visit, set before the page paints.
+    try { const theme = JSON.parse(localStorage.getItem('ids-input:theme') ?? 'null'); if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme } catch {}
+  </script>
+</head>
+<body>
+  <div id="font-compare"></div>
+  <noscript>
+    <main>
+      <h1>IDS Workshop — Font comparison</h1>
+      <p>Every character and description drawn side by side in the workshop's five faces.</p>
+      <p>Enable JavaScript to see the drawings. The <a href="./">workshop</a> needs it too.</p>
+    </main>
+  </noscript>
+  <script type="module" src="./font-compare.js"></script>
+</body>
+</html>

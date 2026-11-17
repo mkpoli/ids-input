@@ -869,5 +869,16 @@
   "strokes.error.char": "Chỉ một chữ",
   "baishi.other.body": "Không nguồn nào trong số này là ký pháp của zi.tools: đây là một đề xuất mà cơ sở dữ liệu không sử dụng, cùng các bản nháp đã được tài liệu hướng dẫn thay thế.",
   "baishi.heading.drafts": "Các bản nháp trước đó",
-  "baishi.drafts.variants": "D1 gọi các định danh này là định danh vùng."
+  "baishi.drafts.variants": "D1 gọi các định danh này là định danh vùng.",
+  "fontCompare.title": "So sánh phông chữ",
+  "fontCompare.lead": "Mỗi chữ và mô tả được vẽ cạnh nhau bằng năm phông.",
+  "fontCompare.setLabel": "Bộ",
+  "fontCompare.row": "Chữ",
+  "fontCompare.count": "{shown} trên {total}",
+  "fontCompare.page": "Trang {page} / {pages}",
+  "fontCompare.source": "Văn bản từ Wikisource; ví dụ từ workshop; unencoded-db từ bản xuất của nó.",
+  "fontCompare.set.qianziwen": "Thiên tự văn",
+  "fontCompare.set.poems": "Cổ thi",
+  "fontCompare.set.examples": "Ví dụ",
+  "fontCompare.set.unencoded": "unencoded-db"
 }

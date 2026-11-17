@@ -869,5 +869,16 @@
   "strokes.error.char": "한 글자만",
   "baishi.other.body": "이 중 zi.tools 표기법은 없으며, 데이터베이스에서 사용하지 않는 제안안과 안내서로 대체된 초안들입니다.",
   "baishi.heading.drafts": "이전 초안",
-  "baishi.drafts.variants": "D1에서는 식별자를 영역 식별자라고 부릅니다."
+  "baishi.drafts.variants": "D1에서는 식별자를 영역 식별자라고 부릅니다.",
+  "fontCompare.title": "글꼴 비교",
+  "fontCompare.lead": "모든 글자와 설명을 다섯 서체로 나란히 그립니다.",
+  "fontCompare.setLabel": "집합",
+  "fontCompare.row": "글자",
+  "fontCompare.count": "전체 {total}행 중 {shown}행",
+  "fontCompare.page": "{page} / {pages} 쪽",
+  "fontCompare.source": "본문은 위키문헌, 예시는 워크숍, unencoded-db는 내보내기입니다.",
+  "fontCompare.set.qianziwen": "천자문",
+  "fontCompare.set.poems": "고시",
+  "fontCompare.set.examples": "예시",
+  "fontCompare.set.unencoded": "unencoded-db"
 }

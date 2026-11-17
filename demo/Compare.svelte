@@ -7,6 +7,11 @@
   import { load, save } from './lib/storage.js'
   import Segmented from './ui/controls/Segmented.svelte'
   import data from './lib/comparison.json'
+  import FontSwitch from './ui/FontSwitch.svelte'
+  import FontDrawing from './ui/FontDrawing.svelte'
+  import { composerPreview } from '@han-compose/composer'
+  import { COMPOSER_BASES } from './lib/composer.js'
+  import { createIconDrawings } from './lib/icons.js'
 
   const params = new URLSearchParams(location.search)
   const wanted = String(params.get('lang') ?? load('locale', null) ?? navigator.language ?? '')
@@ -29,6 +34,21 @@
   /** @type {'weakest' | 'best'} */
   let order = $state('weakest')
   let limit = $state(48)
+  const FACES = /** @type {const} */ ([
+    { key: 'sans', label: 'app.font.sans' },
+    { key: 'serif', label: 'app.font.serif' },
+    { key: 'fangsong', label: 'app.font.fangsong' },
+    { key: 'regular', label: 'app.font.regular' },
+    { key: 'pen-writing', label: 'app.font.pen-writing' },
+  ])
+  let face = $state('sans')
+  /** @type {Map<string, ReturnType<typeof createIconDrawings>>} */
+  const drawings = new Map()
+  /** @param {string} style */
+  const drawFor = style => {
+    if (!drawings.has(style)) drawings.set(style, createIconDrawings(composerPreview({ base: COMPOSER_BASES[style], fontStyle: style })))
+    return /** @type {ReturnType<typeof createIconDrawings>} */ (drawings.get(style))
+  }
   const SIDE = new Set(['⿰', '⿲'])
   const STACKED = new Set(['⿱', '⿳'])
   const ENCLOSURE = new Set('⿴⿵⿶⿷⿸⿹⿺⿼⿽')
@@ -70,6 +90,11 @@
       <p class="caveat">{t('compare.method.caveat')}</p>
     </details>
 
+    <div class="faces">
+      <span class="faces-label">{t('app.font.label')}</span>
+      <FontSwitch faces={[...FACES]} bind:face label={t('app.font.label')} {t} />
+    </div>
+
     <div class="controls">
       <label class="select">
         <span>{t('compare.set.label')}</span>
@@ -108,7 +133,11 @@
           <div class="drawings">
             <figure>
               <figcaption>{t('compare.ours')}</figcaption>
-              <svg viewBox="0 0 1000 1000" role="img" aria-label={`${entry.sequence} — ${t('compare.ours')}`}><path d={entry.ours} fill="currentColor"/></svg>
+              {#if face === 'sans'}
+                <svg viewBox="0 0 1000 1000" role="img" aria-label={`${entry.sequence} — ${t('compare.ours')}`}><path d={entry.ours} fill="currentColor"/></svg>
+              {:else}
+                <FontDrawing sequence={entry.sequence} draw={drawFor(face)} label={`${entry.sequence} — ${t('compare.ours')}`} fallback={entry.ours} />
+              {/if}
             </figure>
             <figure>
               <figcaption>{t('compare.kage')}</figcaption>
@@ -159,6 +188,8 @@
   .method p{margin:8px 0}
   .method .caveat{color:var(--ui-color-ink-muted)}
 
+  .faces{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  .faces-label{font-size:12px;color:var(--ui-color-ink-muted)}
   .controls{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:18px 0 4px}
   .controls .select{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--ui-color-ink-muted)}
   .order{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--ui-color-ink-muted)}
