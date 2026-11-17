@@ -115,19 +115,18 @@
     "tsrs": "0.22.0-ts7.1.0-beta",
     "typescript": "5.9.3",
     "vite": "8.3.6",
-    "wrangler": "4.158.0",
-    "@han-compose/composer": "file:../composer"
+    "wrangler": "4.158.0"
   },
   "peerDependencies": {
-    "svelte": "^5.20.0",
-    "@han-compose/composer": "*"
+    "svelte": "^5.20.0"
   },
   "peerDependenciesMeta": {
-    "@han-compose/composer": {
+    "svelte": {
       "optional": true
     }
   },
   "dependencies": {
-    "@cf-wasm/resvg": "^0.4.0"
+    "@cf-wasm/resvg": "^0.4.0",
+    "@han-compose/composer": "file:../composer"
   }
 }
