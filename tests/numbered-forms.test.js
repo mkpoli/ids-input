@@ -17,7 +17,7 @@ describe('numbered component faces', () => {
     expect(chars.sort()).toEqual(Object.keys(outlines.records).sort())
     expect(forms.fallback).toEqual([23, 27, 65, 79, 90, 92, 103, 111, 118])
     for (const char of chars) {
-      for (const style of ['sans', 'serif', 'kaisho']) {
+      for (const style of ['sans', 'serif', 'pen-writing']) {
         expect(isComponentForm(char, style)).toBe(false)
         const drawn = componentDrawing(char, style)
         expect(drawn?.d.length).toBeGreaterThan(20)

@@ -120,7 +120,7 @@
   // What a share names: this page, or the published site for the desktop app, whose own address
   // opens nothing outside it.
   const shareFrom = DESKTOP ? new URL(SITE) : location
-  /** @type {'sans' | 'serif' | 'fangsong' | 'klee'} */
+  /** @type {'sans' | 'serif' | 'regular' | 'fangsong' | 'pen-writing'} */
   let face = $state(load('font', 'sans'))
   $effect(() => save('font', face === 'sans' ? undefined : face))
   $effect(() => { document.documentElement.dataset.font = face })
@@ -216,9 +216,9 @@
   // names the package reads, and the URL Vite gives each file it bundles. See `vite.config.js`.
   // The forms of the component variation lists that only an outline draws go to the engine as the
   // host's own outlines: drawn in Gothic for Sans, in Mincho for every other face.
-  /** @param {'sans' | 'serif' | 'fangsong' | 'kaisho'} style */
+  /** @param {'sans' | 'serif' | 'regular' | 'fangsong' | 'pen-writing'} style */
   const bundlesFor = style => ({ ...engineOutlines, 'host/outlines.json.gz': style === 'sans' ? variationOutlinesSans : variationOutlines })
-  /** @param {string} at @param {boolean} split @param {'sans' | 'serif' | 'fangsong' | 'kaisho'} style @param {string} [owner] A view whose drawings the others must not cancel. */
+  /** @param {string} at @param {boolean} split @param {'sans' | 'serif' | 'regular' | 'fangsong' | 'pen-writing'} style @param {string} [owner] A view whose drawings the others must not cancel. */
   const previewAt = (at, split, style, owner = '', preferExport = false) => {
     const key = `${at}\0${split ? '1' : '0'}\0${style}\0${owner}\0${preferExport ? '1' : '0'}`
     if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split, fontStyle: style, preferExport, loaders: bundlesFor(style) }))
@@ -283,7 +283,7 @@
    * A face's preview: its own export, then the encoded character's glyph in that face, then the
    * default export. A sequence the face cannot compose still draws, and an example that names a
    * character draws that character when the face has it. @param {string} at @param {boolean} split
-   * @param {'sans' | 'serif' | 'fangsong' | 'kaisho'} style
+   * @param {'sans' | 'serif' | 'regular' | 'fangsong' | 'pen-writing'} style
    * @param {string} [owner] A view with its own worker, so the editor's drawings do not cancel its own.
    */
   function previewFor(at, split, style, owner = '', preferExport = false) {
@@ -324,12 +324,10 @@
       }
       try {
         const drawn = await draw(sequence, options)
-        // Klee One draws about ten thousand characters; a kanji it lacks is stood in for by a crude
-        // description (术 is ⿺木丶), and a description it cannot cut is assembled from unscaled whole
-        // operands. The Kaisho face borrows the Serif drawing in both cases, and so does Fangsong, whose
-        // font is about as small.
+        // A face whose font lacks a character, or whose cut fails, borrows the Serif drawing: Klee
+        // One draws about ten thousand characters, and TW-Kai lacks the extensions beyond B and G.
         const transplanted = drawn?.origins?.some(origin => origin.startsWith('transplant '))
-        if ((style === 'kaisho' || style === 'fangsong') && !split && (drawn?.missing?.length || transplanted)) {
+        if ((style === 'regular' || style === 'pen-writing' || style === 'fangsong') && !split && (drawn?.missing?.length || transplanted)) {
           try { return { ...(await serif(sequence, options)), faceFallback: 'serif' } } catch { /* keep the face's own drawing */ }
         }
         return drawn
@@ -372,7 +370,7 @@
   // Tab icons need their own drawer so their requests cannot cancel the main preview.
   /** @type {Map<string, ReturnType<typeof createIconDrawings>>} */
   const iconDrawings = new Map()
-  /** A face's drawer for tabs and the tree, falling back to the default export. @param {string} at @param {'sans' | 'serif' | 'fangsong' | 'kaisho'} style */
+  /** A face's drawer for tabs and the tree, falling back to the default export. @param {string} at @param {'sans' | 'serif' | 'regular' | 'fangsong' | 'pen-writing'} style */
   const drawerAt = (at, style) => {
     const composed = composerPreview({ base: at, fontStyle: style, loaders: bundlesFor(style) })
     if (exportUrl(at) === preparedBase && style === 'sans') return composed
@@ -389,7 +387,7 @@
       }
     }
   }
-  /** @param {string} at @param {'sans' | 'serif' | 'fangsong' | 'kaisho'} style */
+  /** @param {string} at @param {'sans' | 'serif' | 'regular' | 'fangsong' | 'pen-writing'} style */
   const iconsAt = (at, style) => {
     const key = `${at}\0${style}`
     if (!iconDrawings.has(key)) {
@@ -400,12 +398,13 @@
     }
     return /** @type {ReturnType<typeof createIconDrawings>} */ (iconDrawings.get(key))
   }
-  /** The four faces the switch names, each with its composer style and message key. @type {{ key: 'sans' | 'serif' | 'fangsong' | 'klee', style: 'sans' | 'serif' | 'fangsong' | 'kaisho', label: string }[]} */
+  /** The five faces the switch names, each with its composer style and message key. @type {{ key: 'sans' | 'serif' | 'regular' | 'fangsong' | 'pen-writing', style: 'sans' | 'serif' | 'regular' | 'fangsong' | 'pen-writing', label: string }[]} */
   const FONT_FACES = [
     { key: 'sans', style: 'sans', label: 'app.font.sans' },
     { key: 'serif', style: 'serif', label: 'app.font.serif' },
+    { key: 'regular', style: 'regular', label: 'app.font.regular' },
     { key: 'fangsong', style: 'fangsong', label: 'app.font.fangsong' },
-    { key: 'klee', style: 'kaisho', label: 'app.font.klee' },
+    { key: 'pen-writing', style: 'pen-writing', label: 'app.font.pen-writing' },
   ]
   /** The export a face's sample draws from, as the chosen face's preview does: one named in `?composer=`, the build or Preferences, else the face's own. @param {typeof FONT_FACES[number]['key']} key */
   const faceExport = key => composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[key] || COMPOSER_BASE
@@ -433,7 +432,7 @@
     }
     return /** @type {ReturnType<typeof createSampleDrawings>} */ (sampleDrawings.get(key))
   }
-  const componentStyle = $derived(face === 'serif' ? 'serif' : face === 'fangsong' ? 'fangsong' : face === 'klee' ? 'kaisho' : 'sans')
+  const componentStyle = $derived(FONT_FACES.find(option => option.key === face)?.style ?? 'sans')
   const icons = $derived(iconsAt(base, componentStyle))
   // One function for each export, so a tree asks again only when the face changes.
   /** @type {Map<string, () => Promise<Map<string, string[]>>>} */
@@ -1754,9 +1753,10 @@
   .font-choice .wide{font-family:var(--cjk-label-sans)}
   .font-choice .aa.serif,.font-choice .wide.serif{font-family:var(--cjk-label-serif)}
   .font-choice .aa.fangsong,.font-choice .wide.fangsong{font-family:var(--cjk-label-fangsong)}
-  .font-choice .aa.klee,.font-choice .wide.klee{font-family:var(--cjk-label-klee)}
+  .font-choice .aa.regular,.font-choice .wide.regular{font-family:var(--cjk-label-regular)}
+  .font-choice .aa.pen-writing,.font-choice .wide.pen-writing{font-family:var(--cjk-label-pen-writing)}
   /* Kureedo draws neither 书 nor ả/ư; keep those names in one face. */
-  .font-choice .wide.klee:lang(zh-Hans),.font-choice .wide.klee:lang(vi){font-family:var(--cjk-label-sans)}
+  .font-choice .wide.pen-writing:lang(zh-Hans),.font-choice .wide.pen-writing:lang(vi){font-family:var(--cjk-label-sans)}
   .font-choice:hover{color:var(--ui-color-ink)}
   .font-choice[aria-pressed="true"]{background:var(--ui-color-accent-soft);color:var(--ui-color-accent)}
   .font-choice:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}
