@@ -32,6 +32,7 @@ import { translator } from './i18n.js'
  * @typedef {'hover' | 'on' | 'off'} TintMode
  * @typedef {{ tintMode?: TintMode, adapter: IdsAdapter, messages?: Record<string, string>, locale?: string, disabled?: boolean }} EditorOptions
  * @typedef {{ id: number, label: string, destructive: boolean, undone?: boolean, reorder?: { from: Path, to: Path }, swap?: { from: Path, to: Path } }} Change
+ * @typedef {{ tree: Part, chosen: Path | null, draft: string, expression: string }} EditorState
  */
 
 /** The message key of each operator's name. */
@@ -66,9 +67,11 @@ export function createEditor(options) {
   /** Whether the chosen part was picked by selecting its text in the field, where its alternatives then show. */
   let inField = $state(false)
   let draft = $state(''), piece = $state(''), note = $state('')
+  /** The replacement expression the tree was resolved from, while the field still holds it. */
+  let expression = $state('')
   /** The last change, for a host to answer (an undo toast after one that throws something away). */
   let change = $state.raw(/** @type {Change | null} */ (null))
-  /** @type {import('../core/history.js').History<{ tree: Part, chosen: Path | null, draft: string }>} */
+  /** @type {import('../core/history.js').History<EditorState>} */
   const history = createHistory(100)
   let steps = $state.raw(/** @type {{ done: string[], undone: string[] }} */ ({ done: [], undone: [] }))
   let typing = false, run = false, changes = 0
@@ -78,9 +81,11 @@ export function createEditor(options) {
   const listeners = []
 
   const typed = $derived(parse(draft, { open: true }))
+  /** The field holds the expression its tree was resolved from; the tree is the result. */
+  const expressed = $derived(expression !== '' && expression === draft)
   const whole = $derived(write(tree))
   // A custom component still being written (&CDP-89, {5, #(一) is not yet a part: no fault is named.
-  const problem = $derived(note || (!draft || !typed.problem || unfinishedCustom(draft) >= 0 ? '' : namingOperator(draft) ? t('ids.problem.naming')
+  const problem = $derived(note || (expressed || !draft || !typed.problem || unfinishedCustom(draft) >= 0 ? '' : namingOperator(draft) ? t('ids.problem.naming')
     : t(`ids.problem.${typed.problem}`)))
   // The first slot still empty, named by its place: a sequence is whole only once there is none.
   const gap = $derived(isNode(tree) ? nextEmpty(tree) : null)
@@ -89,7 +94,7 @@ export function createEditor(options) {
     const parent = partAt(tree, gap.slice(0, -1))
     return isNode(parent) ? t('ids.problem.empty', { n: /** @type {number} */ (gap.at(-1)) + 1, name: name(parent.op) }) : ''
   })
-  const usable = $derived(isNode(tree) && !gap && !typed.problem && isDescription(whole))
+  const usable = $derived(isNode(tree) && !gap && (expressed || !typed.problem) && isDescription(whole))
   const picked = $derived(chosen ? partAt(tree, chosen) : undefined)
   // The descriptions a chosen component can be split into, those the editor can read, and what can stand in its place.
   const splits = $derived.by(() => {
@@ -145,25 +150,25 @@ export function createEditor(options) {
   function sync() {
     steps = history.steps()
     const done = draft
-    const ok = isNode(tree) && !nextEmpty(tree) && !parse(done, { open: true }).problem && isDescription(write(tree))
+    const ok = isNode(tree) && !nextEmpty(tree) && (expressed || !parse(done, { open: true }).problem) && isDescription(write(tree))
     for (const listen of listeners) listen(done, ok)
   }
   /** Resolve complete zi.tools replacement input without overwriting a later edit.
    * @param {string} input */
   function resolveInput(input) {
     const query = replacementQuery(input)
-    const expression = query ? null : replacementExpression(input)
-    if ((!query && !expression) || disabled()) return
+    const nested = query ? null : replacementExpression(input)
+    if ((!query && !nested) || disabled()) return
     cancelResolution()
     const controller = new AbortController()
     resolution = controller
     const ticket = revision, adapter = options().adapter
     const structure = (/** @type {string} */ char) => adapter.structure(char, { signal: controller.signal })
     const request = query ? resolveReplacement(query, structure, { signal: controller.signal })
-      : resolveReplacementExpression(/** @type {import('../core/replacement-expression.js').Expression} */ (expression), structure, { signal: controller.signal })
+      : resolveReplacementExpression(/** @type {import('../core/replacement-expression.js').Expression} */ (nested), structure, { signal: controller.signal })
     request.then(result => {
       if (result === null || revision !== ticket || draft !== input || disabled() || options().adapter !== adapter) return
-      apply(result, null, t('ids.do.type', { text: write(result) }))
+      show(result, input)
     }).catch(() => { /* Leave the original input in place if the data cannot be read. */ })
       .finally(() => { if (resolution === controller) resolution = null })
   }
@@ -190,34 +195,46 @@ export function createEditor(options) {
     invalidateResolution()
     history.clear(); caret = null; hovered = null; note = ''; change = null; typing = false; run = false
     const read = parse(start, { open: true })
-    tree = read.tree ?? null; chosen = null; lone = false; inField = false; piece = ''
+    tree = read.tree ?? null; chosen = null; lone = false; inField = false; piece = ''; expression = ''
     // The text stays as given, so the slots a reader wrote stay written; a pasted ＋ for an empty
     // slot is written back as ⬚.
     draft = start.replaceAll('＋', '⬚')
     sync()
   }
-  /** @param {Part} next @param {Path | null} select @param {string} [written] */
-  function commit(next, select, written) {
+  /** @param {Part} next @param {Path | null} select @param {string} [written] @param {string} [kept] */
+  function commit(next, select, written, kept = '') {
     invalidateResolution()
     caret = null
     hovered = null
     tree = next; chosen = select; lone = false; inField = false; selectionVersion++; note = ''
     // An empty tree is an empty field, not an empty slot (⬚); a slot is written inside a node.
     // A draft the tree cannot read yet (it is not a description) is put back as it was typed.
-    if (!typing) draft = written ?? (next === null ? '' : writeDraft(next))
+    if (!typing || kept) draft = written ?? (next === null ? '' : writeDraft(next))
+    expression = kept
     const part = select ? partAt(next, select) : undefined
     piece = text(part)
     if (typeof part === 'string') lookup.read(lookupChar(part))
     readDescribed(select)
     sync()
   }
+  /** Show `next` as the result of `source`, keeping `source` in the field as an expression. The
+   * field edit that produced `source` is the history step; resolution only updates the tree.
+   * @param {Part} next @param {string} source */
+  function show(next, source) {
+    const valid = parse(write(next), { open: true })
+    if (valid.problem) { note = t(`ids.problem.${valid.problem}`); return false }
+    if (!sameTree(valid.tree, next)) { note = t('ids.problem.unwritable'); return false }
+    run = false
+    commit(next, null, source, source)
+    return true
+  }
   /**
    * A change to the tree, named for the history; a run of typing in the field is one step. `from` is
    * the state to put back: this one, or the text a caller is about to replace (see `edit`).
    * @param {Part} next @param {Path | null} select @param {string} label @param {{ destructive?: boolean, reorder?: { from: Path, to: Path }, swap?: { from: Path, to: Path } }} [how]
-   * @param {{ tree: Part, chosen: Path | null, draft: string }} [from]
+   * @param {EditorState} [from]
    */
-  function apply(next, select, label, { destructive = false, reorder, swap } = {}, from = { tree, chosen, draft }) {
+  function apply(next, select, label, { destructive = false, reorder, swap } = {}, from = { tree, chosen, draft, expression }) {
     // A description's text can only carry marks at its end; keep them there.
     next = normalizeMarks(next)
     const valid = parse(write(next), { open: true })
@@ -231,26 +248,26 @@ export function createEditor(options) {
   }
   function undo() {
     run = false
-    const label = history.undoLabel(), last = history.undo({ tree, chosen, draft })
+    const label = history.undoLabel(), last = history.undo({ tree, chosen, draft, expression })
     if (!last) return
     change = { id: ++changes, label: label ?? '', destructive: false, undone: true }
-    commit(last.tree, last.chosen, last.draft)
+    commit(last.tree, last.chosen, last.draft, last.expression)
   }
   function redo() {
     run = false
-    const label = history.redoLabel(), last = history.redo({ tree, chosen, draft })
+    const label = history.redoLabel(), last = history.redo({ tree, chosen, draft, expression })
     if (!last) return
     change = { id: ++changes, label: label ?? '', destructive: false }
-    commit(last.tree, last.chosen, last.draft)
+    commit(last.tree, last.chosen, last.draft, last.expression)
   }
 
   /**
    * The editor's state, to put back later with `restore`: the tree, the chosen part, the text in the
    * field, the part field and the history.
-   * @returns {{ tree: Part, chosen: Path | null, draft: string, piece: string, history: import('../core/history.js').HistoryState<{ tree: Part, chosen: Path | null, draft: string }> }}
+   * @returns {{ tree: Part, chosen: Path | null, draft: string, expression: string, piece: string, history: import('../core/history.js').HistoryState<EditorState> }}
    */
   function snapshot() {
-    return { tree, chosen, draft, piece, history: history.snapshot() }
+    return { tree, chosen, draft, expression, piece, history: history.snapshot() }
   }
   /** Put back a state from `snapshot`, as when a host switches between documents. @param {ReturnType<typeof snapshot>} state */
   function restore(state) {
@@ -258,7 +275,7 @@ export function createEditor(options) {
     caret = null
     hovered = null
     history.restore(state.history)
-    tree = state.tree ?? null; chosen = state.chosen ?? null; lone = false; inField = false; draft = state.draft; piece = state.piece
+    tree = state.tree ?? null; chosen = state.chosen ?? null; lone = false; inField = false; draft = state.draft; expression = state.expression ?? ''; piece = state.piece
     note = ''; typing = false; run = false; change = null
     const part = chosen ? partAt(tree, chosen) : undefined
     if (typeof part === 'string') lookup.read(lookupChar(part))
@@ -453,13 +470,22 @@ export function createEditor(options) {
       field.value = written
       field.setSelectionRange(map(from), map(field.selectionEnd ?? from))
     }
-    if (draft !== written) invalidateResolution()
+    if (draft !== written) { invalidateResolution(); expression = '' }
     // The step keeps what the field held before this input, including text the tree cannot read
     // yet, so Undo gives the previous draft back rather than the last tree it managed to read.
-    const from = { tree, chosen, draft }
+    const from = { tree, chosen, draft, expression }
     draft = written
     const found = parse(written, { open: true })
-    if (found.problem) { sync(); return }
+    if (found.problem) {
+      const label = t('ids.do.type', { text: written || '∅' })
+      typing = true
+      history.record(from, { merge: run, label })
+      run = true
+      change = { id: ++changes, label, destructive: false }
+      typing = false
+      sync()
+      return
+    }
     typing = true
     apply(found.tree, null, t('ids.do.type', { text: written || '∅' }), {}, from)
     typing = false
