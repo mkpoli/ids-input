@@ -120,7 +120,7 @@
   // What a share names: this page, or the published site for the desktop app, whose own address
   // opens nothing outside it.
   const shareFrom = DESKTOP ? new URL(SITE) : location
-  const FACE_KEYS = /** @type {const} */ (['sans', 'serif', 'regular', 'fangsong', 'pen-writing'])
+  const FACE_KEYS = /** @type {const} */ (['sans', 'serif', 'fangsong', 'regular', 'pen-writing'])
   const storedFace = load('font', 'sans')
   /** @type {'sans' | 'serif' | 'regular' | 'fangsong' | 'pen-writing'} */
   let face = $state(FACE_KEYS.includes(storedFace) ? storedFace : 'sans')
@@ -404,8 +404,8 @@
   const FONT_FACES = [
     { key: 'sans', style: 'sans', label: 'app.font.sans' },
     { key: 'serif', style: 'serif', label: 'app.font.serif' },
-    { key: 'regular', style: 'regular', label: 'app.font.regular' },
     { key: 'fangsong', style: 'fangsong', label: 'app.font.fangsong' },
+    { key: 'regular', style: 'regular', label: 'app.font.regular' },
     { key: 'pen-writing', style: 'pen-writing', label: 'app.font.pen-writing' },
   ]
   /** The export a face's sample draws from, as the chosen face's preview does: one named in `?composer=`, the build or Preferences, else the face's own. @param {typeof FONT_FACES[number]['key']} key */
