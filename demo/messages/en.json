@@ -872,5 +872,16 @@
   "strokes.error.char": "One character",
   "baishi.other.body": "None of these is zi.tools notation: a proposal the database does not use, and the drafts the guide replaced.",
   "baishi.heading.drafts": "Earlier drafts",
-  "baishi.drafts.variants": "D1 calls the identifiers region identifiers."
+  "baishi.drafts.variants": "D1 calls the identifiers region identifiers.",
+  "fontCompare.title": "Font comparison",
+  "fontCompare.lead": "Each character and description is drawn in all five faces.",
+  "fontCompare.setLabel": "Set",
+  "fontCompare.row": "Text",
+  "fontCompare.count": "{shown} of {total}",
+  "fontCompare.page": "Page {page} of {pages}",
+  "fontCompare.source": "Texts from Wikisource; examples from the workshop; unencoded-db records from its export.",
+  "fontCompare.set.qianziwen": "千字文",
+  "fontCompare.set.poems": "Classical poems",
+  "fontCompare.set.examples": "Examples",
+  "fontCompare.set.unencoded": "unencoded-db"
 }

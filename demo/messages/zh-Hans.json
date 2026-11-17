@@ -869,5 +869,16 @@
   "strokes.error.char": "只能输入一个字",
   "baishi.other.body": "以下均非zi.tools记法：包括数据库未采纳的提案，以及已被导论取代的草稿。",
   "baishi.heading.drafts": "早期草稿",
-  "baishi.drafts.variants": "D1将这些标识符称为地区标识符。"
+  "baishi.drafts.variants": "D1将这些标识符称为地区标识符。",
+  "fontCompare.title": "字体比较",
+  "fontCompare.lead": "每个字与描述都以五种字体并列。",
+  "fontCompare.setLabel": "字集",
+  "fontCompare.row": "文字",
+  "fontCompare.count": "共 {total} 行，显示 {shown} 行",
+  "fontCompare.page": "第 {page} / {pages} 页",
+  "fontCompare.source": "文本出自维基文库；示例出自工作坊；unencoded-db 为其导出。",
+  "fontCompare.set.qianziwen": "千字文",
+  "fontCompare.set.poems": "古诗",
+  "fontCompare.set.examples": "示例",
+  "fontCompare.set.unencoded": "unencoded-db"
 }

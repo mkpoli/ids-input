@@ -869,5 +869,16 @@
   "strokes.error.char": "一字だけ",
   "baishi.other.body": "これらはいずれもzi.toolsの記法ではありません。データベースで使用されていない提案と、ガイドによって置き換えられた草稿です。",
   "baishi.heading.drafts": "以前の草稿",
-  "baishi.drafts.variants": "D1ではこれらの識別子を地域識別子と呼んでいます。"
+  "baishi.drafts.variants": "D1ではこれらの識別子を地域識別子と呼んでいます。",
+  "fontCompare.title": "フォント比較",
+  "fontCompare.lead": "各文字と説明を五つの書体で並べます。",
+  "fontCompare.setLabel": "セット",
+  "fontCompare.row": "文字",
+  "fontCompare.count": "{total} 行中 {shown} 行",
+  "fontCompare.page": "{page} / {pages} ページ",
+  "fontCompare.source": "本文はウィキソース、例はワークショップ、unencoded-db はその書き出しです。",
+  "fontCompare.set.qianziwen": "千字文",
+  "fontCompare.set.poems": "古詩",
+  "fontCompare.set.examples": "例",
+  "fontCompare.set.unencoded": "unencoded-db"
 }

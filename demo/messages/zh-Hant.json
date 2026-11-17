@@ -869,5 +869,16 @@
   "strokes.error.char": "只能輸入一個字",
   "baishi.other.body": "以下皆非zi.tools採用的記法，包括資料庫未採用的提案，以及已被指南取代的草稿。",
   "baishi.heading.drafts": "早期草稿",
-  "baishi.drafts.variants": "D1將這些識別符稱為地區識別符。"
+  "baishi.drafts.variants": "D1將這些識別符稱為地區識別符。",
+  "fontCompare.title": "字體比較",
+  "fontCompare.lead": "每個字與描述都以五種字體並列。",
+  "fontCompare.setLabel": "字集",
+  "fontCompare.row": "文字",
+  "fontCompare.count": "共 {total} 行，顯示 {shown} 行",
+  "fontCompare.page": "第 {page} / {pages} 頁",
+  "fontCompare.source": "文本出自維基文庫；範例出自工作坊；unencoded-db 為其匯出。",
+  "fontCompare.set.qianziwen": "千字文",
+  "fontCompare.set.poems": "古詩",
+  "fontCompare.set.examples": "範例",
+  "fontCompare.set.unencoded": "unencoded-db"
 }
