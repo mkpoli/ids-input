@@ -94,6 +94,32 @@ describe('zi.tools replacement expressions', () => {
   it('preserves component variation selectors in the output', async () => {
     expect(await resolve('🔄林木火︀')).toBe('⿰木火︀')
   })
+  it('reads an occurrence index and a source region variant', async () => {
+    const parts = new Map(Object.entries({
+      喵: [{ text: '⿰口苗', regions: 'GHTV' }],
+      苗: [{ text: '⿱艹田', regions: 'GHTJKPV' }],
+      口: [{ text: '口', regions: 'GHTJKPV' }],
+      田: [{ text: '⿴囗十', regions: '' }],
+      艹: [{ text: '⿻一⿰丨丨', regions: 'GJ' }, { text: '⿰十十', regions: 'HTK' }],
+      十: [{ text: '⿻一丨', regions: 'GHTJKPV' }],
+    }))
+    const ask = async text => {
+      const query = replacementQuery(text)
+      if (!query) throw Error('Invalid test query')
+      const tree = await resolveReplacement(query, async char => parts.get(char) ?? [])
+      return tree === null ? null : write(tree)
+    }
+    expect(replacementQuery('🔄[1]喵H十喵')).toEqual({ source: '喵', target: '十', replacement: '喵', index: 1, variant: 'H' })
+    expect(replacementQuery('🔄喵H十喵')).toEqual({ source: '喵', target: '十', replacement: '喵', variant: 'H' })
+    expect(replacementQuery('🔄木H火')).toEqual({ source: '木', target: 'H', replacement: '火' })
+    expect(await ask('🔄[0]喵H十喵')).toBe('⿰口⿱⿰喵十田')
+    expect(await ask('🔄[1]喵H十喵')).toBe('⿰口⿱⿰十喵田')
+    const expression = replacementExpression('⿰氵🔄[1]喵H十喵')
+    const tree = expression && await resolveReplacementExpression(expression, async char => parts.get(char) ?? [])
+    expect(tree && write(tree)).toBe('⿰氵⿰口⿱⿰十喵田')
+    expect(replacementExpression('⿰氵🔄喵H十喵')).not.toBeNull()
+    expect(replacementExpression('⿰氵🔄木H火')).not.toBeNull()
+  })
   it('reads replacements inside an IDS or another replacement', async () => {
     const ask = async text => {
       const expression = replacementExpression(text)
