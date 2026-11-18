@@ -449,6 +449,13 @@ export function focusOf(quote) {
 /** Every quotation as the build looks it up: its file, the line of its row and its text. @returns {[string, number, string][]} */
 export const quotations = () => cardsOf().flatMap(card => card.quotes.map(quote => /** @type {[string, number, string]} */ ([quote.file ?? 'ids_lv0.txt', quote.row, quote.text])))
 
+// 宀 in Noto Sans CJK Regular, SC CID 15443 and JP CID 15442.
+// Centre each 1000-em outline vertically; retain its native width and stroke proportions.
+export const ROOF_FORMS = new Map([
+  ['⿱丶.冖', 'M408 335C436 375 466 428 479 464L557 432C543 398 513 346 483 308ZM88 464V692H167V536H830V692H913V464Z'],
+  ['⿱丶s冖', 'M87 466V705H164V538H833V704H913V466H538V295H457V466Z'],
+])
+
 // Stroke glyphs for the rounded and angular variants in component tooltips (guide §5.3).
 export const TURN_GLYPHS = new Map([['#(SHw)', '㇄'], ['#(SH)', '𠃊']])
 
