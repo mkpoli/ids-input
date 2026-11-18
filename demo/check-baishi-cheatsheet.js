@@ -89,11 +89,11 @@ try {
       assert.equal(await drawings.count(), 2)
       assert.notEqual(await drawings.first().getAttribute('aria-label'), await drawings.last().getAttribute('aria-label'))
       for (const [i, written] of ['一.', '一t'].entries()) {
-        await entries.locator('.token.part').filter({ hasText: new RegExp('^' + written.replace('.', '\\.') + '$') }).focus()
+        await entries.locator('.token.part').filter({ hasText: new RegExp('^' + written.replace('.', '\\.') + '$') }).hover()
         assert.equal(await drawings.nth(i).locator('.part.lit title').textContent(), written)
         assert.equal(await drawings.nth(1 - i).locator('.part.lit,.part.dim').count(), 0)
       }
-      await token.focus()
+      await token.hover()
       // The entries of the component's row stand side by side, the font's glyph over the entry it is drawn for.
       const feet = await tip.locator('.variants li').evaluateAll(items => items.map(item => Math.round(item.getBoundingClientRect().bottom)))
       assert.equal(feet[0], feet[1], `${scheme}: the entries stand side by side`)
