@@ -251,9 +251,8 @@
         const reference = char === '宀' ? ROOF_FORMS.get(body) : char === '八' || char === '乂' ? NA_FORMS.get(body) : undefined
         const documented = variant.ids.map(id => FORMS[char + id]).find(Boolean)
         const ink = reference || documented || (variant.native ? glyph : stroke ? GLYPHS[stroke].join('') : '')
-        // The 㠯(x) walk collapses to a square. 弓(z)'s quoted final stroke and
-        // the guide's 𤓷 example disagree. Neither diagram identifies the form.
-        const omitChain = (char === '㠯' && variant.ids.includes('x')) || (char === '弓' && variant.ids.includes('z'))
+        // The 㠯(x) walk collapses to a square, losing the two enclosed spaces.
+        const omitChain = char === '㠯' && variant.ids.includes('x')
         const line = !tile && !ink && !omitChain && body.startsWith('#(') ? chainPath(body) : null
         return { ...variant, ink, tile, line }
       }), more: all.length - variants.length,
@@ -433,7 +432,17 @@
           <li><span class="what">{t('cheatsheet.source.data')}</span> <a href={SOURCE.repository} target="_blank" rel="noreferrer">yi-bai/ids</a> <a href={`${SOURCE.repository}/tree/${SOURCE.commit}`} target="_blank" rel="noreferrer"><code>{SOURCE.commit.slice(0, 8)}</code></a> · {SOURCE.date} · MIT</li>
           <li><span class="what">{t('cheatsheet.source.notation')}</span> <b class="key">{GRAMMAR.key}</b> <a href={GRAMMAR.url} target="_blank" rel="noreferrer" lang="zh-Hans">{GRAMMAR.title}</a> · {GRAMMAR.date} · {t('cheatsheet.source.notationBy')} <span class="weak">{t('cheatsheet.source.notationNote')}</span></li>
           <li><span class="what">{t('cheatsheet.source.grammar')}</span> <a href={sectionHref('spec', 'row')}>{t('baishi.title')}</a> · <a href={`./baishi-railroad.html?lang=${locale}`}>{t('railroad.title')}</a> · <code>data/baishi-ids.ebnf</code></li>
-          <li><span class="what">{t('cheatsheet.source.outlines')}</span> <a href="https://github.com/notofonts/noto-cjk" target="_blank" rel="noreferrer">Noto Sans CJK</a> · <a href="https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project" target="_blank" rel="noreferrer">Plangothic</a> · <a href="https://github.com/mkpoli/han-compose" target="_blank" rel="noreferrer">han-compose</a> <code>{outlines.composer.commit}</code> · <a href="https://glyphwiki.org/wiki/jmj-034221@1">𡮂 JMJ-034221</a> · <a href="https://glyphwiki.org/wiki/u4d22-var-001@1">䴢 (u)</a> · <a href="https://github.com/NightFurySL2001/bai-ids/blob/0ca5ed48f51821d4d54246196f1f5f38c9d6bd6a/fonts/example.woff2">父 (qq222), 八d, 丰..p</a> © 2024–2025 -PT_AxH_RV- · <a href={exampleLicence}>SIL OFL 1.1</a> · <a href="https://glyphwiki.org/wiki/u4e42-j@2">乂J (GlyphWiki)</a> · <a href="https://glyphwiki.org/wiki/u24f44-g@3">𤽄 (.)</a> · <a href="https://github.com/yi-bai/iwds/tree/8302302d615ff1c1f60ae335b118b10060be0ed4">IWDS 128, 316</a></li>
+          <li><span class="what">{t('cheatsheet.source.outlines')}</span> <a href="https://github.com/notofonts/noto-cjk" target="_blank" rel="noreferrer">Noto Sans CJK</a> · <a href="https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project" target="_blank" rel="noreferrer">Plangothic</a> · <a href="https://github.com/mkpoli/han-compose" target="_blank" rel="noreferrer">han-compose</a> <code>{outlines.composer.commit}</code> · <a href="https://glyphwiki.org/wiki/jmj-034221@1">𡮂 JMJ-034221</a> · <a href="https://glyphwiki.org/wiki/u4d22-var-001@1">䴢 (u)</a> · <a href="https://github.com/NightFurySL2001/bai-ids/blob/0ca5ed48f51821d4d54246196f1f5f38c9d6bd6a/fonts/example.woff2">父 (qq222), 八d, 丰..p</a> © 2024–2025 -PT_AxH_RV- · <a href={exampleLicence}>SIL OFL 1.1</a> · <a href="https://glyphwiki.org/wiki/u4e42-j@2">乂J (GlyphWiki)</a> · {#each [
+            ['𤽄 (.)', 'u24f44-g@3'],
+            ['木 (y)', 'u2097d-j@2'],
+            ['門 (s)', 'u9580-05-var-002@1'],
+            ['亥 (V)', 'u4ea5-v@3'],
+            ['鹿 (s.h)', 'u9e7f-var-003@2'],
+            ['鹿 (sth)', 'u9e7f-v01@1'],
+            ['弓 (z)', 'u5f16-ue0102@2'],
+            ['ユ (t)', 'u4e11-g01@1'],
+            ['丰 (ptp)', 'u90a6-ue0102@12']
+          ] as [label, source], i}{i ? ' · ' : ''}<a href={'https://glyphwiki.org/wiki/' + source}>{label}</a>{/each} · <a href="https://github.com/yi-bai/iwds/tree/8302302d615ff1c1f60ae335b118b10060be0ed4">IWDS 128, 316</a></li>
           <li><a href="https://glyphwiki.org/wiki/aj1-13763">工 (q4082)</a> · {t('cheatsheet.source.gong')}</li>
         </ul>
       </footer>

@@ -13,6 +13,7 @@ import base64
 import gzip
 import json
 import struct
+import subprocess
 import sys
 from pathlib import Path
 
@@ -72,7 +73,7 @@ WITNESSES = [
 UCV_FORMS = [('口q3162', '316', 2, 'cdp-89cc'), ('㠯T', '128', 2, 'u382f-t'), ('㠯q1283', '128', 3, 'u382f-ja')]
 
 # Isolated colored parts in the cheatsheet's cited 耳, 久 and 亡 cards.
-CARD_FORMS = [('干t', '耳', [0, 3, 5]), ('スn', '久', [2, 3, 1]), ('𠃊w', '亡', [2])]
+CARD_FORMS = [('十.t', '耳', [3, 5]), ('干t', '耳', [0, 3, 5]), ('スn', '久', [2, 3, 1]), ('𠃊w', '亡', [2])]
 
 
 # GlyphWiki u24f44-g@3, with its u767d-07@4 component. Generated with
@@ -117,6 +118,11 @@ def main():
     faces['I26'] = TTFont(fetch(GUIDE[0], cache / 'bai-ids-example.woff2', GUIDE[1]))
     paths = {key: outline(faces[face], char, indices) for key, face, char, indices in WITNESSES}
     paths['𤽄.'] = STRAIGHT_STEM
+    kage = subprocess.check_output(['node', ROOT / 'scripts/build_baishi_kage.mjs'], text=True)
+    for key, path in json.loads(kage).items():
+        cut = RecordingPen()
+        parse_path(path, cut)
+        paths[key] = fitted(cut, 1)
     entries = {entry['id']: entry for entry in json.loads((ROOT / 'data/ucv.json').read_text())['entries']}
     records = json.loads(gzip.decompress((ROOT / 'data/ucv-outlines-sans.json.gz').read_bytes()))['records']
     card_glyphs = json.loads((ROOT / 'demo/lib/baishi-cheatsheet-outlines.json').read_text())['glyphs']

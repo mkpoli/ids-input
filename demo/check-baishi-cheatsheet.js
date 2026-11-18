@@ -93,6 +93,7 @@ try {
       // A source-specific form gets its own drawing; unsupported forms keep the source notation.
       for (const [written, identifier, ink] of /** @type {const} */ ([
         ['口.', 'q3162', true], ['七.', '(t)', true], ['㠯.', '(T)', true],
+        ['弓.', '(z)', true], ['門.', '(s)', true], ['十.', '(.t)', true],
         ['㠯.', '(x)', false], ['干t', '(t)', true], ['𤽄V', '(.)', true],
       ])) {
         const part = page.locator('.token.part').filter({ hasText: new RegExp('^' + written.replace('.', '\\.') + '$') }).first()
