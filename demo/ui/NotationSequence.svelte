@@ -134,7 +134,7 @@
 </script>
 
 <span class="sequence" class:large lang="ja" role="group" aria-label={label} bind:this={root} style:--scope-height={`${scopeHeight}px`}>{#each chunks as chunk (chunk.key)}<span class="chunk">{#each chunk.items as { token, index } (index)}<button
-  type="button" data-token={index} class={['token', token.kind, token.slot !== null && `s${token.slot}`]} class:active={active === index}
+  type="button" data-token={index} class={['token', token.kind, token.slot !== null && `s${token.slot % 4}`]} class:active={active === index}
   class:related={active !== index && lit !== null && token.slot !== null && pointed?.entry === token.entry && lit.includes(token.slot)}
   tabindex={index === Math.min(stop, tokens.length - 1) ? 0 : -1} aria-describedby={active === index ? tip : undefined}
   onpointerenter={event => onpoint?.(index, /** @type {HTMLElement} */ (event.currentTarget), 'hover')} onpointerleave={() => leave(index)}

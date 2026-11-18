@@ -101,14 +101,13 @@ describe('the cheatsheet\'s cards', () => {
       expect(focusOf(quote)[0][0], id).toBe([...quote.text].lastIndexOf('\t'))
     }
   })
-  it('colour as many parts as an entry writes, four at most', () => {
+  it('map every selectable part to a drawing layer', () => {
     for (const card of cards) for (const quote of card.quotes) {
       const tokens = tokenise(quote.text, { strokes: quote.strokes })
       for (const [entry, glyph] of quote.glyphs.entries()) {
         if (!glyph || glyph === 'composed' || !glyph.parts) continue
         const slots = new Set(tokens.filter(token => token.entry === entry && token.leaf !== undefined).map(token => quote.slots?.[token.leaf] ?? token.leaf))
-        expect([...slots].sort(), `${card.id} ${quote.text}`).toEqual(glyph.parts.map((_, slot) => slot))
-        expect(glyph.parts.length).toBeLessThanOrEqual(4)
+        expect([...slots].sort((a, b) => a - b), `${card.id} ${quote.text}`).toEqual(glyph.parts.map((_, slot) => slot))
         // A chain's joins are one for each stroke.
         if (glyph.joins) expect(glyph.joins.length).toBe(tokens.filter(token => token.entry === entry && token.kind === 'stroke').length)
       }

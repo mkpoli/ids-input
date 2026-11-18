@@ -287,15 +287,15 @@
     {#if tile.ink}<path class="ink" d={tile.ink} />{/if}
     <g class="rest">{#each tile.rest as piece, at (at)}{@render cut(piece)}{/each}</g>
     {#each tile.layers as layer (layer.slot)}
-      <g class={['part', `s${layer.slot}`]} class:dim={lights !== null && !lights.includes(layer.slot)} class:lit={lights !== null && lights.includes(layer.slot)}>
+      <g class={['part', `s${layer.slot % 4}`]} class:dim={lights !== null && !lights.includes(layer.slot)} class:lit={lights !== null && lights.includes(layer.slot)}>
         <title>{layer.names}</title>{#each layer.cuts as piece, at (at)}{@render cut(piece)}{/each}
       </g>
     {/each}
     {#if tile.cross}{#each ['halo', ''] as halo (halo)}<path class={['cross', halo]} d={`M${tile.cross[0] - 38 * size} ${tile.cross[1] - 38 * size}l${76 * size} ${76 * size}m0 ${-76 * size}l${-76 * size} ${76 * size}`} />{/each}{/if}
     {#each tile.marks as mark (mark.order)}
-      {#if mark.broken}<rect class={['join', `s${mark.slot}`]} x={mark.x - 30 * size} y={mark.y - 30 * size} width={60 * size} height={60 * size} />
-      {:else}<circle class={['join', `s${mark.slot}`]} cx={mark.x} cy={mark.y} r={33 * size} />{/if}
-      {#if mark.closed}<circle class={['closing', `s${mark.slot}`]} cx={mark.x} cy={mark.y} r={13 * size} />{/if}
+      {#if mark.broken}<rect class={['join', `s${mark.slot % 4}`]} x={mark.x - 30 * size} y={mark.y - 30 * size} width={60 * size} height={60 * size} />
+      {:else}<circle class={['join', `s${mark.slot % 4}`]} cx={mark.x} cy={mark.y} r={33 * size} />{/if}
+      {#if mark.closed}<circle class={['closing', `s${mark.slot % 4}`]} cx={mark.x} cy={mark.y} r={13 * size} />{/if}
       {#if numbered}<text class="order" x={mark.x} y={mark.y - 52}>{mark.order}</text>{/if}
     {/each}
   </svg>
