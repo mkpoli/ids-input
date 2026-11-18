@@ -103,6 +103,18 @@ try {
         assert.equal(await entry.locator('svg').count(), Number(ink), `${scheme}: ${written} ${identifier} evidence`)
         await page.mouse.move(0, 0)
       }
+      // All eleven 龜 leaves select their own ink, including each stroke of the chain.
+      const turtle = page.locator('article.card').filter({ has: page.locator('.char', { hasText: /^龜$/ }) })
+      const leaves = turtle.locator('.token:is(.part,.stroke)')
+      assert.equal(await leaves.count(), 11)
+      for (let i = 0; i < await leaves.count(); i++) {
+        await leaves.nth(i).focus()
+        const layers = turtle.locator('.tile .part')
+        assert.equal(await layers.count(), 11)
+        assert.ok(await layers.nth(i).evaluate(el => el.classList.contains('lit')))
+        assert.equal(await turtle.locator('.tile .part.dim').count(), 10)
+      }
+      await page.keyboard.press('Escape')
       // A press pins the tooltip: it stays when the pointer leaves, and goes with a press elsewhere.
       await token.click()
       await page.mouse.move(0, 0)
