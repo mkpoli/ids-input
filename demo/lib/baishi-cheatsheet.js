@@ -15,7 +15,7 @@
 // 土t in 地, 凵y in 世, whose own entries carry those tags. An entry for a form no outline has is
 // drawn by the workshop's composer from the sequence, without its tags, and marked as composed.
 // 𱤻 stands for ⿾止 as the guide gives it (§2.1), though its row's default entry spells it otherwise.
-import variantGlyphs from './baishi-variant-glyphs.json' with { type: 'json' }
+import tenGlyphs from './baishi-ten-glyphs.json' with { type: 'json' }
 import { chainStrokes } from '../../src/core/chain-shape.js'
 
 // JMJ-034221 (GlyphWiki koseki-085450@6), drawn in Gothic at 10 KAGE units.
@@ -148,8 +148,7 @@ export const SHEET = [
   { id: 'row', label: 'rows', rules: ['row', 'primary group', 'alternative group'], cards: [
     { id: 'row-entries', anchors: ['primary-group', 'entry-separator'], label: 'entries', hint: 'entries', quotes: [{ char: '十', text: '十\t⿻丨一.(.);⿻丨一t(.t)', row: 1346, glyphs: [
       { char: '十', parts: [[1], [0]] },
-      // The documented 耳 crop contains the rising bar followed by the vertical.
-      { char: '十', contours: variantGlyphs['十.t'].split(/(?=M)/u), parts: [[1], [0]] },
+      { char: '十', contours: tenGlyphs.raisedCross, parts: [[0], [1]] },
     ], focus: [';'] }] },
     { id: 'row-alternative', anchors: ['alternative-group'], label: 'alternative', hint: 'alternative', quotes: [{ char: '三', text: '三\t⿱一.二.\t⿱二.一.', row: 10, glyphs: [{ char: '三', parts: [[0], [1, 2]] }, { char: '三', parts: [[0, 1], [2]] }], focus: [[7, 8]] }] },
   ] },
@@ -273,6 +272,18 @@ export const SHEET = [
       [[4, 127.5, 678.8, 877, 745.2]]] }], focus: ['[1]'] }] },
   ] },
   { id: 'worked', label: 'worked', cards: [
+    { id: 'worked-noon', hint: 'workedNoon', quotes: [
+      { char: '午', text: '午\t⿱𠂉十.(.);⿱𠂉十.t(t)', row: 1353, glyphs: [
+        { char: '午', contours: tenGlyphs.flatNoon, parts: [[0, 1], [2, 3]] },
+        { char: '午', contours: tenGlyphs.risingNoon, parts: [[0, 1], [2, 3]] },
+      ], focus: ['十.t'] },
+      { char: '𭬁', text: '⿰木d⿱⿰午t午.心', row: 83627, glyphs: [
+        { char: '𭬁', contours: tenGlyphs.pairedNoons, parts: [[0], [1], [2], [3]] },
+      ], focus: ['午t', '午.'] },
+      { char: '戢', text: '⿹⿽戈口.⿽十.t⿰丨二.(.)', row: 5155, glyphs: [
+        { char: '戢', contours: tenGlyphs.halberd, parts: [[1, 7, 8, 9], [0], [5, 6], [2], [3, 4]] },
+      ], focus: ['十.t'] },
+    ] },
     { id: 'worked-shi', hint: 'workedShi', quotes: [
       { char: '世', text: '⿻⿺𠃊.凵y一.(.)', row: 23, glyphs: [{ char: '世', parts: [[3, 1], [4, 2, 5], [0]] }], focus: ['凵y'] },
       { char: '凵', text: '#(丨b一-丨)(y)', row: 1014, strokes: true, glyphs: [{ char: '世', parts: [[4], [2], [5]], rest: [0, 1, 3], joins: [[500, 78], [500, 607], [770, 607]] }], focus: ['(y)'] },

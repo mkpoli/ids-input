@@ -151,7 +151,7 @@ describe('the links between the cheatsheet and the specification', () => {
     const page = read('../demo/BaishiCheatsheet.svelte')
     // Sections, groups and cards take their ids from the sheet: the page writes no anchor of its own but the worked examples' and the sources'.
     expect([...page.matchAll(/\bid="([a-z-]+)"/g)].map(match => match[1]).sort()).toEqual(['cheatsheet-tip', 'sources'])
-    for (const expression of ['id={section.id}', 'id={group.id}', 'id={item.anchors?.[0]}', '<span {id} class="anchor">']) expect(page).toContain(expression)
+    for (const expression of ['id={section.id}', 'id={group.id}', 'id={item.anchors?.[0] ??', '<span {id} class="anchor">']) expect(page).toContain(expression)
     expect(page).toContain("sectionHref('spec', section.id)")
     expect(page).toContain("sectionHref('spec', group.id)")
   })

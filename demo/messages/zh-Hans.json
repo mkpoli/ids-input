@@ -712,6 +712,7 @@
   "cheatsheet.hint.segment": "b：「一」穿过「㇉」的第二个竖笔段（I26 §6.3）。",
   "cheatsheet.hint.reverse2": "竖线之后为两部分角色互换后的相同描述。",
   "cheatsheet.hint.space": "[n]将第二部分置于第一部分的第n号包围空间内，编号从0起算。[0]一律不写（I26 §6.6）。",
+  "cheatsheet.hint.workedNoon": "𭬁 中左边的午t 用提，右边的午用平横。戢 中十.t 的交点更靠右下。",
   "cheatsheet.hint.workedShi": "「世」中的凵y是「凵」的(y)条目，写作三笔。",
   "cheatsheet.hint.workedMu": "「⿻」内套「⿴」中的笔画链。第1笔「𠃊」与第0笔「𠃌」相交。",
   "cheatsheet.hint.workedYa": "两条笔画链并排夹于两「一」之间。",
