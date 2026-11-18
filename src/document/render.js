@@ -3,9 +3,11 @@
 // for each operator child and local geometry for each component; this module composes those with the
 // authored layer transforms, applies them to the geometry, and reports what it could not evaluate.
 // Compositing (the ㇯ subtraction and the union of operators) belongs to the consumer of the pieces.
-import { TransformError, chainIsAffine, affineForChain, transformPieces } from './transform.js'
+import { TransformError, chainIsAffine, affineForChain, invertAffine, multiplyAffine, transformPieces } from './transform.js'
 import { applyGeometryEdits } from './geometry-edit.js'
 import { findLayer } from './model.js'
+import { keepStrokeWidth } from './stroke-width.js'
+import { layerFrames } from './frames.js'
 
 /** @typedef {import('./model.js').Document} Document */
 /** @typedef {import('./model.js').Node} Node */
@@ -120,15 +122,16 @@ export function renderLayers(document, source, { tolerance = 0.1 } = {}) {
  * Build the scoped drawing for compositing: each component keeps its positive and cut pieces apart,
  * and each operator keeps its children. Pieces are already transformed. `source` is the same one
  * `renderLayers` takes. A missing piece or unsupported transform makes the tree incomplete.
- * @param {Document} document @param {LayerSource} source @param {{ tolerance?: number }} [options] @returns {ScopeTree}
+ * @param {Document} document @param {LayerSource} source @param {{ tolerance?: number, stroke?: number[] | null }} [options] @returns {ScopeTree}
  */
-export function renderScopes(document, source, { tolerance = 0.1 } = {}) {
+export function renderScopes(document, source, { tolerance = 0.1, stroke } = {}) {
+  const keepWidth = stroke?.length === 2 && stroke.every(width => Number.isFinite(width) && width > 0) ? stroke : null
   /** @type {Set<string>} */
   const seen = new Set()
   /** @type {LayerIssue[]} */
   const issues = []
-  /** @param {Node} node @param {Chain} parentChain @returns {Scope | null} */
-  const visit = (node, parentChain) => {
+  /** @param {Node} node @param {Chain} parentChain @param {Chain} placementChain @returns {Scope | null} */
+  const visit = (node, parentChain, placementChain) => {
     const chain = [...(node.transform ?? []), ...parentChain]
     if (node.kind === 'slot') return { kind: 'slot', node: node.id }
     if (node.kind === 'component') {
@@ -143,7 +146,12 @@ export function renderScopes(document, source, { tolerance = 0.1 } = {}) {
         return null
       }
       try {
-        const transformed = transformPieces(geometry.pieces, chain, { tolerance })
+        const base = keepWidth ? affineForChain(placementChain) : null
+        const inverse = base ? invertAffine(base) : null
+        const full = inverse ? affineForChain(chain) : null
+        const kept = full && inverse && base && keepWidth
+          ? keepStrokeWidth(geometry.pieces, base, multiplyAffine(full, inverse), keepWidth) : null
+        const transformed = kept ?? transformPieces(geometry.pieces, chain, { tolerance })
         /** @type {ComponentScope} */
         const scope = { kind: 'component', node: node.id, positive: [], negative: [] }
         if (node.fill) scope.fill = node.fill
@@ -155,7 +163,7 @@ export function renderScopes(document, source, { tolerance = 0.1 } = {}) {
       }
     }
     if (node.kind === 'group') {
-      const child = visit(node.child, chain)
+      const child = visit(node.child, chain, placementChain)
       return child ? { kind: 'group', node: node.id, child } : null
     }
     /** @type {Scope[]} */
@@ -172,14 +180,23 @@ export function renderScopes(document, source, { tolerance = 0.1 } = {}) {
         children.push({ kind: 'slot', node: child.id })
         return
       }
-      const childScope = visit(child, [{ type: 'affine', matrix: placement }, ...chain])
+      const edge = /** @type {import('./model.js').Affine} */ ({ type: 'affine', matrix: placement })
+      const childScope = visit(child, [edge, ...chain], keepWidth ? [edge, ...placementChain] : [])
       children.push(childScope ?? { kind: 'slot', node: child.id })
     })
     return { kind: 'operator', node: node.id, op: node.op, children }
   }
-  const root = visit(document.root, []) ?? { kind: 'slot', node: document.root.id }
+  const root = visit(document.root, [], []) ?? { kind: 'slot', node: document.root.id }
   missingEditTargets(document, seen, issues)
   return { root, complete: issues.length === 0, issues, leafFrames: new Map() }
+}
+
+/** @param {number[] | null} [stroke] @returns {{ layerFrames: typeof layerFrames, renderScopes: typeof renderScopes }} */
+export function documentRenderer(stroke) {
+  return {
+    layerFrames,
+    renderScopes: (document, source, options) => renderScopes(document, source, { ...options, stroke }),
+  }
 }
 
 export { chainIsAffine, affineForChain }

@@ -12,7 +12,7 @@
   import { askDrawable, EMOJI_CUT_MATRIX, FACE, STROKE, badge, emojiPlace, emojiTransform, placeholder, roughLayout, runPreview } from '../core/preview.js'
   import { documentView } from '@han-compose/composer/document-view'
   import { affineForChain, applyAffine, boxCorners, findLayer, invertAffine, layerAtPath, multiplyAffine, pathOfLayer, scopesMarkup } from '../document/index.js'
-  import { documentForFace, layerFrames, renderScopes } from '../document/index.js'
+  import { documentForFace, documentRenderer } from '../document/index.js'
   import { translator } from './i18n.js'
   /** @typedef {import('../document/frames.js').LayerFrame} LayerFrame */
   /** @typedef {import('../document/model.js').Document} LocalDocument */
@@ -32,10 +32,10 @@
   /** @typedef {import('../document/session.js').DocumentSession} DocumentSession */
   /** @typedef {import('../document/render.js').ScopeTree} ScopeTree */
   /**
-   * @type {{ adapter: IdsAdapter, tree: Part, chosen?: Path | null, messages?: Record<string, string>, locale?: string, small?: boolean, notes?: boolean, delay?: number, detail?: string, detailContent?: import('svelte').Snippet, drawing?: Drawing | null, document?: Document | null, session?: DocumentSession | null, version?: number, face?: import('../document/model.js').DocumentFace, scopes?: ScopeTree | null, slots?: number[][], emoji?: NonNullable<Drawing['emoji']> | null, cut?: string | null, cutLeaf?: number | null, step?: 'idle' | 'loading' | 'composed' | 'final' | 'failed' | 'capped' | 'unavailable', editable?: boolean, onchoose?: ((path: number[]) => void) | null, onedit?: (() => void) | null }}
+   * @type {{ adapter: IdsAdapter, tree: Part, chosen?: Path | null, messages?: Record<string, string>, locale?: string, small?: boolean, notes?: boolean, delay?: number, detail?: string, detailContent?: import('svelte').Snippet, drawing?: Drawing | null, document?: Document | null, session?: DocumentSession | null, version?: number, face?: import('../document/model.js').DocumentFace, preserveStroke?: boolean, scopes?: ScopeTree | null, slots?: number[][], emoji?: NonNullable<Drawing['emoji']> | null, cut?: string | null, cutLeaf?: number | null, step?: 'idle' | 'loading' | 'composed' | 'final' | 'failed' | 'capped' | 'unavailable', editable?: boolean, onchoose?: ((path: number[]) => void) | null, onedit?: (() => void) | null }}
    */
   let { adapter, tree, chosen = null, messages, locale = 'en', small = true, notes = true, delay = 150, detail = '', detailContent, drawing = $bindable(null),
-    document = null, session = null, version = 0, face, scopes = $bindable(null), slots = $bindable(/** @type {number[][]} */ ([])), emoji = $bindable(null), cut = $bindable(null), cutLeaf = $bindable(null), step = $bindable('idle'), editable = false, onchoose = null, onedit = null } = $props()
+    document = null, session = null, version = 0, face, preserveStroke = undefined, scopes = $bindable(null), slots = $bindable(/** @type {number[][]} */ ([])), emoji = $bindable(null), cut = $bindable(null), cutLeaf = $bindable(null), step = $bindable('idle'), editable = false, onchoose = null, onedit = null } = $props()
   const t = $derived(translator(messages, locale))
 
   const uid = $props.id()
@@ -98,8 +98,9 @@
   const view = $derived.by(() => {
     const drawn = shown?.drawn
     if (!localDoc || !drawn || !sketched || sketched.text !== sequence) return null
+    const stroke = (preserveStroke ?? face === 'sans') && !drawn.faceFallback ? drawn.stroke : null
     return /** @type {View} */ (/** @type {unknown} */ (documentView(/** @type {LocalDocument} */ (localDoc), drawn, sketched.leaves, {
-      renderer: { layerFrames, renderScopes },
+      renderer: documentRenderer(stroke),
     })))
   })
   const adjustNote = $derived(editable && step === 'composed' && shown?.drawn && !view?.complete ? t('ids.adjust.unavailable') : '')
