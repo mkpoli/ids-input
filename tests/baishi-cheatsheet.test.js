@@ -5,7 +5,7 @@ import { COMPOSER_BASE } from '../demo/lib/composer.js'
 import { LOCALES, appMessages } from '../demo/lib/locales.js'
 import { readGrammar } from '../demo/lib/railroad.js'
 import {
-  GROUP_LABELS, SHEET, SOURCE, STROKE_LETTERS, anchorsOf, bareOf, cardsOf, componentsWritten, composedDrawn, contoursOf, entriesOf, focusOf, glyphsDrawn, idsOf, kindOf, linkedOf, quotations, tokenise,
+  GROUP_LABELS, NA_FORMS, SHEET, SOURCE, STROKE_LETTERS, anchorsOf, bareOf, cardsOf, componentsWritten, composedDrawn, contoursOf, entriesOf, focusOf, glyphsDrawn, idsOf, kindOf, linkedOf, quotations, tokenise, variantBody,
 } from '../demo/lib/baishi-cheatsheet.js'
 import { CHEATSHEET_SECTIONS, SECTIONS, sectionHref } from '../demo/lib/baishi-sections.js'
 
@@ -174,6 +174,14 @@ describe('the prepared outlines', () => {
   })
   it('draw a composed sequence part by part', () => {
     for (const [sequence, parts] of Object.entries(outlines.composed)) expect(parts.length, sequence).toBe([...sequence].filter(char => !/[⿰-⿿㇯]/u.test(char)).length)
+  })
+  it('keeps the plain, raised and dotted forms of 八 and 乂 distinct', () => {
+    for (const char of ['八', '乂']) {
+      const bodies = entriesOf(char + '\t' + outlines.rows[char]).map(variantBody)
+      const paths = bodies.map(body => NA_FORMS.get(body))
+      expect(paths.every(path => path?.startsWith('M'))).toBe(true)
+      expect(new Set(paths).size).toBe(3)
+    }
   })
   it('keep a written component\'s outline and row only for components the cards write', () => {
     const written = new Set(componentsWritten())

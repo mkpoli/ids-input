@@ -8,7 +8,7 @@ import { STROKE_CHAINS } from '@han-compose/composer/tree'
 /** A stroke letter as a step of the pen, y down. H 横, S 竖, P 撇, N 捺, D 点, T 提, J 提捺, Z leftward,
  * W 弯; Qa to Qd the four quarter circles, clockwise from the upper right. */
 const STEP = /** @type {Record<string, [number, number]>} */ ({
-  H: [1, 0], S: [0, 1], P: [-0.55, 0.9], N: [0.7, 0.8], D: [0.3, 0.4], T: [0.55, -0.3], J: [0.9, 0.45], Z: [-1, 0], W: [0.12, 1],
+  H: [1, 0], S: [0, 1], P: [-0.55, 0.9], N: [0.7, 0.8], D: [0.3, 0.4], T: [0.55, -0.3], Z: [-1, 0], W: [0.12, 1],
   Qa: [0.5, 0.5], Qb: [-0.5, 0.5], Qc: [-0.5, -0.5], Qd: [0.5, -0.5],
 })
 /** Where a quarter circle bends, as a share of its step: it leaves along one axis and arrives
@@ -47,6 +47,12 @@ function steps(letters) {
         [1 - radius, 0])
       last = 'Hw'
       at += 2
+      continue
+    }
+    // ㇝ (提捺): lift toward the right before sweeping down into the na.
+    if (one === 'J') {
+      out.push([0.28, -0.12], [0.62, 0.57, 0.13, 0.45])
+      last = one
       continue
     }
     if (one === 'g') { if (HOOK[last]) out.push(HOOK[last]); continue }
