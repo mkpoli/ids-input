@@ -241,7 +241,9 @@
     const all = char ? variantsOf(char, token.stretches[1]?.text) : []
     const glyph = char && GLYPHS[char] ? GLYPHS[char].join('') : ''
     // Six entries at most, in the row's order: the one named and the one the font draws are always among them.
-    const kept = new Set([...all.filter(variant => variant.named || variant.font), ...all].slice(0, 6))
+    /** @param {typeof all[number]} variant */
+    const preferred = variant => variant.named || variant.font
+    const kept = new Set([...all.filter(preferred), ...all.filter(variant => !preferred(variant))].slice(0, 6))
     const variants = all.filter(variant => kept.has(variant))
     return { token, ...describe(token), char, glyph: all.length ? '' : glyph,
       variants: variants.map(variant => {
