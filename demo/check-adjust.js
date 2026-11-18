@@ -161,6 +161,33 @@ try {
     assert.ok(Math.abs(snapped.degrees) > 30, 'dragging the rotate handle turns the part')
     assert.ok(Math.abs(snapped.degrees / 15 - Math.round(snapped.degrees / 15)) < 0.01, `Shift snaps the turn to 15° (got ${snapped.degrees}°)`)
     assert.ok(Math.abs(snapped.shear) < 1e-3, 'the handle turn keeps the part\'s shape')
+    const originalFace = page.locator('.font-choice:has(.aa.sans)')
+    const serifFace = page.locator('.font-choice:has(.aa.serif)')
+    const drawing = page.locator('.ids-preview-large svg[role="application"]')
+    async function switchFace() {
+      await serifFace.click()
+      await drawing.waitFor({ timeout: 60000 })
+      await originalFace.click()
+      await drawing.waitFor({ timeout: 60000 })
+    }
+    async function dragPart() {
+      const grip = await page.locator('.ids-preview-large .select-grip').boundingBox()
+      assert.ok(grip)
+      const x = grip.x + grip.width / 2, y = grip.y + grip.height / 2
+      await page.mouse.move(x, y)
+      await page.mouse.down()
+      await page.mouse.move(x + 18, y + 6, { steps: 3 })
+      await page.mouse.up()
+    }
+    const sansEdits = () => page.evaluate(() => JSON.parse(localStorage.getItem('ids-input:tabs') ?? '[]')[0]?.document?.document?.root?.children?.[0]?.faceTransforms?.sans)
+    await switchFace()
+    await dragPart()
+    const firstDrag = await sansEdits()
+    await switchFace()
+    await dragPart()
+    assert.notDeepEqual(await sansEdits(), firstDrag)
+    await page.locator('button[aria-label^="Undo"]').first().click()
+    assert.deepEqual(await sansEdits(), firstDrag, 'undo after a font switch reverts one drag')
     assert.deepEqual(errors, [])
     console.log(`PASS ${scheme}: main preview drag, scoped export and reset`)
     await page.close()
