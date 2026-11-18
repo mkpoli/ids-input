@@ -17,6 +17,31 @@
 // 𱤻 stands for ⿾止 as the guide gives it (§2.1), though its row's default entry spells it otherwise.
 import { chainStrokes } from '../../src/core/chain-shape.js'
 
+// Sans drawing of IWDS 408-2 (aj1-13763), traced from the ImageGen study.
+// Keep the three parts separate for token highlighting.
+const gong408 = {
+  char: '工',
+  contours: [
+    'M165 104H835V176H165Z',
+    'M460 176H530L421 438H665V498L513 824H433L579 505H320Z',
+    'M80 824H920V896H80Z',
+  ],
+  parts: [[0], [1], [2]],
+}
+
+// U+E021 of the guide's fonts/example.woff2 at 0ca5ed48 (§4.3.2).
+// The right leg of 儿 meets 乂. Split their shared contour at the contact for highlighting.
+// Copyright (c) 2025 NightFurySL2001, data/licences/bai-ids-MIT.txt.
+const fu222 = {
+  char: '父',
+  contours: [
+    'M310 57C300 193 264 286 64 351C79 364 104 400 112 417C332 343 382 218 392 60Z',
+    'M591 60V260C591 329 610 353 669 357L684 358C685 358 687 358 689 358H849C918 358 938 323 944 182C924 177 894 164 878 152C874 272 870 284 841 284H703C673 284 669 280 669 254V60Z',
+    'M669 357C629 469 574 562 502 639C429 560 372 467 333 363L261 383C307 502 368 607 446 693C340 784 205 848 39 892C56 907 83 942 93 958C256 909 391 842 500 748C607 846 741 918 907 958C918 937 942 904 960 888C797 852 663 785 558 693C639 608 703 504 750 377L684 358Z',
+  ],
+  parts: [[0, 1], [2]],
+}
+
 /** The data every sequence is quoted from. */
 export const SOURCE = {
   repository: 'https://github.com/yi-bai/ids',
@@ -40,7 +65,7 @@ export const GRAMMAR = { key: 'I26', title: '（白式）IDS 延展语法导论'
  * drawn faint because nothing quoted names them. Without `parts` the outline is drawn in ink. For a
  * chain, `joins` is where the line takes up each stroke, in the chain's order, and `cross` where
  * two of its strokes cross.
- * @typedef {{ char: string, parts?: Piece[][], rest?: Piece[], joins?: [number, number][], cross?: [number, number] }} Glyph
+ * @typedef {{ char: string, contours?: string[], parts?: Piece[][], rest?: Piece[], joins?: [number, number][], cross?: [number, number] }} Glyph
  */
 /**
  * One quotation: the character, the text as the data has it (an entry, or a whole row when it holds
@@ -173,8 +198,8 @@ export const SHEET = [
     ] },
     { id: 'source-letter', rules: ['source letter'], legends: [SOURCE_LETTERS] },
     { id: 'style-tag', rules: ['style tag'], legends: [STYLE_LETTERS, POSITION_LETTERS], cards: [
-      { id: 'list-ucv', anchors: ['ucv-position'], label: 'ucv', hint: 'listUcv', quotes: [{ char: '工', text: '⿳一.𠃑.一.(q4082)', row: 4070, glyphs: ['composed'], focus: ['(q4082)'] }] },
-      { id: 'list-analogy', anchors: ['imaginary-ucv'], label: 'analogy', hint: 'listAnalogy', quotes: [{ char: '父', text: '⿱儿.乂.(qq222)', row: 9271, glyphs: ['composed'], focus: ['(qq222)'] }] },
+      { id: 'list-ucv', anchors: ['ucv-position'], label: 'ucv', hint: 'listUcv', quotes: [{ char: '工', text: '⿳一.𠃑.一.(q4082)', row: 4070, glyphs: [gong408], focus: ['(q4082)'] }] },
+      { id: 'list-analogy', anchors: ['imaginary-ucv'], label: 'analogy', hint: 'listAnalogy', quotes: [{ char: '父', text: '⿱儿.乂.(qq222)', row: 9271, glyphs: [fu222], focus: ['(qq222)'] }] },
     ] },
   ] },
   { id: 'stroke-chain', label: 'chains', rules: ['stroke chain', 'stroke part'], cards: [
@@ -425,7 +450,7 @@ export function focusOf(quote) {
 export const quotations = () => cardsOf().flatMap(card => card.quotes.map(quote => /** @type {[string, number, string]} */ ([quote.file ?? 'ids_lv0.txt', quote.row, quote.text])))
 
 /** Every character whose outline a card draws. @returns {string[]} */
-export const glyphsDrawn = () => [...new Set(cardsOf().flatMap(card => card.quotes.flatMap(quote => quote.glyphs.flatMap(glyph => glyph && glyph !== 'composed' ? [glyph.char] : []))))]
+export const glyphsDrawn = () => [...new Set(cardsOf().flatMap(card => card.quotes.flatMap(quote => quote.glyphs.flatMap(glyph => glyph && glyph !== 'composed' && !glyph.contours ? [glyph.char] : []))))]
 
 /** Every component a card writes, whose own row and outline a tooltip shows. @returns {string[]} */
 export const componentsWritten = () => [...new Set(cardsOf().flatMap(card => card.quotes.flatMap(quote => tokenise(quote.text, { strokes: quote.strokes }).filter(token => token.kind === 'part').map(token => token.stretches[0].text))))]

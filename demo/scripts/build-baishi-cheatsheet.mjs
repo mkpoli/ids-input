@@ -85,7 +85,7 @@ for (const card of cardsOf()) {
     const pieces = [...glyph.parts.flat(), ...(glyph.rest ?? [])]
     const whole = pieces.filter(piece => typeof piece === 'number')
     const named = contoursOf(pieces).sort((a, b) => a - b)
-    if (named.join() !== glyphs[glyph.char].map((_, index) => index).join() || new Set(whole).size !== whole.length) throw new Error(`${card.id}: ${glyph.char} has contours 0–${glyphs[glyph.char].length - 1}, the card names ${pieces.map(piece => typeof piece === 'number' ? piece : piece[0]).join(' ')}`)
+    if (named.join() !== (glyph.contours ?? glyphs[glyph.char]).map((_, index) => index).join() || new Set(whole).size !== whole.length) throw new Error(`${card.id}: ${glyph.char} has contours 0–${(glyph.contours ?? glyphs[glyph.char]).length - 1}, the card names ${pieces.map(piece => typeof piece === 'number' ? piece : piece[0]).join(' ')}`)
   }
 }
 

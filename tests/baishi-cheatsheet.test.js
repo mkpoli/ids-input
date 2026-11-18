@@ -185,7 +185,7 @@ describe('the prepared outlines', () => {
       if (!glyph || glyph === 'composed' || !glyph.parts) continue
       const pieces = [...glyph.parts.flat(), ...(glyph.rest ?? [])]
       const whole = pieces.filter(piece => typeof piece === 'number')
-      expect(contoursOf(pieces).sort((a, b) => a - b), `${card.id} ${glyph.char}`).toEqual(outlines.glyphs[glyph.char].map((_, index) => index))
+      expect(contoursOf(pieces).sort((a, b) => a - b), `${card.id} ${glyph.char}`).toEqual((glyph.contours ?? outlines.glyphs[glyph.char]).map((_, index) => index))
       expect(new Set(whole).size, `${card.id} ${glyph.char}`).toBe(whole.length)
     }
   })

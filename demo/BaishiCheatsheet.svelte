@@ -97,7 +97,7 @@
         parts.forEach((d, leaf) => bySlot.set(slotOf(leaf), (bySlot.get(slotOf(leaf)) ?? '') + d))
         return [{ entry, char: quote.char, composed: true, ink: '', rest: /** @type {Cut[]} */ ([]), layers: [...bySlot].map(([slot, d]) => ({ slot, cuts: [{ d, box: null }], names: names(entry, slot) })), marks: [], cross: null }]
       }
-      const contours = GLYPHS[glyph.char]
+      const contours = glyph.contours ?? GLYPHS[glyph.char]
       const strokes = tokens.filter(token => token.entry === entry && token.kind === 'stroke')
       const closed = tokens.some(token => token.entry === entry && token.kind === 'close')
       // Where the chain takes up each stroke: a square after a break, a filled ring where it closes.
@@ -232,7 +232,7 @@
   /** The drawing of a component's variant inside a character that has it, where a card gives one.
    * @param {string} char @param {string[]} ids */
   const variantTile = (char, ids) => sheet.flatMap(section => [...section.cards, ...section.groups.flatMap(group => group.cards)]).flatMap(card => card.quotes)
-    .find(quote => quote.char === char && quote.tiles[0]?.rest.length && idsOf(quote.text).some(id => ids.includes(id)))?.tiles[0] ?? null
+    .find(quote => quote.char === char && (quote.tiles[0]?.rest.length || quote.glyphs.some(glyph => glyph && glyph !== 'composed' && glyph.contours)) && idsOf(quote.text).some(id => ids.includes(id)))?.tiles[0] ?? null
   const tip = $derived.by(() => {
     if (!pointed) return null
     const token = pointed.quote.tokens[pointed.index]
