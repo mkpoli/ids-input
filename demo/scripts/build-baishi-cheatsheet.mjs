@@ -21,6 +21,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { compose, fromUrl } from '@han-compose/composer/loader'
 import { COMPOSER_BASE } from '../lib/composer.js'
+import { featureExamples } from '../lib/baishi-feature-examples.js'
 import { SOURCE, STROKE_LETTERS, cardsOf, componentsWritten, composedDrawn, contoursOf, entriesOf, glyphsDrawn, quotations, tokenise } from '../lib/baishi-cheatsheet.js'
 
 const redrawn = process.argv.includes('--redrawn')
@@ -39,6 +40,15 @@ for (const [file, sha256] of Object.entries(SOURCE.sha256)) {
   files[file] = bytes.toString('utf8').split('\n')
 }
 
+for (const [feature, examples] of Object.entries(featureExamples)) {
+  for (const [char, line, text, mark, level] of examples) {
+    const row = files[`ids_lv${level ?? 0}.txt`][line - 1]
+    if (!row?.startsWith(char + '\t') || !text.includes(mark) ||
+        (row.slice(char.length + 1) !== text && !entriesOf(row).includes(text))) {
+      throw new Error(`${feature}: ${char} ${text} does not match its cited row or marked feature`)
+    }
+  }
+}
 for (const card of cardsOf()) {
   for (const quote of card.quotes) {
     const row = files[quote.file ?? 'ids_lv0.txt'][quote.row - 1] ?? ''

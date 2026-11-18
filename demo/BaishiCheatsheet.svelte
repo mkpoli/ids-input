@@ -17,6 +17,7 @@
   import { SECTIONS, sectionHref } from './lib/baishi-sections.js'
   import { readGrammar } from './lib/railroad.js'
   import ebnf from '../data/baishi-ids.ebnf?raw'
+  import { featureExamples } from './lib/baishi-feature-examples.js'
   import { GLOSS, GRAMMAR, GROUP_LABELS, SHEET, SOURCE, NA_FORMS, ROOF_FORMS, TURN_GLYPHS, UNUSED, arityOf, bareOf, entriesOf, focusOf, idsOf, kindOf, tokenise, variantBody } from './lib/baishi-cheatsheet.js'
   import { chainPath } from '../src/core/chain-shape.js'
   import tenGlyphs from './lib/baishi-ten-glyphs.json'
@@ -342,6 +343,21 @@
   </header>
 {/snippet}
 
+{#snippet readings(/** @type {string} */ id)}
+  {#if featureExamples[id]}
+    <details class="readings">
+      <summary>{t('strokes.examples')}</summary>
+      <ul>
+        {#each featureExamples[id] as [char, row, text, mark, level] (char + text)}
+          {@const at = text.indexOf(mark)}
+          <li><a href={`${SOURCE.repository}/blob/${SOURCE.commit}/ids_lv${level ?? 0}.txt#L${row}`} lang="ja">{char}</a>
+            <code lang="ja">{text.slice(0, at).replaceAll('\t', '⇥')}<mark>{mark.replaceAll('\t', '⇥')}</mark>{text.slice(at + mark.length).replaceAll('\t', '⇥')}</code></li>
+        {/each}
+      </ul>
+    </details>
+  {/if}
+{/snippet}
+
 {#snippet card(/** @type {ShownCard} */ item)}
   {@const first = item.quotes[0]}
   {@const subject = first.tokens.flatMap(token => token.stretches.filter((_, at) => token.subject[at]).map(stretch => stretch.text)).join('')}
@@ -367,6 +383,7 @@
       </div>
     {/each}
     {#if item.id === 'row-entries'}<a class="comparison-link" href="#worked-noon" lang="ja">午 · 𭬁 · 戢 →</a>{/if}
+    {@render readings(item.id)}
   </article>
 {/snippet}
 
@@ -378,6 +395,7 @@
   <article class="card legend">
     {@render about(t(`cheatsheet.label.${item.id}`), t(`cheatsheet.hint.${item.id}`), '', undefined, '')}
     <dl>{#each item.items as [letter, gloss] (letter)}<div><dt>{letter}</dt>{#if gloss !== letter}<dd lang={item.lang}>{gloss}</dd>{/if}</div>{/each}</dl>
+    {@render readings(item.id)}
   </article>
 {/snippet}
 
@@ -524,6 +542,13 @@
   .hint{flex:1 1 0;width:0;min-width:15em;margin:0;font-size:11.5px;line-height:1.4;color:var(--ui-color-ink-muted);text-align:end;text-wrap:pretty}
 
   .comparison-link{align-self:flex-start;font-family:var(--ids-font),var(--ids-glyph-fallback);font-size:14px}
+  .readings{font-size:14px}
+  .readings summary{cursor:pointer;color:var(--ui-color-ink-soft)}
+  .readings ul{display:grid;gap:5px;margin:8px 0 0;padding:0;list-style:none}
+  .readings li{display:grid;grid-template-columns:2em minmax(0,1fr);gap:6px;align-items:baseline}
+  .readings a,.readings code{font:inherit;font-family:var(--ids-font),var(--ids-glyph-fallback)}
+  .readings code{overflow-wrap:anywhere}
+  .readings mark{color:var(--ui-color-ink);background:var(--mark)}
   .quote{display:flex;align-items:center;gap:12px;min-width:0}
   .tiles{display:flex;flex:none;gap:6px}
   .tile{all:unset;box-sizing:border-box;display:block;inline-size:64px;block-size:64px;border-radius:var(--ui-radius-md);background:var(--ui-color-surface-sunken);cursor:zoom-in}
