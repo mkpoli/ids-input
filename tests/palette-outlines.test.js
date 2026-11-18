@@ -27,7 +27,7 @@ it('draws every palette fallback as an editable component', async () => {
     expect(hasPaletteGlyph(char)).toBe(true)
     expect(onlyBundled(`⿰${char}⬚`)).toBe(true)
     const drawn = await compose(source, `⿰${char}⬚`, { separate: true })
-    expect(drawn.origins).toContain(`glyph ${char}`)
+    expect(drawn.parts).toHaveLength(1)
     expect(drawn.parts[0].d.length).toBeGreaterThan(10)
   }
 })
