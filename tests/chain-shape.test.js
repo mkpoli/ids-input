@@ -25,6 +25,11 @@ describe('a stroke chain as a line', () => {
     expect(chainPath('PHwg')).toContain('Q')
     expect(chainPath('Hg')).toBe('M120 405L880 405L789 595')
   })
+  it('draws the rising onset of ㇝ before its descending sweep', () => {
+    const path = chainPath('#(J)')
+    expect(path).toBe('M120 361L356 259Q466 639 880 741')
+    expect(chainPath('#(㇝)')).toBe(path)
+  })
   it('answers null for what is no chain it knows', () => {
     expect(chainPath('#(木)')).toBeNull()
     expect(chainPath('#(-)')).toBeNull()
