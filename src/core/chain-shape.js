@@ -15,7 +15,7 @@ const STEP = /** @type {Record<string, [number, number]>} */ ({
  * along the other. */
 const BEND = /** @type {Record<string, [number, number]>} */ ({ Qa: [0.5, 0], Qb: [0, 0.5], Qc: [-0.5, 0], Qd: [0, -0.5] })
 /** The hook a stroke ends in, by the letter it follows. */
-const HOOK = /** @type {Record<string, [number, number]>} */ ({ H: [-0.12, 0.25], S: [-0.25, -0.18], W: [-0.25, -0.18], P: [0.2, -0.12], N: [0.04, -0.28] })
+const HOOK = /** @type {Record<string, [number, number]>} */ ({ H: [-0.12, 0.25], Hw: [0, -0.32], S: [-0.25, -0.18], W: [-0.25, -0.18], P: [0.2, -0.12], N: [0.04, -0.28] })
 
 /** The letters of each stroke a chain may name by its character: 𠃍 as HS. */
 const LETTERS = new Map(Object.entries(STROKE_CHAINS).filter(([chain]) => /^[A-Za-z]+$/.test(chain)).map(([chain, char]) => [char, chain]))
@@ -37,7 +37,18 @@ function steps(letters) {
     const two = letters.slice(at, at + 2)
     if (BEND[two]) { out.push([...STEP[two], ...BEND[two]]); last = two; at++; continue }
     const one = letters[at]
-    if (one === 'w') continue
+    // SHw and PHw round the join into H. Keep both endpoints so the next
+    // stroke starts in the same place as it would after the angular form.
+    if ((one === 'S' || one === 'P') && letters.startsWith('Hw', at + 1)) {
+      const [dx, dy] = STEP[one]
+      const radius = 0.5
+      out.push([dx * (1 - radius), dy * (1 - radius)],
+        [dx * radius + radius, dy * radius, dx * radius, dy * radius],
+        [1 - radius, 0])
+      last = 'Hw'
+      at += 2
+      continue
+    }
     if (one === 'g') { if (HOOK[last]) out.push(HOOK[last]); continue }
     if (!STEP[one]) return null
     out.push(STEP[one])

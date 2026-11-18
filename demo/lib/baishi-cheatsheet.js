@@ -449,8 +449,11 @@ export function focusOf(quote) {
 /** Every quotation as the build looks it up: its file, the line of its row and its text. @returns {[string, number, string][]} */
 export const quotations = () => cardsOf().flatMap(card => card.quotes.map(quote => /** @type {[string, number, string]} */ ([quote.file ?? 'ids_lv0.txt', quote.row, quote.text])))
 
-/** Every character whose outline a card draws. @returns {string[]} */
-export const glyphsDrawn = () => [...new Set(cardsOf().flatMap(card => card.quotes.flatMap(quote => quote.glyphs.flatMap(glyph => glyph && glyph !== 'composed' && !glyph.contours ? [glyph.char] : []))))]
+// Stroke glyphs for the rounded and angular variants in component tooltips (guide §5.3).
+export const TURN_GLYPHS = new Map([['#(SHw)', '㇄'], ['#(SH)', '𠃊']])
+
+/** Every character whose outline a card or its tooltip draws. @returns {string[]} */
+export const glyphsDrawn = () => [...new Set([...TURN_GLYPHS.values(), ...cardsOf().flatMap(card => card.quotes.flatMap(quote => quote.glyphs.flatMap(glyph => glyph && glyph !== 'composed' && !glyph.contours ? [glyph.char] : [])))])]
 
 /** Every component a card writes, whose own row and outline a tooltip shows. @returns {string[]} */
 export const componentsWritten = () => [...new Set(cardsOf().flatMap(card => card.quotes.flatMap(quote => tokenise(quote.text, { strokes: quote.strokes }).filter(token => token.kind === 'part').map(token => token.stretches[0].text))))]
