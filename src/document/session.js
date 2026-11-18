@@ -15,6 +15,7 @@ import { validateFill } from './fill.js'
 /** @typedef {import('./model.js').Document} Document */
 /** @typedef {import('./model.js').Node} Node */
 /** @typedef {import('./model.js').Chain} Chain */
+/** @typedef {{ coalesce?: string, face?: import('./model.js').DocumentFace }} TransformOptions */
 /** @typedef {import('./model.js').Allocator} Allocator */
 /** @typedef {import('./model.js').Issue} Issue */
 /** @typedef {import('./model.js').Content} Content */
@@ -52,10 +53,10 @@ import { validateFill } from './fill.js'
  * @property {(id?: string) => string} clear
  * @property {(edit: import('./model.js').GeometryEdit, options?: { coalesce?: string, replace?: string[] }) => string} setGeometryEdit
  * @property {(id: string | string[], options?: { coalesce?: string }) => string} clearGeometryEdit
- * @property {(chain: Chain, id?: string, options?: { coalesce?: string }) => string} setTransform
+ * @property {(chain: Chain, id?: string, options?: TransformOptions) => string} setTransform
  * @property {(fill: import('./fill.js').Fill | null, id?: string, options?: { coalesce?: string }) => string} setFill
  * @property {(title: string) => void} setTitle
- * @property {(id?: string) => string} clearTransform
+ * @property {(id?: string, options?: TransformOptions) => string} clearTransform
  * @property {(listener: (session: DocumentSession) => void) => () => void} listen
  */
 
@@ -274,8 +275,8 @@ export function createDocumentSession(initial = emptyDocument(), { reserved = []
       commit(replaceNode(document, at, { kind: 'slot' }, { allocator }), at, action(name(at).clear))
       return at
     },
-    /** @param {Chain} chain @param {string} [id] @param {{ coalesce?: string }} [options] */
-    setTransform(chain, id, { coalesce } = {}) {
+    /** @param {Chain} chain @param {string} [id] @param {TransformOptions} [options] */
+    setTransform(chain, id, { coalesce, face } = {}) {
       const at = requireId(id ?? null)
       /** @type {Issue[]} */
       const issues = []
@@ -284,9 +285,17 @@ export function createDocumentSession(initial = emptyDocument(), { reserved = []
       const next = /** @type {Document} */ (structuredClone(document))
       const found = findLayer(next.root, at)
       if (!found) throw new DocumentError([{ path: '', message: `no layer ${at}` }])
-      if (chain.length) found.node.transform = /** @type {Chain} */ (structuredClone(chain))
-      else delete found.node.transform
-      commit(next, at, action(name(at).transform), coalesce)
+      const { node } = found
+      if (face) {
+        const transforms = { ...node.faceTransforms }
+        if (chain.length || node.transform?.length) transforms[face] = structuredClone(chain)
+        else delete transforms[face]
+        if (Object.keys(transforms).length) node.faceTransforms = transforms
+        else delete node.faceTransforms
+      } else if (chain.length) node.transform = structuredClone(chain)
+      else delete node.transform
+      // Identical key nudges in different faces are separate undo steps.
+      commit(next, at, action(name(at).transform), coalesce && face ? `${face}:${coalesce}` : coalesce)
       return at
     },
     /** @param {import('./fill.js').Fill | null} fill @param {string} [id] @param {{ coalesce?: string }} [options] */
@@ -343,16 +352,8 @@ export function createDocumentSession(initial = emptyDocument(), { reserved = []
       else delete next.title
       commit(next, chosen, value ? `Title ${value}` : 'Clear title')
     },
-    /** @param {string} [id] */
-    clearTransform(id) {
-      const at = requireId(id ?? null)
-      const next = /** @type {Document} */ (structuredClone(document))
-      const found = findLayer(next.root, at)
-      if (!found) throw new DocumentError([{ path: '', message: `no layer ${at}` }])
-      delete found.node.transform
-      commit(next, at, action(name(at).transform))
-      return at
-    },
+    /** @param {string} [id] @param {TransformOptions} [options] */
+    clearTransform(id, options) { return session.setTransform([], id, options) },
     /** @param {(session: DocumentSession) => void} listener */
     listen(listener) { listeners.push(listener); return () => { const at = listeners.indexOf(listener); if (at >= 0) listeners.splice(at, 1) } },
   }

@@ -19,6 +19,7 @@ export const MAX_DEPTH = 64
 export const MAX_EDITS = 1000
 export const MAX_OPERATIONS = 64
 export const MAX_ASSETS = 128
+export const DOCUMENT_FACES = /** @type {const} */ (['sans', 'serif', 'fangsong', 'regular', 'pen-writing'])
 
 const ID = /^[A-Za-z0-9_-]{1,80}$/
 const DIGEST = /^[0-9a-f]{64}$/
@@ -30,8 +31,9 @@ const SLOT = '⬚'
 /** @typedef {Record<string, unknown> & { type: string }} UnknownOperation */
 /** @typedef {Affine | Projective | Mobius | UnknownOperation} Operation */
 /** @typedef {Operation[]} Chain */
+/** @typedef {typeof DOCUMENT_FACES[number]} DocumentFace */
 /** @typedef {Record<string, unknown>} Extensions */
-/** @typedef {{ id: string, name?: string, transform?: Chain, extensions?: Extensions }} Layer */
+/** @typedef {{ id: string, name?: string, transform?: Chain, faceTransforms?: Partial<Record<DocumentFace, Chain>>, extensions?: Extensions }} Layer */
 /** @typedef {Layer & { kind: 'component', char: string, fill?: import('./fill.js').Fill }} Component */
 /** @typedef {Layer & { kind: 'operator', op: string, children: Node[], marks?: string, note?: string }} OperatorNode */
 /** @typedef {Layer & { kind: 'slot' }} Slot */
@@ -271,6 +273,14 @@ function validateLayerFields(value, path, issues) {
   if (typeof value.id !== 'string' || !ID.test(value.id)) issues.push({ path: `${path}/id`, message: 'invalid layer ID' })
   if (value.name !== undefined && (typeof value.name !== 'string' || [...value.name].length > 80)) issues.push({ path: `${path}/name`, message: 'name must be at most 80 characters' })
   if (value.transform !== undefined) validateChain(value.transform, `${path}/transform`, issues)
+  if (value.faceTransforms !== undefined) {
+    const at = `${path}/faceTransforms`
+    if (!object(value.faceTransforms)) issues.push({ path: at, message: 'face transforms must be an object' })
+    else {
+      closedFields(value.faceTransforms, [...DOCUMENT_FACES], at, issues)
+      for (const [face, chain] of Object.entries(value.faceTransforms)) validateChain(chain, `${at}/${face}`, issues)
+    }
+  }
   if (value.extensions !== undefined && !object(value.extensions)) issues.push({ path: `${path}/extensions`, message: 'extensions must be an object' })
 }
 
@@ -294,7 +304,7 @@ function validateNode(value, path, depth, ids, issues, end = true) {
   }
   validateLayerFields(value, path, issues)
   if (value.kind === 'component') {
-    closedFields(value, ['id', 'kind', 'char', 'name', 'transform', 'fill', 'extensions'], path, issues)
+    closedFields(value, ['id', 'kind', 'char', 'name', 'transform', 'faceTransforms', 'fill', 'extensions'], path, issues)
     if (value.fill !== undefined) validateFill(value.fill, `${path}/fill`, issues)
     if (typeof value.char !== 'string') issues.push({ path: `${path}/char`, message: 'a component needs text' })
     else {
@@ -320,17 +330,17 @@ function validateNode(value, path, depth, ids, issues, end = true) {
     return
   }
   if (value.kind === 'slot') {
-    closedFields(value, ['id', 'kind', 'name', 'transform', 'extensions'], path, issues)
+    closedFields(value, ['id', 'kind', 'name', 'transform', 'faceTransforms', 'extensions'], path, issues)
     return
   }
   if (value.kind === 'group') {
-    closedFields(value, ['id', 'kind', 'child', 'name', 'transform', 'extensions'], path, issues)
+    closedFields(value, ['id', 'kind', 'child', 'name', 'transform', 'faceTransforms', 'extensions'], path, issues)
     if (!object(value.child)) issues.push({ path: `${path}/child`, message: 'a group needs a child' })
     else validateNode(value.child, `${path}/child`, depth + 1, ids, issues, end)
     return
   }
   if (value.kind === 'operator') {
-    closedFields(value, ['id', 'kind', 'op', 'children', 'marks', 'note', 'name', 'transform', 'extensions'], path, issues)
+    closedFields(value, ['id', 'kind', 'op', 'children', 'marks', 'note', 'name', 'transform', 'faceTransforms', 'extensions'], path, issues)
     const op = value.op
     if (typeof op !== 'string' || arity(op) === 0) issues.push({ path: `${path}/op`, message: 'unknown operator' })
     if (value.marks !== undefined) {

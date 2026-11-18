@@ -35,6 +35,7 @@ function kept(old, allocator, kind) {
   if (old?.name !== undefined) out.name = old.name
   if (old?.kind === 'component' && old.fill !== undefined && kind === 'component') out.fill = structuredClone(old.fill)
   if (old?.transform !== undefined) out.transform = structuredClone(old.transform)
+  if (old?.faceTransforms !== undefined) out.faceTransforms = structuredClone(old.faceTransforms)
   if (old?.extensions !== undefined) out.extensions = structuredClone(old.extensions)
   return /** @type {T} */ (out)
 }

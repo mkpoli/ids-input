@@ -3,7 +3,7 @@
 // read. A document that carries more than its sequence rides in `?doc=<base64url>`.
 import { sequenceOfPath } from '../../src/core/address.js'
 import { parse } from '../../src/core/ids.js'
-import { carriedMore, readShareDocument, shareDocument } from '../../src/document/index.js'
+import { carriedMore, readShareDocument, shareDocument, transformForFace } from '../../src/document/index.js'
 
 /** The sequence a link carries, or ''. @param {Location | URL} where */
 export function sequenceFrom(where) {
@@ -35,11 +35,11 @@ export function linkTo(sequence, where, document = null) {
   return url.href
 }
 
-/** Whether any layer carries an authored transform. @param {import('../../src/document/index.js').Node} root */
-export function transformed(root) {
-  if (root.transform?.length) return true
-  if (root.kind === 'operator') return root.children.some(transformed)
-  if (root.kind === 'group') return transformed(root.child)
+/** Whether any layer carries an authored transform. @param {import('../../src/document/index.js').Node} root @param {import('../../src/document/index.js').DocumentFace} [face] */
+export function transformed(root, face) {
+  if (transformForFace(root, face)?.length) return true
+  if (root.kind === 'operator') return root.children.some(child => transformed(child, face))
+  if (root.kind === 'group') return transformed(root.child, face)
   return false
 }
 

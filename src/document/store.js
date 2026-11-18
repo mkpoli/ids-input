@@ -106,7 +106,7 @@ export function carriedMore(document) {
   if (document.geometryEdits?.length) return true
   /** @param {Node} node @returns {boolean} */
   const walk = node => {
-    if (node.kind === 'group' || node.name !== undefined || node.transform !== undefined || node.extensions !== undefined) return true
+    if (node.kind === 'group' || node.name !== undefined || node.transform !== undefined || node.faceTransforms !== undefined || node.extensions !== undefined) return true
     if (node.kind === 'component' && node.fill !== undefined) return true
     return node.kind === 'operator' && node.children.some(walk)
   }
@@ -170,6 +170,7 @@ export function shareDocument(document) {
     if (node.name !== undefined) fields.n = node.name
     if (node.kind === 'component' && node.fill !== undefined) fields.f = node.fill
     if (node.transform !== undefined) fields.x = node.transform
+    if (node.faceTransforms !== undefined) fields.fx = node.faceTransforms
     if (node.extensions !== undefined) fields.e = node.extensions
     if (Object.keys(fields).length) layers.push([path, fields])
   }
@@ -241,6 +242,7 @@ export function readShareDocument(token) {
       else issues.push({ path: `/l/${path}`, message: 'a fill belongs to a component' })
     }
     if (fields.x !== undefined) node.transform = fields.x
+    if (fields.fx !== undefined) node.faceTransforms = fields.fx
     if (fields.e !== undefined) node.extensions = fields.e
   }
   if (issues.length) throw new DocumentError(issues)

@@ -259,6 +259,15 @@
         "transform": {
           "$ref": "#/$defs/chain"
         },
+        "faceTransforms": {
+          "type": "object",
+          "propertyNames": {
+            "enum": ["sans", "serif", "fangsong", "regular", "pen-writing"]
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/chain"
+          }
+        },
         "extensions": {
           "$ref": "#/$defs/extensions"
         }
