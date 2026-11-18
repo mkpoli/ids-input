@@ -31,7 +31,7 @@ const gong408 = {
 
 // U+E021 of the guide's fonts/example.woff2 at 0ca5ed48 (§4.3.2).
 // The right leg of 儿 meets 乂. Split their shared contour at the contact for highlighting.
-// Copyright (c) 2025 NightFurySL2001, data/licences/bai-ids-MIT.txt.
+// © 2024-2025 -PT_AxH_RV-, fonts/OFL-Baishi-example.txt.
 const fu222 = {
   char: '父',
   contours: [
