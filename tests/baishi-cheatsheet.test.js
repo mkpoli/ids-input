@@ -7,6 +7,7 @@ import { readGrammar } from '../demo/lib/railroad.js'
 import {
   GROUP_LABELS, NA_FORMS, SHEET, SOURCE, STROKE_LETTERS, anchorsOf, bareOf, cardsOf, componentsWritten, composedDrawn, contoursOf, entriesOf, focusOf, glyphsDrawn, idsOf, kindOf, linkedOf, quotations, tokenise, variantBody,
 } from '../demo/lib/baishi-cheatsheet.js'
+import { featureExamples } from '../demo/lib/baishi-feature-examples.js'
 import { CHEATSHEET_SECTIONS, SECTIONS, sectionHref } from '../demo/lib/baishi-sections.js'
 
 const read = path => readFileSync(new URL(path, import.meta.url), 'utf8')
@@ -83,6 +84,12 @@ describe('reading a quotation of the zi.tools notation', () => {
 })
 
 describe('the cheatsheet\'s cards', () => {
+  it('gives every feature card and letter legend a cited reading', () => {
+    const features = cards.filter(card => !card.id.startsWith('worked-')).map(card => card.id)
+    for (const id of [...features, 'sourceLetters', 'styleLetters', 'positionLetters', 'strokeLetters']) {
+      expect(featureExamples[id]?.length, id).toBeGreaterThan(0)
+    }
+  })
   it('have ids of their own', () => {
     expect(new Set(cards.map(card => card.id)).size).toBe(cards.length)
   })
