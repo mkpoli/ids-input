@@ -17,7 +17,7 @@
   import { SECTIONS, sectionHref } from './lib/baishi-sections.js'
   import { readGrammar } from './lib/railroad.js'
   import ebnf from '../data/baishi-ids.ebnf?raw'
-  import { GLOSS, GRAMMAR, GROUP_LABELS, SHEET, SOURCE, UNUSED, arityOf, bareOf, entriesOf, focusOf, idsOf, kindOf, tokenise, variantBody } from './lib/baishi-cheatsheet.js'
+  import { GLOSS, GRAMMAR, GROUP_LABELS, SHEET, SOURCE, TURN_GLYPHS, UNUSED, arityOf, bareOf, entriesOf, focusOf, idsOf, kindOf, tokenise, variantBody } from './lib/baishi-cheatsheet.js'
   import { drawingOf } from './lib/baishi-drawing.js'
   import exampleLicence from '../fonts/OFL-Baishi-example.txt?url'
   import outlines from './lib/baishi-cheatsheet-outlines.json'
@@ -246,7 +246,10 @@
     return { token, ...describe(token), char, glyph: all.length ? '' : glyph,
       variants: variants.map(variant => {
         const tile = variantTile(char, variant.ids)
-        return { ...variant, ink: variant.font ? glyph : '', tile, sketch: variant.font || tile ? null : sketchOf(variant.text) }
+        const body = variantBody(variant.text).replace(/^\{[^}]*\}/u, '')
+        const stroke = TURN_GLYPHS.get(body)
+        const ink = variant.font ? glyph : stroke ? GLYPHS[stroke].join('') : ''
+        return { ...variant, ink, tile, sketch: ink || tile ? null : sketchOf(variant.text) }
       }), more: all.length - variants.length,
       // The other quotations of the card stand beside an operator's bracket: with it and without.
       beside: token.kind === 'op' && pointed.card.quotes.length > 1 ? pointed.card.quotes : [] }

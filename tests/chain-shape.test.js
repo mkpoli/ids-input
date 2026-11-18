@@ -17,6 +17,14 @@ describe('a stroke chain as a line', () => {
     expect(chainPath('#(丨x3◞◟◜)')).toContain('Q')
     expect(chainPath('#(◟◜◝◞z)').match(/Q/g)).toHaveLength(4)
   })
+  it('distinguishes the angular, rounded and hooked forms of 乚', () => {
+    expect(chainPath('SH')).toBe('M120 120L120 880L880 880')
+    expect(chainPath('SHw')).toBe('M120 120L120 500Q120 880 500 880L880 880')
+    expect(chainPath('SHwg')).toBe(chainPath('SHw') + 'L880 637')
+    expect(chainPath('乚')).toBe(chainPath('SHwg'))
+    expect(chainPath('PHwg')).toContain('Q')
+    expect(chainPath('Hg')).toBe('M120 405L880 405L789 595')
+  })
   it('answers null for what is no chain it knows', () => {
     expect(chainPath('#(木)')).toBeNull()
     expect(chainPath('#(-)')).toBeNull()
