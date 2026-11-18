@@ -1,5 +1,14 @@
 <script module>
-  import { isNode } from '../core/ids.js'
+  import { isNode, partAt, write } from '../core/ids.js'
+
+  /** @param {import('./editor.svelte.js').Editor} editor */
+  function grassForm(editor) {
+    const { picked: part, chosen, tree } = editor
+    if (part === '艹' || part === '⺿') return part
+    if (!isNode(part) || write(part) !== '⿰十十' || chosen?.at(-1) !== 0) return null
+    const parent = partAt(tree, chosen.slice(0, -1))
+    return isNode(parent) && ['⿱', '⿳'].includes(parent.op) ? '⺿' : null
+  }
 
   /** What can stand in place of the editor's chosen part, in groups by how it was found.
    * @param {import('./editor.svelte.js').Editor} editor */
@@ -20,7 +29,7 @@
    * @param {import('./editor.svelte.js').Editor} editor @param {number} [unifiable] how many UCV entries offer a form */
   export function hasAlternatives(editor, unifiable = 0) {
     const groups = alternativeGroups(editor), search = editor.alternatives
-    return (typeof editor.picked === 'string' && unifiable > 0) || groups.swaps.length + groups.splits.length + groups.merges.length + groups.merged.length + groups.split.length + groups.both.length > 0
+    return Boolean(grassForm(editor)) || (typeof editor.picked === 'string' && unifiable > 0) || groups.swaps.length + groups.splits.length + groups.merges.length + groups.merged.length + groups.split.length + groups.both.length > 0
       || search.truncated || search.failed
   }
 </script>
@@ -31,7 +40,6 @@
   // splitting and merging, and with `variations` the forms the IRG unifies with it (its UCV entries),
   // each under its own heading. `onchoose` hears an alternative being used; `onspent`, the search
   // asked for more having found everything. With nothing to offer it shows nothing.
-  import { write } from '../core/ids.js'
   import { createUnifiable } from './unifiable.svelte.js'
 
   /** @type {{ editor: import('./editor.svelte.js').Editor, variations?: boolean, variationsHref?: ((entry: string) => string) | null, onchoose?: () => void, onspent?: () => void }} */
@@ -42,6 +50,7 @@
   const groups = $derived(alternativeGroups(editor))
   const picked = $derived(editor.picked)
   const part = $derived(typeof picked === 'string' ? picked : '')
+  const grass = $derived(grassForm(editor))
   const written = $derived(isNode(picked) ? write(picked) : '')
   const unifiable = createUnifiable(() => editor, () => variations)
   $effect(() => { search.load() })
@@ -60,6 +69,19 @@
 
 {#if hasAlternatives(editor, unifiable.entries.length)}
 <div class="ids-options">
+  {#if grass}
+    <div class="ids-option-group" role="group" aria-labelledby={`${uid}-grass`}>
+      <span class="ids-option-label" id={`${uid}-grass`}>{t('ids.grass.head')}</span>
+      <div class="ids-option-items">
+        {#each ['艹', '⺿'] as form}
+          <button type="button" class="ids-grass" aria-pressed={grass === form} disabled={editor.disabled}
+            onclick={() => { if (part !== form) choose(() => editor.put(form, editor.chosen)) }}>
+            <span aria-hidden="true">{form}</span>{t(form === '艹' ? 'ids.grass.connected' : 'ids.grass.split')}
+          </button>
+        {/each}
+      </div>
+    </div>
+  {/if}
   {#if groups.swaps.length}
     <div class="ids-option-group" role="group" aria-labelledby={`${uid}-replace`}>
       <span class="ids-option-label" id={`${uid}-replace`}>{t('ids.alternatives.replace')}</span>
@@ -156,6 +178,9 @@
   .ids-option-group{display:flex;flex-direction:column;gap:4px;min-width:0}
   .ids-option-label{font-size:11px;font-weight:500;letter-spacing:.02em;color:var(--_muted)}
   .ids-option-items{display:flex;flex-wrap:wrap;gap:6px}
+  .ids-grass{display:inline-flex;align-items:center;gap:6px;padding:4px 8px}
+  .ids-grass span{font:22px/1.25 var(--_font)}
+  .ids-grass[aria-pressed="true"]{border-color:var(--_accent);color:var(--_accent)}
   .ids-unified{align-items:center}
   .ids-unified-entry{flex:none;font-size:11px;line-height:1;padding:3px 6px;border:1px solid var(--_line);border-radius:5px;color:var(--_muted);white-space:nowrap;text-decoration:none;font-variant-numeric:tabular-nums}
   a.ids-unified-entry:hover{border-color:var(--_accent);color:var(--_accent)}
