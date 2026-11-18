@@ -55,3 +55,31 @@ describe('geometry edit resolution', () => {
     }
   })
 })
+
+describe('stroke width during an authored resize', () => {
+  const affine = matrix => [{ type: 'affine', matrix }]
+  const source = {
+    geometry: () => ({ pieces: [{ d: 'M0 0L400 0L400 400L0 400ZM25 25L25 375L375 375L375 25Z' }] }),
+    placement: () => [0.5, 0, 0, 1, 0, 0],
+  }
+  it('keeps the width of a horizontal stem under vertical scaling of a parent', () => {
+    const document = {
+      root: {
+        kind: 'operator', op: '⿰', id: 'root',
+        transform: affine([1, 0, 0, 2, 0, 0]),
+        children: [{ kind: 'component', char: '口', id: 'a' }, { kind: 'slot', id: 'b' }],
+      },
+    }
+    const sans = renderScopes(document, source, { stroke: [12.5, 25] })
+    const other = renderScopes(document, source)
+    expect(sans.complete).toBe(true)
+    expect(sans.root.children[0].positive[0].d).toBe('M0.000 12.500L200.000 12.500L200.000 787.500L0.000 787.500ZM12.500 37.500L12.500 762.500L187.500 762.500L187.500 37.500Z')
+    expect(other.root.children[0].positive[0].d).toBe('M0 0L200 0L200 800L0 800ZM12.5 50L12.5 750L187.5 750L187.5 50Z')
+  })
+  it('keeps a bar parallel to its rotated direction and preserves its width when shrunk', () => {
+    const bar = { geometry: () => ({ pieces: [{ d: 'M0 0L300 0L300 20L0 20Z' }] }) }
+    const document = { root: { kind: 'component', id: 'bar', transform: affine([0, 1, -0.5, 0, 0, 0]) } }
+    const drawing = renderScopes(document, bar, { stroke: [20, 20] })
+    expect(drawing.root.positive[0].d).toBe('M5.000 0.000L5.000 300.000L-15.000 300.000L-15.000 0.000Z')
+  })
+})

@@ -191,7 +191,7 @@
       svg = ''
       return
     }
-    const scopes = renderScopes(doc, made.source)
+    const scopes = renderScopes(doc, made.source, { stroke: face === 'sans' && !drawing.faceFallback ? drawing.stroke : null })
     if (!scopes.complete) {
       issue = scopes.issues[0]?.message ?? t('app.layers.incomplete')
       svg = ''

@@ -70,7 +70,8 @@ components of the output and offers their fills below the drawing.
 Each layer can also carry `faceTransforms`, keyed by `sans`, `serif`,
 `fangsong`, `regular` or `pen-writing`. A face's entry replaces the shared
 chain for that face. An empty entry restores the composer's placement, and
-an absent entry inherits the shared chain.
+an absent entry inherits the shared chain. In Sans, affine resizing keeps the
+width of stems whose opposite edges can be measured from the composed outline.
 
 Every kind can have `transform`, an ordered array of operations; omission or
 `[]` means identity. The tree is authoritative. For core parsing, searching,

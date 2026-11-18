@@ -25,7 +25,7 @@ export {
   transformPieces,
   transformPath,
 } from './transform.js'
-export { renderLayers, renderScopes } from './render.js'
+export { documentRenderer, renderLayers, renderScopes } from './render.js'
 export { FILL_COLOUR, fillColour, fillPaint, isFillColour, validateFill } from './fill.js'
 export { applyGeometryEdits, fingerprintGeometry, splitSubpaths } from './geometry-edit.js'
 export { scopesMarkup, scopesSvg } from './svg.js'
