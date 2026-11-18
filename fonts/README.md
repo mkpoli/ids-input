@@ -7,6 +7,10 @@ BabelStone PUA glyphs for numbered components with no IDS fragment, and the edit
 installed font has them. Zhuque Fangsong supplies the optional Fangsong face, TW-Kai the optional Regular Kai face, and
 Kureedo and GenZui Sans the optional Wen Kai face.
 
+The cheatsheet’s 父 (qq222) outline comes from U+E021 in the guide’s
+[example font](https://github.com/NightFurySL2001/bai-ids/blob/0ca5ed48f51821d4d54246196f1f5f38c9d6bd6a/fonts/example.woff2),
+© 2024–2025 -PT_AxH_RV-, [SIL Open Font License 1.1](OFL-Baishi-example.txt).
+
 `scripts/build_ids_parts.py --font` cuts them from
 `data/ids-parts.json`, so they are rebuilt with the palette. `fonts.css` names them `IDS Strokes`
 (U+2B1A, U+31C0–U+31E3) and `IDS Parts` (U+2E80–U+2EFF, U+31E4–U+31EF, U+20000–U+3FFFF), with ranges
