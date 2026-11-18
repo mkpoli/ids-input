@@ -30,7 +30,7 @@ try {
     await page.mouse.up()
     await page.waitForTimeout(400)
     const dragged = await page.evaluate(() => JSON.parse(localStorage.getItem('ids-input:tabs') ?? '[]')[0]?.document?.document)
-    assert.ok(Math.abs(dragged?.root?.children?.[0]?.transform?.[0]?.matrix?.[4] ?? 0) > 1, 'the handle moved the layer')
+    assert.ok(Math.abs(dragged?.root?.children?.[0]?.faceTransforms?.sans?.[0]?.matrix?.[4] ?? 0) > 1, 'the handle moved the layer')
     await dialog.getByRole('button', { name: 'Reset transform', exact: true }).click()
     const x = dialog.locator('input[type=number]').nth(0)
     await x.fill('20')
@@ -40,7 +40,7 @@ try {
     const document = stored[0]?.document?.document
     assert.ok(document, 'the tab keeps a document record')
     const wood = document.root.children?.[0]
-    assert.deepEqual(wood?.transform?.[0]?.matrix, [1, 0, 0, 1, 20, 0])
+    assert.deepEqual(wood?.faceTransforms?.sans?.[0]?.matrix, [1, 0, 0, 1, 20, 0])
     assert.ok((await dialog.locator('img').getAttribute('src'))?.length > 100, 'the layer drawing exists')
     if (process.env.IDS_LAYER_SHOTS) await dialog.screenshot({ path: `${process.env.IDS_LAYER_SHOTS}/layers-${scheme}.png` })
 
@@ -53,7 +53,7 @@ try {
     await page.mouse.up()
     await page.waitForTimeout(400)
     const scaled = await page.evaluate(() => JSON.parse(localStorage.getItem('ids-input:tabs') ?? '[]')[0]?.document?.document)
-    const scaledMatrix = scaled?.root?.children?.[0]?.transform?.[0]?.matrix
+    const scaledMatrix = scaled?.root?.children?.[0]?.faceTransforms?.sans?.[0]?.matrix
     assert.ok(Math.hypot(scaledMatrix?.[0] ?? 1, scaledMatrix?.[1] ?? 0) > 1, 'the scale handle widened the layer')
     assert.ok(Math.abs((scaledMatrix?.[3] ?? 1) - 1) < 0.05, 'the scale handle kept the height')
     await dialog.getByRole('button', { name: 'Reset transform', exact: true }).click()
@@ -70,7 +70,7 @@ try {
     await page.mouse.up()
     await page.waitForTimeout(400)
     const rotated = await page.evaluate(() => JSON.parse(localStorage.getItem('ids-input:tabs') ?? '[]')[0]?.document?.document)
-    const rotatedMatrix = rotated?.root?.children?.[0]?.transform?.[0]?.matrix
+    const rotatedMatrix = rotated?.root?.children?.[0]?.faceTransforms?.sans?.[0]?.matrix
     assert.ok(Math.abs(rotatedMatrix?.[1] ?? 0) > 0.01, 'the rotate handle turned the layer')
     await dialog.getByRole('button', { name: 'Reset transform', exact: true }).click()
 
@@ -80,7 +80,7 @@ try {
     if (process.env.IDS_LAYER_SHOTS) await dialog.locator('details.history').screenshot({ path: `${process.env.IDS_LAYER_SHOTS}/history-${scheme}.png` })
     await step.click()
     await page.waitForTimeout(300)
-    const undone = await page.evaluate(() => JSON.parse(localStorage.getItem('ids-input:tabs') ?? '[]')[0]?.document?.document?.root?.children?.[0]?.transform)
+    const undone = await page.evaluate(() => JSON.parse(localStorage.getItem('ids-input:tabs') ?? '[]')[0]?.document?.document?.root?.children?.[0]?.faceTransforms?.sans)
     assert.equal(undone, undefined, 'the inspector history undoes a transform')
 
     await dialog.getByRole('button', { name: 'Matrix', exact: true }).click()
@@ -89,7 +89,7 @@ try {
     await matrixFields.nth(1).press('Tab')
     await page.waitForTimeout(500)
     const matrixStored = await page.evaluate(() => JSON.parse(localStorage.getItem('ids-input:tabs') ?? '[]')[0]?.document?.document)
-    assert.deepEqual(matrixStored?.root?.children?.[0]?.transform?.[0]?.matrix, [1, 0.2, 0, 1, 0, 0])
+    assert.deepEqual(matrixStored?.root?.children?.[0]?.faceTransforms?.sans?.[0]?.matrix, [1, 0.2, 0, 1, 0, 0])
     await page.evaluate(() => { const element = document.querySelector('dialog .body'); if (element) element.scrollTop = 0 })
     if (process.env.IDS_LAYER_SHOTS) await dialog.locator('fieldset.transform').screenshot({ path: `${process.env.IDS_LAYER_SHOTS}/matrix-${scheme}.png` })
     await dialog.getByRole('button', { name: 'Reset transform', exact: true }).click()
@@ -100,8 +100,8 @@ try {
     await fields.nth(4).press('Tab')
     await page.waitForTimeout(600)
     const mobius = await page.evaluate(() => JSON.parse(localStorage.getItem('ids-input:tabs') ?? '[]')[0]?.document?.document)
-    assert.equal(mobius?.root?.children?.[0]?.transform?.[0]?.type, 'mobius')
-    assert.deepEqual(mobius?.root?.children?.[0]?.transform?.[0]?.c, [0.001, 0])
+    assert.equal(mobius?.root?.children?.[0]?.faceTransforms?.sans?.[0]?.type, 'mobius')
+    assert.deepEqual(mobius?.root?.children?.[0]?.faceTransforms?.sans?.[0]?.c, [0.001, 0])
     assert.ok((await dialog.locator('img').getAttribute('src'))?.length > 100, 'the Möbius drawing exists')
     if (process.env.IDS_LAYER_SHOTS) await dialog.screenshot({ path: `${process.env.IDS_LAYER_SHOTS}/mobius-${scheme}.png` })
 

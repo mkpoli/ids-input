@@ -130,7 +130,7 @@ try {
   await docPage.waitForTimeout(600)
   const layerRecord = await docPage.evaluate(() => JSON.parse(localStorage.getItem('ids-input:recent') ?? '[]').find(entry => entry.sequence === '⿱艹半'))
   assert.equal(layerRecord?.document?.document?.title, 'Recent document', 'the recent keeps its document')
-  const matrix = layerRecord?.document?.document?.root?.children?.[0]?.transform?.[0]?.matrix
+  const matrix = layerRecord?.document?.document?.root?.children?.[0]?.faceTransforms?.sans?.[0]?.matrix
   assert.equal(matrix?.[4], 20, 'a layer change keeps the recent document current')
   assert.deepEqual(docErrors, [])
   await docPage.close()
