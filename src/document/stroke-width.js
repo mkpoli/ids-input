@@ -49,9 +49,12 @@ function rings(paths, cut) {
   }))
 }
 
-/** @param {Edge} side @param {Edge[]} edges @param {Point} ray @param {number} limit */
-function acrossInk(side, edges, ray, limit) {
-  const origin = /** @type {Point} */ ([(side.start[0] + side.end[0]) / 2, (side.start[1] + side.end[1]) / 2])
+/** @param {Edge} side @param {Edge[]} edges @param {Point} ray @param {number} limit @param {number} along */
+function acrossInk(side, edges, ray, limit, along) {
+  const origin = /** @type {Point} */ ([
+    side.start[0] * (1 - along) + side.end[0] * along,
+    side.start[1] * (1 - along) + side.end[1] * along,
+  ])
   let winding = 0, forward = Infinity, back = -Infinity
   /** @type {Edge | undefined} */
   let ahead, behind
@@ -82,11 +85,39 @@ function acrossInk(side, edges, ray, limit) {
 function join(before, after, a, b) {
   const det = cross(before, after)
   const max = 2 * Math.max(Math.abs(a), Math.abs(b))
-  if (Math.abs(det) > EPS) {
+  if (dot(before, after) < 0.92 && Math.abs(det) > EPS) {
     const shift = /** @type {Point} */ ([(a * after[1] - b * before[1]) / det, (b * before[0] - a * after[0]) / det])
     if (Math.hypot(...shift) <= max) return shift
   }
   return /** @type {Point} */ ([(a * before[0] + b * after[0]) / 2, (a * before[1] + b * after[1]) / 2])
+}
+
+/**
+ * Spread abrupt changes in displacement along short contour edges. Keeping each
+ * change shorter than the edge prevents small segments at curved caps folding back.
+ * @param {Point[]} points @param {Point[]} shifts @param {Point[]} normals
+ */
+function smoothShifts(points, shifts, normals) {
+  const runs = points.map((point, i) => minus(points[(i + 1) % points.length], point))
+  const limits = runs.map((run, i) => {
+    const previous = (i + normals.length - 1) % normals.length, next = (i + 1) % normals.length
+    const smooth = dot(normals[i], normals[previous]) > 0.8 || dot(normals[i], normals[next]) > 0.8
+    return smooth ? Math.hypot(...run) * 0.65 : Infinity
+  })
+  for (let pass = 0; pass < 16; pass++) {
+    let stable = true
+    for (let i = 0; i < points.length; i++) {
+      const j = (i + 1) % points.length
+      const delta = minus(shifts[j], shifts[i]), length = Math.hypot(...delta)
+      if (length <= limits[i] + EPS) continue
+      const change = times(delta, (1 - limits[i] / length) / 2)
+      shifts[i] = [shifts[i][0] + change[0], shifts[i][1] + change[1]]
+      shifts[j] = minus(shifts[j], change)
+      stable = false
+    }
+    if (stable) return true
+  }
+  return runs.every((run, i) => dot(run, minus(shifts[(i + 1) % points.length], shifts[i])) > -dot(run, run))
 }
 
 /**
@@ -110,26 +141,35 @@ export function keepStrokeWidth(pieces, base, edit, stroke) {
   return shapes.map((shape, i) => {
     const original = pieces[i]
     if (!shape.length) return { ...original, ...transformPath(original.d, [{ type: 'affine', matrix: base }, { type: 'affine', matrix: edit }]) }
-    let changed = false
+    let changed = false, stable = true
     const paths = shape.map(({ points, edges: sides }) => {
       const offsets = sides.map(side => {
         const [x, y] = side.tangent, tangent = /** @type {Point} */ ([a * x + c * y, b * x + d * y])
         const run = Math.hypot(...tangent), ratio = Math.abs(det) / run
         const outward = normal(side.tangent)
         const limit = 2.2 * Math.hypot(outward[0] * stroke[0], outward[1] * stroke[1])
-        const width = Math.abs(ratio - 1) < EPS ? 0 : acrossInk(side, edges, outward, limit)
+        // A crossing through the centre can obscure a long stem. Check its exposed ends too.
+        const worthMeasuring = Math.abs(ratio - 1) >= EPS
+        let width = worthMeasuring ? acrossInk(side, edges, outward, limit, 0.5) : 0
+        if (!width && worthMeasuring && Math.hypot(...minus(side.end, side.start)) >= limit) {
+          width = acrossInk(side, edges, outward, limit, 0.25) || acrossInk(side, edges, outward, limit, 0.75)
+        }
         const offset = width * (ratio - 1) / 2
         if (Math.abs(offset) > EPS) changed = true
         return { normal: times(normal(tangent), Math.sign(det) / run), offset }
       })
-      return points.map((point, k) => {
-        const before = offsets[(k + offsets.length - 1) % offsets.length], after = offsets[k]
-        const [dx, dy] = join(before.normal, after.normal, before.offset, after.offset)
-        const [x, y] = applyAffine(edit, point)
+      const scaled = points.map(point => applyAffine(edit, point))
+      const shifts = offsets.map((after, k) => {
+        const before = offsets[(k + offsets.length - 1) % offsets.length]
+        return join(before.normal, after.normal, before.offset, after.offset)
+      })
+      if (!smoothShifts(scaled, shifts, offsets.map(offset => offset.normal))) stable = false
+      return scaled.map(([x, y], k) => {
+        const [dx, dy] = shifts[k]
         return `${k ? 'L' : 'M'}${(x + dx).toFixed(3)} ${(y + dy).toFixed(3)}`
       }).join('') + 'Z'
     })
-    if (!changed) return { ...original, ...transformPath(original.d, [{ type: 'affine', matrix: base }, { type: 'affine', matrix: edit }]) }
+    if (!changed || !stable) return { ...original, ...transformPath(original.d, [{ type: 'affine', matrix: base }, { type: 'affine', matrix: edit }]) }
     return { ...original, d: paths.join(''), approximate: true }
   })
 }
