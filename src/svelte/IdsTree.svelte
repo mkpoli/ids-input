@@ -19,7 +19,8 @@
   import { OPERATOR_GROUPS, isCustom, isNode, parse, partAt, samePath, write } from '../core/ids.js'
   import { marksOf, withMarks } from '../core/marks.js'
   import { codePoints, variationBase, variationOf, withVariation } from '../core/variation.js'
-  import { ucvChoices } from '../core/ucv-choice.js'
+  import { decompositionChoices } from './unifiable.svelte.js'
+  import { occurrenceChoices } from '../core/ucv-choice.js'
   import { componentForms, drawnForm } from '../core/forms.js'
   import { loadUcvIndex } from './ucv.js'
   import IdsPartIcon from './IdsPartIcon.svelte'
@@ -66,7 +67,7 @@
     if (!ucv || typeof part !== 'string') return existing
     const forms = existing.filter(form => !form.unifiable)
     const seen = new Set(forms.map(form => form.write))
-    for (const entry of ucvChoices(ucv, variationOf(part))) for (const form of entry.forms) {
+    for (const entry of occurrenceChoices(ucv, variationOf(part), editor.chosen && samePath(editor.chosen, path) ? decompositionChoices(editor) : [])) for (const form of entry.forms) {
       if (seen.has(form.write)) continue
       seen.add(form.write)
       forms.push({ write: form.write, glyph: form.glyph, entry: entry.id, unifiable: true, kind: 'sibling' })

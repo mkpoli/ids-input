@@ -48,3 +48,25 @@ it('keeps the operand inside both extended frames of UCV 444', () => {
 it('keeps unrelated catalogue groups out of the picker', () => {
   expect(ucvChoices(index, tree('⿳猫犬牛'))).toEqual([])
 })
+
+import { occurrenceChoices } from '../src/core/ucv-choice.js'
+
+it('changes one occurrence inside an encoded host, preserving the other operands and marks', () => {
+  for (const [char, source, expected] of [
+    ['伴', '⿰亻半', '⿰亻半\u{E0101}'], ['消', '⿰氵肖', '⿰氵肖\u{E0101}'],
+    ['楂', '⿰木查', '⿰木査'], ['捨', '⿰扌舍', '⿰扌舎'],
+  ]) {
+    const forms = occurrenceChoices(index, char + 'ˊ', [source]).flatMap(entry => entry.forms)
+    expect(forms.map(form => form.write)).toContain(expected + 'ˊ')
+  }
+  const forms = occurrenceChoices(index, '林', ['⿰⿱八木⿱八木']).flatMap(e => e.forms.map(f => f.write))
+  expect(forms).toContain('⿰⿱丷木⿱八木')
+  expect(forms).toContain('⿰⿱八木⿱丷木')
+  expect(occurrenceChoices(index, '消\u{E0100}', ['⿰氵肖']).some(e => e.context)).toBe(false)
+})
+
+it('uses a deeper expansion and supports catalogue templates at the root of an expansion', () => {
+  const hosts = occurrenceChoices(index, '倘', ['⿰亻尚', '⿰亻⿱⺌冋'])
+  expect(hosts.flatMap(e => e.forms.map(f => f.write))).toContain('⿰亻⿱&GW-u21b54-03;冋')
+  expect(occurrenceChoices(index, '薛', ['⿱艹⿰𠂤辛']).flatMap(e => e.forms.map(f => f.write))).toContain('⿰𠂤⿱艹辛')
+})

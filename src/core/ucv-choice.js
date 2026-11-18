@@ -1,7 +1,8 @@
 // Persist the spelling of the selected occurrence. Catalogue examples describe hosts
 // containing a form, so only explicit whole-character witnesses are indexed as hosts.
-import { isNode, parse, sameTree, variantOf, write } from './ids.js'
+import { isNode, parse, partAt, paths, replaceAt, sameTree, variantOf, write } from './ids.js'
 import { marksOf, withoutMarks, withMarks } from './marks.js'
+import { variationBase, variationOf } from './variation.js'
 import { compatibilitySequences } from './compatibility.js'
 import registered from '../../data/ucv-spellings.json' with { type: 'json' }
 import { glyphReference } from './forms.js'
@@ -95,4 +96,46 @@ export function ucvChoices(index, picked) {
     })
     return forms.length ? [{ id: entry.id, note: entry.note, forms }] : []
   })
+}
+
+/** All selectable occurrences inside a complete decomposition of the chosen character.
+ * The adapter looks up a plain character, so never use that lookup to open a specific IVS.
+ * @param {import('./ucv.js').UcvIndex} index @param {Part | undefined} picked @param {string[]} splits */
+export function occurrenceChoices(index, picked, splits) {
+  const groups = ucvChoices(index, picked).map(entry => ({ ...entry, context: '' }))
+  if (typeof picked !== 'string' || variationBase(picked) !== variationOf(picked)) return groups
+  const marks = marksOf(picked)
+  const seen = new Set(groups.flatMap(group => group.forms.map(form => form.write)))
+  /** @type {Map<string, ReturnType<typeof ucvChoices>>} */
+  const matches = new Map()
+  const sites = new Set()
+  for (const text of new Set(splits)) {
+    const source = parse(text).tree
+    if (!isNode(source)) continue
+    for (const path of paths(source)) {
+      const part = partAt(source, path)
+      if (part == null) continue
+      const token = write(part)
+      const site = JSON.stringify([path, token])
+      // The expanding lookup visits shorter descriptions first. Opening an
+      // unrelated sibling again would repeat the same choice at this site.
+      if (sites.has(site)) continue
+      sites.add(site)
+      let entries = matches.get(token)
+      if (!entries) { entries = ucvChoices(index, part); matches.set(token, entries) }
+      if (!entries.length) continue
+      const context = write(replaceAt(source, path, '〔' + token + '〕'))
+      for (const entry of entries) {
+        const forms = entry.forms.flatMap(form => {
+          const tree = /** @type {Part} */ (withMarks(replaceAt(source, path, form.tree), marks))
+          const written = write(tree)
+          if (seen.has(written) || !sameTree(parse(written, { open: true }).tree ?? null, tree)) return []
+          seen.add(written)
+          return [{ ...form, tree, write: written }]
+        })
+        if (forms.length) groups.push({ ...entry, forms, context })
+      }
+    }
+  }
+  return groups
 }

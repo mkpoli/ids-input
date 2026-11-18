@@ -98,10 +98,11 @@
   {#if unifiable.entries.length}
     <div class="ids-option-group" role="group" aria-labelledby={`${uid}-unified`}>
       <span class="ids-option-label" id={`${uid}-unified`}>{t('ids.alternatives.unifiable')}</span>
-      {#each unifiable.entries as entry (entry.id)}
+      {#each unifiable.entries as entry (entry.id + entry.context)}
         <div class="ids-option-items ids-unified" data-ucv={entry.id} title={entry.note}>
           {#if variationsHref}<a class="ids-unified-entry" href={variationsHref(entry.id)} target="_blank" rel="noreferrer">UCV {entry.id}</a>
           {:else}<span class="ids-unified-entry">UCV {entry.id}</span>{/if}
+          {#if entry.context}<span class="ids-unified-entry">{entry.context}</span>{/if}
           {#each entry.forms as form, place (place)}
             {@const outline = unifiable.outlines?.[form.glyph]}
             {#if form.write}
