@@ -20,6 +20,7 @@
   import { featureExamples } from './lib/baishi-feature-examples.js'
   import { GLOSS, GRAMMAR, GROUP_LABELS, SHEET, SOURCE, NA_FORMS, ROOF_FORMS, TURN_GLYPHS, UNUSED, arityOf, bareOf, entriesOf, focusOf, idsOf, kindOf, tokenise, variantBody } from './lib/baishi-cheatsheet.js'
   import { chainPath } from '../src/core/chain-shape.js'
+  import tenGlyphs from './lib/baishi-ten-glyphs.json'
   import documentedForms from './lib/baishi-variant-glyphs.json'
   import exampleLicence from '../fonts/OFL-Baishi-example.txt?url'
   import outlines from './lib/baishi-cheatsheet-outlines.json'
@@ -38,7 +39,7 @@
   const GLYPHS = /** @type {Record<string, string[]>} */ ({ ...outlines.components, ...outlines.glyphs })
   const COMPOSED = /** @type {Record<string, string[]>} */ (outlines.composed)
   const ROWS = /** @type {Record<string, string>} */ (outlines.rows)
-  const FORMS = /** @type {Record<string, string>} */ (documentedForms)
+  const FORMS = /** @type {Record<string, string>} */ ({ ...documentedForms, '午t': tenGlyphs.risingNoon.join(''), '午.': tenGlyphs.flatNoon.join('') })
   const grammar = readGrammar(ebnf)
   const anchors = new Map(SECTIONS.map(section => [section.id, section]))
   /** An anchor's name: the title the specification gives it, or its rule. @param {string} id */
@@ -361,7 +362,7 @@
   {@const first = item.quotes[0]}
   {@const subject = first.tokens.flatMap(token => token.stretches.filter((_, at) => token.subject[at]).map(stretch => stretch.text)).join('')}
   {@const operator = item.id.startsWith('op-') ? first.tokens.find(token => token.kind === 'op' && token.subject[0])?.stretches[0].text : undefined}
-  <article class="card" id={item.anchors?.[0]}>
+  <article class="card" id={item.anchors?.[0] ?? (item.id.startsWith('worked-') ? item.id : undefined)}>
     {#each item.anchors?.slice(1) ?? [] as id (id)}<span {id} class="anchor"></span>{/each}
     {@render about(operator ? t(`ids.op.${OP_NAMES[operator]}`) : item.label ? t(`cheatsheet.label.${item.label}`) : item.id.startsWith('worked-') ? first.char : undefined,
       item.hint && t(`cheatsheet.hint.${item.hint}`), item.id.startsWith('worked-') || subject.length > 8 ? '' : subject === '\t' ? '⇥' : subject, item.anchors?.[0], item.label || operator ? '' : 'ja')}
@@ -381,6 +382,7 @@
         </div>
       </div>
     {/each}
+    {#if item.id === 'row-entries'}<a class="comparison-link" href="#worked-noon" lang="ja">午 · 𭬁 · 戢 →</a>{/if}
     {@render readings(item.id)}
   </article>
 {/snippet}
@@ -450,7 +452,7 @@
           <li><span class="what">{t('cheatsheet.source.data')}</span> <a href={SOURCE.repository} target="_blank" rel="noreferrer">yi-bai/ids</a> <a href={`${SOURCE.repository}/tree/${SOURCE.commit}`} target="_blank" rel="noreferrer"><code>{SOURCE.commit.slice(0, 8)}</code></a> · {SOURCE.date} · MIT</li>
           <li><span class="what">{t('cheatsheet.source.notation')}</span> <b class="key">{GRAMMAR.key}</b> <a href={GRAMMAR.url} target="_blank" rel="noreferrer" lang="zh-Hans">{GRAMMAR.title}</a> · {GRAMMAR.date} · {t('cheatsheet.source.notationBy')} <span class="weak">{t('cheatsheet.source.notationNote')}</span></li>
           <li><span class="what">{t('cheatsheet.source.grammar')}</span> <a href={sectionHref('spec', 'row')}>{t('baishi.title')}</a> · <a href={`./baishi-railroad.html?lang=${locale}`}>{t('railroad.title')}</a> · <code>data/baishi-ids.ebnf</code></li>
-          <li><span class="what">{t('cheatsheet.source.outlines')}</span> <a href="https://github.com/notofonts/noto-cjk" target="_blank" rel="noreferrer">Noto Sans CJK</a> · <a href="https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project" target="_blank" rel="noreferrer">Plangothic</a> · <a href="https://github.com/mkpoli/han-compose" target="_blank" rel="noreferrer">han-compose</a> <code>{outlines.composer.commit}</code> · <a href="https://glyphwiki.org/wiki/jmj-034221@1">𡮂 JMJ-034221</a> · <a href="https://glyphwiki.org/wiki/u4d22-var-001@1">䴢 (u)</a> · <a href="https://github.com/NightFurySL2001/bai-ids/blob/0ca5ed48f51821d4d54246196f1f5f38c9d6bd6a/fonts/example.woff2">父 (qq222), 八d, 丰..p</a> © 2024–2025 -PT_AxH_RV- · <a href={exampleLicence}>SIL OFL 1.1</a> · <a href="https://glyphwiki.org/wiki/u4e42-j@2">乂J (GlyphWiki)</a> · {#each [
+          <li><span class="what">{t('cheatsheet.source.outlines')}</span> <a href="https://github.com/notofonts/noto-cjk" target="_blank" rel="noreferrer">Noto Sans CJK</a> · <a href="https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project" target="_blank" rel="noreferrer">Plangothic</a> · <a href="https://github.com/mkpoli/han-compose" target="_blank" rel="noreferrer">han-compose</a> <code>{outlines.composer.commit}</code> · <a href="https://glyphwiki.org/wiki/jmj-034221@1">𡮂 JMJ-034221</a> · <a href="https://glyphwiki.org/wiki/u4d22-var-001@1">䴢 (u)</a> · <a href="https://github.com/NightFurySL2001/bai-ids/blob/0ca5ed48f51821d4d54246196f1f5f38c9d6bd6a/fonts/example.woff2">父 (qq222), 八d, 丰..p</a> © 2024–2025 -PT_AxH_RV- · <a href={exampleLicence}>SIL OFL 1.1</a> · <a href="https://glyphwiki.org/wiki/u2db01-j@5">午 · 午(t)</a> · <a href="https://glyphwiki.org/wiki/u6222-g@3">戢</a> · <a href="https://glyphwiki.org/wiki/u4e42-j@2">乂J (GlyphWiki)</a> · {#each [
             ['𤽄 (.)', 'u24f44-g@3'],
             ['木 (y)', 'u2097d-j@2'],
             ['門 (s)', 'u9580-05-var-002@1'],
@@ -539,6 +541,7 @@
   /* The description takes no width of its own: it wraps inside what the sequence needs. */
   .hint{flex:1 1 0;width:0;min-width:15em;margin:0;font-size:11.5px;line-height:1.4;color:var(--ui-color-ink-muted);text-align:end;text-wrap:pretty}
 
+  .comparison-link{align-self:flex-start;font-family:var(--ids-font),var(--ids-glyph-fallback);font-size:14px}
   .readings{font-size:14px}
   .readings summary{cursor:pointer;color:var(--ui-color-ink-soft)}
   .readings ul{display:grid;gap:5px;margin:8px 0 0;padding:0;list-style:none}
@@ -627,7 +630,8 @@
   }
   @media (max-width:520px) {
     .card{min-width:0;flex:1 1 auto}
-    .quote{flex-wrap:wrap}
+    .comparison-link{align-self:flex-start;font-family:var(--ids-font),var(--ids-glyph-fallback);font-size:14px}
+  .quote{flex-wrap:wrap}
     #stroke-chain .tile,.worked .tile{inline-size:80px;block-size:80px}
     .hint{min-width:8em}
   }

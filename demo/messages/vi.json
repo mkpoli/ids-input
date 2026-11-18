@@ -712,6 +712,7 @@
   "cheatsheet.hint.segment": "b: 一 cắt ngang đoạn thẳng đứng thứ hai của ㇉ (I26 §6.3).",
   "cheatsheet.hint.reverse2": "Sau dấu gạch đứng là phần mô tả tương tự nhưng hoán đổi vai trò của hai bộ phận.",
   "cheatsheet.hint.space": "[n] đặt bộ phận thứ hai vào vùng bao kín thứ n của bộ phận thứ nhất, đếm từ 0. [0] không bao giờ được viết ra (I26 §6.6).",
+  "cheatsheet.hint.workedNoon": "Trong 𭬁, nét ngang của 午t bên trái hất lên, còn nét ngang của 午 bên phải nằm ngang. Hai nét của 十.t trong 戢 giao nhau lệch về góc dưới bên phải.",
   "cheatsheet.hint.workedShi": "凵y trong 世 là mục (y) của 凵, viết thành ba nét.",
   "cheatsheet.hint.workedMu": "Một chuỗi nét nằm trong ⿴ nằm trong ⿻. 𠃊, nét số 1, cắt ngang nét số 0 là 𠃌.",
   "cheatsheet.hint.workedYa": "Hai chuỗi nét đặt cạnh nhau, nằm giữa hai nét 一.",

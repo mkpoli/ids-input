@@ -712,6 +712,7 @@
   "cheatsheet.hint.segment": "b：「一」が「㇉」の2番目の縦のセグメントと交差します（I26 §6.3）。",
   "cheatsheet.hint.reverse2": "縦棒の後ろには、2つの部品の役割を入れ替えた同じ記述が続きます。",
   "cheatsheet.hint.space": "[n]は、第1部品の0から数えてn番目の囲み空間に第2部品を配置します。[0]は書かれません（I26 §6.6）。",
+  "cheatsheet.hint.workedNoon": "𭬁 の左の午t は横画が右上がりで、右の午は水平。戢 の十.t は交点が右下に寄る。",
   "cheatsheet.hint.workedShi": "「世」の凵yは「凵」の(y)エントリで、3画で書かれます。",
   "cheatsheet.hint.workedMu": "「⿻」の中の「⿴」、さらにその中にある連鎖です。筆画1の「𠃊」は、筆画0の「𠃌」と交差します。",
   "cheatsheet.hint.workedYa": "2つの「一」の間に、2つの連鎖が横に並んでいます。",
