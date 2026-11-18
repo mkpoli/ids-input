@@ -353,7 +353,7 @@
       <div class="quote">
         <div class="tiles">
           {#each quote.tiles as tile (tile.entry)}
-            <button type="button" class="tile" class:composed={tile.composed} title={tile.composed ? t('cheatsheet.composed') : t('cheatsheet.zoom')} aria-label={`${t('cheatsheet.zoom')}: ${quote.char}`}
+            <button type="button" class="tile" class:composed={tile.composed} title={tile.composed ? t('cheatsheet.composed') : t('cheatsheet.zoom')} aria-label={`${t('cheatsheet.zoom')}: ${quote.char}${quote.tiles.length > 1 ? ' ' + entriesOf(quote.text)[tile.entry] : ''}`}
               onclick={() => { zoomed = { card: item, quote }; zoomOpen = true }}>{@render drawing(tile, lit(quote, tile.entry), false)}</button>
           {/each}
         </div>

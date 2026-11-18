@@ -84,6 +84,16 @@ try {
       assert.ok((await tip.locator('.variants li').count()) >= 2, `${scheme}: the tooltip lists the component's entries`)
       assert.equal(await page.locator('#component-variant .card').first().locator('.part.dim').count(), 1, `${scheme}: the other part dims`)
       if (shots) await page.screenshot({ path: `${shots}/baishi-cheatsheet-tooltip-${scheme}.png` })
+      const entries = page.locator('#primary-group')
+      const drawings = entries.locator('.tile')
+      assert.equal(await drawings.count(), 2)
+      assert.notEqual(await drawings.first().getAttribute('aria-label'), await drawings.last().getAttribute('aria-label'))
+      for (const [i, written] of ['一.', '一t'].entries()) {
+        await entries.locator('.token.part').filter({ hasText: new RegExp('^' + written.replace('.', '\\.') + '$') }).focus()
+        assert.equal(await drawings.nth(i).locator('.part.lit title').textContent(), written)
+        assert.equal(await drawings.nth(1 - i).locator('.part.lit,.part.dim').count(), 0)
+      }
+      await token.focus()
       // The entries of the component's row stand side by side, the font's glyph over the entry it is drawn for.
       const feet = await tip.locator('.variants li').evaluateAll(items => items.map(item => Math.round(item.getBoundingClientRect().bottom)))
       assert.equal(feet[0], feet[1], `${scheme}: the entries stand side by side`)
