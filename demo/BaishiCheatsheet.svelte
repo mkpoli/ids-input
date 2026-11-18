@@ -105,7 +105,7 @@
       // Where the chain takes up each stroke: a square after a break, a filled ring where it closes.
       const marks = (glyph.joins ?? []).map(([x, y], order) => ({ x, y, order, slot: strokes[order]?.slot ?? 0,
         broken: order > 0 && strokes[order - 1]?.stretches.some(stretch => stretch.role === 'mark' && stretch.text === 'b'), closed: closed && order === 0 }))
-      return [{ entry, char: glyph.char, composed: false, ink: glyph.parts ? '' : contours.join(''), rest: cuts(contours, glyph.rest ?? []),
+      return [{ entry, char: glyph.char, composed: Boolean(glyph.composed), ink: glyph.parts ? '' : contours.join(''), rest: cuts(contours, glyph.rest ?? []),
         layers: (glyph.parts ?? []).map((pieces, slot) => ({ slot, cuts: cuts(contours, pieces), names: names(entry, slot) })), marks, cross: glyph.cross ?? null }]
     })
     return { ...quote, key: `${card.id}/${at}`, tokens, tiles, numbered: Boolean(quote.strokes) && tokens.filter(token => token.kind === 'stroke').length > 1 }
@@ -239,7 +239,9 @@
     const all = char ? variantsOf(char, token.stretches[1]?.text) : []
     const glyph = char && GLYPHS[char] ? GLYPHS[char].join('') : ''
     // Six entries at most, in the row's order: the one named and the one the font draws are always among them.
-    const kept = new Set([...all.filter(variant => variant.named || variant.font), ...all].slice(0, 6))
+    /** @param {typeof all[number]} variant */
+    const preferred = variant => variant.named || variant.font
+    const kept = new Set([...all.filter(preferred), ...all.filter(variant => !preferred(variant))].slice(0, 6))
     const variants = all.filter(variant => kept.has(variant))
     return { token, ...describe(token), char, glyph: all.length ? '' : glyph,
       variants: variants.map(variant => {
@@ -431,7 +433,8 @@
           <li><span class="what">{t('cheatsheet.source.data')}</span> <a href={SOURCE.repository} target="_blank" rel="noreferrer">yi-bai/ids</a> <a href={`${SOURCE.repository}/tree/${SOURCE.commit}`} target="_blank" rel="noreferrer"><code>{SOURCE.commit.slice(0, 8)}</code></a> · {SOURCE.date} · MIT</li>
           <li><span class="what">{t('cheatsheet.source.notation')}</span> <b class="key">{GRAMMAR.key}</b> <a href={GRAMMAR.url} target="_blank" rel="noreferrer" lang="zh-Hans">{GRAMMAR.title}</a> · {GRAMMAR.date} · {t('cheatsheet.source.notationBy')} <span class="weak">{t('cheatsheet.source.notationNote')}</span></li>
           <li><span class="what">{t('cheatsheet.source.grammar')}</span> <a href={sectionHref('spec', 'row')}>{t('baishi.title')}</a> · <a href={`./baishi-railroad.html?lang=${locale}`}>{t('railroad.title')}</a> · <code>data/baishi-ids.ebnf</code></li>
-          <li><span class="what">{t('cheatsheet.source.outlines')}</span> <a href="https://github.com/notofonts/noto-cjk" target="_blank" rel="noreferrer">Noto Sans CJK</a> · <a href="https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project" target="_blank" rel="noreferrer">Plangothic</a> · <a href="https://github.com/mkpoli/han-compose" target="_blank" rel="noreferrer">han-compose</a> <code>{outlines.composer.commit}</code> · <a href="https://github.com/NightFurySL2001/bai-ids/blob/0ca5ed48f51821d4d54246196f1f5f38c9d6bd6a/fonts/example.woff2">父 (qq222), 八d, 丰..p</a> © 2024–2025 -PT_AxH_RV- · <a href={exampleLicence}>SIL OFL 1.1</a> · <a href="https://glyphwiki.org/wiki/u4e42-j@2">乂J (GlyphWiki)</a> · <a href="https://github.com/yi-bai/iwds/tree/8302302d615ff1c1f60ae335b118b10060be0ed4">IWDS 128, 316</a></li>
+          <li><span class="what">{t('cheatsheet.source.outlines')}</span> <a href="https://github.com/notofonts/noto-cjk" target="_blank" rel="noreferrer">Noto Sans CJK</a> · <a href="https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project" target="_blank" rel="noreferrer">Plangothic</a> · <a href="https://github.com/mkpoli/han-compose" target="_blank" rel="noreferrer">han-compose</a> <code>{outlines.composer.commit}</code> · <a href="https://glyphwiki.org/wiki/jmj-034221@1">𡮂 JMJ-034221</a> · <a href="https://glyphwiki.org/wiki/u4d22-var-001@1">䴢 (u)</a> · <a href="https://github.com/NightFurySL2001/bai-ids/blob/0ca5ed48f51821d4d54246196f1f5f38c9d6bd6a/fonts/example.woff2">父 (qq222), 八d, 丰..p</a> © 2024–2025 -PT_AxH_RV- · <a href={exampleLicence}>SIL OFL 1.1</a> · <a href="https://glyphwiki.org/wiki/u4e42-j@2">乂J (GlyphWiki)</a> · <a href="https://github.com/yi-bai/iwds/tree/8302302d615ff1c1f60ae335b118b10060be0ed4">IWDS 128, 316</a></li>
+          <li><a href="https://glyphwiki.org/wiki/aj1-13763">工 (q4082)</a> · {t('cheatsheet.source.gong')}</li>
         </ul>
       </footer>
     </main>

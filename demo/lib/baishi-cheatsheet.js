@@ -17,6 +17,30 @@
 // 𱤻 stands for ⿾止 as the guide gives it (§2.1), though its row's default entry spells it otherwise.
 import { chainStrokes } from '../../src/core/chain-shape.js'
 
+// JMJ-034221 (GlyphWiki koseki-085450@6), drawn in Gothic at 10 KAGE units.
+// Its top u5c0f-03@8 has the hooked 亅 of 小.; its bottom cdp-8bc4@7 has 白 over 小.
+const smallJ = {
+  char: '𡮂',
+  contours: [
+    'M525 63L525 267.5L475 267.5L475 63ZM525 267.5L523 282.5L517.5 297L507.5 309L495 317.5L481 323L466 325.5L450 325.5L432.5 324L414 321L393.5 316.5L406 268L423.5 272L439 274.5L451.5 275.5L461.5 275.5L468.5 274.5L472.5 273L474 272L474 272L474.5 271L475 267.5ZM378.5 138.5L360 159L339.5 179L317 199L293.5 218L267.5 236.5L240.5 254.5L211.5 272L181 289L149 305.5L115 321.5L94.5 276L127 260.5L157.5 245L186.5 228.5L214 212L239.5 195.5L263 178L285 160.5L305.5 142.5L324 124.5L341 106ZM608.5 98.5L642.5 111.5L675.5 125.5L707.5 140L738.5 155.5L768.5 171.5L797 188.5L824.5 206.5L851.5 225L876.5 244L901 264.5L868.5 302L845.5 283.5L822 265.5L797 248L771 231L743.5 215L715.5 200L686 185L655.5 171L624 158L591 145.5Z',
+    'M554 389L544.5 395L533.5 402L521.5 409.5L507.5 418L492 426.5L475 436.5L456 446.5L436 458L414 469.5L390.5 482L367 438L390.5 425.5L412 414L432 403L450.5 392.5L467 383L482 374.5L495.5 366.5L507.5 359.5L517.5 353L526 347.5ZM251 435.5L251 743.5L201 743.5L201 435.5ZM201 435.5L838.5 435.5L838.5 485.5L201 485.5ZM838.5 435.5L838.5 743.5L788.5 743.5L788.5 435.5ZM201 536.5L838.5 536.5L838.5 586.5L201 586.5ZM201 643.5L838.5 643.5L838.5 693.5L201 693.5ZM545 649.5L545 856.5L495 856.5L495 649.5ZM545 856.5L543 871.5L537.5 886L527.5 898.5L515 907L501 912L486 914.5L470 915L452.5 913.5L434 910.5L413.5 906L426 857.5L443.5 861.5L459 864L471.5 865L481.5 865L488.5 863.5L492.5 862.5L494 861.5L494 861.5L494.5 860L495 856.5ZM357 760.5L335 780L311.5 799L286.5 817.5L260.5 834.5L232.5 851L203.5 866.5L172.5 881.5L140.5 895.5L107 908.5L72 921L56 873.5L89.5 861.5L121.5 849L152 836L180.5 822L208 807.5L234 792L258 776L281 759.5L302.5 742L322 724ZM655 712L696.5 727L735 742L770 756.5L802.5 771L832 785.5L858.5 799.5L882 814L902.5 828L920.5 843L936 857.5L898.5 891L887.5 880L873 868.5L855 856L833.5 843L809 830L781.5 816L750.5 802.5L716.5 788.5L679 774L638.5 759.5Z'
+  ],
+  parts: [[0], [1]],
+}
+
+// Assemble the upper-position variant in the boxes of GlyphWiki u4d22-var-001@1.
+// Keep 比. in u9e7f-03@7, replacing just the vertical dot with the sloping dot
+// of u9e7f-t03@3. The lower 木 is u6728-04@6.
+const deerUpper = {
+  char: '䴢',
+  composed: true,
+  contours: [
+    'M450 37L466 44L481 51.5L495.5 59.5L509 67.5L521.5 75.5L533 83.5L543.5 92L553 101L562 110L570 120L530 150L524.5 143.5L518.5 137L511 130L502.5 123.5L493 116.5L482.5 110L471 103L458.5 96L444.5 89.5L429.5 82.5ZM135 130L920 130L920 180L135 180ZM185 130L185 355L135 355L135 130ZM185 355L184 392.5L181 428.5L176 463.5L169 497.5L160 530L149 561L135.5 590.5L120.5 618.5L103.5 645.5L84 670.5L45.5 639L62.5 616.5L77.5 593.5L90.5 568.5L102.5 542.5L112 514.5L120.5 485.5L126.5 455L131 423L134 389.5L135 355ZM135 215L855 215L855 265L135 265ZM855 215L855 410L805 410L805 215ZM425 130L425 360L375 360L375 130ZM645 130L645 360L595 360L595 130ZM135 310L855 310L855 360L135 360ZM285 410L540 410L540 460L285 460ZM335 350L335 560L285 560L285 350ZM201.5 540L234 535.5L266.5 531L300.5 526L335 520L370.5 514L406.5 507L443.5 500L481.5 492.5L520 484L559.5 475.5L570 524L530.5 533L491.5 541L453 549L416 556.5L379 563L343.5 569.5L308.5 575L274 580.5L240.5 585.5L208 589.5ZM844.5 427.5L829 434L811.5 440L793 446L772.5 452L751 458L727.5 463.5L702.5 469L676.5 474L648.5 479.5L619 484.5L610.5 435L639.5 430L667 425L692.5 420L716.5 414.5L738.5 409L759.5 404L778.5 398.5L795.5 393L811 387.5L825 382ZM640 350L640 500L590 500L590 350ZM640 500L640 506.5L641 511.5L642 515.5L643.5 518L645 519.5L646.5 521L649 522.5L653 523.5L658 524.5L665 525L665 575L652.5 574L640.5 572L629.5 568L619 562.5L609.5 555L602 545.5L596.5 535L592.5 524L590.5 512L590 500ZM665 525L850 525L850 575L665 575ZM850 525L854.5 524.5L858.5 523L863 520.5L868 516L873.5 510L879 501L885 490L890.5 477L895.5 461.5L900.5 443.5L949 456L943.5 476L937 494.5L930 511.5L922.5 526.5L913.5 540L903.5 551.5L892 561L879 568.5L864.5 573L850 575Z',
+    'M90 626.5L910 626.5L910 676.5L90 676.5ZM525 539L525 930.5L475 930.5L475 539ZM489.5 667L460 701.5L427.5 734.5L392.5 765.5L355 794.5L314.5 822L271 847.5L225.5 871L177 893L126 913L72.5 931L57 883.5L109 866L157.5 846.5L203.5 826L247 803.5L287.5 779.5L325.5 754L360.5 727L393 698L423 668L450 636ZM542.5 633.5L572 661.5L603.5 688L636.5 713.5L670.5 737.5L706.5 760L743.5 781L782.5 801L822.5 819.5L864.5 836.5L908 852.5L891.5 900L846.5 883.5L803 865.5L760.5 846L720 825L680.5 803L643 779L606.5 753.5L572 727L539 699L507 669.5Z',
+  ],
+  parts: [[0], [1]],
+}
+
 // Sans drawing of IWDS 408-2 (aj1-13763), traced from the ImageGen study.
 // Keep the three parts separate for token highlighting.
 const gong408 = {
@@ -65,7 +89,7 @@ export const GRAMMAR = { key: 'I26', title: '（白式）IDS 延展语法导论'
  * drawn faint because nothing quoted names them. Without `parts` the outline is drawn in ink. For a
  * chain, `joins` is where the line takes up each stroke, in the chain's order, and `cross` where
  * two of its strokes cross.
- * @typedef {{ char: string, contours?: string[], parts?: Piece[][], rest?: Piece[], joins?: [number, number][], cross?: [number, number] }} Glyph
+ * @typedef {{ char: string, composed?: boolean, contours?: string[], parts?: Piece[][], rest?: Piece[], joins?: [number, number][], cross?: [number, number] }} Glyph
  */
 /**
  * One quotation: the character, the text as the data has it (an entry, or a whole row when it holds
@@ -134,7 +158,7 @@ export const SHEET = [
         { char: '径', text: '{?0径}⿰彳圣(T)', row: 4485, glyphs: ['composed'], focus: ['{?0径}'] },
         { char: '叱', text: '{?叱}⿰口.七.(V)', row: 1522, glyphs: ['composed'], focus: ['{?叱}'] },
       ] },
-      { id: 'prefix-source', label: 'oneSource', hint: 'prefixSource', quotes: [{ char: '𡮂', text: '{𡮂J}⿱小.𤽄V(J)', row: 34639, glyphs: ['composed'], focus: ['{𡮂J}'] }] },
+      { id: 'prefix-source', label: 'oneSource', hint: 'prefixSource', quotes: [{ char: '𡮂', text: '{𡮂J}⿱小.𤽄V(J)', row: 34639, glyphs: [smallJ], focus: ['{𡮂J}'] }] },
     ] },
   ] },
   { id: 'ids', label: 'operators', rules: ['ids'], groups: [
@@ -190,7 +214,7 @@ export const SHEET = [
       { id: 'list-source', label: 'source', hint: 'listSource', quotes: [{ char: '画', text: '⿱一.⿶凵.由(J)', row: 10044, glyphs: [{ char: '画', parts: [[1], [2, 0, 3], [4, 5, 6, 7, 8]] }], focus: ['(J)'] }] },
       { id: 'list-style', label: 'style', hint: 'listStyle', quotes: [{ char: '土', text: '⿱十.一t(t)', row: 2336, glyphs: [{ char: '地', parts: [[4, 5], [6]], rest: [0, 1, 2, 3] }], focus: ['(t)'] }] },
       { id: 'list-position', label: 'position', hint: 'listPosition', quotes: [
-        { char: '䴢', text: '⿱鹿.木.(u)', row: 27427, glyphs: ['composed'], focus: ['(u)'] },
+        { char: '䴢', text: '⿱鹿.木.(u)', row: 27427, glyphs: [deerUpper], focus: ['(u)'] },
         { char: '䴢', text: '⿸鹿.木.(.)', row: 27427, glyphs: [{ char: '䴢', parts: [[0, 7, 6, 4, 5, 12, 14, 2, 13, 8, 9], [1, 3, 11, 10]] }] },
       ] },
       { id: 'list-mirror', label: 'mirror', hint: 'listMirror', quotes: [{ char: '𱤻', text: '⿾止.(m)', row: 94401, glyphs: [{ char: '𱤻', parts: [[0]] }], focus: ['(m)'] }] },
@@ -475,7 +499,11 @@ export const NA_FORMS = new Map([
 export const TURN_GLYPHS = new Map([['#(SHw)', '㇄'], ['#(SH)', '𠃊']])
 
 /** Every character whose outline a card or its tooltip draws. @returns {string[]} */
-export const glyphsDrawn = () => [...new Set([...TURN_GLYPHS.values(), ...cardsOf().flatMap(card => card.quotes.flatMap(quote => quote.glyphs.flatMap(glyph => glyph && glyph !== 'composed' && !glyph.contours ? [glyph.char] : [])))])]
+export function glyphsDrawn() {
+  const chars = cardsOf().flatMap(card => card.quotes.flatMap(quote =>
+    quote.glyphs.flatMap(glyph => glyph && glyph !== 'composed' && !glyph.contours ? [glyph.char] : [])))
+  return [...new Set([...chars, ...TURN_GLYPHS.values()])]
+}
 
 /** Every component a card writes, whose own row and outline a tooltip shows. @returns {string[]} */
 export const componentsWritten = () => [...new Set(cardsOf().flatMap(card => card.quotes.flatMap(quote => tokenise(quote.text, { strokes: quote.strokes }).filter(token => token.kind === 'part').map(token => token.stretches[0].text))))]
