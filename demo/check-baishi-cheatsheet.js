@@ -90,6 +90,19 @@ try {
       assert.equal(await tip.locator('.variants li.named:has(.mini)').count(), 1, `${scheme}: the font's glyph stands over the entry it is drawn for`)
       await page.mouse.move(0, 0)
       assert.equal(await tip.count(), 0, `${scheme}: the tooltip leaves with the pointer`)
+      // A source-specific form gets its own drawing; unsupported forms keep the source notation.
+      for (const [written, identifier, ink] of /** @type {const} */ ([
+        ['口.', 'q3162', true], ['七.', '(t)', true], ['㠯.', '(T)', true],
+        ['弓.', '(z)', true], ['門.', '(s)', true], ['十.', '(.t)', true],
+        ['㠯.', '(x)', false], ['干t', '(t)', true], ['𤽄V', '(.)', true],
+      ])) {
+        const part = page.locator('.token.part').filter({ hasText: new RegExp('^' + written.replace('.', '\\.') + '$') }).first()
+        await part.hover()
+        const entry = tip.locator('li').filter({ hasText: new RegExp(identifier.replace(/[().]/gu, '\\$&')) }).first()
+        await entry.waitFor()
+        assert.equal(await entry.locator('svg').count(), Number(ink), `${scheme}: ${written} ${identifier} evidence`)
+        await page.mouse.move(0, 0)
+      }
       // A press pins the tooltip: it stays when the pointer leaves, and goes with a press elsewhere.
       await token.click()
       await page.mouse.move(0, 0)
