@@ -1,4 +1,5 @@
 <script>
+  import { formSpelling } from '../core/ucv-choice.js'
   // The IRG's unifiable (UCV) and non-unifiable (NUCV) component variations as a list: each entry's
   // forms drawn from the source's glyphs, the criterion it cites and its example characters. Typing
   // a character or an entry number narrows it. A form or an example that is text is a link where
@@ -79,14 +80,15 @@
           <div class="ids-ucv-forms">
             {#each entry.forms as form, slot (slot)}
               {@const outline = outlines[form.glyph]}
+              {@const spelling = formSpelling(form)}
               {@const label = form.text ? `${form.text} ${code(form.text)}` : t('ids.ucv.form', { name: form.glyph })}
-              {#if form.text && href}
-                <a class="ids-ucv-form" data-form={form.glyph} href={href(form.text)} title={label} aria-label={label}>
+              {#if href && (form.text || entry.kind === 'unifiable')}
+                <a class="ids-ucv-form" data-form={form.glyph} href={href(spelling)} title={label} aria-label={label}>
                   {#if outline}<svg viewBox="0 0 200 200" aria-hidden="true"><path d={outline} /></svg>{:else}<span lang="ja">{form.text}</span>{/if}
                 </a>
-              {:else if form.text && ontake}
+              {:else if ontake && (form.text || entry.kind === 'unifiable')}
                 <button type="button" class="ids-ucv-form" data-form={form.glyph} {disabled} title={label} aria-label={label}
-                  onclick={() => ontake(/** @type {string} */ (form.text))}>
+                  onclick={() => ontake(spelling)}>
                   {#if outline}<svg viewBox="0 0 200 200" aria-hidden="true"><path d={outline} /></svg>{:else}<span lang="ja">{form.text}</span>{/if}
                 </button>
               {:else}

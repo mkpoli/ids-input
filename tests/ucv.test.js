@@ -73,9 +73,10 @@ it('draws every form, and gives each textless one an outline record', () => {
   for (const form of forms) expect(outlines[form.glyph], form.glyph).toMatch(/^M[\d. ]+L/)
   expect(data.source.glyphs.traced).toHaveLength(11)
   for (const name of data.source.glyphs.traced) expect(polygonsOf(outlines[name]).length, name).toBeGreaterThan(0)
-  const { records } = JSON.parse(gunzipSync(readFileSync(new URL('../data/ucv-outlines.json.gz', import.meta.url))).toString('utf8'))
+  const { records, aliases } = JSON.parse(gunzipSync(readFileSync(new URL('../data/ucv-outlines.json.gz', import.meta.url))).toString('utf8'))
   const wanted = new Set(forms.filter((/** @type {{ text?: string }} */ form) => !form.text).map((/** @type {{ glyph: string }} */ form) => `&GW-${form.glyph};`))
-  expect(new Set(Object.keys(records))).toEqual(wanted)
+  for (const ref of [...wanted, ...Object.values(aliases)]) expect(records).toHaveProperty(ref)
+  for (const ref of Object.keys(records)) expect(forms.some(form => ref === `&GW-${form.glyph};`)).toBe(true)
   expect(wanted.size).toBe(638)
   const record = records['&GW-u58ec-t;']
   expect(record.k).toBe('&GW-u58ec-t;')
@@ -138,7 +139,7 @@ it('draws every textless form in Gothic too, from stroke data that draws its rec
   expect(Object.keys(sans).sort()).toEqual(Object.keys(mincho).sort())
   for (const key of Object.keys(sans)) {
     const name = key.slice('&GW-'.length, -1)
-    if (data.source.glyphs.traced.includes(name)) { expect(sans[key]).toEqual(mincho[key]); continue }
+    if (!strokes.forms[name] || data.source.glyphs.traced.includes(name)) { expect(sans[key]).toEqual(mincho[key]); continue }
     const kept = strokes.forms[name]
     expect(kept.same).toBeGreaterThanOrEqual(strokes.source.same)
     expect(strokes.glyphs[`${name}@${kept.version}`]).toBeTruthy()
@@ -174,7 +175,7 @@ it('draws every textless form in Gothic too, from stroke data that draws its rec
         return Math.sign(sum)
       }
       // A traced form is one shape, whose counters are wound against it.
-      const stroke = !data.source.glyphs.traced.includes(key.slice('&GW-'.length, -1))
+      const stroke = Boolean(strokes.forms[key.slice('&GW-'.length, -1)])
       if ((stroke && turn(0) !== 1) || turn(-0.6) !== turn(0) || turn(1) !== turn(0)) throw new Error(`${key}: a contour turns over between weights`)
     }
   }

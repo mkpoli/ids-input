@@ -1,4 +1,7 @@
 // @ts-check
+import { descriptionEnd } from './ids.js'
+import { compatibilitySequences } from './compatibility.js'
+import registered from '../../data/ucv-spellings.json' with { type: 'json' }
 // The IRG's unifiable (UCV) and non-unifiable (NUCV) component variations, as compiled in
 // `data/ucv.json`: which entries a character belongs to, and which entries a query asks for.
 
@@ -69,6 +72,8 @@ export function entryCharacters(entry) {
 /**
  * @typedef {object} UcvIndex
  * @property {UcvEntry[]} entries
+ * @property {Map<UcvEntry, string[]>} patterns
+ * @property {UcvEntry[]} templates
  * @property {(query: string, options?: { kind?: UcvEntry['kind'] | null }) => UcvEntry[]} find
  *   The entries a query asks for: an entry number (with or without its letters), or any of its
  *   characters as a form or an example. An entry with the whole query as a form comes first, then
@@ -85,11 +90,28 @@ export function createUcvIndex(data) {
   const characters = entries.map(entryCharacters)
   /** @type {Map<string, number[]>} */
   const byForm = new Map()
+  /** @type {Map<UcvEntry, string[]>} */
+  const patterns = new Map()
   characters.forEach(({ forms }, index) => {
-    for (const char of forms) byForm.set(char, [...byForm.get(char) ?? [], index])
+    // Components are adjacent prefix expressions. Keep complex IDS whole so that a
+    // radical mentioned inside one does not become an anchor for the entire entry.
+    const chars = [...entries[index].components ?? '']
+    const anchors = []
+    for (let at = 0; at < chars.length;) {
+      const end = descriptionEnd(chars, at)
+      if (end <= at) break
+      anchors.push(chars.slice(at, end).join(''))
+      at = end
+    }
+    patterns.set(entries[index], anchors)
+    const names = entries[index].forms.filter(form => !form.text).map(form => `&GW-${form.glyph};`)
+    const spellings = entries[index].forms.map(form => /** @type {Record<string, string>} */ (registered)[form.glyph]).filter(Boolean).map(bare)
+    for (const char of new Set([...forms, ...[...forms].map(text => bare(compatibilitySequences(text))), ...names, ...spellings, ...anchors])) byForm.set(char, [...byForm.get(char) ?? [], index])
   })
   return {
     entries,
+    patterns,
+    templates: entries.filter(entry => patterns.get(entry)?.some(text => text.includes('⬚')) || entry.forms.some(form => form.text?.includes('⬚'))),
     find(query, { kind = null } = {}) {
       // An entry number may be typed full-width; characters are compared as written.
       const typed = query.trim(), folded = typed.normalize('NFKC')
