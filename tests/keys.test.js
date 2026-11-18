@@ -2,6 +2,11 @@ import { describe, expect, it } from 'bun:test'
 import { ALIASES, CODES, KEYS, KEY_OF, OPERATORS, commandFor, createHistory, namingOperator, unalias } from '../src/core/index.js'
 
 describe('ASCII operator names', () => {
+  it('normalizes the ㄍ component shorthand', () => {
+    expect(unalias('ㄍ')).toBe('巜')
+    expect(unalias('LRㄍ木')).toBe('⿰巜木')
+  })
+
   it('name each operator but 〾 once', () => {
     const named = Object.values(ALIASES)
     expect(new Set(named).size).toBe(named.length)
