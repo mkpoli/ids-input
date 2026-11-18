@@ -74,11 +74,11 @@ function acrossInk(side, edges, ray, limit, along) {
   }
   const otherSide = winding - side.winding
   // Both sides can be filled where two strokes overlap. Only compensate a boundary of ink.
-  if (Boolean(winding) === Boolean(otherSide)) return 0
+  if (Boolean(winding) === Boolean(otherSide)) return null
   const match = winding ? ahead : behind
   const width = winding ? forward : back
-  if (!match || Math.abs(width) > limit || dot(match.tangent, side.tangent) * match.winding * side.winding > -0.7) return 0
-  return width
+  if (!match || Math.abs(width) > limit || dot(match.tangent, side.tangent) * match.winding * side.winding > -0.7) return null
+  return { width, clearance: winding ? -back : forward }
 }
 
 /** @param {Point} before @param {Point} after @param {number} a @param {number} b */
@@ -150,11 +150,16 @@ export function keepStrokeWidth(pieces, base, edit, stroke) {
         const limit = 2.2 * Math.hypot(outward[0] * stroke[0], outward[1] * stroke[1])
         // A crossing through the centre can obscure a long stem. Check its exposed ends too.
         const worthMeasuring = Math.abs(ratio - 1) >= EPS
-        let width = worthMeasuring ? acrossInk(side, edges, outward, limit, 0.5) : 0
-        if (!width && worthMeasuring && Math.hypot(...minus(side.end, side.start)) >= limit) {
-          width = acrossInk(side, edges, outward, limit, 0.25) || acrossInk(side, edges, outward, limit, 0.75)
+        let measured = worthMeasuring ? acrossInk(side, edges, outward, limit, 0.5) : null
+        if (!measured && worthMeasuring && Math.hypot(...minus(side.end, side.start)) >= limit) {
+          measured = acrossInk(side, edges, outward, limit, 0.25) ?? acrossInk(side, edges, outward, limit, 0.75)
         }
-        const offset = width * (ratio - 1) / 2
+        let offset = measured ? measured.width * (ratio - 1) / 2 : 0
+        if (measured && ratio < 1) {
+          // A compressed counter may be too narrow to keep both strokes at full width.
+          const room = measured.clearance * ratio * 0.45
+          offset = Math.sign(offset) * Math.min(Math.abs(offset), room)
+        }
         if (Math.abs(offset) > EPS) changed = true
         return { normal: times(normal(tangent), Math.sign(det) / run), offset }
       })

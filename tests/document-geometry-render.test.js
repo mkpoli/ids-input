@@ -106,4 +106,13 @@ describe('stroke width during an authored resize', () => {
     const width = (after[1] + after[3] - after[27] - after[29]) / 2
     expect(Math.abs(width - 20)).toBeLessThan(2)
   })
+  it('keeps a gap between bars when the available space cannot fit their original widths', () => {
+    const bars = { geometry: () => ({ pieces: [{ d: 'M0 0L300 0L300 20L0 20ZM0 30L300 30L300 50L0 50Z' }] }) }
+    const document = { root: { kind: 'component', id: 'bars', transform: affine([1, 0, 0, 0.5, 0, 0]) } }
+    const drawing = renderScopes(document, bars, { stroke: [20, 20] })
+    const [above, below] = pathRings(drawing.root.positive[0].d)
+    const bottomOfAbove = Math.min(...above.filter((_, i) => i % 2))
+    const topOfBelow = Math.max(...below.filter((_, i) => i % 2))
+    expect(bottomOfAbove - topOfBelow).toBeGreaterThanOrEqual(0.5)
+  })
 })
