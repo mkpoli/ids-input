@@ -6,7 +6,7 @@
 
 The UI's text stack draws rare components from a Plangothic subset; characters newer than the
 bundled sources are not in it. This subsets Plangothic P2 (SIL OFL 1.1), a Source Han Sans design,
-to the characters in `data/ids-characters.tsv`, so 𳑳 renders in the same sans style as the drawing.
+to the characters in `data/ids-characters.tsv` and the closed-chain example 𱍫 in the Baishi guide.
 Run after changing that file:
 
     uv run scripts/build_project_font.py [--font PlangothicP2-Regular.ttf]
@@ -54,7 +54,7 @@ def main(argv: list[str] | None = None) -> int:
     from fontTools.ttLib import TTFont
 
     path = args.font or fetch(PLANGOTHIC["url"], args.cache / PLANGOTHIC["file"], PLANGOTHIC["sha256"])
-    wanted = sorted({ord(char) for char in characters(SOURCE)})
+    wanted = sorted({ord(char) for char in [*characters(SOURCE), "𱍫"]})
     options = subset.Options()
     options.drop_tables += ["FFTM"]
     options.layout_features, options.name_IDs, options.notdef_outline = [], ["*"], True

@@ -43,7 +43,7 @@ comes from the reader's own CJK font.
   subset, SIL Open Font License 1.1 (`OFL-Plangothic.txt`). The font declares no Reserved Font Name.
   Source SHA-256s: P1 `550b5d0775b15405946b18f4843df439a51e69508d7e6778d94c1f7a53dc5ad6`, P2
   `681933370adfe0fc7253f77735275a82fea09fe4f8adba907bdeb46c110daf8f`.
-- `Plangothic-ids-project.woff2` (4.6 KB, 1 character): U+33473 𳑳 from Plangothic P2 V2.9.5795,
+- `Plangothic-ids-project.woff2` (2 characters): U+3136B 𱍫 and U+33473 𳑳 from Plangothic P2 V2.9.5795,
   the same source and licence as above, named `IDS Project`; it lets the project's characters render
   in the Sans face before the system fonts. Rebuild with
   `uv run scripts/build_project_font.py` after changing `data/ids-characters.tsv`.
