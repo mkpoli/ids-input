@@ -766,7 +766,7 @@
   "cheatsheet.source.grammar": "Grammar",
   "cheatsheet.help.title": "About this sheet",
   "cheatsheet.help.colour": "A written part and the strokes it names share a colour, and each colour has its own underline. Pointing at either picks out the pair. A token says what it is when pointed at, tapped, or reached with Tab and the arrow keys.",
-  "cheatsheet.help.glyphs": "The glyphs are the font's own outlines, Noto Sans CJK JP and Plangothic. A part is the contours of its strokes; nothing is redrawn.",
+  "cheatsheet.help.glyphs": "The colours identify the strokes belonging to each component. The Sources section credits the outlines.",
   "cheatsheet.help.entry": "Each sequence is the entry of its row for the form drawn: the (J) entry, or the default where the row has none. A variant the font does not draw alone is drawn inside a character whose entry names it, the rest of that character faint. 𱤻 stands for ⿾止 as I26 gives it (§2.1).",
   "cheatsheet.help.subject": "The marked piece of a sequence is what its card is about.",
   "cheatsheet.help.composed": "A tile with a dashed edge is drawn by the workshop's composer from the sequence, for a form no outline has. Its tags are not drawn.",
