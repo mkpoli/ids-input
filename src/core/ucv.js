@@ -96,9 +96,11 @@ export function createUcvIndex(data) {
     // Components are adjacent prefix expressions. Keep complex IDS whole so that a
     // radical mentioned inside one does not become an anchor for the entire entry.
     const chars = [...entries[index].components ?? '']
+    // A square is a template operand. Count it as a leaf while finding prefix boundaries.
+    const countable = chars.map(char => char === '⬚' ? '木' : char)
     const anchors = []
     for (let at = 0; at < chars.length;) {
-      const end = descriptionEnd(chars, at)
+      const end = descriptionEnd(countable, at)
       if (end <= at) break
       anchors.push(chars.slice(at, end).join(''))
       at = end

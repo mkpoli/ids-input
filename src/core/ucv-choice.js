@@ -32,6 +32,25 @@ function fill(pattern, operands) {
   return i === operands.length ? result : undefined
 }
 
+// In these IWDS entries the component column identifies the complete shape of
+// each drawing including its open slot(s), in the same order as the glyphs.
+const parallelTemplates = new Set(['188b', '307e', '307f', '312d', '352c', '435'])
+
+/** @param {import('./ucv.js').UcvEntry} entry @param {import('./ucv.js').UcvForm} form
+ * @param {number} i @param {string[]} patterns */
+function contextualSpelling(entry, form, i, patterns) {
+  if (entry.id === '47') return '⿰' + formSpelling(form) + '⬚'
+  if (parallelTemplates.has(entry.id)) return patterns[i]
+  if (entry.id === '82a' && !form.text) return '⿱⬚&CDP-8DC1;'
+  if (entry.id === '230b') return '⿳' + (i === 0 ? '𠂊' : '𠂉') + '&CDP-885E;⬚'
+  // Both extended frames put 止 across the horizontal of a right-hand hook.
+  // Only the last reference has the dot of 弋 above that horizontal.
+  if (entry.id === '444' && !form.text) return i === 1 ? '⿹⿻止⿻一㇂⬚' : '⿹⿻止弋⬚'
+  // The middle reference draws its right-hand glyph with u5192-j.
+  if (entry.id === '382' && !form.text) return '⿰⬚冒\u{E0100}'
+  return null
+}
+
 /** @param {import('./ucv.js').UcvIndex} index @param {Part | undefined} picked */
 export function ucvChoices(index, picked) {
   if (picked == null) return []
@@ -51,19 +70,22 @@ export function ucvChoices(index, picked) {
     /** @type {Part[]} */
     let operands = []
     if (isNode(part)) {
-      const matched = [...entry.forms.map(form => form.text), ...index.patterns.get(entry) ?? []].some(text => {
+      const patterns = index.patterns.get(entry) ?? []
+      const contextual = entry.forms.map((form, i) => contextualSpelling(entry, form, i, patterns))
+      const matched = [...entry.forms.map(form => form.text), ...patterns, ...contextual].some(text => {
+        if (!text) return false
         operands = []
-        const pattern = text && parse(compatibilitySequences(text), { open: true }).tree
-        return pattern !== undefined && pattern !== '' && comparable !== undefined && match(pattern, comparable, operands)
+        const pattern = parse(compatibilitySequences(text), { open: true }).tree
+        return pattern !== undefined && comparable !== undefined && match(pattern, comparable, operands)
       })
       if (!matched) return []
     }
     const listed = entry.id === '22' ? [...entry.forms, { glyph: 'u516b', text: '八' }] : entry.forms
-    const forms = listed.flatMap(form => {
+    const forms = listed.flatMap((form, i) => {
       // UCV 28 illustrates the upper three strokes. Keep the flesh component in 肖.
       const spelling = xiao && entry.id === '28'
         ? (form.glyph === 'u21b54-03' ? '肖\u{E0101}' : '肖\u{E0100}')
-        : formSpelling(form)
+        : (isNode(part) && operands.length ? contextualSpelling(entry, form, i, index.patterns.get(entry) ?? []) : null) ?? formSpelling(form)
       const pattern = parse(spelling, { open: true }).tree
       if (pattern === undefined) return []
       const filled = fill(pattern, operands)

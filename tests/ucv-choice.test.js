@@ -10,6 +10,7 @@ const choices = (text, id) => ucvChoices(index, tree(text)).find(entry => entry.
 
 it('opens every UCV reference spelling and can choose a sibling', () => {
   for (const entry of index.entries.filter(entry => entry.kind === 'unifiable')) {
+    expect(index.patterns.get(entry).join('')).toBe(entry.components ?? '')
     for (const anchor of index.patterns.get(entry)) {
       expect(choices(anchor, entry.id).length, entry.id + ': ' + anchor).toBeGreaterThan(0)
     }
@@ -28,6 +29,22 @@ it('keeps the leaf, its marks and its sibling scoped to the occurrence', () => {
 })
 it('rebinds operands when the template rearranges them and keeps filled operands out of drawings', () => {
   expect(choices('⿱艹⿰日月', '307c').map(f => f.write)).toContain('⿰日⿱艹月')
-  expect(choices('⿰日冒', '382').map(f => f.write)).toEqual(['⿰日冐'])
+  expect(choices('⿰日冒', '382').map(f => f.write)).toEqual(['⿰日冒\u{E0100}', '⿰日冐'])
   expect(choices('⿱日月', '305').map(f => f.write)).toContain('⿸日月')
+})
+
+it('retains the filled operand in drawings of a positional fragment', () => {
+  expect(choices('⿰二月', '47').map(f => f.write)).toContain('⿰&GW-u51ab-01;月')
+  expect(choices('⿱雨⿰日月', '307e').map(f => f.write)).toContain('⿰日⿱雨月')
+  expect(choices('⿰孛月', '188b').map(f => f.write)).toContain('⿰⿱龸子月')
+})
+
+it('keeps the operand inside both extended frames of UCV 444', () => {
+  const spellings = choices('⿱此木', '444').map(f => f.write)
+  expect(spellings).toEqual(['⿹⿻止⿻一㇂木', '⿹⿻止弋木'])
+  for (const text of spellings) expect(choices(text, '444').map(f => f.write)).toContain('⿱此木')
+})
+
+it('keeps unrelated catalogue groups out of the picker', () => {
+  expect(ucvChoices(index, tree('⿳猫犬牛'))).toEqual([])
 })
