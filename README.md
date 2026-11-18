@@ -1605,7 +1605,7 @@ The prepared drawings in `demo/lib/example-drawings.json` are composed once from
 The zi.tools IDS cheatsheet (`demo/lib/baishi-cheatsheet.js`) quotes Yi Bai's data at one commit and
 colours the contours of real outlines. `bun run build:baishi-cheatsheet` looks every quotation up in
 the row it names and refuses a card with nothing to draw, then stores in
-`demo/lib/baishi-cheatsheet-outlines.json` each drawn character's contours from the export, the
+`demo/lib/baishi-cheatsheet-outlines.json` the contours used from the export (individual variant outlines are in the card data), the
 composer's drawing of each sequence no outline has, and each written component's own row for the
 tooltips; `tests/baishi-cheatsheet.test.js` fails while the cards and the file disagree. The sheet's
 anchors are those of `demo/lib/baishi-sections.js`, shared with the specification page.
