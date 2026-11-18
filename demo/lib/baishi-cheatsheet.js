@@ -15,6 +15,7 @@
 // 土t in 地, 凵y in 世, whose own entries carry those tags. An entry for a form no outline has is
 // drawn by the workshop's composer from the sequence, without its tags, and marked as composed.
 // 𱤻 stands for ⿾止 as the guide gives it (§2.1), though its row's default entry spells it otherwise.
+import variantGlyphs from './baishi-variant-glyphs.json' with { type: 'json' }
 import { chainStrokes } from '../../src/core/chain-shape.js'
 
 // JMJ-034221 (GlyphWiki koseki-085450@6), drawn in Gothic at 10 KAGE units.
@@ -145,7 +146,11 @@ export const GROUP_LABELS = {
 /** The sheet, top down as the grammar nests. @type {Section[]} */
 export const SHEET = [
   { id: 'row', label: 'rows', rules: ['row', 'primary group', 'alternative group'], cards: [
-    { id: 'row-entries', anchors: ['primary-group', 'entry-separator'], label: 'entries', hint: 'entries', quotes: [{ char: '十', text: '十\t⿻丨一.(.);⿻丨一t(.t)', row: 1346, glyphs: [{ char: '十', parts: [[1], [0]] }, null], focus: [';'] }] },
+    { id: 'row-entries', anchors: ['primary-group', 'entry-separator'], label: 'entries', hint: 'entries', quotes: [{ char: '十', text: '十\t⿻丨一.(.);⿻丨一t(.t)', row: 1346, glyphs: [
+      { char: '十', parts: [[1], [0]] },
+      // The documented 耳 crop contains the rising bar followed by the vertical.
+      { char: '十', contours: variantGlyphs['十.t'].split(/(?=M)/u), parts: [[1], [0]] },
+    ], focus: [';'] }] },
     { id: 'row-alternative', anchors: ['alternative-group'], label: 'alternative', hint: 'alternative', quotes: [{ char: '三', text: '三\t⿱一.二.\t⿱二.一.', row: 10, glyphs: [{ char: '三', parts: [[0], [1, 2]] }, { char: '三', parts: [[0, 1], [2]] }], focus: [[7, 8]] }] },
   ] },
   { id: 'entry', label: 'entry', rules: ['entry'], groups: [
