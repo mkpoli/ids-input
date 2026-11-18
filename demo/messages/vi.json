@@ -763,7 +763,7 @@
   "cheatsheet.source.grammar": "Ngữ pháp",
   "cheatsheet.help.title": "Giới thiệu bảng tra này",
   "cheatsheet.help.colour": "Một phần được viết và các nét mà nó chỉ định dùng chung một màu, và mỗi màu có kiểu gạch chân riêng. Trỏ vào một trong hai sẽ làm nổi bật cả cặp. Một phần tử sẽ cho biết nó là gì khi được trỏ vào, chạm vào, hoặc đi tới bằng phím Tab và các phím mũi tên.",
-  "cheatsheet.help.glyphs": "Các tự hình là đường viền gốc của hai phông chữ Noto Sans CJK JP và Plangothic. Mỗi bộ phận lấy nguyên đường bao của các nét; không có phần nào được vẽ lại.",
+  "cheatsheet.help.glyphs": "Màu sắc cho biết nét nào thuộc về bộ phận nào. Xem nguồn của các tự hình ở cuối trang.",
   "cheatsheet.help.entry": "Mỗi chuỗi là mục tương ứng trên dòng của chữ đó cho dạng đang hiển thị: mục (J), hoặc mục mặc định nếu dòng đó không có mục (J). Biến thể nào phông chữ không vẽ riêng được thì sẽ được vẽ bên trong một chữ có mục chỉ định nó, phần còn lại của chữ đó được làm mờ. 𱤻 đại diện cho ⿾止 như I26 nêu (§2.1).",
   "cheatsheet.help.subject": "Phần được đánh dấu của một chuỗi chính là nội dung mà ô này đề cập.",
   "cheatsheet.help.composed": "Ô có viền nét đứt do bộ ghép của xưởng vẽ từ chuỗi, dành cho dạng không có đường viền nào. Các thẻ của nó không được vẽ.",
