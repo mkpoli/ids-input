@@ -7,7 +7,7 @@ BabelStone PUA glyphs for numbered components with no IDS fragment, and the edit
 installed font has them. Zhuque Fangsong supplies the optional Fangsong face, TW-Kai the optional Regular Kai face, and
 Kureedo and GenZui Sans the optional Wen Kai face.
 
-The cheatsheet’s 父 (qq222) outline comes from U+E021 in the guide’s
+The cheatsheet uses U+E021 for 父 (qq222), U+E012 for 八(d), and U+E003 for 丰(..p) from the guide’s
 [example font](https://github.com/NightFurySL2001/bai-ids/blob/0ca5ed48f51821d4d54246196f1f5f38c9d6bd6a/fonts/example.woff2),
 © 2024–2025 -PT_AxH_RV-, [SIL Open Font License 1.1](OFL-Baishi-example.txt).
 
