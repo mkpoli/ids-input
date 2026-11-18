@@ -12,7 +12,7 @@
   import { askDrawable, EMOJI_CUT_MATRIX, FACE, STROKE, badge, emojiPlace, emojiTransform, placeholder, roughLayout, runPreview } from '../core/preview.js'
   import { documentView } from '@han-compose/composer/document-view'
   import { affineForChain, applyAffine, boxCorners, findLayer, invertAffine, layerAtPath, multiplyAffine, pathOfLayer, scopesMarkup } from '../document/index.js'
-  import { layerFrames, renderScopes } from '../document/index.js'
+  import { documentForFace, layerFrames, renderScopes } from '../document/index.js'
   import { translator } from './i18n.js'
   /** @typedef {import('../document/frames.js').LayerFrame} LayerFrame */
   /** @typedef {import('../document/model.js').Document} LocalDocument */
@@ -32,10 +32,10 @@
   /** @typedef {import('../document/session.js').DocumentSession} DocumentSession */
   /** @typedef {import('../document/render.js').ScopeTree} ScopeTree */
   /**
-   * @type {{ adapter: IdsAdapter, tree: Part, chosen?: Path | null, messages?: Record<string, string>, locale?: string, small?: boolean, notes?: boolean, delay?: number, detail?: string, detailContent?: import('svelte').Snippet, drawing?: Drawing | null, document?: Document | null, session?: DocumentSession | null, version?: number, scopes?: ScopeTree | null, slots?: number[][], emoji?: NonNullable<Drawing['emoji']> | null, cut?: string | null, cutLeaf?: number | null, step?: 'idle' | 'loading' | 'composed' | 'final' | 'failed' | 'capped' | 'unavailable', editable?: boolean, onchoose?: ((path: number[]) => void) | null, onedit?: (() => void) | null }}
+   * @type {{ adapter: IdsAdapter, tree: Part, chosen?: Path | null, messages?: Record<string, string>, locale?: string, small?: boolean, notes?: boolean, delay?: number, detail?: string, detailContent?: import('svelte').Snippet, drawing?: Drawing | null, document?: Document | null, session?: DocumentSession | null, version?: number, face?: import('../document/model.js').DocumentFace, scopes?: ScopeTree | null, slots?: number[][], emoji?: NonNullable<Drawing['emoji']> | null, cut?: string | null, cutLeaf?: number | null, step?: 'idle' | 'loading' | 'composed' | 'final' | 'failed' | 'capped' | 'unavailable', editable?: boolean, onchoose?: ((path: number[]) => void) | null, onedit?: (() => void) | null }}
    */
   let { adapter, tree, chosen = null, messages, locale = 'en', small = true, notes = true, delay = 150, detail = '', detailContent, drawing = $bindable(null),
-    document = null, session = null, version = 0, scopes = $bindable(null), slots = $bindable(/** @type {number[][]} */ ([])), emoji = $bindable(null), cut = $bindable(null), cutLeaf = $bindable(null), step = $bindable('idle'), editable = false, onchoose = null, onedit = null } = $props()
+    document = null, session = null, version = 0, face, scopes = $bindable(null), slots = $bindable(/** @type {number[][]} */ ([])), emoji = $bindable(null), cut = $bindable(null), cutLeaf = $bindable(null), step = $bindable('idle'), editable = false, onchoose = null, onedit = null } = $props()
   const t = $derived(translator(messages, locale))
 
   const uid = $props.id()
@@ -90,11 +90,17 @@
   // Raw: the session already hands out a fresh clone, and a deep proxy would make its plain
   // transform chains unclonable on the way back into the session.
   let localDoc = $state.raw(/** @type {Document | null} */ (null))
-  $effect(() => { void version; localDoc = session?.document ?? document })
+  function syncDocument() {
+    const current = session?.document ?? document
+    localDoc = current && documentForFace(current, face)
+  }
+  $effect(() => { void version; syncDocument() })
   const view = $derived.by(() => {
     const drawn = shown?.drawn
     if (!localDoc || !drawn || !sketched || sketched.text !== sequence) return null
-    return /** @type {View} */ (/** @type {unknown} */ (documentView(/** @type {LocalDocument} */ (localDoc), drawn, sketched.leaves, { renderer: { layerFrames, renderScopes } })))
+    return /** @type {View} */ (/** @type {unknown} */ (documentView(/** @type {LocalDocument} */ (localDoc), drawn, sketched.leaves, {
+      renderer: { layerFrames, renderScopes },
+    })))
   })
   const adjustNote = $derived(editable && step === 'composed' && shown?.drawn && !view?.complete ? t('ids.adjust.unavailable') : '')
   $effect(() => {
@@ -212,15 +218,15 @@
     const inverse = invertAffine(place)
     if (!inverse) return
     const local = multiplyAffine(inverse, multiplyAffine(operation, place))
-    session.setTransform([...base, { type: 'affine', matrix: local }], id, { coalesce })
-    localDoc = session.document
+    session.setTransform([...base, { type: 'affine', matrix: local }], id, { coalesce, face })
+    syncDocument()
     onedit?.()
   }
   /** Apply an operation in the layer's own frame, before its authored chain. @param {number[]} operation @param {import('../document/index.js').Chain} base @param {string} id @param {string} coalesce */
   function applyLocal(operation, base, id, coalesce) {
     if (!session) return
-    session.setTransform([{ type: 'affine', matrix: operation }, ...base], id, { coalesce })
-    localDoc = session.document
+    session.setTransform([{ type: 'affine', matrix: operation }, ...base], id, { coalesce, face })
+    syncDocument()
     onedit?.()
   }
   /** @param {KeyboardEvent} event */
@@ -232,8 +238,8 @@
     event.preventDefault()
     event.stopPropagation()
     if (key === '0') {
-      session.clearTransform(chosenLayer.id)
-      localDoc = session.document
+      session.clearTransform(chosenLayer.id, { face })
+      syncDocument()
       onedit?.()
       return
     }
@@ -262,7 +268,7 @@
   function chooseLayer(id) {
     if (!session || !localDoc) return
     if (!session.choose(id)) return
-    localDoc = session.document
+    syncDocument()
     const path = pathOfLayer(localDoc.root, id)
     if (path) onchoose?.(path)
     onedit?.()
@@ -336,7 +342,7 @@
     if (docDrag.kind === 'move') {
       const dx = p.x - docDrag.p0.x, dy = p.y - docDrag.p0.y
       if (Math.hypot(dx, dy) < 3 * docDrag.perPixel) return
-      applyCanvas([1, 0, 0, 1, dx, dy], docDrag.base, docDrag.id, docDrag.place, `drag-${docDrag.gesture}`)
+      applyCanvas([1, 0, 0, 1, dx, dy], docDrag.base, docDrag.id, docDrag.place, `drag-${uid}-${docDrag.gesture}`)
       return
     }
     if (Math.hypot(p.x - docDrag.p0.x, p.y - docDrag.p0.y) < 2 * docDrag.perPixel) return
@@ -344,7 +350,7 @@
       let angle = (Math.atan2(p.y - cy, p.x - cx) - docDrag.a0) * 180 / Math.PI
       if (event.shiftKey) angle = Math.round(angle / 15) * 15
       const radians = angle * Math.PI / 180, cos = Math.cos(radians), sin = Math.sin(radians)
-      applyCanvas([cos, sin, -sin, cos, cx - cos * cx + sin * cy, cy - sin * cx - cos * cy], docDrag.base, docDrag.id, docDrag.place, `drag-${docDrag.gesture}`)
+      applyCanvas([cos, sin, -sin, cos, cx - cos * cx + sin * cy, cy - sin * cx - cos * cy], docDrag.base, docDrag.id, docDrag.place, `drag-${uid}-${docDrag.gesture}`)
       return
     }
     if (!docDrag.inverseFull) return
@@ -364,7 +370,7 @@
     }
     sx = clamp(sx, 0.05, 20); sy = clamp(sy, 0.05, 20)
     if (Math.abs(sx - 1) < 0.002 && Math.abs(sy - 1) < 0.002) return
-    applyLocal([sx, 0, 0, sy, ax * (1 - sx), ay * (1 - sy)], docDrag.base, docDrag.id, `drag-${docDrag.gesture}`)
+    applyLocal([sx, 0, 0, sy, ax * (1 - sx), ay * (1 - sy)], docDrag.base, docDrag.id, `drag-${uid}-${docDrag.gesture}`)
   }
   /** @param {PointerEvent} event */
   function endDrag(event) {

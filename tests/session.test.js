@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { parse } from '../src/core/ids.js'
-import { DocumentError, createDocumentSession, documentIds, findLayer, fromSequence, treeFromDocument, validateDocument } from '../src/document/index.js'
+import { DocumentError, createDocumentSession, documentForFace, documentIds, findLayer, fromSequence, readShareDocument, sessionFromRecord, sessionRecord, shareDocument, transformForFace, treeFromDocument, validateDocument } from '../src/document/index.js'
 
 const transform = [{ type: 'affine', matrix: [1, 0, 0, 1, 12, -3] }]
 const tree = sequence => parse(sequence, { open: true }).tree
@@ -278,4 +278,28 @@ describe('geometry edits in a session', () => {
     session.clearGeometryEdit('e1')
     expect(session.document.geometryEdits).toBeUndefined()
   })
+})
+
+it('edits and resets faces independently through history and sharing', () => {
+  const session = createDocumentSession(fromSequence('⿰木口'))
+  const layerId = layer(session, 0).id
+  const moved = [{ type: 'affine', matrix: [1, 0, 0, 1, 32, 0] }]
+  session.setTransform(transform, layerId)
+  session.setTransform(moved, layerId, { face: 'sans', coalesce: 'right' })
+  session.setTransform(moved, layerId, { face: 'serif', coalesce: 'right' })
+  expect(session.undo()).toBe(true)
+  expect(transformForFace(layer(session, 0), 'sans')).toEqual(moved)
+  expect(transformForFace(layer(session, 0), 'serif')).toEqual(transform)
+  expect(session.redo()).toBe(true)
+  session.clearTransform(layerId, { face: 'serif' })
+  session.sync(tree('⿰木水'))
+  const saved = sessionFromRecord(sessionRecord(session)).document
+  const shared = readShareDocument(shareDocument(saved))
+  for (const document of [saved, shared]) {
+    expect(documentForFace(document, 'sans').root.children[0].transform).toEqual(moved)
+    expect(documentForFace(document, 'serif').root.children[0].transform).toEqual([])
+    expect(documentForFace(document, 'regular').root.children[0].transform).toEqual(transform)
+    expect(documentForFace(document, 'fangsong').root.children[0].transform).toEqual(transform)
+    expect(documentForFace(document, 'pen-writing').root.children[0].transform).toEqual(transform)
+  }
 })

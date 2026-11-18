@@ -23,6 +23,14 @@ describe('document share tokens', () => {
     expect(read.root.children[1].extensions).toEqual({ note: true })
     expect(findLayer(read.root, read.root.children[0].id)).not.toBeNull()
   })
+  it('shares an edit made in only one font', () => {
+    const document = fromSequence('⿰木口')
+    const transform = [{ type: 'affine', matrix: [1, 0, 0, 1, 12, 0] }]
+    document.root.children[0].faceTransforms = { serif: transform }
+    const token = shareDocument(document)
+    expect(token).toMatch(/^[A-Za-z0-9_-]+$/)
+    expect(readShareDocument(token).root.children[0].faceTransforms).toEqual({ serif: transform })
+  })
   it('regenerates the same IDs every read', () => {
     const document = fromSequence('⿰木口')
     document.root.children[0].transform = [{ type: 'affine', matrix: [1, 0, 0, 1, 1, 0] }]

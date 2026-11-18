@@ -1,5 +1,6 @@
 // @ts-check
 export * from './model.js'
+export { documentForFace, transformForFace } from './faces.js'
 export {
   changeOperator,
   decompose,

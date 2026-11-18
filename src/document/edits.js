@@ -17,6 +17,7 @@ function common(node) {
   const out = { id: node.id }
   if (node.name !== undefined) out.name = node.name
   if (node.transform !== undefined) out.transform = node.transform
+  if (node.faceTransforms !== undefined) out.faceTransforms = node.faceTransforms
   if (node.extensions !== undefined) out.extensions = node.extensions
   return out
 }

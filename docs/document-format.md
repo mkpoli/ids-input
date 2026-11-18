@@ -67,6 +67,11 @@ operator, group or slot has no ink of its own. The renderer paints a filled comp
 over the drawing's ink, and an alpha channel blends with what lies under it. The workshop lists the
 components of the output and offers their fills below the drawing.
 
+Each layer can also carry `faceTransforms`, keyed by `sans`, `serif`,
+`fangsong`, `regular` or `pen-writing`. A face's entry replaces the shared
+chain for that face. An empty entry restores the composer's placement, and
+an absent entry inherits the shared chain.
+
 Every kind can have `transform`, an ordered array of operations; omission or
 `[]` means identity. The tree is authoritative. For core parsing, searching,
 sharing plain IDS or looking up a decomposition, project it to IDS and use the
@@ -390,7 +395,7 @@ outside version 1.
 A share link carries the sequence in its path and, only where the document
 holds more than that sequence, the difference in a `doc` parameter: base64url of
 a small JSON object with the sequence, the title, the render recipe and each
-layer's path, kind, name, transform and extensions. IDs are fresh on arrival,
+layer's path, kind, name, shared and face-specific transforms, and extensions. IDs are fresh on arrival,
 the same ones every read. A document its sequence already spells shares the
 path alone; use a file when the difference exceeds the host's URL or QR-code
 budget. The older `#` and `?ids=` forms still open. The worker writes the title,

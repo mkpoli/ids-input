@@ -2,7 +2,7 @@
   // A document view of the active description: the composer's separated drawing, rendered through
   // the layer document, with a layer list and an affine transform for the chosen layer.
   import { documentSource } from '@han-compose/composer/document-source'
-  import { affineForChain, applyAffine, applyGeometryEdits, boxCorners, findLayer, fingerprintGeometry, invertAffine, layerAtPath, layerFrames, pathOfLayer, renderScopes, scopesSvg, transformPath } from '../../src/document/index.js'
+  import { affineForChain, applyAffine, applyGeometryEdits, boxCorners, documentForFace, findLayer, fingerprintGeometry, invertAffine, layerAtPath, layerFrames, pathOfLayer, renderScopes, scopesSvg, transformPath } from '../../src/document/index.js'
   import Dialog from './Dialog.svelte'
 
   /** @typedef {import('../../src/document/index.js').DocumentSession} DocumentSession */
@@ -10,14 +10,15 @@
   /** @typedef {import('../../src/document/index.js').Node} Node */
   /** @typedef {import('../../src/adapter/types.js').Drawing} Drawing */
   /** @typedef {import('../../src/adapter/types.js').SketchLeaf} SketchLeaf */
-  /** @type {{ open: boolean, session: DocumentSession | null, preview: ((sequence: string, options?: { signal?: AbortSignal, onSketch?: (leaves: SketchLeaf[]) => void }) => Promise<Drawing>) | null, sequence: string, t: (key: string, params?: Record<string, string | number>) => string, chosenPath?: number[] | null, structure?: ((char: string) => Promise<{ text: string, sources?: string[] }[]>) | null, onchange?: () => void, onchoose?: ((path: number[]) => void) | null, onstructure?: () => void, oncanvas?: (() => void) | null }} */
-  let { open = $bindable(false), session, preview, sequence, t, chosenPath = null, structure = null, onchange = () => {}, onchoose = null, onstructure = () => {}, oncanvas = null } = $props()
+  /** @type {{ open: boolean, session: DocumentSession | null, face: import('../../src/document/model.js').DocumentFace, preview: ((sequence: string, options?: { signal?: AbortSignal, onSketch?: (leaves: SketchLeaf[]) => void }) => Promise<Drawing>) | null, sequence: string, t: (key: string, params?: Record<string, string | number>) => string, chosenPath?: number[] | null, structure?: ((char: string) => Promise<{ text: string, sources?: string[] }[]>) | null, onchange?: () => void, onchoose?: ((path: number[]) => void) | null, onstructure?: () => void, oncanvas?: (() => void) | null }} */
+  let { open = $bindable(false), session, face, preview, sequence, t, chosenPath = null, structure = null, onchange = () => {}, onchoose = null, onstructure = () => {}, oncanvas = null } = $props()
 
   let drawing = $state.raw(/** @type {Drawing | null} */ (null))
   let sketch = $state.raw(/** @type {SketchLeaf[] | null} */ (null))
   let step = $state(/** @type {'idle' | 'loading' | 'ready' | 'failed'} */ ('idle'))
   let failed = $state('')
-  let doc = $state(/** @type {Document | null} */ (null))
+  let current = $state.raw(/** @type {Document | null} */ (null))
+  const doc = $derived(current && documentForFace(current, face))
   let chosen = $state(/** @type {string | null} */ (null))
   let svg = $state('')
   let issue = $state('')
@@ -67,7 +68,7 @@
     if (!node || session.chosen === node.id) return
     if (!session.choose(node.id)) return
     chosen = session.chosen
-    doc = session.document
+    current = session.document
     onchange()
   })
 
@@ -135,7 +136,7 @@
   // Open: take the session's document and draw the sequence separately.
   $effect(() => {
     if (!open || !session) return
-    doc = session.document
+    current = session.document
     chosen = session.chosen
     drawing = null
     sketch = null
@@ -258,7 +259,7 @@
     if (!session) return
     if (!session.choose(id)) return
     chosen = session.chosen
-    doc = session.document
+    current = session.document
     const path = pathOfLayer(doc.root, id)
     if (path && onchoose) onchoose(path)
     onchange()
@@ -287,27 +288,27 @@
             target: { kind: 'stroke', id: strokeId }, transform: [{ type: 'affine', matrix: next }],
           }, { ...(coalesce ? { coalesce } : {}), replace: strokeEdits.map(edit => edit.id) })
         }
-        doc = session.document
+        current = session.document
         chosen = session.chosen
         onchange()
         return
       }
       if (mode === 'mobius') {
-        session.setTransform([{ type: 'mobius', a: [...mobius.a], b: [...mobius.b], c: [...mobius.c], d: [...mobius.d] }], selected.id, coalesce ? { coalesce } : {})
+        session.setTransform([{ type: 'mobius', a: [...mobius.a], b: [...mobius.b], c: [...mobius.c], d: [...mobius.d] }], selected.id, { face, coalesce: coalesce || undefined })
       } else if (mode === 'matrix') {
         const flat = matrix.map(Number)
-        if (flat.every((value, index) => value === [1, 0, 0, 1, 0, 0][index])) session.clearTransform(selected.id)
-        else session.setTransform([{ type: 'affine', matrix: flat }], selected.id, coalesce ? { coalesce } : {})
+        if (flat.every((value, index) => value === [1, 0, 0, 1, 0, 0][index])) session.clearTransform(selected.id, { face })
+        else session.setTransform([{ type: 'affine', matrix: flat }], selected.id, { face, coalesce: coalesce || undefined })
       } else {
         const radians = rotate * Math.PI / 180
         const a = Math.cos(radians) * scaleX, b = Math.sin(radians) * scaleX
         const c = -Math.sin(radians) * scaleY, d = Math.cos(radians) * scaleY
         const cx = 500, cy = 500
         const matrix = [a, b, c, d, cx + x - a * cx - c * cy, cy + y - b * cx - d * cy]
-        if (x === 0 && y === 0 && scaleX === 1 && scaleY === 1 && rotate === 0) session.clearTransform(selected.id)
-        else session.setTransform([{ type: 'affine', matrix }], selected.id, coalesce ? { coalesce } : {})
+        if (x === 0 && y === 0 && scaleX === 1 && scaleY === 1 && rotate === 0) session.clearTransform(selected.id, { face })
+        else session.setTransform([{ type: 'affine', matrix }], selected.id, { face, coalesce: coalesce || undefined })
       }
-      doc = session.document
+      current = session.document
       chosen = session.chosen
       onchange()
     } catch (error) {
@@ -318,8 +319,8 @@
   function reset() {
     if (!session || !selected) return
     if (strokeId) { if (strokeEdits.length) session.clearGeometryEdit(strokeEdits.map(edit => edit.id)) }
-    else session.clearTransform(selected.id)
-    doc = session.document
+    else session.clearTransform(selected.id, { face })
+    current = session.document
     chosen = session.chosen
     onchange()
   }
@@ -327,7 +328,7 @@
   function travel(count, undo) {
     if (!session) return
     for (let i = 0; i < count; i++) { if (!(undo ? session.undo() : session.redo())) break }
-    doc = session.document
+    current = session.document
     chosen = session.chosen
     onchange()
   }
@@ -377,7 +378,7 @@
     if (!session || !splitTarget) return
     try {
       session.decompose(sequence, splitTarget.id)
-      doc = session.document
+      current = session.document
       chosen = session.chosen
       splitOptions = []
       splitTarget = null

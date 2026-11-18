@@ -18,7 +18,7 @@
   import engineOutlines from 'ids-engine-outlines'
   import { EMPTY_MARKS, OPERATORS, characterStrokes, componentQuery, drawnText, isJurchen, isShuishu, parse, substituteSequences, unalias } from '../src/core/index.js'
   import { loadStrokeRecords } from '../src/svelte/strokes.js'
-  import { createDocumentSession, layerAtPath, sessionRecord, toSequence } from '../src/document/index.js'
+  import { createDocumentSession, DOCUMENT_FACES, layerAtPath, sessionRecord, toSequence } from '../src/document/index.js'
   import { documentFile, readDocumentFile } from './lib/documents.js'
   import equivalencesUrl from '../data/ids-equivalences.json?url'
   import { workshopAdapter } from './lib/workshop-adapter.js'
@@ -120,10 +120,9 @@
   // What a share names: this page, or the published site for the desktop app, whose own address
   // opens nothing outside it.
   const shareFrom = DESKTOP ? new URL(SITE) : location
-  const FACE_KEYS = /** @type {const} */ (['sans', 'serif', 'fangsong', 'regular', 'pen-writing'])
   const storedFace = load('font', 'sans')
   /** @type {'sans' | 'serif' | 'regular' | 'fangsong' | 'pen-writing'} */
-  let face = $state(FACE_KEYS.includes(storedFace) ? storedFace : 'sans')
+  let face = $state(DOCUMENT_FACES.includes(storedFace) ? storedFace : 'sans')
   $effect(() => save('font', face === 'sans' ? undefined : face))
   $effect(() => { document.documentElement.dataset.font = face })
   // The han-compose export the preview draws from; `?composer=`, VITE_COMPOSER_BASE or Preferences point it elsewhere.
@@ -208,7 +207,7 @@
   let slots = $state(/** @type {number[][]} */ ([]))
   const exportIncomplete = $derived.by(() => {
     const document = currentSession()?.document
-    return Boolean((document && transformed(document.root) && !scopes) || (scopes && !scopes.complete))
+    return Boolean((document && transformed(document.root, face) && !scopes) || (scopes && !scopes.complete))
   })
   const canExport = $derived(Boolean(!exportIncomplete && (scopes ?? drawing)))
   const separate = true
@@ -620,7 +619,7 @@
     const session = sessionFor(tab)
     const node = layerAtPath(session.document.root, editor.chosen)
     if (!node) return
-    session.clearTransform(node.id)
+    session.clearTransform(node.id, { face })
     layerChanged()
   }
   /** Whether the output drawing can be adjusted. */
@@ -1583,8 +1582,8 @@
       <section class="pane output" class:phone-active={phonePane === 'output'} class:adjusting={adjusting} id="output-panel" aria-label={t('app.output')}>
         <div class="preview" data-character-info-avoid ondblclick={startAdjust}>
           {#if !large}
-            {#key activeId}
-              <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false}
+            {#key `${activeId}:${face}`}
+              <IdsPreview {adapter} {face} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false}
                 document={currentSession()?.document} session={currentSession()} version={documentTick} bind:scopes bind:slots
                 editable={adjusting} onchoose={path => editor.choose(path, { toggle: false })} onedit={layerChanged} bind:drawing bind:emoji bind:cut bind:cutLeaf bind:step={previewStep}>
                 {#snippet detailContent()}
@@ -1662,8 +1661,10 @@
             </div>
           </div>
           {#if large}
-            <IdsPreview {adapter} tree={editor.tree} {messages} {locale} small={false} notes={false}
-              document={currentSession()?.document} session={currentSession()} version={documentTick} editable={false} bind:step={previewStep} />
+            {#key face}
+              <IdsPreview {adapter} {face} tree={editor.tree} {messages} {locale} small={false} notes={false}
+                document={currentSession()?.document} session={currentSession()} version={documentTick} editable={false} bind:step={previewStep} />
+            {/key}
           {/if}
         </dialog>
         {#if !embed}
@@ -1713,7 +1714,7 @@
 <ReportDialog bind:open={reportOpen} {endpoint} sequence={editor.whole} link={linkTo(editor.whole, location, currentDocument())}
   {drawing} {scopes} {slots} {emoji} {cut} {cutLeaf} version={documentTick} preview={() => work?.querySelector('#output-panel .ids-preview') ?? null} workspace={reportWorkspace}
   {locale} {theme} {face} composer={base} {t} />
-<LayerDialog bind:open={layerOpen} session={currentSession()} preview={previewFor(base, true, componentStyle, 'layers', true)} sequence={editor.whole} {t}
+<LayerDialog bind:open={layerOpen} {face} session={currentSession()} preview={previewFor(base, true, componentStyle, 'layers', true)} sequence={editor.whole} {t}
   chosenPath={editor.chosen} structure={char => adapter.structure(char)} onchange={layerChanged}
   onchoose={path => editor.choose(path, { toggle: false })} onstructure={layerStructureChanged}
   oncanvas={() => { layerOpen = false; adjusting = true }} />

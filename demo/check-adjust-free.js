@@ -126,7 +126,7 @@ try {
     await page.waitForTimeout(300)
     assert.equal((await stored())?.chosen, outer.id, 'the enclosure is chosen again for its own move')
     await drag(border, { x: border.x + 30, y: border.y + 12 })
-    const moved = (await stored())?.document?.root?.children?.find(child => child.char === '囗')?.transform
+    const moved = (await stored())?.document?.root?.children?.find(child => child.char === '囗')?.faceTransforms?.sans
     assert.ok(moved?.length, 'dragging the enclosure writes its transform')
     const enclosure = JSON.stringify(moved)
 
@@ -135,24 +135,24 @@ try {
     await page.waitForTimeout(300)
     assert.equal((await stored())?.chosen, inner.id, 'the enclosed part is reachable under a moved enclosure')
     await drag(shifted, { x: shifted.x + 40, y: shifted.y + 10 })
-    assert.ok((await chosenNode())?.transform?.length, 'dragging the part writes its transform')
-    assert.equal(JSON.stringify((await stored())?.document?.root?.children?.find(child => child.char === '囗')?.transform), enclosure, 'the enclosing part keeps its own transform')
+    assert.ok((await chosenNode())?.faceTransforms?.sans?.length, 'dragging the part writes its transform')
+    assert.equal(JSON.stringify((await stored())?.document?.root?.children?.find(child => child.char === '囗')?.faceTransforms?.sans), enclosure, 'the enclosing part keeps its own transform')
 
     // An east handle changes width only.
-    const before = scaleOf(flattened((await chosenNode())?.transform))
+    const before = scaleOf(flattened((await chosenNode())?.faceTransforms?.sans))
     const east = await page.locator('.ids-preview-large .handle.resize.e .handle-hit').boundingBox()
     assert.ok(east, 'the east resize handle exists')
     await drag({ x: east.x + east.width / 2, y: east.y + east.height / 2 }, { x: east.x + east.width / 2 + 40, y: east.y + east.height / 2 })
-    const wider = scaleOf(flattened((await chosenNode())?.transform))
+    const wider = scaleOf(flattened((await chosenNode())?.faceTransforms?.sans))
     assert.ok(wider.x > before.x + 0.05, 'the east handle widens the layer')
     assert.ok(Math.abs(wider.y - before.y) < 0.005, 'the east handle keeps the height')
 
     // A south handle changes height only.
-    const beforeHeight = scaleOf(flattened((await chosenNode())?.transform))
+    const beforeHeight = scaleOf(flattened((await chosenNode())?.faceTransforms?.sans))
     const south = await page.locator('.ids-preview-large .handle.resize.s .handle-hit').boundingBox()
     assert.ok(south, 'the south resize handle exists')
     await drag({ x: south.x + south.width / 2, y: south.y + south.height / 2 }, { x: south.x + south.width / 2, y: south.y + south.height / 2 + 40 })
-    const taller = scaleOf(flattened((await chosenNode())?.transform))
+    const taller = scaleOf(flattened((await chosenNode())?.faceTransforms?.sans))
     assert.ok(taller.y > beforeHeight.y + 0.05, 'the south handle heightens the layer')
     assert.ok(Math.abs(taller.x - beforeHeight.x) < 0.005, 'the south handle keeps the width')
 
@@ -162,7 +162,7 @@ try {
     const corner = await page.locator('.ids-preview-large .handle.resize.se .handle-hit').boundingBox()
     assert.ok(corner, 'the corner resize handle exists')
     await drag({ x: corner.x + corner.width / 2, y: corner.y + corner.height / 2 }, { x: corner.x + corner.width / 2 + 35, y: corner.y + corner.height / 2 + 25 }, true)
-    const even = scaleOf(flattened((await chosenNode())?.transform))
+    const even = scaleOf(flattened((await chosenNode())?.faceTransforms?.sans))
     assert.ok(even.x > 1.05 && Math.abs(even.x - even.y) < 1e-3, 'Shift keeps the corner scale even')
 
     // An off-centre grab scales from the handle's own corner, so the edge follows the pointer
@@ -179,7 +179,7 @@ try {
     const span = Math.hypot(eastGrip.x + eastGrip.width / 2 - (westGrip.x + westGrip.width / 2), eastGrip.y + eastGrip.height / 2 - (westGrip.y + westGrip.height / 2))
     const grab = { x: eastGrip.x + eastGrip.width * 0.9, y: eastGrip.y + eastGrip.height / 2 }
     await drag(grab, { x: grab.x + 60, y: grab.y })
-    const offCentre = scaleOf(flattened((await chosenNode())?.transform))
+    const offCentre = scaleOf(flattened((await chosenNode())?.faceTransforms?.sans))
     const expected = 1 + 60 / span
     assert.ok(Math.abs(offCentre.x - expected) < 0.01, `an off-centre grab scales by the pointer (${offCentre.x.toFixed(3)} vs ${expected.toFixed(3)})`)
     assert.ok(Math.abs(offCentre.y - 1) < 0.005, 'an off-centre east grab keeps the height')
@@ -190,7 +190,7 @@ try {
     const turn = await page.locator('.ids-preview-large .handle.rotate .handle-hit').boundingBox()
     assert.ok(turn, 'the turn handle exists')
     await drag({ x: turn.x + turn.width / 2, y: turn.y + turn.height / 2 }, { x: turn.x + turn.width / 2 + 60, y: turn.y + turn.height / 2 + 40 })
-    const turned = flattened((await chosenNode())?.transform)
+    const turned = flattened((await chosenNode())?.faceTransforms?.sans)
     assert.ok(Math.abs(turned[1]) > 0.05, 'the turn handle rotates the layer')
 
     if (process.env.IDS_ADJUST_FREE_SHOTS) {

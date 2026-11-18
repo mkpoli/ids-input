@@ -33,16 +33,16 @@ try {
     await page.mouse.up()
     await page.waitForTimeout(500)
     const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('ids-input:tabs') ?? '[]')[0]?.document?.document)
-    const operator = stored?.root?.transform?.[0]?.matrix
+    const operator = stored?.root?.faceTransforms?.sans?.[0]?.matrix
     assert.ok(Math.abs(operator?.[4] ?? 0) > 1 || Math.abs(operator?.[5] ?? 0) > 1, 'the operator transform moved the subtree')
-    assert.equal(stored?.root?.children?.[0]?.transform, undefined, 'the component kept its own transform')
+    assert.equal(stored?.root?.children?.[0]?.faceTransforms?.sans, undefined, 'the component kept its own transform')
     if (process.env.IDS_OPERATOR_SHOTS) {
       mkdirSync(process.env.IDS_OPERATOR_SHOTS, { recursive: true })
       await page.locator('.ids-preview').screenshot({ path: `${process.env.IDS_OPERATOR_SHOTS}/operator-${scheme}.png` })
     }
     await page.getByRole('button', { name: 'Reset part', exact: true }).click()
     await page.waitForTimeout(300)
-    const reset = await page.evaluate(() => JSON.parse(localStorage.getItem('ids-input:tabs') ?? '[]')[0]?.document?.document?.root?.transform)
+    const reset = await page.evaluate(() => JSON.parse(localStorage.getItem('ids-input:tabs') ?? '[]')[0]?.document?.document?.root?.faceTransforms?.sans)
     assert.equal(reset, undefined)
     assert.deepEqual(errors, [])
     console.log(`PASS ${scheme}: operator selected and dragged as one layer`)
