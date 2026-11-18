@@ -28,7 +28,7 @@ const translate = run => {
  * `text` with the ASCII operator names in it written as operators. A run of capitals is read in
  * pairs from the left (LLR is ⿲R); a run in any case is read when it is made of names only (lr, Ud).
  * A zi.tools modifier is copied untouched: its letters are an index or a matrix, not a name. So is
- * a custom component, whole or still being written.
+ * a custom component, whole or still being written. The component shorthand ㄍ becomes 巜.
  * @param {string | null | undefined} text
  */
 export const unalias = text => {
@@ -48,7 +48,11 @@ export const unalias = text => {
     }
     run.lastIndex = at
     const match = run.exec(source)
-    if (!match) { out += source[at++]; continue }
+    if (!match) {
+      const char = source[at++]
+      out += char === 'ㄍ' ? '巜' : char
+      continue
+    }
     out += translate(match[0])
     at = run.lastIndex
   }
