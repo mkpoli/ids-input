@@ -3,13 +3,20 @@
 // place: a character, a description, or a form no code point names, written with its identifier
 // where the adapter draws such forms. The list is read once a component is asked about, the drawings
 // once an entry is shown; a form that cannot be written shows only as its drawing.
+import { marksOf } from '../core/marks.js'
 import { occurrenceChoices } from '../core/ucv-choice.js'
 import { loadUcvIndex, loadUcvOutlines } from './ucv.js'
 
 /** @param {import('./editor.svelte.js').Editor} editor */
 export function decompositionChoices(editor) {
   const search = editor.alternatives
-  return search.loading ? editor.splits : [...editor.splits, ...search.found.filter(item => item.operation === 'expand').map(item => item.text)]
+  if (search.loading) return editor.splits
+  const marks = marksOf(editor.picked ?? null)
+  // Recursive expansions already carry the host's trailing marks. The chooser
+  // restores them once after replacing the selected component.
+  const expanded = search.found.filter(item => item.operation === 'expand').map(item =>
+    marks && marksOf(item.tree).endsWith(marks) ? item.text.slice(0, -marks.length) : item.text)
+  return [...editor.splits, ...expanded]
 }
 
 /** @param {() => import('./editor.svelte.js').Editor} of the editor @param {() => boolean} [wanted] whether the forms are asked for */

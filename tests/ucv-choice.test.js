@@ -70,3 +70,13 @@ it('uses a deeper expansion and supports catalogue templates at the root of an e
   expect(hosts.flatMap(e => e.forms.map(f => f.write))).toContain('⿰亻⿱&GW-u21b54-03;冋')
   expect(occurrenceChoices(index, '薛', ['⿱艹⿰𠂤辛']).flatMap(e => e.forms.map(f => f.write))).toContain('⿰𠂤⿱艹辛')
 })
+
+it('preserves a marked recursive expansion once when it becomes a saved choice', async () => {
+  const { decompositionChoices } = await import('../src/svelte/unifiable.svelte.js')
+  const text = '⿰亻⿱⺌冋ˊ'
+  const splits = decompositionChoices(/** @type {any} */ ({
+    picked: '倘ˊ', splits: [], alternatives: { found: [{ operation: 'expand', text, tree: tree(text) }] },
+  }))
+  expect(occurrenceChoices(index, '倘ˊ', splits).flatMap(e => e.forms.map(f => f.write)))
+    .toContain('⿰亻⿱&GW-u21b54-03;冋ˊ')
+})
