@@ -343,7 +343,7 @@
     if (docDrag.kind === 'move') {
       const dx = p.x - docDrag.p0.x, dy = p.y - docDrag.p0.y
       if (Math.hypot(dx, dy) < 3 * docDrag.perPixel) return
-      applyCanvas([1, 0, 0, 1, dx, dy], docDrag.base, docDrag.id, docDrag.place, `drag-${docDrag.gesture}`)
+      applyCanvas([1, 0, 0, 1, dx, dy], docDrag.base, docDrag.id, docDrag.place, `drag-${uid}-${docDrag.gesture}`)
       return
     }
     if (Math.hypot(p.x - docDrag.p0.x, p.y - docDrag.p0.y) < 2 * docDrag.perPixel) return
@@ -351,7 +351,7 @@
       let angle = (Math.atan2(p.y - cy, p.x - cx) - docDrag.a0) * 180 / Math.PI
       if (event.shiftKey) angle = Math.round(angle / 15) * 15
       const radians = angle * Math.PI / 180, cos = Math.cos(radians), sin = Math.sin(radians)
-      applyCanvas([cos, sin, -sin, cos, cx - cos * cx + sin * cy, cy - sin * cx - cos * cy], docDrag.base, docDrag.id, docDrag.place, `drag-${docDrag.gesture}`)
+      applyCanvas([cos, sin, -sin, cos, cx - cos * cx + sin * cy, cy - sin * cx - cos * cy], docDrag.base, docDrag.id, docDrag.place, `drag-${uid}-${docDrag.gesture}`)
       return
     }
     if (!docDrag.inverseFull) return
@@ -371,7 +371,7 @@
     }
     sx = clamp(sx, 0.05, 20); sy = clamp(sy, 0.05, 20)
     if (Math.abs(sx - 1) < 0.002 && Math.abs(sy - 1) < 0.002) return
-    applyLocal([sx, 0, 0, sy, ax * (1 - sx), ay * (1 - sy)], docDrag.base, docDrag.id, `drag-${docDrag.gesture}`)
+    applyLocal([sx, 0, 0, sy, ax * (1 - sx), ay * (1 - sy)], docDrag.base, docDrag.id, `drag-${uid}-${docDrag.gesture}`)
   }
   /** @param {PointerEvent} event */
   function endDrag(event) {
