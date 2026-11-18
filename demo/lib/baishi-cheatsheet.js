@@ -453,7 +453,11 @@ export const quotations = () => cardsOf().flatMap(card => card.quotes.map(quote 
 export const TURN_GLYPHS = new Map([['#(SHw)', '㇄'], ['#(SH)', '𠃊']])
 
 /** Every character whose outline a card or its tooltip draws. @returns {string[]} */
-export const glyphsDrawn = () => [...new Set([...TURN_GLYPHS.values(), ...cardsOf().flatMap(card => card.quotes.flatMap(quote => quote.glyphs.flatMap(glyph => glyph && glyph !== 'composed' && !glyph.contours ? [glyph.char] : [])))])]
+export function glyphsDrawn() {
+  const chars = cardsOf().flatMap(card => card.quotes.flatMap(quote =>
+    quote.glyphs.flatMap(glyph => glyph && glyph !== 'composed' && !glyph.contours ? [glyph.char] : [])))
+  return [...new Set([...chars, ...TURN_GLYPHS.values()])]
+}
 
 /** Every component a card writes, whose own row and outline a tooltip shows. @returns {string[]} */
 export const componentsWritten = () => [...new Set(cardsOf().flatMap(card => card.quotes.flatMap(quote => tokenise(quote.text, { strokes: quote.strokes }).filter(token => token.kind === 'part').map(token => token.stretches[0].text))))]
