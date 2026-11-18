@@ -1,10 +1,12 @@
 <script module>
+  import { variationOf, withVariation } from '../core/variation.js'
+  import { grassIVS, grassShape } from '@han-compose/composer/variants'
   import { isNode, partAt, write } from '../core/ids.js'
 
   /** @param {import('./editor.svelte.js').Editor} editor */
-  function grassForm(editor) {
+  export function grassForm(editor) {
     const { picked: part, chosen, tree } = editor
-    if (part === '艹' || part === '⺿') return part
+    if (typeof part === 'string') return grassShape(variationOf(part))
     if (!isNode(part) || write(part) !== '⿰十十' || chosen?.at(-1) !== 0) return null
     const parent = partAt(tree, chosen.slice(0, -1))
     return isNode(parent) && ['⿱', '⿳'].includes(parent.op) ? '⺿' : null
@@ -73,10 +75,10 @@
     <div class="ids-option-group" role="group" aria-labelledby={`${uid}-grass`}>
       <span class="ids-option-label" id={`${uid}-grass`}>{t('ids.grass.head')}</span>
       <div class="ids-option-items">
-        {#each ['艹', '⺿'] as form}
-          <button type="button" class="ids-grass" aria-pressed={grass === form} disabled={editor.disabled}
-            onclick={() => { if (part !== form) choose(() => editor.put(form, editor.chosen)) }}>
-            <span aria-hidden="true">{form}</span>{t(form === '艹' ? 'ids.grass.connected' : 'ids.grass.split')}
+        {#each [grassIVS.connected, grassIVS.split, grassIVS.inward] as form}
+          <button type="button" class="ids-grass" aria-pressed={grass === grassShape(form)} disabled={editor.disabled}
+            onclick={() => { if (variationOf(part) !== form) choose(() => editor.put(withVariation(part, form), editor.chosen)) }}>
+            <span aria-hidden="true">{grassShape(form)}</span>{t(form === grassIVS.connected ? 'ids.grass.connected' : form === grassIVS.split ? 'ids.grass.split' : 'ids.grass.inward')}
           </button>
         {/each}
       </div>
