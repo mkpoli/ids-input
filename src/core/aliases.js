@@ -1,5 +1,5 @@
 // @ts-check
-// ASCII names for the operators, so a sequence can be typed without an input method.
+// Input shorthands for IDS operators and components.
 import { customLength, modifierLength, unfinishedCustom } from './ids.js'
 
 /**
@@ -15,6 +15,11 @@ export const ALIASES = {
   XX: '⿻', OL: '⿼', LU: '⿽', MI: '⿾', RO: '⿿', SU: '㇯',
 }
 const ALIAS = new RegExp(Object.keys(ALIASES).join('|'), 'g')
+
+/** Single-character input shorthands. @type {Readonly<Record<string, string>>} */
+export const COMPONENT_ALIASES = Object.freeze({
+  'ㄍ': '巜',
+})
 /** `run` with the ASCII names in it written as operators. @param {string} run */
 const translate = run => {
   const upper = run.toUpperCase()
@@ -28,7 +33,7 @@ const translate = run => {
  * `text` with the ASCII operator names in it written as operators. A run of capitals is read in
  * pairs from the left (LLR is ⿲R); a run in any case is read when it is made of names only (lr, Ud).
  * A zi.tools modifier is copied untouched: its letters are an index or a matrix, not a name. So is
- * a custom component, whole or still being written. The component shorthand ㄍ becomes 巜.
+ * a custom component, whole or still being written. Component shorthands come from COMPONENT_ALIASES.
  * @param {string | null | undefined} text
  */
 export const unalias = text => {
@@ -49,8 +54,9 @@ export const unalias = text => {
     run.lastIndex = at
     const match = run.exec(source)
     if (!match) {
-      const char = source[at++]
-      out += char === 'ㄍ' ? '巜' : char
+      const char = String.fromCodePoint(source.codePointAt(at) ?? 0)
+      at += char.length
+      out += COMPONENT_ALIASES[char] ?? char
       continue
     }
     out += translate(match[0])

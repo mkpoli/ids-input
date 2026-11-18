@@ -2,12 +2,12 @@
   // What the workshop reads as the same thing written another way, each table from the code or the
   // data that applies it, grouped by whether the input is rewritten or kept as written: structures
   // (the Templates count), kana and Hangul shapes (the search), component forms and stroke families
-  // (the palette and the search), stroke chains and operator names (the parser).
+  // (the palette and the search), stroke chains (the parser), operator names and component shorthands (input).
   import PageHeader from './ui/PageHeader.svelte'
   import { translator } from '../src/svelte/index.js'
   import { LOCALES, appMessages } from './lib/locales.js'
   import { load, save } from './lib/storage.js'
-  import { ALIASES, equivalences, parse, structureSkeleton } from '../src/core/index.js'
+  import { ALIASES, COMPONENT_ALIASES, equivalences, parse, structureSkeleton } from '../src/core/index.js'
   import { STROKE_CHAINS } from '@han-compose/composer/tree'
   import identity from '../src/core/component-identity.json'
   import formsText from '../data/component-forms.tsv?raw'
@@ -53,12 +53,12 @@
   const families = Object.entries(/** @type {Record<string, string[]>} */ (identity.families)).map(([ideograph, members]) => ({ from: members.map(char), to: [char(ideograph)] }))
   /** @type {Rule[]} */
   const chains = Object.entries(STROKE_CHAINS).map(([chain, to]) => ({ from: [`#(${chain})`], to: [to] }))
-  /** @type {Rule[]} */
-  const operators = Object.entries(ALIASES).map(([name, op]) => ({ from: [name], to: [op] }))
+  /** @param {Readonly<Record<string, string>>} aliases @returns {Rule[]} */
+  const aliasRules = aliases => Object.entries(aliases).map(([from, to]) => ({ from: [from], to: [to] }))
 
   // A rewrite replaces what is typed; a match keeps it as written and treats it as the same.
   const GROUPS = /** @type {const} */ ([
-    ['rewrite', [['chains', chains], ['operators', operators]]],
+    ['rewrite', [['chains', chains], ['operators', aliasRules(ALIASES)], ['componentAliases', aliasRules(COMPONENT_ALIASES)]]],
     ['match', [['structure', structures], ['kana', kana], ['hangul', hangul], ['forms', forms], ['families', families]]],
   ])
   let query = $state(params.get('q') ?? '')

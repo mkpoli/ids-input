@@ -41,3 +41,10 @@ bun test tests/render-normalization.test.js tests/composer-normalization.test.js
 ```
 
 The integration fixture deliberately assigns unequal outline lengths to `吋` and the sum of `口` and `寸`. It checks parent allocation, feature records, preferred donor keys, exclusions, annotations and cold/warm loading. The evidence schema follows the pinned [han-compose export](https://github.com/mkpoli/han-compose/tree/bd0829b), whose record and shard fields are documented in the [loader](../src/composer/loader.js).
+
+## Appendix: IDS input rules
+
+The workshop’s Normalization page lists input rewrites under **Rewritten**.
+The IDS sequence field and search expand the component shorthand `ㄍ` to
+`巜`. The appendix draws this row from the
+[component shorthand table](../src/core/aliases.js) used by the input code.
