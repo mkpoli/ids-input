@@ -42,6 +42,15 @@
   /** Each face's share of the blend, in percent. @type {Record<string, number>} */
   let shares = $state(Object.fromEntries(FONT_STYLES.map(style => [style, 20])))
   let weight = $state(100)
+  // The blend is kept between visits, and the workshop's Mix option draws in it.
+  const kept = load('font-mix', null)
+  if (FONT_STYLES.every(style => Number.isFinite(kept?.shares?.[style]) && kept.shares[style] >= 0)) {
+    const total = FONT_STYLES.reduce((sum, style) => sum + kept.shares[style], 0)
+    if (total > 0) for (const style of FONT_STYLES) shares[style] = (kept.shares[style] / total) * 100
+  }
+  if (Number.isFinite(kept?.weight)) weight = Math.round(Math.min(1.5, Math.max(0.65, kept.weight)) * 100)
+  /** Keep the blend the reader set by hand; a tour's passing frames are not kept. */
+  const keep = () => save('font-mix', { shares: Object.fromEntries(FONT_STYLES.map(style => [style, shares[style] / 100])), weight: weight / 100 })
   let pace = $state(3)
   let phase = $state('neighbours')
   /** @type {'idle' | 'preparing' | 'playing' | 'paused'} */
@@ -125,12 +134,14 @@
     const total = others.reduce((sum, face) => sum + shares[face], 0)
     for (const face of others) shares[face] = (100 - value) * (total > 0 ? shares[face] / total : 1 / others.length)
     shares[style] = value
+    keep()
     schedule()
   }
   /** @param {PointerEvent} event */
   function movePad(event) {
     const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(/** @type {DOMMatrix} */ (pad.getScreenCTM()).inverse())
     weightsAt([point.x, point.y]).forEach((share, i) => { shares[FONT_STYLES[i]] = share * 100 })
+    keep()
     schedule()
   }
 
@@ -320,7 +331,7 @@
       <label class="weight">
         <span>{t('fontMixer.weight')}</span>
         <input class="ui-range" type="range" min="65" max="150" bind:value={weight}
-          style:--fill={fill(weight, 65, 150)} aria-valuetext={percent(weight)} oninput={schedule} />
+          style:--fill={fill(weight, 65, 150)} aria-valuetext={percent(weight)} oninput={() => { keep(); schedule() }} />
         <output>{percent(weight)}</output>
       </label>
 

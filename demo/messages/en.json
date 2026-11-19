@@ -89,6 +89,8 @@
   "app.font.regular": "Regular",
   "app.font.fangsong": "Fangsong",
   "app.font.pen-writing": "Pen",
+  "app.font.mix": "Mix",
+  "app.font.mixSet": "Set the mix",
   "app.fills.title": "Part fills",
   "app.fills.fill": "Fill",
   "app.fills.area": "Saturation and brightness",

@@ -88,6 +88,8 @@
   "app.font.regular": "正楷",
   "app.font.fangsong": "仿宋",
   "app.font.pen-writing": "文楷",
+  "app.font.mix": "混合",
+  "app.font.mixSet": "调整混合比例",
   "app.fills.title": "部件填充",
   "app.fills.fill": "填充",
   "app.fills.area": "饱和度与明度",

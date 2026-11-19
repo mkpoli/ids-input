@@ -88,6 +88,8 @@
   "app.font.regular": "해서",
   "app.font.fangsong": "방송체",
   "app.font.pen-writing": "펜해서",
+  "app.font.mix": "혼합",
+  "app.font.mixSet": "혼합 비율 조정",
   "app.fills.title": "부품 채우기",
   "app.fills.fill": "채우기",
   "app.fills.area": "채도와 밝기",

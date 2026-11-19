@@ -16,6 +16,7 @@
   import { composerPreview as composerAt } from '@han-compose/composer'
   import { variationSequences } from '@han-compose/composer/variants'
   import engineOutlines from 'ids-engine-outlines'
+  import { FONT_STYLES } from '@han-compose/composer/font-mix'
   import { EMPTY_MARKS, OPERATORS, characterStrokes, componentQuery, drawnText, isJurchen, isShuishu, parse, substituteSequences, unalias } from '../src/core/index.js'
   import { loadStrokeRecords } from '../src/svelte/strokes.js'
   import { createDocumentSession, DOCUMENT_FACES, layerAtPath, sessionRecord, toSequence } from '../src/document/index.js'
@@ -434,6 +435,59 @@
     return /** @type {ReturnType<typeof createSampleDrawings>} */ (sampleDrawings.get(key))
   }
   const componentStyle = $derived(FONT_FACES.find(option => option.key === face)?.style ?? 'sans')
+  // The blend the font mixer page keeps: with it on, the previews are drawn in that blend of the
+  // five faces. The chosen face still names the text face and the layers' own adjustments.
+  let mixed = $state(load('font-mixed', false) === true)
+  $effect(() => save('font-mixed', mixed || undefined))
+  /** The shares and weight the mixer page saved, or an even blend. */
+  const storedMix = () => {
+    const kept = load('font-mix', null)
+    const even = Object.fromEntries(FONT_STYLES.map(style => [style, 1]))
+    const shares = FONT_STYLES.every(style => Number.isFinite(kept?.shares?.[style]) && kept.shares[style] >= 0) && FONT_STYLES.some(style => kept.shares[style] > 0)
+      ? Object.fromEntries(FONT_STYLES.map(style => [style, kept.shares[style]])) : even
+    const weight = Number.isFinite(kept?.weight) ? Math.min(1.5, Math.max(0.65, kept.weight)) : 1
+    return { shares, weight }
+  }
+  let mix = $state.raw(storedMix())
+  onMount(() => {
+    // The mixer page in another tab changes the blend.
+    const changed = (/** @type {StorageEvent} */ event) => { if (event.key === 'ids-input:font-mix') mix = storedMix() }
+    window.addEventListener('storage', changed)
+    return () => window.removeEventListener('storage', changed)
+  })
+  /** One composer of the blend per layout, whatever the shares. @type {Map<boolean, ReturnType<typeof composerPreview>>} */
+  const blenders = new Map()
+  /** @param {boolean} split */
+  const blender = split => {
+    if (!blenders.has(split)) blenders.set(split, composerPreview({
+      base: COMPOSER_BASE,
+      faceBases: Object.fromEntries(FONT_STYLES.map(style => [style, COMPOSER_BASES[style]])),
+      separate: split,
+      loaders: bundlesFor('sans'),
+    }))
+    return /** @type {ReturnType<typeof composerPreview>} */ (blenders.get(split))
+  }
+  /** The last blended preview, kept so the same face and blend give the same function.
+   *  @type {{ inner: unknown, split: boolean, setting: unknown, preview: ReturnType<typeof composerPreview> } | null} */
+  let blend = null
+  /** A preview drawn in the blend, falling back to the face's own where the blend cannot draw.
+   *  @param {ReturnType<typeof composerPreview>} inner @param {boolean} split @param {{ shares: Record<string, number>, weight: number }} setting */
+  const blended = (inner, split, setting) => {
+    if (blend && blend.inner === inner && blend.split === split && blend.setting === setting) return blend.preview
+    const draw = blender(split)
+    /** @type {ReturnType<typeof composerPreview>} */
+    const preview = Object.assign(async (sequence, options) => {
+      try {
+        const drawn = await draw(sequence, { ...options, mix: setting })
+        if (!drawn?.missing?.length) return drawn
+      } catch (error) {
+        if (options?.signal?.aborted || stopping(error)) throw error
+      }
+      return inner(sequence, options)
+    }, { warm: inner.warm })
+    blend = { inner, split, setting, preview }
+    return preview
+  }
   const icons = $derived(iconsAt(base, componentStyle))
   // One function for each export, so a tree asks again only when the face changes.
   /** @type {Map<string, () => Promise<Map<string, string[]>>>} */
@@ -443,7 +497,8 @@
     if (!sequenceLists.has(at)) sequenceLists.set(at, () => variationSequences(readFrom(at)))
     return /** @type {() => Promise<Map<string, string[]>>} */ (sequenceLists.get(at))
   }
-  const adapter = $derived({ ...babel, preview: previewFor(base, separate, componentStyle), icon: icons, fontStyle: componentStyle, variationSequences: sequencesAt(base) })
+  const facePreview = $derived(previewFor(base, separate, componentStyle))
+  const adapter = $derived({ ...babel, preview: mixed ? blended(facePreview, separate, mix) : facePreview, icon: icons, fontStyle: componentStyle, variationSequences: sequencesAt(base) })
   const wanted = String(params.get('lang') ?? load('locale', null) ?? navigator.language ?? '')
   // A browser asking for Traditional Chinese names its region or script, never the catalogue's code.
   const traditional = /^zh-(?:Hant|TW|HK|MO)\b/i
@@ -1431,6 +1486,15 @@
         <span class="wide {option.key}">{t(option.label)}</span>
       </button>
     {/each}
+    <button type="button" class="font-choice" aria-pressed={mixed} aria-label={t('app.font.mix')} title={t('app.font.mix')} onclick={() => { mix = storedMix(); mixed = !mixed }}>
+      <Icon name="blend" size={16} />
+      <span class="wide">{t('app.font.mix')}</span>
+    </button>
+    {#if mixed}
+      <a class="font-choice" href={`./font-mixer?lang=${locale}${editor.tree === null ? '' : `&ids=${encodeURIComponent(editor.whole)}`}`} aria-label={t('app.font.mixSet')} title={t('app.font.mixSet')}>
+        <Icon name="settings" size={16} />
+      </a>
+    {/if}
   </div>
 {/snippet}
 
@@ -1582,7 +1646,7 @@
       <section class="pane output" class:phone-active={phonePane === 'output'} class:adjusting={adjusting} id="output-panel" aria-label={t('app.output')}>
         <div class="preview" data-character-info-avoid ondblclick={startAdjust}>
           {#if !large}
-            {#key `${activeId}:${face}`}
+            {#key `${activeId}:${face}:${mixed ? JSON.stringify(mix) : ''}`}
               <IdsPreview {adapter} {face} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false}
                 document={currentSession()?.document} session={currentSession()} version={documentTick} bind:scopes bind:slots
                 editable={adjusting} onchoose={path => editor.choose(path, { toggle: false })} onedit={layerChanged} bind:drawing bind:emoji bind:cut bind:cutLeaf bind:step={previewStep}>
@@ -1661,7 +1725,7 @@
             </div>
           </div>
           {#if large}
-            {#key face}
+            {#key `${face}:${mixed ? JSON.stringify(mix) : ''}`}
               <IdsPreview {adapter} {face} tree={editor.tree} {messages} {locale} small={false} notes={false}
                 document={currentSession()?.document} session={currentSession()} version={documentTick} editable={false} bind:step={previewStep} />
             {/key}
@@ -1761,6 +1825,7 @@
   /* Kureedo draws neither 书 nor ả/ư; keep those names in one face. */
   .font-choice .wide.pen-writing:lang(zh-Hans),.font-choice .wide.pen-writing:lang(vi){font-family:var(--cjk-label-sans)}
   .font-choice .wide.regular:lang(ko),.font-choice .wide.regular:lang(vi){font-family:var(--cjk-label-sans)}
+  a.font-choice{text-decoration:none}
   .font-choice:hover{color:var(--ui-color-ink)}
   .font-choice[aria-pressed="true"]{background:var(--ui-color-accent-soft);color:var(--ui-color-accent)}
   .font-choice:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}
