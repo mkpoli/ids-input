@@ -15,5 +15,6 @@ export const pages = t => [
   { id: 'open-data', icon: 'download', label: t('app.openData') },
   { id: 'compare', icon: 'scales', label: t('app.compare') },
   { id: 'font-compare', icon: 'variants', label: t('fontCompare.title') },
+  { id: 'font-mixer', icon: 'blend', label: t('fontMixer.title') },
   { id: 'engines', icon: 'table', label: t('app.engines') },
 ]
