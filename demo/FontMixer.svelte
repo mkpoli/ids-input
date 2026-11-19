@@ -49,7 +49,7 @@
     if (total > 0) for (const style of FONT_STYLES) shares[style] = (kept.shares[style] / total) * 100
   }
   if (Number.isFinite(kept?.weight)) weight = Math.round(Math.min(1.5, Math.max(0.65, kept.weight)) * 100)
-  /** Keep the blend the reader set by hand; a tour's passing frames are not kept. */
+  /** Keep the blend once the reader lets go of a control, so another tab hears of it once. */
   const keep = () => save('font-mix', { shares: Object.fromEntries(FONT_STYLES.map(style => [style, shares[style] / 100])), weight: weight / 100 })
   let pace = $state(3)
   let phase = $state('neighbours')
@@ -139,14 +139,12 @@
     const total = others.reduce((sum, face) => sum + shares[face], 0)
     for (const face of others) shares[face] = (100 - value) * (total > 0 ? shares[face] / total : 1 / others.length)
     shares[style] = value
-    keep()
     schedule()
   }
   /** @param {PointerEvent} event */
   function movePad(event) {
     const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(/** @type {DOMMatrix} */ (pad.getScreenCTM()).inverse())
     weightsAt([point.x, point.y]).forEach((share, i) => { shares[FONT_STYLES[i]] = share * 100 })
-    keep()
     schedule()
   }
 
@@ -316,7 +314,8 @@
         <div class="pad">
           <svg bind:this={pad} viewBox="-150 -112 300 214" role="img" aria-label={t('fontMixer.pad')}
             onpointerdown={event => { if (!event.isPrimary || event.button !== 0) return; event.preventDefault(); event.currentTarget.setPointerCapture(event.pointerId); movePad(event) }}
-            onpointermove={event => { if (event.currentTarget.hasPointerCapture(event.pointerId)) movePad(event) }}>
+            onpointermove={event => { if (event.currentTarget.hasPointerCapture(event.pointerId)) movePad(event) }}
+            onpointerup={keep} onpointercancel={keep}>
             <polygon class="field" points={vertices.map(p => p.join(',')).join(' ')} />
             {#each vertices as [x, y] (x)}<line class="spoke" x1="0" y1="0" x2={x} y2={y} />{/each}
             <polyline class="trail" points={trail} />
@@ -335,7 +334,7 @@
               <span>{t(`app.font.${style}`)}</span>
               <input class="ui-range" type="range" min="0" max="100" step="0.1" value={shares[style]}
                 style:--fill={`${shares[style]}%`} aria-valuetext={percent(shares[style])}
-                oninput={event => setShare(style, event.currentTarget.valueAsNumber)} />
+                oninput={event => setShare(style, event.currentTarget.valueAsNumber)} onchange={keep} />
               <output>{percent(shares[style])}</output>
             </label>
           {/each}
@@ -345,7 +344,7 @@
       <label class="weight">
         <span>{t('fontMixer.weight')}</span>
         <input class="ui-range" type="range" min="65" max="150" bind:value={weight}
-          style:--fill={fill(weight, 65, 150)} aria-valuetext={percent(weight)} oninput={() => { keep(); schedule() }} />
+          style:--fill={fill(weight, 65, 150)} aria-valuetext={percent(weight)} oninput={schedule} onchange={keep} />
         <output>{percent(weight)}</output>
       </label>
 

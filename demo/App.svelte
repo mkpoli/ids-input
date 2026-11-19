@@ -451,41 +451,53 @@
   let mix = $state.raw(storedMix())
   onMount(() => {
     // The mixer page in another tab changes the blend.
-    const changed = (/** @type {StorageEvent} */ event) => { if (event.key === 'ids-input:font-mix') mix = storedMix() }
+    const reread = () => {
+      const next = storedMix()
+      if (JSON.stringify(next) !== JSON.stringify(mix)) mix = next
+    }
+    const changed = (/** @type {StorageEvent} */ event) => { if (event.key === 'ids-input:font-mix') reread() }
+    // Coming back from the mixer page in this tab restores the editor without a storage event.
+    const shown = (/** @type {PageTransitionEvent} */ event) => { if (event.persisted) reread() }
     window.addEventListener('storage', changed)
-    return () => window.removeEventListener('storage', changed)
+    window.addEventListener('pageshow', shown)
+    return () => { window.removeEventListener('storage', changed); window.removeEventListener('pageshow', shown) }
   })
   /** One composer of the blend per layout, whatever the shares. @type {Map<boolean, ReturnType<typeof composerPreview>>} */
   const blenders = new Map()
   /** @param {boolean} split */
   const blender = split => {
     if (!blenders.has(split)) blenders.set(split, composerPreview({
-      base: COMPOSER_BASE,
-      faceBases: Object.fromEntries(FONT_STYLES.map(style => [style, COMPOSER_BASES[style]])),
+      base: readFrom(COMPOSER_BASE),
+      faceBases: Object.fromEntries(FONT_STYLES.map(style => [style, readFrom(COMPOSER_BASES[style])])),
       separate: split,
       loaders: bundlesFor('sans'),
     }))
     return /** @type {ReturnType<typeof composerPreview>} */ (blenders.get(split))
   }
-  /** The last blended preview, kept so the same face and blend give the same function.
-   *  @type {{ inner: unknown, split: boolean, setting: unknown, preview: ReturnType<typeof composerPreview> } | null} */
+  /** The last blended preview, kept so the same face gives the same function whatever the blend:
+   *  the editor's tools hold on to the adapter, and a new blend only needs a new drawing.
+   *  @type {{ inner: unknown, split: boolean, preview: ReturnType<typeof composerPreview> } | null} */
   let blend = null
-  /** A preview drawn in the blend, falling back to the face's own where the blend cannot draw.
-   *  @param {ReturnType<typeof composerPreview>} inner @param {boolean} split @param {{ shares: Record<string, number>, weight: number }} setting */
-  const blended = (inner, split, setting) => {
-    if (blend && blend.inner === inner && blend.split === split && blend.setting === setting) return blend.preview
+  /** A preview drawn in the current blend. The face's own preview draws what the blend cannot: a
+   *  description the face resolves to a character it names, one with missing glyphs, and one whose
+   *  faces split it into different parts, which the layers could not adjust.
+   *  @param {ReturnType<typeof composerPreview>} inner @param {boolean} split */
+  const blended = (inner, split) => {
+    if (blend && blend.inner === inner && blend.split === split) return blend.preview
     const draw = blender(split)
     /** @type {ReturnType<typeof composerPreview>} */
     const preview = Object.assign(async (sequence, options) => {
-      try {
-        const drawn = await draw(sequence, { ...options, mix: setting })
-        if (!drawn?.missing?.length) return drawn
-      } catch (error) {
-        if (options?.signal?.aborted || stopping(error)) throw error
+      if (!sequence.includes('[') && !APPROXIMATE.some(operator => sequence.includes(operator))) {
+        try {
+          const drawn = await draw(sequence, { ...options, mix: untrack(() => mix) })
+          if (!drawn?.missing?.length && (drawn?.parts?.length || !drawn?.d)) return drawn
+        } catch (error) {
+          if (options?.signal?.aborted || stopping(error)) throw error
+        }
       }
       return inner(sequence, options)
     }, { warm: inner.warm })
-    blend = { inner, split, setting, preview }
+    blend = { inner, split, preview }
     return preview
   }
   const icons = $derived(iconsAt(base, componentStyle))
@@ -498,7 +510,7 @@
     return /** @type {() => Promise<Map<string, string[]>>} */ (sequenceLists.get(at))
   }
   const facePreview = $derived(previewFor(base, separate, componentStyle))
-  const adapter = $derived({ ...babel, preview: mixed ? blended(facePreview, separate, mix) : facePreview, icon: icons, fontStyle: componentStyle, variationSequences: sequencesAt(base) })
+  const adapter = $derived({ ...babel, preview: mixed ? blended(facePreview, separate) : facePreview, icon: icons, fontStyle: componentStyle, variationSequences: sequencesAt(base) })
   const wanted = String(params.get('lang') ?? load('locale', null) ?? navigator.language ?? '')
   // A browser asking for Traditional Chinese names its region or script, never the catalogue's code.
   const traditional = /^zh-(?:Hant|TW|HK|MO)\b/i
@@ -1491,7 +1503,7 @@
       <span class="wide">{t('app.font.mix')}</span>
     </button>
     {#if mixed}
-      <a class="font-choice" href={`./font-mixer?lang=${locale}${editor.tree === null ? '' : `&ids=${encodeURIComponent(editor.whole)}`}`} aria-label={t('app.font.mixSet')} title={t('app.font.mixSet')}>
+      <a class="font-choice" href={`./font-mixer.html?lang=${locale}${editor.tree === null ? '' : `&ids=${encodeURIComponent(editor.whole)}`}`} aria-label={t('app.font.mixSet')} title={t('app.font.mixSet')}>
         <Icon name="settings" size={16} />
       </a>
     {/if}
