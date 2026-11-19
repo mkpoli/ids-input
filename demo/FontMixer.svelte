@@ -51,6 +51,8 @@
   /** The tour's position, or how far its preparation is; null when no tour is loaded. @type {number | null} */
   let position = $state(null)
   let drawn = $state(false)
+  /** Whether the drawing shown is of the newest request, so Save writes what the controls say. */
+  let current = $state(false)
   /** The pad positions of the tour's current part. */
   let trail = $state('')
   /** @type {HTMLElement} */
@@ -90,6 +92,8 @@
       visible = ''
       status = wanted ? 'composing' : 'empty'
     } else status = ''
+    if (!wanted) status = 'empty'
+    current = false
     if (!frame && !running && pending) frame = requestAnimationFrame(render)
   }
   async function render() {
@@ -105,6 +109,7 @@
       glyph.replaceChildren(svgNode(drawing))
       visible = request.sequence
       drawn = true
+      current = request.version === revision
       status = drawing.missing?.length ? t('fontMixer.missing', { glyphs: drawing.missing.join(' ') }) : ''
     } catch (error) {
       if (!controller.signal.aborted && request.version === revision && glyph) {
@@ -140,6 +145,9 @@
   /** @type {{ name: string, start: number, end: number } | undefined} */
   let shown
   let scrubbing = false, scrubbed = false
+  // Until a tour shows its first frame the bar shows how far its preparation is; after that it
+  // stays the reader's place in the tour, also while a jump ahead is being prepared.
+  let started = false
   const weightsOf = (/** @type {Record<string, number>} */ mix) => FONT_STYLES.map(style => mix[style] ?? 0)
   /** @param {{ name: string, start: number, end: number } | undefined} part */
   function showPhase(part) {
@@ -159,11 +167,13 @@
       glyph.replaceChildren(shot.image)
       visible = recorded
       drawn = true
+      current = true
+      started = true
       for (const style of FONT_STYLES) shares[style] = (shot.mix[style] ?? 0) * 100
       showPhase(route.phases.findLast(part => index >= part.start - 1) ?? route.phases[0])
-      if (!scrubbing) position = index / route.frames.length
+      if (!scrubbing) position = index / Math.max(1, route.frames.length - 1)
     },
-    progress: fraction => { if (!scrubbing) position = fraction },
+    progress: fraction => { if (!scrubbing && !started) position = fraction },
     prepared: () => { if (status === 'preparing') status = '' },
     stateChanged: state => {
       playing = state
@@ -172,6 +182,7 @@
         if (status === 'preparing') status = ''
         showPhase(undefined)
         position = null
+        scrubbing = false
       }
     },
     failed: error => { status = error.message },
@@ -190,6 +201,7 @@
     revision++
     running?.controller.abort()
     route = tour(FONT_STYLES, pace)
+    started = false
     playback.start(route.frames, phaseStart())
   }
   function setPace() {
@@ -199,10 +211,11 @@
     // A tour that was running starts again at the new pace.
     if (state !== 'paused') play()
   }
-  /** @param {number} fraction */
-  function scrub(fraction) {
-    position = fraction
-    if (route.frames.length) playback.seek(Math.round(fraction * (route.frames.length - 1)))
+  const lastFrame = $derived(position === null ? 1 : Math.max(1, route.frames.length - 1))
+  /** @param {number} index */
+  function scrub(index) {
+    position = index / lastFrame
+    if (route.frames.length) playback.seek(index)
   }
   function endScrub() {
     if (scrubbing && scrubbed) playback.resume()
@@ -248,11 +261,12 @@
       <div class="frame">
         <div class="proof">
           <div class="glyph" bind:this={glyph}></div>
-          {#if statusText}<p class="status" role="status">{statusText}</p>{/if}
+          <p class="status" role="status">{statusText}</p>
           {#if position !== null}
-            <input class="ui-range scrub" type="range" min="0" max="1" step="any" value={position}
+            <input class="ui-range scrub" type="range" min="0" max={lastFrame} step="1" value={Math.round(position * lastFrame)}
               style:--fill={`${position * 100}%`} aria-label={t('fontMixer.position')}
-              onpointerdown={() => { scrubbing = true; scrubbed = playback.state === 'playing' || playback.state === 'preparing'; playback.pause() }}
+              aria-valuetext={`${t(`fontMixer.phase.${phase}`)} ${percent(position * 100)}`}
+              onpointerdown={event => { if (!event.isPrimary || event.button !== 0) return; scrubbing = true; scrubbed = playback.state === 'playing' || playback.state === 'preparing'; playback.pause() }}
               oninput={event => scrub(event.currentTarget.valueAsNumber)}
               onchange={endScrub} onpointerup={endScrub} onpointercancel={endScrub} />
           {/if}
@@ -324,7 +338,7 @@
         <output>{percent(weight)}</output>
       </label>
 
-      <button type="button" class="ui-button save" disabled={!drawn} onclick={saveSvg}>
+      <button type="button" class="ui-button save" disabled={!drawn || !current} onclick={saveSvg}>
         <Icon name="download" size={14} /><span>{t('fontMixer.save')}</span>
       </button>
     </section>
@@ -342,6 +356,7 @@
       linear-gradient(transparent calc(50% - .5px),var(--ui-color-border) 0 calc(50% + .5px),transparent 0)}
   .glyph{display:grid;place-items:center;inline-size:100%;block-size:100%}
   .glyph :global(svg){inline-size:88%;block-size:88%}
+  .status:empty{display:none}
   .status{position:absolute;inset:auto 0 var(--ui-space-2xl);margin:0;text-align:center;color:var(--ui-color-ink-muted);font-size:var(--ui-text-sm)}
   .scrub{position:absolute;inset:auto 0 0;block-size:16px;cursor:ew-resize}
   .scrub::-webkit-slider-runnable-track{border-radius:0;margin-block-start:8px}
