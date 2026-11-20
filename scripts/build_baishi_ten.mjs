@@ -36,5 +36,5 @@ function outlines(records, fit = false) {
   const center = bounds.map(([lo, hi]) => fit ? (lo + hi) / 2 : 100)
   return strokes.map(polygons => polygons.map(points => 'M' + points.map(point => point.map((v, i) => +(500 + (v - center[i]) * scale).toFixed(1)).join(' ')).join('L') + 'Z').join(''))
 }
-const output = { flatNoon: outlines(flatNoon, true), risingNoon: outlines(risingNoon, true), halberd: outlines(halberd), pairedNoons: outlines(pairedNoons), raisedCross: outlines(risingNoon.slice(2), true) }
+const output = { risingNoon: outlines(risingNoon, true), halberd: outlines(halberd), pairedNoons: outlines(pairedNoons), raisedCross: outlines(risingNoon.slice(2), true) }
 writeFileSync(new URL('../demo/lib/baishi-ten-glyphs.json', import.meta.url), JSON.stringify(output, null, 1) + '\n')

@@ -15,6 +15,7 @@
 // 土t in 地, 凵y in 世, whose own entries carry those tags. An entry for a form no outline has is
 // drawn by the workshop's composer from the sequence, without its tags, and marked as composed.
 // 𱤻 stands for ⿾止 as the guide gives it (§2.1), though its row's default entry spells it otherwise.
+import fontGlyphs from './baishi-font-glyphs.json' with { type: 'json' }
 import tenGlyphs from './baishi-ten-glyphs.json' with { type: 'json' }
 import { chainStrokes } from '../../src/core/chain-shape.js'
 
@@ -42,16 +43,11 @@ const deerUpper = {
   parts: [[0], [1]],
 }
 
-// Sans drawing of IWDS 408-2 (aj1-13763), traced from the ImageGen study.
-// Keep the three parts separate for token highlighting.
+// Adobe-Japan1 CID+13763 (工 + VS18), Noto Sans CJK JP 2.004 at wght=400.
 const gong408 = {
   char: '工',
-  contours: [
-    'M165 104H835V176H165Z',
-    'M460 176H530L421 438H665V498L513 824H433L579 505H320Z',
-    'M80 824H920V896H80Z',
-  ],
-  parts: [[0], [1], [2]],
+  contours: fontGlyphs.glyphs['工󠄁'],
+  parts: [[0], [2, 3, 4], [1]],
 }
 
 // U+E021 of the guide's fonts/example.woff2 at 0ca5ed48 (§4.3.2).
@@ -274,7 +270,7 @@ export const SHEET = [
   { id: 'worked', label: 'worked', cards: [
     { id: 'worked-noon', hint: 'workedNoon', quotes: [
       { char: '午', text: '午\t⿱𠂉十.(.);⿱𠂉十.t(t)', row: 1353, glyphs: [
-        { char: '午', contours: tenGlyphs.flatNoon, parts: [[0, 1], [2, 3]] },
+        { char: '午', contours: fontGlyphs.glyphs.午, parts: [[0, 1], [2, 3]] },
         { char: '午', contours: tenGlyphs.risingNoon, parts: [[0, 1], [2, 3]] },
       ], focus: ['十.t'] },
       { char: '𭬁', text: '⿰木d⿱⿰午t午.心', row: 83627, glyphs: [

@@ -84,6 +84,10 @@ try {
       assert.ok((await tip.locator('.variants li').count()) >= 2, `${scheme}: the tooltip lists the component's entries`)
       assert.equal(await page.locator('#component-variant .card').first().locator('.part.dim').count(), 1, `${scheme}: the other part dims`)
       if (shots) await page.screenshot({ path: `${shots}/baishi-cheatsheet-tooltip-${scheme}.png` })
+      for (const [written, forms] of /** @type {[string, string[]][]} */ ([['一.', ['{一}#(T)(t)']], ['人.', ['#(-丿丶)(d)']], ['己.', ['(t)', '(w)', '(z)']]])) {
+        await page.locator('.token.part').filter({ hasText: new RegExp('^' + written.replace('.', '\\.') + '$') }).first().hover()
+        for (const form of forms) assert.equal(await tip.locator('li').filter({ hasText: form }).locator('path.ink').count(), 1)
+      }
       const entries = page.locator('#primary-group')
       const drawings = entries.locator('.tile')
       assert.equal(await drawings.count(), 2)
