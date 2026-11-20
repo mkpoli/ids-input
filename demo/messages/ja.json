@@ -86,7 +86,7 @@
   "app.font.sans": "ゴシック",
   "app.font.serif": "明朝",
   "app.font.regular": "正楷",
-  "app.font.fangsong": "仿宋",
+  "app.font.fangsong": "宋朝体",
   "app.font.pen-writing": "文楷",
   "app.font.mix": "ブレンド",
   "app.font.mixSet": "ブレンドを調整",
@@ -924,7 +924,7 @@
   "page.baishi-cheatsheet.description": "zi.toolsデータベースの拡張IDSを1枚にまとめた早見表。演算子、異体字識別子、筆画連鎖、重なり括弧、囲みインデックスを、実在の漢字上で部品ごとに色分けして示します。",
   "page.open-data.description": "このプロジェクトが書き起こし・読み込んだIDS記述と、検索で用いる仮名・ハングルの等価データを、CC0 1.0のJSONおよびTSV形式で公開しています。",
   "page.compare.description": "実際の未符号化見出し字のIDSから、IDS工房の組字器とKAGEの合成字形を並べて比較。両者が一致する点と異なる点を確認できます。",
-  "page.font-compare.description": "同じ文字や記述をIDS工房の五つの書体（ゴシック、明朝、仿宋、正楷、文楷）で並べて比較します。",
-  "page.font-mixer.description": "IDS工房の五つの書体（ゴシック、明朝、仿宋、正楷、文楷）の間で文字をブレンドし、書体間の変化を自動再生でたどれます。",
+  "page.font-compare.description": "同じ文字や記述をIDS工房の五つの書体（ゴシック、明朝、宋朝体、正楷、文楷）で並べて比較します。",
+  "page.font-mixer.description": "IDS工房の五つの書体（ゴシック、明朝、宋朝体、正楷、文楷）の間で文字をブレンドし、書体間の変化を自動再生でたどれます。",
   "page.engines.description": "IDS組字エンジンの機能比較。IDS工房、KAGE、GlyphWiki、zi.tools、yedict、Mojidata、MetaHan、CHISEを比較しています。"
 }

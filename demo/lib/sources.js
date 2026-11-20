@@ -666,7 +666,7 @@ export const SOURCES = [
     date: '0.212',
     summary: {
       en: 'The Fangsong glyph face, a technical preview recut from the 1932 Nansong type.',
-      ja: '仿宋体の字形。1932年の活字「南宋」を改刻した技術プレビュー版。',
+      ja: '宋朝体の字形。1932年の活字「南宋」を改刻した技術プレビュー版。',
       'zh-Hans': '仿宋字形，改刻自1932年的“南宋”活字，目前为技术预览版。',
       'zh-Hant': '仿宋字形，改刻自1932年的「南宋」活字，目前為技術預覽版。',
       ko: '방송체 글리프. 1932년 활자 ‘남송’을 다시 새긴 기술 미리 보기판.',
