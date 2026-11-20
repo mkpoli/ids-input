@@ -20,13 +20,31 @@ try {
   const back = await spec.evaluate(() => [...document.querySelectorAll('a[href*="baishi-cheatsheet.html"]')].map(link => /** @type {HTMLAnchorElement} */ (link).hash.slice(1)).filter(Boolean))
   await spec.close()
 
-  for (const scheme of /** @type {const} */ (['light', 'dark'])) for (const [name, width] of /** @type {const} */ ([['desktop', 1360], ['phone', 400]])) {
+  const linked = await browser.newPage()
+  await linked.goto(base + '/baishi-cheatsheet.html?lang=en&face=serif#worked-noon', { waitUntil: 'networkidle' })
+  const worked = linked.locator('#worked-noon')
+  assert.ok(Math.abs((await worked.boundingBox()).y) < 160, 'Serif deep link reaches the example')
+  const drawing = worked.locator('.part path').first()
+  const serifPath = await drawing.getAttribute('d')
+  const fontMenu = linked.getByRole('button', { name: /Glyph font/ })
+  await fontMenu.click()
+  await linked.getByRole('menuitemradio', { name: 'Sans', exact: true }).click()
+  await linked.waitForFunction(() => !location.search.includes('face=serif'))
+  assert.notEqual(await drawing.getAttribute('d'), serifPath)
+  await fontMenu.click()
+  await linked.getByRole('menuitemradio', { name: 'Serif', exact: true }).click()
+  await linked.waitForFunction(() => location.search.includes('face=serif'))
+  assert.equal(await drawing.getAttribute('d'), serifPath)
+  assert.equal(new URL(linked.url()).hash, '#worked-noon')
+  await linked.close()
+
+  for (const face of ['sans', 'serif']) for (const scheme of /** @type {const} */ (['light', 'dark'])) for (const [name, width] of /** @type {const} */ ([['desktop', 1360], ['phone', 400]])) {
     const page = await browser.newPage({ viewport: { width, height: 900 }, deviceScaleFactor: 2, colorScheme: scheme, hasTouch: name === 'phone' })
     const errors = []
     page.on('pageerror', error => errors.push(error.message))
-    await page.goto(`${base}/baishi-cheatsheet.html?lang=ja`, { waitUntil: 'networkidle' })
+    await page.goto(`${base}/baishi-cheatsheet.html?lang=ja&face=${face}`, { waitUntil: 'networkidle' })
     await page.evaluate(() => document.fonts.ready)
-    const view = `${name} ${scheme}`
+    const view = `${face} ${name} ${scheme}`
     assert.equal(await page.locator('article.card:not(.unused):not(.legend)').count(), cards.length, `${view}: every card is drawn`)
     assert.equal(await page.locator('.quote:has(.sequence):not(:has(.tile .glyph))').count(), 0, `${view}: every quotation has a drawing`)
     assert.equal(await page.locator('.tile .glyph').count(), cards.flatMap(card => card.quotes).reduce((sum, quote) => sum + quote.glyphs.filter(Boolean).length, 0), `${view}: every tile is drawn`)
@@ -83,7 +101,7 @@ try {
       assert.ok((await tip.locator('p').count()) >= 2, `${scheme}: the tooltip names the token and says what it does`)
       assert.ok((await tip.locator('.variants li').count()) >= 2, `${scheme}: the tooltip lists the component's entries`)
       assert.equal(await page.locator('#component-variant .card').first().locator('.part.dim').count(), 1, `${scheme}: the other part dims`)
-      if (shots) await page.screenshot({ path: `${shots}/baishi-cheatsheet-tooltip-${scheme}.png` })
+      if (shots) await page.screenshot({ path: `${shots}/baishi-cheatsheet-tooltip-${face}-${scheme}.png` })
       for (const [written, forms] of /** @type {[string, string[]][]} */ ([['一.', ['{一}#(T)(t)']], ['人.', ['#(-丿丶)(d)']], ['己.', ['(t)', '(w)', '(z)']]])) {
         await page.locator('.token.part').filter({ hasText: new RegExp('^' + written.replace('.', '\\.') + '$') }).first().hover()
         for (const form of forms) assert.equal(await tip.locator('li').filter({ hasText: form }).locator('path.ink').count(), 1)
@@ -203,11 +221,11 @@ try {
       await tip.waitFor()
       const box = /** @type {{ x: number, width: number }} */ (await tip.boundingBox())
       assert.ok(box.x >= 0 && box.x + box.width <= width, `${view}: the tooltip stays inside the window`)
-      if (shots) await page.screenshot({ path: `${shots}/baishi-cheatsheet-tap-${scheme}.png` })
+      if (shots) await page.screenshot({ path: `${shots}/baishi-cheatsheet-tap-${face}-${scheme}.png` })
       await page.locator('#component-variant h3').tap()
       assert.equal(await tip.count(), 0, `${view}: a tap elsewhere puts the tooltip away`)
     }
-    if (shots) await page.screenshot({ path: `${shots}/baishi-cheatsheet-${name}-${scheme}.png`, fullPage: true })
+    if (shots) await page.screenshot({ path: `${shots}/baishi-cheatsheet-${face}-${name}-${scheme}.png`, fullPage: true })
     assert.deepEqual(errors, [], `${view}: no page error`)
     await page.close()
   }
