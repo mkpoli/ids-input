@@ -15,6 +15,7 @@
 // 土t in 地, 凵y in 世, whose own entries carry those tags. An entry for a form no outline has is
 // drawn by the workshop's composer from the sequence, without its tags, and marked as composed.
 // 𱤻 stands for ⿾止 as the guide gives it (§2.1), though its row's default entry spells it otherwise.
+import fontGlyphs from './baishi-font-glyphs.json' with { type: 'json' }
 import tenGlyphs from './baishi-ten-glyphs.json' with { type: 'json' }
 import { chainStrokes } from '../../src/core/chain-shape.js'
 
@@ -42,16 +43,11 @@ const deerUpper = {
   parts: [[0], [1]],
 }
 
-// Sans drawing of IWDS 408-2 (aj1-13763), traced from the ImageGen study.
-// Keep the three parts separate for token highlighting.
+// Adobe-Japan1 CID+13763 (工 + VS18), Noto Sans CJK JP 2.004 at wght=400.
 const gong408 = {
   char: '工',
-  contours: [
-    'M165 104H835V176H165Z',
-    'M460 176H530L421 438H665V498L513 824H433L579 505H320Z',
-    'M80 824H920V896H80Z',
-  ],
-  parts: [[0], [1], [2]],
+  contours: fontGlyphs.glyphs['工󠄁'],
+  parts: [[0], [2, 3, 4], [1]],
 }
 
 // U+E021 of the guide's fonts/example.woff2 at 0ca5ed48 (§4.3.2).
@@ -148,7 +144,7 @@ export const SHEET = [
   { id: 'row', label: 'rows', rules: ['row', 'primary group', 'alternative group'], cards: [
     { id: 'row-entries', anchors: ['primary-group', 'entry-separator'], label: 'entries', hint: 'entries', quotes: [{ char: '十', text: '十\t⿻丨一.(.);⿻丨一t(.t)', row: 1346, glyphs: [
       { char: '十', parts: [[1], [0]] },
-      { char: '十', contours: tenGlyphs.raisedCross, parts: [[0], [1]] },
+      { char: '十', contours: fontGlyphs.glyphs['十.t'], parts: [[0], [1]] },
     ], focus: [';'] }] },
     { id: 'row-alternative', anchors: ['alternative-group'], label: 'alternative', hint: 'alternative', quotes: [{ char: '三', text: '三\t⿱一.二.\t⿱二.一.', row: 10, glyphs: [{ char: '三', parts: [[0], [1, 2]] }, { char: '三', parts: [[0, 1], [2]] }], focus: [[7, 8]] }] },
   ] },
@@ -274,14 +270,14 @@ export const SHEET = [
   { id: 'worked', label: 'worked', cards: [
     { id: 'worked-noon', hint: 'workedNoon', quotes: [
       { char: '午', text: '午\t⿱𠂉十.(.);⿱𠂉十.t(t)', row: 1353, glyphs: [
-        { char: '午', contours: tenGlyphs.flatNoon, parts: [[0, 1], [2, 3]] },
+        { char: '午', contours: fontGlyphs.glyphs.午, parts: [[0, 1], [2, 3]] },
         { char: '午', contours: tenGlyphs.risingNoon, parts: [[0, 1], [2, 3]] },
       ], focus: ['十.t'] },
       { char: '𭬁', text: '⿰木d⿱⿰午t午.心', row: 83627, glyphs: [
         { char: '𭬁', contours: tenGlyphs.pairedNoons, parts: [[0], [1], [2], [3]] },
       ], focus: ['午t', '午.'] },
       { char: '戢', text: '⿹⿽戈口.⿽十.t⿰丨二.(.)', row: 5155, glyphs: [
-        { char: '戢', contours: tenGlyphs.halberd, parts: [[1, 7, 8, 9], [0], [5, 6], [2], [3, 4]] },
+        { char: '戢', contours: fontGlyphs.glyphs.戢, parts: [[0, 1, 2, 3], [4, 5], [9, 10], [6], [7, 8]] },
       ], focus: ['十.t'] },
     ] },
     { id: 'worked-shi', hint: 'workedShi', quotes: [

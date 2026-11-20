@@ -117,8 +117,6 @@ def main():
     faces['Plangothic'] = TTFont(fetch(url, cache / 'PlangothicP1-Regular.ttf', sha))
     faces['I26'] = TTFont(fetch(GUIDE[0], cache / 'bai-ids-example.woff2', GUIDE[1]))
     paths = {key: outline(faces[face], char, indices) for key, face, char, indices in WITNESSES}
-    ten = json.loads((ROOT / 'demo/lib/baishi-ten-glyphs.json').read_text())
-    paths['十.t'] = ''.join(ten['raisedCross'])
     paths['𤽄.'] = STRAIGHT_STEM
     kage = subprocess.check_output(['node', ROOT / 'scripts/build_baishi_kage.mjs'], text=True)
     for key, path in json.loads(kage).items():
