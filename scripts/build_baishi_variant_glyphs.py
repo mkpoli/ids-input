@@ -109,6 +109,23 @@ def fitted(cut, direction):
     return path.getCommands()
 
 
+def ucv_forms(filename):
+    entries = {entry['id']: entry for entry in json.loads((ROOT / 'data/ucv.json').read_text())['entries']}
+    records = json.loads(gzip.decompress((ROOT / 'data' / filename).read_bytes()))['records']
+    paths = {}
+    for key, rule, position, expected in UCV_FORMS:
+        name = entries[rule]['forms'][position - 1]['glyph']
+        if name != expected:
+            raise ValueError(f'UCV {rule} form {position}: expected {expected}, found {name}')
+        contours = records[f'&GW-{name};']['G']['p']
+        polygons = []
+        for commands, points, _delta in contours:
+            pairs = struct.iter_unpack('<hh', base64.b64decode(points))
+            polygons.append(''.join(f'{op}{x / 4:g} {880 - y / 4:g}' for op, (x, y) in zip(commands, pairs, strict=True)) + 'Z')
+        paths[key] = ''.join(polygons)
+    return paths
+
+
 def main():
     cache = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / 'cache'
     url, sha = FONTS['PlangothicP1-Regular.ttf']
@@ -123,24 +140,13 @@ def main():
         cut = RecordingPen()
         parse_path(path, cut)
         paths[key] = fitted(cut, 1)
-    entries = {entry['id']: entry for entry in json.loads((ROOT / 'data/ucv.json').read_text())['entries']}
-    records = json.loads(gzip.decompress((ROOT / 'data/ucv-outlines-sans.json.gz').read_bytes()))['records']
     card_glyphs = json.loads((ROOT / 'demo/lib/baishi-cheatsheet-outlines.json').read_text())['glyphs']
     for key, char, indices in CARD_FORMS:
         cut = RecordingPen()
         for idx in indices:
             parse_path(card_glyphs[char][idx], cut)
         paths[key] = fitted(cut, 1)
-    for key, rule, position, expected in UCV_FORMS:
-        name = entries[rule]['forms'][position - 1]['glyph']
-        if name != expected:
-            raise ValueError(f'UCV {rule} form {position}: expected {expected}, found {name}')
-        contours = records[f'&GW-{name};']['G']['p']
-        polygons = []
-        for commands, points, _delta in contours:
-            pairs = struct.iter_unpack('<hh', base64.b64decode(points))
-            polygons.append(''.join(f'{op}{x / 4:g} {880 - y / 4:g}' for op, (x, y) in zip(commands, pairs, strict=True)) + 'Z')
-        paths[key] = ''.join(polygons)
+    paths.update(ucv_forms("ucv-outlines-sans.json.gz"))
     TARGET.write_text(json.dumps(paths, ensure_ascii=False, indent=1) + '\n')
 
 

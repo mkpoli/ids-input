@@ -762,6 +762,7 @@
   "cheatsheet.tip.list.analogy": "qq and rule numbers: a variant made by analogy with those UCV rules.",
   "cheatsheet.tip.list.mirror": "m marks an entry that has a mirrored part.",
   "cheatsheet.tip.list.other": "Another identifier that tells the entries of the row apart.",
+  "cheatsheet.referenceGlyph": "Source illustration",
   "cheatsheet.sources": "Sources",
   "cheatsheet.source.data": "Data",
   "cheatsheet.source.notation": "Notation",

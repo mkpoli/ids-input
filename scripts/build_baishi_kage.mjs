@@ -93,8 +93,10 @@ const records = {
 }
 
 const kage = new Kage()
-kage.kShotai = kage.kGothic
-kage.kFont.kWidth = 5
+if (!process.argv.includes('--serif')) {
+  kage.kShotai = kage.kGothic
+  kage.kFont.kWidth = 5
+}
 const paths = {}
 for (const [key, strokes] of Object.entries(records)) {
   const polygons = new Polygons()

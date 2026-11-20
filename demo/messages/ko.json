@@ -759,6 +759,7 @@
   "cheatsheet.tip.list.analogy": "qq와 규칙 번호: 해당 UCV 규칙을 유추 적용해 만든 이형입니다.",
   "cheatsheet.tip.list.mirror": "m은 좌우 반전된 부분이 있는 항목을 표시합니다.",
   "cheatsheet.tip.list.other": "행의 항목들을 서로 구분하는 또 다른 식별자입니다.",
+  "cheatsheet.referenceGlyph": "원자료 자형",
   "cheatsheet.sources": "출처",
   "cheatsheet.source.data": "데이터",
   "cheatsheet.source.notation": "표기법",

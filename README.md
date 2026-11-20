@@ -1610,6 +1610,14 @@ composer's drawing of each sequence no outline has, and each written component's
 tooltips; `tests/baishi-cheatsheet.test.js` fails while the cards and the file disagree. The sheet's
 anchors are those of `demo/lib/baishi-sections.js`, shared with the specification page.
 
+The font menu selects the Serif illustrations at `?face=serif`. Rebuild the Serif export with
+`bun run build:baishi-serif [export-folder]`. Review changed contours against
+`demo/lib/baishi-serif-layers.json` before accepting a redraw with `--redrawn`.
+For the separately cited shapes, run `node scripts/build_baishi_ten.mjs`, then
+`uv run scripts/build_baishi_font_glyphs.py FONT_DIR` and
+`uv run scripts/build_baishi_serif_glyphs.py FONT_DIR`. The sheets retain the guide's
+illustration for 父 (qq222). An unillustrated tooltip entry gives its original IDS.
+
 `data/sketch-parts.json.gz` is built by `scripts/build_sketch_parts.py` from the bundled faces and
 the system Noto Sans CJK JP (`NOTO_SANS_CJK` overrides its path). `tests/sketch-data.test.js` reads
 it, checks its format, and looks up drawings of 日, 木 and 口.

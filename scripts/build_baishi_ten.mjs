@@ -32,5 +32,26 @@ function outlines(records, fit = false) {
   const center = bounds.map(([lo, hi]) => fit ? (lo + hi) / 2 : 100)
   return strokes.map(polygons => polygons.map(points => 'M' + points.map(point => point.map((v, i) => +(500 + (v - center[i]) * scale).toFixed(1)).join(' ')).join('L') + 'Z').join(''))
 }
-const output = { risingNoon: outlines(risingNoon, true), pairedNoons: outlines(pairedNoons) }
+const rising = () => outlines(risingNoon, true)
+const output = { risingNoon: rising(), pairedNoons: outlines(pairedNoons) }
 writeFileSync(new URL('../demo/lib/baishi-ten-glyphs.json', import.meta.url), JSON.stringify(output, null, 1) + '\n')
+
+// The same records rendered in Mincho for the Serif sheet.
+engine.kShotai = engine.kMincho
+engine.kBuhin.push('u65e5-j', '1:12:13:46:32:46:168$1:2:2:46:32:154:32$1:22:23:154:32:154:168$1:2:2:46:98:154:98$1:2:2:46:168:154:168') // @10
+engine.kBuhin.push('u767d-07-var-002', '2:0:7:104:15:96:29:72:62$99:0:0:-8:37:208:194:u65e5-j:0:0:0') // @3
+engine.kBuhin.push('cdp-8bc4', '99:0:0:5:6:195:127:u767d-07-var-002:0:0:0$1:32:4:100:110:100:182$2:0:7:66:131:47:161:14:179$2:7:8:124:129:164:152:175:172') // @7
+engine.kBuhin.push('u5c0f-03', '1:0:4:100:14:100:96$2:0:7:72:33:55:65:21:90$2:7:8:120:33:154:53:177:85') // @8
+engine.kBuhin.push('u6728-04', '1:0:0:18:114:182:114$1:0:0:100:85:100:186$2:32:7:94:114:67:158:13:180$2:7:0:105:114:135:152:180:172') // @6
+engine.kBuhin.push('u9e7f-03', '1:0:32:104:13:104:31$1:2:0:32:31:184:31$7:12:7:32:31:32:71:32:108:13:131$1:2:2:32:48:166:48$1:22:23:166:48:166:67$1:32:32:80:31:80:67$1:32:32:124:31:124:67$1:2:2:32:67:166:67$1:2:0:62:87:108:87$1:0:32:62:70:62:107$2:0:7:41:113:73:109:113:100$2:0:7:167:81:153:87:123:92$3:0:5:123:70:123:110:180:110') // @7
+engine.kBuhin.push('u9e7f-t03', '2:7:8:88:12:104:19:110:27$1:2:0:32:31:184:31$7:12:7:32:31:32:71:32:108:13:131$1:32:32:80:31:80:67$1:32:32:124:31:124:67$1:0:2:39:48:166:48$1:22:23:166:48:166:67$1:0:2:39:67:166:67$1:2:0:56:87:106:87$1:0:32:56:70:56:107$2:0:7:49:111:60:109:111:100$1:0:0:123:87:171:87$3:0:5:123:70:123:110:180:110') // @3
+engine.kBuhin.push('koseki-085450', '99:0:0:0:4:200:128:u5c0f-03:0:0:0$99:0:0:-2:64:210:193:cdp-8bc4:0:0:0') // @6
+engine.kBuhin.push('u4d22-var-001', '99:0:0:0:0:200:200:u9e7f-03$99:0:0:0:42:200:197:u6728-04') // @1
+const strokesOf = name => engine.kBuhin.search(name).split('$')
+engine.kBuhin.push('deer-upper', [strokesOf('u9e7f-t03')[0], ...strokesOf('u9e7f-03').slice(1)].join('$'))
+const serif = {
+  risingNoon: rising(),
+  smallJ: outlines(strokesOf('koseki-085450')),
+  deerUpper: outlines(strokesOf('u4d22-var-001').map(line => line.replace('u9e7f-03', 'deer-upper'))),
+}
+writeFileSync(new URL('../demo/lib/baishi-serif-kage.json', import.meta.url), JSON.stringify(serif, null, 1) + '\n')

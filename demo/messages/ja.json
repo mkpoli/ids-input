@@ -759,6 +759,7 @@
   "cheatsheet.tip.list.analogy": "qqと規則番号：それらのUCV規則からの類推による異形です。",
   "cheatsheet.tip.list.mirror": "mは鏡像化された部分を含むエントリを示します。",
   "cheatsheet.tip.list.other": "その行にあるエントリを区別するためのその他の識別子です。",
+  "cheatsheet.referenceGlyph": "原資料の字形",
   "cheatsheet.sources": "出典",
   "cheatsheet.source.data": "データ",
   "cheatsheet.source.notation": "記法",
