@@ -5,6 +5,7 @@ import { EMPTY_MARKS, OPERATORS, UNKNOWN, isComponent, isSelector, parse } from 
 import { assertDocument, readShareDocument, toSequence } from '../src/document/index.js'
 import { EXAMPLES } from '../demo/lib/examples.js'
 import { shareHtml, routeFor } from './page.js'
+import { LOCALIZED_PATHS, localizedHtml } from './locale.js'
 import { cardResponse, characterFor } from './render.js'
 
 const ORIGIN = 'https://ids.mkpo.li'
@@ -147,7 +148,11 @@ export default {
       const linked = token && (route.kind !== 'asset' || url.pathname === '/') ? documentFrom(token) : null
       const sequence = linked ? toSequence(linked.root) : route.sequence
       const kind = linked && route.kind === 'asset' && url.pathname === '/' && !url.searchParams.get('ids') ? 'page' : route.kind
-      if (kind === 'asset') response = url.pathname === '/' ? await env.ASSETS.fetch(request) : await miss(request, env, url)
+      // A page with a reading in every language names them all, and `?lang=` is that reading's own address.
+      if (kind === 'asset' && LOCALIZED_PATHS.includes(url.pathname)) {
+        const page = await env.ASSETS.fetch(new URL(url.pathname, url.origin).href)
+        response = page.ok ? render(request, localizedHtml(await page.text(), url.pathname, url.searchParams.get('lang'), ORIGIN), 200) : page
+      } else if (kind === 'asset') response = url.pathname === '/' ? await env.ASSETS.fetch(request) : await miss(request, env, url)
       // The root reads the text its `ids` holds whether or not it parses, so a miss there is the
       // share page; only a path can be no sequence.
       else if (kind === 'page' && url.pathname !== '/' && !reads(sequence)) {
