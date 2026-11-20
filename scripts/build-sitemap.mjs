@@ -21,7 +21,7 @@ const url = (loc, readings = []) => `<url>\n    <loc>${loc}</loc>${readings.map(
 export function sitemapXml() {
   const paths = [...new Set([...PAGES, ...EXAMPLES.map(example => pathOf(example.sequence))])]
   const urls = paths.flatMap(path => LOCALIZED_PATHS.includes(path)
-    ? LOCALE_CODES.map(code => url(localeUrl(ORIGIN, path, code), alternates(ORIGIN, path)))
+    ? [`${ORIGIN}${path}`, ...LOCALE_CODES.map(code => localeUrl(ORIGIN, path, code))].map(loc => url(loc, alternates(ORIGIN, path)))
     : [url(`${ORIGIN}${path}`)])
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">

@@ -5,7 +5,8 @@
 import { LOCALES, appMessages } from '../demo/lib/locales.js'
 import { ENGLISH_ONLY, home, pages } from '../demo/lib/pages.js'
 
-/** The language a bare address is written in. */
+/** The language the static pages are written in. A bare address shows the reader's own language,
+ *  so it is no language's reading; it stands for readers of any other. */
 export const DEFAULT_LOCALE = 'en'
 export const LOCALE_CODES = LOCALES.map(([code]) => code)
 
@@ -21,14 +22,14 @@ const translator = locale => {
 export const LOCALIZED_PATHS = ['/', ...pages(key => key).filter(page => !ENGLISH_ONLY.has(page.id)).map(page => `/${page.id}`)]
 
 /** The address of `path` in `locale`. @param {string} origin @param {string} path @param {string} locale */
-export const localeUrl = (origin, path, locale) => `${origin}${path}${locale === DEFAULT_LOCALE ? '' : `?lang=${locale}`}`
+export const localeUrl = (origin, path, locale) => `${origin}${path}?lang=${locale}`
 
 /** Every reading of `path` as `[hreflang, address]`, the bare address standing for readers of any
  *  other language. @param {string} origin @param {string} path
  *  @returns {[string, string][]} */
 export const alternates = (origin, path) => [
   ...LOCALE_CODES.map(code => /** @type {[string, string]} */ ([code, localeUrl(origin, path, code)])),
-  ['x-default', localeUrl(origin, path, DEFAULT_LOCALE)],
+  ['x-default', `${origin}${path}`],
 ]
 
 /** The title and description of `path` in `locale`. @param {string} path @param {string} locale */
@@ -45,21 +46,22 @@ const escaped = text => text.replace(/[&<>"']/g, mark => ({ '&': '&amp;', '<': '
 const withContent = (html, attribute, value) => html.replace(new RegExp(`(<meta ${attribute} content=")[^"]*"`), (_, head) => `${head}${escaped(value)}"`)
 
 /**
- * A localized page as its address reads it: the tags naming its other readings, and for a language
- * other than the default its own language, title, description and canonical address.
+ * A localized page as its address reads it: the tags naming its readings, and where the address
+ * names a language, that reading's language and canonical address, with its title and description.
  * @param {string} html The served page. @param {string} path @param {string | null} wanted The `lang` the address carries.
  * @param {string} origin
  */
 export function localizedHtml(html, path, wanted, origin) {
-  const locale = wanted && LOCALE_CODES.includes(wanted) ? wanted : DEFAULT_LOCALE
+  const locale = wanted && LOCALE_CODES.includes(wanted) ? wanted : null
   const links = alternates(origin, path).map(([code, href]) => `<link rel="alternate" hreflang="${code}" href="${escaped(href)}">`).join('\n  ')
   let out = html
-  if (locale !== DEFAULT_LOCALE) {
-    const meta = pageMeta(path, locale)
+  if (locale) {
     const address = localeUrl(origin, path, locale)
     out = out.replace(/<html lang="[^"]*"/, () => `<html lang="${locale}"`)
       .replace(/<link rel="canonical"[^>]*>/, () => `<link rel="canonical" href="${escaped(address)}">`)
     out = withContent(out, 'property="og:url"', address)
+    // The static page is the English reading already.
+    const meta = locale === DEFAULT_LOCALE ? null : pageMeta(path, locale)
     if (meta) {
       out = out.replace(/<title>[\s\S]*?<\/title>/, () => `<title>${escaped(meta.title)}</title>`)
       for (const attribute of ['property="og:title"', 'name="twitter:title"']) out = withContent(out, attribute, meta.title)

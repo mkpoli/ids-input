@@ -61,9 +61,9 @@ describe('a page with a reading in every language', () => {
   const xml = sitemapXml()
   it('is listed at each reading’s address, every entry naming all the readings', () => {
     for (const path of LOCALIZED_PATHS) {
-      for (const code of LOCALE_CODES) {
-        const entry = xml.split('<url>').find(block => block.includes(`<loc>${localeUrl(ORIGIN, path, code)}</loc>`))
-        expect(entry, `${path} ${code}`).toBeDefined()
+      for (const loc of [`${ORIGIN}${path}`, ...LOCALE_CODES.map(code => localeUrl(ORIGIN, path, code))]) {
+        const entry = xml.split('<url>').find(block => block.includes(`<loc>${loc}</loc>`))
+        expect(entry, loc).toBeDefined()
         for (const [hreflang, href] of alternates(ORIGIN, path))
           expect(entry).toContain(`<xhtml:link rel="alternate" hreflang="${hreflang}" href="${href}"/>`)
       }
@@ -88,15 +88,23 @@ describe('a page with a reading in every language', () => {
     expect(meta?.title).not.toBe(pageMeta('/sources', 'en')?.title)
     expect(meta?.description).not.toBe(pageMeta('/sources', 'en')?.description)
   })
-  it('keeps the bare address for English and for a language it does not have', async () => {
+  it('gives English its own address too, the page as its file writes it', async () => {
     const page = await Bun.file(new URL('../demo/sources.html', import.meta.url)).text()
-    for (const wanted of [null, 'en', 'xx']) {
+    const html = localizedHtml(page, '/sources', 'en', ORIGIN)
+    expect(html).toContain('<html lang="en">')
+    expect(html).toContain('<title>Sources — IDS Workshop</title>')
+    expect(html).toContain(`<link rel="canonical" href="${ORIGIN}/sources?lang=en">`)
+  })
+  it('keeps the bare address, which shows the reader’s own language, for no language and for one it does not have', async () => {
+    const page = await Bun.file(new URL('../demo/sources.html', import.meta.url)).text()
+    for (const wanted of [null, 'xx']) {
       const html = localizedHtml(page, '/sources', wanted, ORIGIN)
-      expect(html).toContain('<html lang="en">')
       expect(html).toContain(`<link rel="canonical" href="${ORIGIN}/sources">`)
       for (const [hreflang, href] of alternates(ORIGIN, '/sources'))
         expect(html).toContain(`<link rel="alternate" hreflang="${hreflang}" href="${href}">`)
     }
+    expect(alternates(ORIGIN, '/sources')).toContainEqual(['x-default', `${ORIGIN}/sources`])
+    expect(alternates(ORIGIN, '/sources')).toContainEqual(['en', `${ORIGIN}/sources?lang=en`])
   })
   it('describes each page in English as its file does', async () => {
     for (const path of ['/', ...PAGES]) {
