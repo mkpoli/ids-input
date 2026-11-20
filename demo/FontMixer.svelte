@@ -306,7 +306,7 @@
     <section class="panel" aria-label={t('fontMixer.controls')}>
       <label class="ui-field">
         <span class="ui-label">{t('fontMixer.description')}</span>
-        <input class="ui-input ids" type="text" lang="zh" spellcheck="false" bind:value={sequence} oninput={schedule} />
+        <input class="ui-input ids" type="text" lang="zh" spellcheck="false" autocomplete="off" placeholder="雷　⿱雨田" bind:value={sequence} oninput={schedule} onfocus={event => event.currentTarget.select()} />
       </label>
 
       <fieldset>
