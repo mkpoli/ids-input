@@ -349,7 +349,7 @@
   "sources.lead": "Bu projenin okuduğu, yararlandığı, karşılaştırdığı veya atıfta bulunduğu kaynaklar; yazarları, lisansları, tarihleri, kategorileri ve etiketleriyle birlikte burada yer alır. Ardından örnek kayıtlar gelir.",
   "sources.search": "Başlık, yazar, not ve etiketlerde ara",
   "sources.all": "Tümü",
-  "sources.count.one": "1 kaynak",
+  "sources.count.one": "{count} kaynak",
   "sources.count.other": "{count} kaynak",
   "sources.empty": "Eşleşen kaynak yok.",
   "sources.read": "Oku",

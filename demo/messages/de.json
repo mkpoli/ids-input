@@ -349,7 +349,7 @@
   "sources.lead": "Die Quellen, die dieses Projekt liest, heranzieht, zum Vergleich nutzt oder zitiert – mit Autoren, Lizenzen, Daten, Kategorien und Schlagwörtern. Danach folgen die Beispieleinträge.",
   "sources.search": "Titel, Autoren, Anmerkungen und Schlagwörter durchsuchen",
   "sources.all": "Alle",
-  "sources.count.one": "1 Quelle",
+  "sources.count.one": "{count} Quelle",
   "sources.count.other": "{count} Quellen",
   "sources.empty": "Keine passende Quelle gefunden.",
   "sources.read": "Lesen",

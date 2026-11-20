@@ -161,7 +161,7 @@
   "ids.search.next": "下一頁",
   "ids.search.page": "第{page}/{pages}頁",
   "ids.hints.title": "{name}第{n}部分嘅常用部件",
-  "ids.hints.count.one": "呢個位有1個字用",
+  "ids.hints.count.one": "呢個位有{count}個字用",
   "ids.hints.count.other": "呢個位有{count}個字用",
   "ids.hints.more": "顯示多{count}個",
   "ids.hints.less": "顯示少啲",

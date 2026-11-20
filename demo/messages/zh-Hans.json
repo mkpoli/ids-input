@@ -347,7 +347,7 @@
   "sources.lead": "本项目读取、依据、比较或引用的资料，附作者、许可、日期、分类与标签。示例记录列在最后。",
   "sources.search": "搜索标题、作者、注记与标签",
   "sources.all": "全部",
-  "sources.count.one": "1项",
+  "sources.count.one": "{count}项",
   "sources.count.other": "{count}项",
   "sources.empty": "没有匹配的资料。",
   "sources.read": "查阅日期",

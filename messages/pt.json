@@ -161,7 +161,7 @@
   "ids.search.next": "Próxima",
   "ids.search.page": "Página {page} de {pages}",
   "ids.hints.title": "Comuns na parte {n} de {name}",
-  "ids.hints.count.one": "Usado nesta posição por 1 caractere",
+  "ids.hints.count.one": "Usado nesta posição por {count} caractere",
   "ids.hints.count.other": "Usado nesta posição por {count} caracteres",
   "ids.hints.more": "Mostrar mais {count}",
   "ids.hints.less": "Mostrar menos",

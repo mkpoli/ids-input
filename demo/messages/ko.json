@@ -347,7 +347,7 @@
   "sources.lead": "이 프로젝트가 읽고, 근거로 삼고, 비교하거나 인용하는 자료를 저자·라이선스·날짜·분류·태그와 함께 모았습니다. 예시 기록은 끝에 이어집니다.",
   "sources.search": "제목, 저자, 주석, 태그 검색",
   "sources.all": "전체",
-  "sources.count.one": "1개",
+  "sources.count.one": "{count}개",
   "sources.count.other": "{count}개",
   "sources.empty": "일치하는 자료가 없습니다.",
   "sources.read": "참조일",

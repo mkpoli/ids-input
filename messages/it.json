@@ -161,7 +161,7 @@
   "ids.search.next": "Successiva",
   "ids.search.page": "Pagina {page} di {pages}",
   "ids.hints.title": "Comuni nella parte {n} di {name}",
-  "ids.hints.count.one": "Usato in questa posizione da 1 carattere",
+  "ids.hints.count.one": "Usato in questa posizione da {count} carattere",
   "ids.hints.count.other": "Usato in questa posizione da {count} caratteri",
   "ids.hints.more": "Mostra altri {count}",
   "ids.hints.less": "Mostra meno",

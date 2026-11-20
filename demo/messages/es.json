@@ -349,7 +349,7 @@
   "sources.lead": "Las fuentes que este proyecto consulta, utiliza, compara o cita, con sus autores, licencias, fechas, categorías y etiquetas. A continuación figuran los registros de ejemplo.",
   "sources.search": "Buscar títulos, autores, notas y etiquetas",
   "sources.all": "Todas",
-  "sources.count.one": "1 fuente",
+  "sources.count.one": "{count} fuente",
   "sources.count.other": "{count} fuentes",
   "sources.empty": "No hay fuentes que coincidan.",
   "sources.read": "Leer",

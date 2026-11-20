@@ -349,7 +349,7 @@
   "sources.lead": "As fontes que este projeto lê, utiliza como base, compara ou cita, com seus autores, licenças, datas, categorias e tags. A seguir estão os registros de exemplo.",
   "sources.search": "Pesquisar títulos, autores, notas e tags",
   "sources.all": "Todas",
-  "sources.count.one": "1 fonte",
+  "sources.count.one": "{count} fonte",
   "sources.count.other": "{count} fontes",
   "sources.empty": "Nenhuma fonte corresponde.",
   "sources.read": "Ler",

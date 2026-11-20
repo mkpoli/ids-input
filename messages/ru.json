@@ -165,7 +165,7 @@
   "ids.search.next": "Следующая",
   "ids.search.page": "Страница {page} из {pages}",
   "ids.hints.title": "Частые в части {n} ({name})",
-  "ids.hints.count.one": "Встречается на этом месте в 1 иероглифе",
+  "ids.hints.count.one": "Встречается на этом месте в {count} иероглифе",
   "ids.hints.count.few": "Используется в этой позиции {count} иероглифами",
   "ids.hints.count.many": "Используется в этой позиции {count} иероглифами",
   "ids.hints.count.other": "Иероглифов с этой частью здесь: {count}",

@@ -349,7 +349,7 @@
   "sources.lead": "本專案讀取、參考、比較或者引用嘅資料來源，附帶作者、授權、日期、分類同標籤。範例記錄列喺後面。",
   "sources.search": "搜尋標題、作者、備註同標籤",
   "sources.all": "全部",
-  "sources.count.one": "1項來源",
+  "sources.count.one": "{count}項來源",
   "sources.count.other": "{count}項來源",
   "sources.empty": "冇符合嘅資料來源。",
   "sources.read": "參閱日期",

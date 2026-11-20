@@ -161,7 +161,7 @@
   "ids.search.next": "Suivant",
   "ids.search.page": "Page {page} sur {pages}",
   "ids.hints.title": "Fréquents dans l’élément {n} de {name}",
-  "ids.hints.count.one": "Utilisé à cet emplacement par 1 caractère",
+  "ids.hints.count.one": "Utilisé à cet emplacement par {count} caractère",
   "ids.hints.count.other": "Utilisé à cet emplacement par {count} caractères",
   "ids.hints.more": "Afficher {count} de plus",
   "ids.hints.less": "Afficher moins",

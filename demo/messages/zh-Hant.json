@@ -347,7 +347,7 @@
   "sources.lead": "本專案讀取、依據、比較或引用的資料，附作者、授權、日期、分類與標籤。範例記錄列在最後。",
   "sources.search": "搜尋標題、作者、註記與標籤",
   "sources.all": "全部",
-  "sources.count.one": "1項",
+  "sources.count.one": "{count}項",
   "sources.count.other": "{count}項",
   "sources.empty": "沒有符合的資料。",
   "sources.read": "參閱日期",

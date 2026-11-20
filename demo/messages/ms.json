@@ -349,7 +349,7 @@
   "sources.lead": "Sumber yang dibaca, dirujuk, dibandingkan atau dipetik oleh projek ini, berserta pengarang, lesen, tarikh, kategori dan tagnya. Rekod contoh menyusul selepas ini.",
   "sources.search": "Cari tajuk, pengarang, nota dan tag",
   "sources.all": "Semua",
-  "sources.count.one": "1 sumber",
+  "sources.count.one": "{count} sumber",
   "sources.count.other": "{count} sumber",
   "sources.empty": "Tiada sumber yang sepadan.",
   "sources.read": "Baca",

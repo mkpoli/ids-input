@@ -161,7 +161,7 @@
   "ids.search.next": "अगला",
   "ids.search.page": "{pages} में से पृष्ठ {page}",
   "ids.hints.title": "{name} के भाग {n} में सामान्य",
-  "ids.hints.count.one": "इस स्थान पर 1 वर्ण में प्रयुक्त",
+  "ids.hints.count.one": "इस स्थान पर {count} वर्ण में प्रयुक्त",
   "ids.hints.count.other": "इस स्थान पर {count} वर्णों में प्रयुक्त",
   "ids.hints.more": "{count} और दिखाएँ",
   "ids.hints.less": "कम दिखाएँ",

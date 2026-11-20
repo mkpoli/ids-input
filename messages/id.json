@@ -161,7 +161,7 @@
   "ids.search.next": "Berikutnya",
   "ids.search.page": "Halaman {page} dari {pages}",
   "ids.hints.title": "Umum di bagian {n} dari {name}",
-  "ids.hints.count.one": "Dipakai di slot ini oleh 1 karakter",
+  "ids.hints.count.one": "Dipakai di slot ini oleh {count} karakter",
   "ids.hints.count.other": "Dipakai di slot ini oleh {count} karakter",
   "ids.hints.more": "Tampilkan {count} lagi",
   "ids.hints.less": "Tampilkan lebih sedikit",

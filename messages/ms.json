@@ -161,7 +161,7 @@
   "ids.search.next": "Seterusnya",
   "ids.search.page": "Halaman {page} daripada {pages}",
   "ids.hints.title": "Lazim dalam bahagian {n} daripada {name}",
-  "ids.hints.count.one": "Digunakan dalam ruang ini oleh 1 aksara",
+  "ids.hints.count.one": "Digunakan dalam ruang ini oleh {count} aksara",
   "ids.hints.count.other": "Digunakan dalam ruang ini oleh {count} aksara",
   "ids.hints.more": "Tunjukkan {count} lagi",
   "ids.hints.less": "Tunjukkan lebih sedikit",

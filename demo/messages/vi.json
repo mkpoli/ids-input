@@ -347,7 +347,7 @@
   "sources.lead": "Các nguồn tài liệu mà dự án đọc, dựa vào, so sánh hoặc trích dẫn, kèm tác giả, giấy phép, ngày tháng, phân loại và thẻ. Các bản ghi ví dụ nối ở cuối.",
   "sources.search": "Tìm tiêu đề, tác giả, ghi chú và thẻ",
   "sources.all": "Tất cả",
-  "sources.count.one": "1 nguồn",
+  "sources.count.one": "{count} nguồn",
   "sources.count.other": "{count} nguồn",
   "sources.empty": "Không có nguồn nào khớp.",
   "sources.read": "Ngày đọc",

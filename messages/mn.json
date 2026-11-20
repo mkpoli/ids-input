@@ -161,7 +161,7 @@
   "ids.search.next": "Дараах",
   "ids.search.page": "Хуудас {page} / {pages}",
   "ids.hints.title": "{name} бүтцийн {n}-р хэсэгт түгээмэл",
-  "ids.hints.count.one": "Энэ байрлалд 1 тэмдэгтэд ашиглагддаг",
+  "ids.hints.count.one": "Энэ байрлалд {count} тэмдэгтэд ашиглагддаг",
   "ids.hints.count.other": "Энэ байрлалд {count} тэмдэгтэд ашиглагддаг",
   "ids.hints.more": "Нэмж {count} харуулах",
   "ids.hints.less": "Цөөнийг харуулах",

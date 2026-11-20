@@ -161,7 +161,7 @@
   "ids.search.next": "ถัดไป",
   "ids.search.page": "หน้า {page} จาก {pages}",
   "ids.hints.title": "ที่พบบ่อยในส่วนที่ {n} ของ {name}",
-  "ids.hints.count.one": "ใช้ในตำแหน่งนี้ 1 ตัวอักษร",
+  "ids.hints.count.one": "ใช้ในตำแหน่งนี้ {count} ตัวอักษร",
   "ids.hints.count.other": "ใช้ในตำแหน่งนี้ {count} ตัวอักษร",
   "ids.hints.more": "แสดงเพิ่มอีก {count} รายการ",
   "ids.hints.less": "แสดงน้อยลง",

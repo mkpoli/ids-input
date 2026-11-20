@@ -161,7 +161,7 @@
   "ids.search.next": "Sonraki",
   "ids.search.page": "Sayfa {page} / {pages}",
   "ids.hints.title": "{name} işlecinin {n}. parçasında yaygın",
-  "ids.hints.count.one": "Bu yuvada 1 karakter tarafından kullanılıyor",
+  "ids.hints.count.one": "Bu yuvada {count} karakter tarafından kullanılıyor",
   "ids.hints.count.other": "Bu yuvada {count} karakter tarafından kullanılıyor",
   "ids.hints.more": "{count} tane daha göster",
   "ids.hints.less": "Daha az göster",

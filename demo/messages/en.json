@@ -349,7 +349,7 @@
   "sources.lead": "The sources this project reads, draws on, compares with or cites, with their authors, licences, dates, categories and tags. The example records follow.",
   "sources.search": "Search titles, authors, notes and tags",
   "sources.all": "All",
-  "sources.count.one": "1 source",
+  "sources.count.one": "{count} source",
   "sources.count.other": "{count} sources",
   "sources.empty": "No source matches.",
   "sources.read": "Read",

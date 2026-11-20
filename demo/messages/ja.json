@@ -347,7 +347,7 @@
   "sources.lead": "このプロジェクトが読み、利用し、比較し、引用する資料を、著者・ライセンス・日付・分類・タグとともに並べています。作例の記録は末尾に続きます。",
   "sources.search": "題名・著者・注記・タグを検索",
   "sources.all": "すべて",
-  "sources.count.one": "1件",
+  "sources.count.one": "{count}件",
   "sources.count.other": "{count}件",
   "sources.empty": "一致する資料はありません。",
   "sources.read": "参照日",

@@ -349,7 +349,7 @@
   "sources.lead": "Les sources que ce projet lit, exploite, utilise pour comparaison ou cite, avec leurs auteurs, licences, dates, catégories et étiquettes. Les notices d’exemples suivent.",
   "sources.search": "Rechercher dans les titres, auteurs, notes et étiquettes",
   "sources.all": "Toutes",
-  "sources.count.one": "1 source",
+  "sources.count.one": "{count} source",
   "sources.count.other": "{count} sources",
   "sources.empty": "Aucune source ne correspond.",
   "sources.read": "Lire",

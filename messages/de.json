@@ -161,7 +161,7 @@
   "ids.search.next": "Weiter",
   "ids.search.page": "Seite {page} von {pages}",
   "ids.hints.title": "Häufig in Teil {n} von {name}",
-  "ids.hints.count.one": "In diesem Feld von 1 Zeichen verwendet",
+  "ids.hints.count.one": "In diesem Feld von {count} Zeichen verwendet",
   "ids.hints.count.other": "In diesem Feld von {count} Zeichen verwendet",
   "ids.hints.more": "{count} weitere anzeigen",
   "ids.hints.less": "Weniger anzeigen",

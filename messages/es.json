@@ -161,7 +161,7 @@
   "ids.search.next": "Siguiente",
   "ids.search.page": "Página {page} de {pages}",
   "ids.hints.title": "Común en la parte {n} de {name}",
-  "ids.hints.count.one": "Usado en este espacio por 1 carácter",
+  "ids.hints.count.one": "Usado en este espacio por {count} carácter",
   "ids.hints.count.other": "Usado en este espacio por {count} caracteres",
   "ids.hints.more": "Mostrar {count} más",
   "ids.hints.less": "Mostrar menos",
