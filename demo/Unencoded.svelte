@@ -418,8 +418,8 @@
     <section class="add" aria-labelledby="add-title">
       <h2 id="add-title">{t('appendix.form.title')}</h2>
       <form onsubmit={add}>
-        <TextField label={t('appendix.one')} bind:value={form.a} placeholder={'{7}'} autocomplete="off" spellcheck={false} mono />
-        <TextField label={t('appendix.other')} bind:value={form.b} placeholder={'&CDP-8BD0;'} autocomplete="off" spellcheck={false} mono />
+        <TextField label={t('appendix.sideOne')} bind:value={form.a} placeholder={'{7}'} autocomplete="off" spellcheck={false} mono />
+        <TextField label={t('appendix.sideOther')} bind:value={form.b} placeholder={'&CDP-8BD0;'} autocomplete="off" spellcheck={false} mono />
         <div class="note-input"><TextField label={t('appendix.form.note')} bind:value={form.note} autocomplete="off" /></div>
         <button type="submit" class="ui-button" data-variant="primary">{t('appendix.form.add')}</button>
       </form>

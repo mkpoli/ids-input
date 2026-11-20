@@ -126,8 +126,8 @@ describe('the cheatsheet\'s cards', () => {
       ...SHEET.map(section => `cheatsheet.section.${section.label}`), ...Object.values(GROUP_LABELS).map(name => `cheatsheet.${name}`),
       ...cards.flatMap(card => [card.label && `cheatsheet.label.${card.label}`, card.hint && `cheatsheet.hint.${card.hint}`]),
       ...SHEET.flatMap(section => (section.groups ?? []).flatMap(group => (group.legends ?? []).flatMap(legend => [`cheatsheet.label.${legend.id}`, `cheatsheet.hint.${legend.id}`]))),
-      ...['default', 'source', 'style', 'position', 'ucv', 'analogy', 'mirror', 'other'].filter(kind => kind !== 'default').map(kind => `cheatsheet.tip.list.${kind}`),
-      'cheatsheet.tip.operator.1', 'cheatsheet.tip.operator.2', 'cheatsheet.tip.operator.3', 'cheatsheet.tip.tag.source', 'cheatsheet.tip.tag.style', 'cheatsheet.tip.tag.other',
+      ...['default', 'source', 'style', 'position', 'ucv', 'analogy', 'mirror', 'misc'].filter(kind => kind !== 'default').map(kind => `cheatsheet.tip.list.${kind}`),
+      'cheatsheet.tip.operator.1', 'cheatsheet.tip.operator.2', 'cheatsheet.tip.operator.3', 'cheatsheet.tip.tag.source', 'cheatsheet.tip.tag.style', 'cheatsheet.tip.tag.misc',
     ].filter(Boolean)
     for (const [code] of LOCALES) for (const key of keys) expect(appMessages(code)[key], `${code} ${key}`).toBeString()
   })

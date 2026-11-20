@@ -267,7 +267,7 @@
         </section>
 
         <section id="other" aria-labelledby="other-title">
-          <h3 id="other-title">{t('baishi.heading.other')}</h3>
+          <h3 id="other-title">{t('baishi.heading.misc')}</h3>
           {@render examples('other')}
           {@render said('custom', ['I26', '§4.3.5'])}
         </section>
