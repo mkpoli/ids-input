@@ -106,6 +106,27 @@ try {
         await page.locator('.token.part').filter({ hasText: new RegExp('^' + written.replace('.', '\\.') + '$') }).first().hover()
         for (const form of forms) assert.equal(await tip.locator('li').filter({ hasText: form }).locator('path.ink').count(), 1)
       }
+      if (face === 'serif') {
+        for (const name of ['凵.', '凵y']) {
+          const token = page.locator('.token.part').filter({ hasText: name === '凵.' ? /^凵\.$/ : /^凵y$/ }).first()
+          await token.hover()
+          const pair = tip.locator('li .mini path.ink')
+          assert.equal(await pair.count(), 2, 'both lower-left corners have standalone specimens')
+          const folded = await pair.evaluateAll(nodes => nodes.map(node => {
+            const path = /** @type {SVGPathElement} */ (node)
+            const box = path.getBBox()
+            const middle = box.y + box.height * 0.45
+            let stem = Math.floor(box.x)
+            while (stem < box.x + box.width && !path.isPointInFill(new DOMPoint(stem, middle))) stem++
+            // Only the folded left foot has ink outside the stem near its base.
+            for (let y = box.y + box.height * 0.7; y <= box.y + box.height; y += 2) {
+              if (path.isPointInFill(new DOMPoint(stem - 20, y))) return true
+            }
+            return false
+          }))
+          assert.deepEqual(folded, [true, false], '凵. folds outward and 凵y has a separate vertical')
+        }
+      }
       const entries = page.locator('#primary-group')
       const drawings = entries.locator('.tile')
       assert.equal(await drawings.count(), 2)
