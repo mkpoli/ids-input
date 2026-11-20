@@ -3,6 +3,7 @@ import { EXAMPLES } from '../demo/lib/examples.js'
 import { sitemapXml } from '../scripts/build-sitemap.mjs'
 import { pathOf, routeFor } from '../worker/page.js'
 import worker from '../worker/index.js'
+import { LOCALE_CODES, LOCALIZED_PATHS, alternates, localeUrl, localizedHtml, pageMeta } from '../worker/locale.js'
 
 const ORIGIN = 'https://ids.mkpo.li'
 const PAGES = ['/compare', '/font-compare', '/font-mixer', '/engines', '/sources', '/open-data', '/unencoded', '/component-atlas', '/ucv', '/normalization', '/baishi', '/baishi-cheatsheet', '/baishi-railroad', '/components', '/history']
@@ -54,4 +55,68 @@ it('points each page’s canonical at the URL the sitemap lists', async () => {
     expect(await Bun.file(new URL(`../demo${path}.html`, import.meta.url)).text())
       .toContain(`<link rel="canonical" href="${ORIGIN}${path}">`)
   }
+})
+
+describe('a page with a reading in every language', () => {
+  const xml = sitemapXml()
+  it('is listed at each reading’s address, every entry naming all the readings', () => {
+    for (const path of LOCALIZED_PATHS) {
+      for (const loc of [`${ORIGIN}${path}`, ...LOCALE_CODES.map(code => localeUrl(ORIGIN, path, code))]) {
+        const entry = xml.split('<url>').find(block => block.includes(`<loc>${loc}</loc>`))
+        expect(entry, loc).toBeDefined()
+        for (const [hreflang, href] of alternates(ORIGIN, path))
+          expect(entry).toContain(`<xhtml:link rel="alternate" hreflang="${hreflang}" href="${href}"/>`)
+      }
+    }
+  })
+  it('leaves a page written in English alone at one address', () => {
+    for (const path of ['/engines', '/open-data']) {
+      expect(LOCALIZED_PATHS).not.toContain(path)
+      expect(locs.filter(loc => loc.startsWith(`${ORIGIN}${path}`))).toEqual([`${ORIGIN}${path}`])
+    }
+  })
+  it('names its language, title, description and address in the reading `?lang=` asks for', async () => {
+    const page = await Bun.file(new URL('../demo/sources.html', import.meta.url)).text()
+    const html = localizedHtml(page, '/sources', 'ja', ORIGIN)
+    const meta = pageMeta('/sources', 'ja')
+    expect(html).toContain('<html lang="ja">')
+    expect(html).toContain(`<title>${meta?.title}</title>`)
+    expect(html).toContain(`<meta name="description" content="${meta?.description}">`)
+    expect(html).toContain(`<meta property="og:description" content="${meta?.description}">`)
+    expect(html).toContain(`<link rel="canonical" href="${ORIGIN}/sources?lang=ja">`)
+    expect(html).toContain(`<meta property="og:url" content="${ORIGIN}/sources?lang=ja">`)
+    expect(meta?.title).not.toBe(pageMeta('/sources', 'en')?.title)
+    expect(meta?.description).not.toBe(pageMeta('/sources', 'en')?.description)
+  })
+  it('gives English its own address too, the page as its file writes it', async () => {
+    const page = await Bun.file(new URL('../demo/sources.html', import.meta.url)).text()
+    const html = localizedHtml(page, '/sources', 'en', ORIGIN)
+    expect(html).toContain('<html lang="en">')
+    expect(html).toContain('<title>Sources — IDS Workshop</title>')
+    expect(html).toContain(`<link rel="canonical" href="${ORIGIN}/sources?lang=en">`)
+  })
+  it('keeps the bare address, which shows the reader’s own language, for no language and for one it does not have', async () => {
+    const page = await Bun.file(new URL('../demo/sources.html', import.meta.url)).text()
+    for (const wanted of [null, 'xx']) {
+      const html = localizedHtml(page, '/sources', wanted, ORIGIN)
+      expect(html).toContain(`<link rel="canonical" href="${ORIGIN}/sources">`)
+      for (const [hreflang, href] of alternates(ORIGIN, '/sources'))
+        expect(html).toContain(`<link rel="alternate" hreflang="${hreflang}" href="${href}">`)
+    }
+    expect(alternates(ORIGIN, '/sources')).toContainEqual(['x-default', `${ORIGIN}/sources`])
+    expect(alternates(ORIGIN, '/sources')).toContainEqual(['en', `${ORIGIN}/sources?lang=en`])
+  })
+  it('describes each page in English as its file does', async () => {
+    for (const path of ['/', ...PAGES]) {
+      const file = await Bun.file(new URL(`../demo${path === '/' ? '/index' : path}.html`, import.meta.url)).text()
+      const described = /name="description" content="([^"]*)"/.exec(file)?.[1]
+      expect(pageMeta(path, 'en')?.description, path).toBe(described)
+    }
+  })
+  it('has a description of its own in every language', () => {
+    for (const path of LOCALIZED_PATHS) {
+      const english = pageMeta(path, 'en')?.description
+      for (const code of LOCALE_CODES.filter(code => code !== 'en')) expect(pageMeta(path, code)?.description, `${path} ${code}`).not.toBe(english)
+    }
+  })
 })

@@ -207,3 +207,24 @@ describe('the prepared outlines', () => {
     for (const [letters, stroke] of STROKE_LETTERS) expect(chainStrokes(`#(${letters})`)?.strokes.map(part => part.stroke).join(''), stroke).toBe(letters)
   })
 })
+
+describe('the Serif cheatsheet', () => {
+  it('assigns every contour of each Serif drawing to the quoted parts', async () => {
+    const serif = await import('../demo/lib/baishi-serif.js')
+    const { COMPOSER_BASES } = await import('../demo/lib/composer.js')
+    expect(serif.base).toBe(COMPOSER_BASES.serif)
+    for (const card of cards) for (const quote of card.quotes) {
+      for (const [entry, original] of quote.glyphs.entries()) {
+        if (!original || original === 'composed') continue
+        const glyph = serif.glyphFor(original, entriesOf(quote.text)[entry])
+        const parts = glyph.parts ?? []
+        expect(parts.length).toBe(original.parts?.length ?? 0)
+        expect(parts.every(part => part.length > 0)).toBe(true)
+        const pieces = [...parts.flat(), ...(glyph.rest ?? [])]
+        expect(contoursOf(pieces).sort((a, b) => a - b), quote.text).toEqual(glyph.contours.map((_, i) => i))
+        expect(glyph.joins?.length).toBe(original.joins?.length)
+      }
+    }
+    expect(Object.keys(serif.composed).sort()).toEqual(composedDrawn().sort())
+  })
+})

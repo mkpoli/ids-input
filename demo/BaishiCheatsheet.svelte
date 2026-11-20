@@ -6,6 +6,8 @@
   // sequence beside the character it describes, a written part and the strokes it names in one
   // colour. The cards and their sources are demo/lib/baishi-cheatsheet.js; the outlines are prepared
   // by demo/scripts/build-baishi-cheatsheet.mjs.
+  import Menu from './ui/Menu.svelte'
+  import { untrack } from 'svelte'
   import PageHeader from './ui/PageHeader.svelte'
   import Dialog from './ui/Dialog.svelte'
   import Icon from './ui/Icon.svelte'
@@ -19,11 +21,29 @@
   import ebnf from '../data/baishi-ids.ebnf?raw'
   import { featureExamples } from './lib/baishi-feature-examples.js'
   import { GLOSS, GRAMMAR, GROUP_LABELS, SHEET, SOURCE, NA_FORMS, ROOF_FORMS, TURN_GLYPHS, UNUSED, arityOf, bareOf, entriesOf, focusOf, idsOf, kindOf, tokenise, variantBody } from './lib/baishi-cheatsheet.js'
-  import { chainPath } from '../src/core/chain-shape.js'
+  import fontGlyphs from './lib/baishi-font-glyphs.json'
   import tenGlyphs from './lib/baishi-ten-glyphs.json'
   import documentedForms from './lib/baishi-variant-glyphs.json'
   import exampleLicence from '../fonts/OFL-Baishi-example.txt?url'
   import outlines from './lib/baishi-cheatsheet-outlines.json'
+
+  /** @type {{ serif?: typeof import('./lib/baishi-serif.js') | null }} */
+  let { serif: loadedFace = null } = $props()
+  let serif = $state.raw(untrack(() => loadedFace))
+  let requestedFace = ''
+  /** @param {string} face */
+  async function selectFace(face) {
+    requestedFace = face
+    const next = face === 'serif' ? await import('./lib/baishi-serif.js') : null
+    if (requestedFace !== face || next === serif) return
+    forget()
+    serif = next
+    const url = new URL(location.href)
+    if (face === 'serif') url.searchParams.set('face', face)
+    else url.searchParams.delete('face')
+    url.searchParams.set('lang', locale)
+    history.replaceState(history.state, '', url)
+  }
 
   const params = new URLSearchParams(location.search)
   const wanted = String(params.get('lang') ?? load('locale', null) ?? navigator.language ?? '')
@@ -36,10 +56,12 @@
   const messages = $derived(LOCALES.find(([code]) => code === locale)?.[2])
   const t = $derived(translator({ ...appMessages('en'), ...messages, ...appMessages(locale) }, locale))
 
-  const GLYPHS = /** @type {Record<string, string[]>} */ ({ ...outlines.components, ...outlines.glyphs })
-  const COMPOSED = /** @type {Record<string, string[]>} */ (outlines.composed)
+  const sansGlyphs = { ...outlines.components, ...outlines.glyphs }
+  const GLYPHS = $derived(/** @type {Record<string, string[]>} */ (serif?.glyphs ?? sansGlyphs))
+  const COMPOSED = $derived(/** @type {Record<string, string[]>} */ (serif?.composed ?? outlines.composed))
   const ROWS = /** @type {Record<string, string>} */ (outlines.rows)
-  const FORMS = /** @type {Record<string, string>} */ ({ ...documentedForms, '午t': tenGlyphs.risingNoon.join(''), '午.': tenGlyphs.flatNoon.join('') })
+  const FORMS = /** @type {Record<string, string>} */ ({ ...documentedForms, ...fontGlyphs.variants,
+    '十.t': fontGlyphs.glyphs['十.t'].join(''), '𠃊t': fontGlyphs.variants.乚t, '午t': tenGlyphs.risingNoon.join(''), '午.': fontGlyphs.glyphs.午.join('') })
   const grammar = readGrammar(ebnf)
   const anchors = new Map(SECTIONS.map(section => [section.id, section]))
   /** An anchor's name: the title the specification gives it, or its rule. @param {string} id */
@@ -101,6 +123,7 @@
         parts.forEach((d, leaf) => bySlot.set(slotOf(leaf), (bySlot.get(slotOf(leaf)) ?? '') + d))
         return [{ entry, char: quote.char, composed: true, ink: '', rest: /** @type {Cut[]} */ ([]), layers: [...bySlot].map(([slot, d]) => ({ slot, cuts: [{ d, box: null }], names: names(entry, slot) })), marks: [], cross: null }]
       }
+      if (serif) glyph = serif.glyphFor(glyph, entriesOf(quote.text)[entry])
       const contours = glyph.contours ?? GLYPHS[glyph.char]
       const strokes = tokens.filter(token => token.entry === entry && token.kind === 'stroke')
       const closed = tokens.some(token => token.entry === entry && token.kind === 'close')
@@ -115,7 +138,7 @@
   /** @typedef {ReturnType<typeof prepare>} Shown */
   /** @param {Card} card */
   const shown = card => ({ ...card, quotes: card.quotes.map((quote, at) => prepare(card, quote, at)) })
-  const sheet = SHEET.map(section => ({ ...section, cards: (section.cards ?? []).map(shown), groups: (section.groups ?? []).map(group => ({ ...group, cards: (group.cards ?? []).map(shown) })) }))
+  const sheet = $derived(SHEET.map(section => ({ ...section, cards: (section.cards ?? []).map(shown), groups: (section.groups ?? []).map(group => ({ ...group, cards: (group.cards ?? []).map(shown) })) })))
   /** @typedef {ReturnType<typeof shown>} ShownCard */
 
   // The token pointed at, focused or pressed: it inverts, its parts light in the drawing, and a tooltip
@@ -223,8 +246,8 @@
     const entries = entriesOf(`${char}\t${row}`).map(text => ({ text, ids: idsOf(text) }))
     // An entry without a list is the form a component without a tag, or with a dot, takes.
     const plain = entries.find(entry => entry.ids.includes('.')) ?? entries.find(entry => !entry.ids.length)
-    // The bundled 𤽄 has the hooked stem of 小 in its V form.
-    const font = entries.find(entry => entry.ids.includes(char === '𤽄' ? 'V' : 'J')) ?? plain
+    // Sans draws the hooked V form of 𤽄. The Serif glyph has a straight stem.
+    const font = char === '𤽄' && serif ? plain : entries.find(entry => entry.ids.includes(char === '𤽄' ? 'V' : 'J')) ?? plain
     // Alternative decompositions bearing the same identifier describe the same glyph.
     return entries.map(entry => ({ ...entry, font: entry === font,
       native: font && (entry === font || entry.ids.some(id => font.ids.includes(id)) || (!entry.ids.length && !font.ids.length)),
@@ -252,11 +275,11 @@
         const stroke = TURN_GLYPHS.get(body)
         const reference = char === '宀' ? ROOF_FORMS.get(body) : char === '八' || char === '乂' ? NA_FORMS.get(body) : undefined
         const documented = variant.ids.map(id => FORMS[char + id]).find(Boolean)
-        const ink = reference || documented || (variant.native ? glyph : stroke ? GLYPHS[stroke].join('') : '')
-        // The 㠯(x) walk collapses to a square, losing the two enclosed spaces.
-        const omitChain = char === '㠯' && variant.ids.includes('x')
-        const line = !tile && !ink && !omitChain && body.startsWith('#(') ? chainPath(body) : null
-        return { ...variant, ink, tile, line }
+        const faceInk = serif && variant.ids.map(id => serif.forms[char + id]).find(Boolean)
+        const original = reference || documented
+        const ink = faceInk || original || (variant.native ? glyph : stroke ? GLYPHS[stroke]?.join('') : '')
+        const sourceOnly = Boolean(serif && original && !faceInk && !tile)
+        return { ...variant, ink, tile, sourceOnly }
       }), more: all.length - variants.length,
       // The other quotations of the card stand beside an operator's bracket: with it and without.
       beside: token.kind === 'op' && pointed.card.quotes.length > 1 ? pointed.card.quotes : [] }
@@ -315,8 +338,9 @@
             <li class:named={variant.named}>
               {#if variant.tile}<span class="mini">{@render drawing(variant.tile, null, false)}</span>
               {:else if variant.ink}<svg class="mini" viewBox="0 0 1000 1000" role="img" aria-label={tip.char}><path class="ink" d={variant.ink} /></svg>
-              {:else if variant.line}<svg class="mini composed" viewBox="0 0 1000 1000" aria-hidden="true"><path class="line" d={variant.line} /></svg>{/if}
+              {/if}
               <code>{variant.text}</code>
+              {#if variant.sourceOnly}<small lang={locale}>{t('cheatsheet.referenceGlyph')}</small>{/if}
             </li>
           {/each}
           {#if tip.more}<li class="more">+{tip.more}</li>{/if}
@@ -375,6 +399,7 @@
           {/each}
         </div>
         <div class="text">
+          {#if serif && quote.char === '父' && item.id === 'list-analogy'}<small lang={locale}>{t('cheatsheet.referenceGlyph')} · I26</small>{/if}
           <!-- A whole row opens with its character; an entry is named by the one it describes. -->
           {#if !quote.text.includes('\t')}<span class="char" lang="ja">{quote.char}</span>{/if}
           <NotationSequence tokens={quote.tokens} label={quote.text.replaceAll('\t', ' ')} numbered={quote.numbered} active={pointed?.key === quote.key ? pointed.index : null} lit={pointed?.key === quote.key ? pointed.quote.tokens[pointed.index].lights : null}
@@ -399,8 +424,10 @@
   </article>
 {/snippet}
 
-<div class="page" bind:this={page}>
+<div class="page" class:serif={Boolean(serif)} bind:this={page}>
   <PageHeader page="baishi-cheatsheet" title={t('cheatsheet.title')} {t} bind:locale links={[{ href: `./baishi.html?lang=${locale}`, label: t('baishi.title') }, { href: `./baishi.html?lang=${locale}#parser`, label: t('baishi.heading.parser') }]}>
+    <Menu label={t(serif ? 'app.font.serif' : 'app.font.sans')} ariaLabel={t('app.font.label') + ' · ' + t(serif ? 'app.font.serif' : 'app.font.sans')} compact keyHints={false}
+      items={['sans', 'serif'].map(face => ({ label: t('app.font.' + face), checked: face === (serif ? 'serif' : 'sans'), run: () => selectFace(face) }))} />
     <button type="button" class="ui-button" data-size="icon" data-variant="quiet" aria-label={t('cheatsheet.help.title')} title={t('cheatsheet.help.title')} onclick={() => { helpOpen = true }}><Icon name="info" /></button>
   </PageHeader>
 
@@ -452,7 +479,10 @@
           <li><span class="what">{t('cheatsheet.source.data')}</span> <a href={SOURCE.repository} target="_blank" rel="noreferrer">yi-bai/ids</a> <a href={`${SOURCE.repository}/tree/${SOURCE.commit}`} target="_blank" rel="noreferrer"><code>{SOURCE.commit.slice(0, 8)}</code></a> · {SOURCE.date} · MIT</li>
           <li><span class="what">{t('cheatsheet.source.notation')}</span> <b class="key">{GRAMMAR.key}</b> <a href={GRAMMAR.url} target="_blank" rel="noreferrer" lang="zh-Hans">{GRAMMAR.title}</a> · {GRAMMAR.date} · {t('cheatsheet.source.notationBy')} <span class="weak">{t('cheatsheet.source.notationNote')}</span></li>
           <li><span class="what">{t('cheatsheet.source.grammar')}</span> <a href={sectionHref('spec', 'row')}>{t('baishi.title')}</a> · <a href={`./baishi-railroad.html?lang=${locale}`}>{t('railroad.title')}</a> · <code>data/baishi-ids.ebnf</code></li>
-          <li><span class="what">{t('cheatsheet.source.outlines')}</span> <a href="https://github.com/notofonts/noto-cjk" target="_blank" rel="noreferrer">Noto Sans CJK</a> · <a href="https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project" target="_blank" rel="noreferrer">Plangothic</a> · <a href="https://github.com/mkpoli/han-compose" target="_blank" rel="noreferrer">han-compose</a> <code>{outlines.composer.commit}</code> · <a href="https://glyphwiki.org/wiki/jmj-034221@1">𡮂 JMJ-034221</a> · <a href="https://glyphwiki.org/wiki/u4d22-var-001@1">䴢 (u)</a> · <a href="https://github.com/NightFurySL2001/bai-ids/blob/0ca5ed48f51821d4d54246196f1f5f38c9d6bd6a/fonts/example.woff2">父 (qq222), 八d, 丰..p</a> © 2024–2025 -PT_AxH_RV- · <a href={exampleLicence}>SIL OFL 1.1</a> · <a href="https://glyphwiki.org/wiki/u2db01-j@5">午 · 午(t)</a> · <a href="https://glyphwiki.org/wiki/u6222-g@3">戢</a> · <a href="https://glyphwiki.org/wiki/u4e42-j@2">乂J (GlyphWiki)</a> · {#each [
+          {#if serif}
+            <li><span class="what">{t('app.font.serif')}</span> <a href="https://github.com/notofonts/noto-cjk/tree/Serif2.003/Serif">Noto Serif CJK 2.003</a> · <a href="https://kamichikoichi.github.io/jigmo/">Jigmo 2025-09-12</a> · <a href={serif.base + 'manifest.json'}>han-compose 8156f838798c</a></li>
+          {/if}
+          <li><span class="what">{t('cheatsheet.source.outlines')}</span> <a href="https://github.com/notofonts/noto-cjk" target="_blank" rel="noreferrer">Noto Sans CJK</a> · <a href="https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project" target="_blank" rel="noreferrer">Plangothic</a> · <a href="https://github.com/mkpoli/han-compose" target="_blank" rel="noreferrer">han-compose</a> <code>{outlines.composer.commit}</code> · <a href="https://glyphwiki.org/wiki/jmj-034221@1">𡮂 JMJ-034221</a> · <a href="https://glyphwiki.org/wiki/u4d22-var-001@1">䴢 (u)</a> · <a href="https://github.com/NightFurySL2001/bai-ids/blob/0ca5ed48f51821d4d54246196f1f5f38c9d6bd6a/fonts/example.woff2">父 (qq222), 八d, 丰..p</a> © 2024–2025 -PT_AxH_RV- · <a href={exampleLicence}>SIL OFL 1.1</a> · <a href="https://glyphwiki.org/wiki/u2db01-j@5">午(t)</a> · <a href="https://glyphwiki.org/wiki/u4e42-j@2">乂J (GlyphWiki)</a> · {#each [
             ['𤽄 (.)', 'u24f44-g@3'],
             ['木 (y)', 'u2097d-j@2'],
             ['門 (s)', 'u9580-05-var-002@1'],
@@ -463,7 +493,7 @@
             ['ユ (t)', 'u4e11-g01@1'],
             ['丰 (ptp)', 'u90a6-ue0102@12']
           ] as [label, source], i}{i ? ' · ' : ''}<a href={'https://glyphwiki.org/wiki/' + source}>{label}</a>{/each} · <a href="https://github.com/yi-bai/iwds/tree/8302302d615ff1c1f60ae335b118b10060be0ed4">IWDS 128, 316</a></li>
-          <li><a href="https://glyphwiki.org/wiki/aj1-13763">工 (q4082)</a> · {t('cheatsheet.source.gong')}</li>
+          <li><a href={serif ? 'https://github.com/notofonts/noto-cjk/tree/Serif2.003/Serif/Variable/TTF' : 'https://github.com/notofonts/noto-cjk/tree/Sans2.004/Sans/Variable/TTF'}>{serif ? 'Noto Serif CJK JP 2.003 VF' : 'Noto Sans CJK JP 2.004 VF'}</a> · <a href="https://github.com/adobe-type-tools/Adobe-Japan1/blob/master/Adobe-Japan1_sequences.txt">工󠄁 (q4082, CID+13763)</a> · 午(.) · 戢 (SC) · 十.t · ㇀ · ㇙</li>
         </ul>
       </footer>
     </main>
@@ -510,6 +540,7 @@
        marker is what a card is about. */
     --part-0:light-dark(#2a67e0,#7db1ff);--part-1:light-dark(#cc4e00,#ffa35c);--part-2:light-dark(#0a5a3a,#12996a);--part-3:light-dark(#651a78,#f0bfea);
     --mark:light-dark(#ffeeb0,#3d3410)}
+  .page.serif{--ids-font:var(--cjk-serif)}
   .body{display:grid;grid-template-columns:200px minmax(0,1fr);gap:28px;width:100%;max-width:1500px;margin:0 auto;padding:22px max(18px,env(safe-area-inset-right)) 64px max(18px,env(safe-area-inset-left))}
   .toc{position:sticky;top:70px;align-self:start;max-height:calc(100dvh - 86px);overflow:auto;font-size:13px}
   .toc ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px}
@@ -602,8 +633,6 @@
   .variants li.named{background:var(--mark)}
   .variants li.more{align-self:center;color:var(--ui-color-ink-muted)}
   .mini{flex:none;display:block;inline-size:34px;block-size:34px;border-radius:5px;background:var(--ui-color-surface-sunken)}
-  .mini.composed{background:none;outline:1.5px dashed var(--ui-color-control-border);outline-offset:-1.5px}
-  .mini .line{fill:none;stroke:var(--ui-color-ink);stroke-width:64;stroke-linecap:round;stroke-linejoin:round}
 
   .zoom{display:flex;flex-wrap:wrap;align-items:flex-start;gap:18px}
   .zoomed{display:flex;flex-wrap:wrap;gap:10px}

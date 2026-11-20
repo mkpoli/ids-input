@@ -109,30 +109,10 @@ def fitted(cut, direction):
     return path.getCommands()
 
 
-def main():
-    cache = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / 'cache'
-    url, sha = FONTS['PlangothicP1-Regular.ttf']
-    noto = TTCollection(fetch(NOTO[0], cache / 'NotoSansCJK-Regular.ttc', NOTO[1]))
-    faces = {region: noto.fonts[i] for i, region in enumerate(('JP', 'KR', 'SC', 'TC', 'HK'))}
-    faces['Plangothic'] = TTFont(fetch(url, cache / 'PlangothicP1-Regular.ttf', sha))
-    faces['I26'] = TTFont(fetch(GUIDE[0], cache / 'bai-ids-example.woff2', GUIDE[1]))
-    paths = {key: outline(faces[face], char, indices) for key, face, char, indices in WITNESSES}
-    ten = json.loads((ROOT / 'demo/lib/baishi-ten-glyphs.json').read_text())
-    paths['十.t'] = ''.join(ten['raisedCross'])
-    paths['𤽄.'] = STRAIGHT_STEM
-    kage = subprocess.check_output(['node', ROOT / 'scripts/build_baishi_kage.mjs'], text=True)
-    for key, path in json.loads(kage).items():
-        cut = RecordingPen()
-        parse_path(path, cut)
-        paths[key] = fitted(cut, 1)
+def ucv_forms(filename):
     entries = {entry['id']: entry for entry in json.loads((ROOT / 'data/ucv.json').read_text())['entries']}
-    records = json.loads(gzip.decompress((ROOT / 'data/ucv-outlines-sans.json.gz').read_bytes()))['records']
-    card_glyphs = json.loads((ROOT / 'demo/lib/baishi-cheatsheet-outlines.json').read_text())['glyphs']
-    for key, char, indices in CARD_FORMS:
-        cut = RecordingPen()
-        for idx in indices:
-            parse_path(card_glyphs[char][idx], cut)
-        paths[key] = fitted(cut, 1)
+    records = json.loads(gzip.decompress((ROOT / 'data' / filename).read_bytes()))['records']
+    paths = {}
     for key, rule, position, expected in UCV_FORMS:
         name = entries[rule]['forms'][position - 1]['glyph']
         if name != expected:
@@ -143,6 +123,30 @@ def main():
             pairs = struct.iter_unpack('<hh', base64.b64decode(points))
             polygons.append(''.join(f'{op}{x / 4:g} {880 - y / 4:g}' for op, (x, y) in zip(commands, pairs, strict=True)) + 'Z')
         paths[key] = ''.join(polygons)
+    return paths
+
+
+def main():
+    cache = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / 'cache'
+    url, sha = FONTS['PlangothicP1-Regular.ttf']
+    noto = TTCollection(fetch(NOTO[0], cache / 'NotoSansCJK-Regular.ttc', NOTO[1]))
+    faces = {region: noto.fonts[i] for i, region in enumerate(('JP', 'KR', 'SC', 'TC', 'HK'))}
+    faces['Plangothic'] = TTFont(fetch(url, cache / 'PlangothicP1-Regular.ttf', sha))
+    faces['I26'] = TTFont(fetch(GUIDE[0], cache / 'bai-ids-example.woff2', GUIDE[1]))
+    paths = {key: outline(faces[face], char, indices) for key, face, char, indices in WITNESSES}
+    paths['𤽄.'] = STRAIGHT_STEM
+    kage = subprocess.check_output(['node', ROOT / 'scripts/build_baishi_kage.mjs'], text=True)
+    for key, path in json.loads(kage).items():
+        cut = RecordingPen()
+        parse_path(path, cut)
+        paths[key] = fitted(cut, 1)
+    card_glyphs = json.loads((ROOT / 'demo/lib/baishi-cheatsheet-outlines.json').read_text())['glyphs']
+    for key, char, indices in CARD_FORMS:
+        cut = RecordingPen()
+        for idx in indices:
+            parse_path(card_glyphs[char][idx], cut)
+        paths[key] = fitted(cut, 1)
+    paths.update(ucv_forms("ucv-outlines-sans.json.gz"))
     TARGET.write_text(json.dumps(paths, ensure_ascii=False, indent=1) + '\n')
 
 

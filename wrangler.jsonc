@@ -18,6 +18,9 @@
   // The anonymous bug report intake, reached as /api/report.
   "services": [{ "binding": "REPORT", "service": "ids-reports" }],
   "workers_dev": false,
+  // A local server stands in for the site as it is served: the worker sees an HTTPS address, as it
+  // does behind the edge, and does not send the reader on to one.
+  "dev": { "upstream_protocol": "https" },
   "observability": { "enabled": true },
   "preview_urls": true
 }
