@@ -146,7 +146,7 @@
       if (/^\p{Unified_Ideograph}$/u.test(char)) {
         const point = (char.codePointAt(0) ?? 0).toString(16).toUpperCase().padStart(5, '0')
         list.push({ key: 'yedict', site: t('info.site.yedict'), what: 'yedict', url: `http://www.yedict.com/z/U${point}` })
-        list.push({ key: 'zdic', site: t('info.site.zdic'), what: 'zdic', url: `https://www.zdic.net/${locale.startsWith('zh-Hant') || locale === 'yue' ? 'hant' : 'hans'}/${encodeURIComponent(char)}` })
+        list.push({ key: 'zdic', site: t('info.site.zdic'), what: 'zdic', url: `https://www.zdic.net/${locale.startsWith('zh-Hant') ? 'hant' : 'hans'}/${encodeURIComponent(char)}` })
       }
       list.push({ key: 'chise', site: t('info.site.chise'), what: 'CHISE IDS', url: `https://www.chise.org/est/view/character/${encodeURIComponent(char)}` })
     }

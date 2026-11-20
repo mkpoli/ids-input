@@ -41,9 +41,8 @@
 
   // A quotation's rendering in the reader's language; a Chinese reader reads the quotation itself.
   const GLOSSES = /** @type {Record<string, Record<string, string>>} */ ({ en, ja, ko, vi })
-  const chinese = $derived(locale.startsWith('zh') || locale === 'yue')
   /** @param {string} id */
-  const gloss = id => chinese ? '' : (GLOSSES[locale]?.[id] ?? en[/** @type {keyof typeof en} */ (id)] ?? '')
+  const gloss = id => locale.startsWith('zh') ? '' : (GLOSSES[locale]?.[id] ?? en[/** @type {keyof typeof en} */ (id)] ?? '')
 
   /** Save a file the site serves, under its own name. @param {string} url @param {string} name */
   function download(url, name) {
@@ -169,7 +168,7 @@
 
       <section id="parser" aria-labelledby="parser-title">
         <h2 id="parser-title">{t('baishi.heading.parser')}</h2>
-        <BaishiParser grammar={corrected} {t} {gloss} zh={chinese} />
+        <BaishiParser grammar={corrected} {t} {gloss} zh={locale.startsWith('zh')} />
       </section>
 
       <section id="rows" aria-labelledby="rows-title">
