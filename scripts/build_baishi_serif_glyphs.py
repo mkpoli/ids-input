@@ -38,6 +38,9 @@ def main():
         glyphs["戢"] = contours(font, "戢", "glyph18561")  # hani/ZHS locl
         glyphs["十.t"] = fit_together([glyphs["戢"][i] for i in [10, 3]])
         variants = cut_forms(font, {tag: (CUTS[tag][0], indices) for tag, indices in INDICES.items()})
+        # 㐫 = ⿱亠.凶 in the guide. Keep the folded frame and the entire 乂d.
+        covered = contours(font, "㐫")
+        glyphs["凶"] = fit_together([covered[i] for i in [0, 1, 4, 7, 5, 6]])
         sc_duo = contours(font, "朵", "glyph20736")
         variants["几w"] = "".join(fit_together([sc_duo[i] for i in [1, 2, 3]]))
         # hani locl glyphs in Serif 2.003. The JP 乂 includes the raised onset.
@@ -52,6 +55,8 @@ def main():
             variants[tag] = "".join(fit_together(contours(font, char, name)))
         # Tag, host glyph, localized glyph name, Serif contour numbers.
         for tag, char, name, indices in [
+            ("凵.", "凼", None, [0, 1, 2, 3]),
+            ("凵y", "世", None, [2, 4, 1]),
             ("八d", "六", None, [2, 3]),
             ("亘t", "刯", None, [2, 3, 4, 5, 6]),
             ("二t", "北", None, [0, 2]),

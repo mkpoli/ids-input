@@ -270,12 +270,12 @@
     const variants = all.filter(variant => kept.has(variant))
     return { token, ...describe(token), char, glyph: all.length ? '' : glyph,
       variants: variants.map(variant => {
-        const tile = variantTile(char, variant.ids)
         const body = variantBody(variant.text).replace(/^\{[^}]*\}/u, '')
         const stroke = TURN_GLYPHS.get(body)
         const reference = char === '宀' ? ROOF_FORMS.get(body) : char === '八' || char === '乂' ? NA_FORMS.get(body) : undefined
         const documented = variant.ids.map(id => FORMS[char + id]).find(Boolean)
         const faceInk = serif && variant.ids.map(id => serif.forms[char + id]).find(Boolean)
+        const tile = faceInk ? null : variantTile(char, variant.ids)
         const original = reference || documented
         const ink = faceInk || original || (variant.native ? glyph : stroke ? GLYPHS[stroke]?.join('') : '')
         const sourceOnly = Boolean(serif && original && !faceInk && !tile)
@@ -480,7 +480,7 @@
           <li><span class="what">{t('cheatsheet.source.notation')}</span> <b class="key">{GRAMMAR.key}</b> <a href={GRAMMAR.url} target="_blank" rel="noreferrer" lang="zh-Hans">{GRAMMAR.title}</a> · {GRAMMAR.date} · {t('cheatsheet.source.notationBy')} <span class="weak">{t('cheatsheet.source.notationNote')}</span></li>
           <li><span class="what">{t('cheatsheet.source.grammar')}</span> <a href={sectionHref('spec', 'row')}>{t('baishi.title')}</a> · <a href={`./baishi-railroad.html?lang=${locale}`}>{t('railroad.title')}</a> · <code>data/baishi-ids.ebnf</code></li>
           {#if serif}
-            <li><span class="what">{t('app.font.serif')}</span> <a href="https://github.com/notofonts/noto-cjk/tree/Serif2.003/Serif">Noto Serif CJK 2.003</a> · <a href="https://kamichikoichi.github.io/jigmo/">Jigmo 2025-09-12</a> · <a href={serif.base + 'manifest.json'}>han-compose 8156f838798c</a></li>
+            <li><span class="what">{t('app.font.serif')}</span> <a href="https://github.com/notofonts/noto-cjk/tree/Serif2.003/Serif">Noto Serif CJK 2.003</a> · <a href="https://kamichikoichi.github.io/jigmo/">Jigmo 2025-09-12</a> · 凵. (凼) · 凵y (世) · 凶 (㐫) · <a href={serif.base + 'manifest.json'}>han-compose 8156f838798c</a></li>
           {/if}
           <li><span class="what">{t('cheatsheet.source.outlines')}</span> <a href="https://github.com/notofonts/noto-cjk" target="_blank" rel="noreferrer">Noto Sans CJK</a> · <a href="https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project" target="_blank" rel="noreferrer">Plangothic</a> · <a href="https://github.com/mkpoli/han-compose" target="_blank" rel="noreferrer">han-compose</a> <code>{outlines.composer.commit}</code> · <a href="https://glyphwiki.org/wiki/jmj-034221@1">𡮂 JMJ-034221</a> · <a href="https://glyphwiki.org/wiki/u4d22-var-001@1">䴢 (u)</a> · <a href="https://github.com/NightFurySL2001/bai-ids/blob/0ca5ed48f51821d4d54246196f1f5f38c9d6bd6a/fonts/example.woff2">父 (qq222), 八d, 丰..p</a> © 2024–2025 -PT_AxH_RV- · <a href={exampleLicence}>SIL OFL 1.1</a> · <a href="https://glyphwiki.org/wiki/u2db01-j@5">午(t)</a> · <a href="https://glyphwiki.org/wiki/u4e42-j@2">乂J (GlyphWiki)</a> · {#each [
             ['𤽄 (.)', 'u24f44-g@3'],
