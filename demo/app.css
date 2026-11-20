@@ -124,3 +124,7 @@
   --cjk: var(--cjk-regular);
   --ids-font: var(--cjk-regular);
 }
+
+/* Devanagari and Thai need a shaping font; the bundled fallback draws their letters one by one. */
+:root:lang(hi) { --ids-glyph-fallback: 'Noto Sans Devanagari', 'Noto Sans Devanagari UI', 'Nirmala UI', 'Kohinoor Devanagari', 'Devanagari Sangam MN', 'Jigmo', 'Jigmo2', 'Jigmo3', 'Plangothic P1', 'Plangothic P2', var(--fallback-font, 'IDS Fallback'); }
+:root:lang(th) { --ids-glyph-fallback: 'Noto Sans Thai', 'Noto Sans Thai UI', 'Noto Looped Thai UI', 'Leelawadee UI', 'Thonburi', 'Tahoma', 'Jigmo', 'Jigmo2', 'Jigmo3', 'Plangothic P1', 'Plangothic P2', var(--fallback-font, 'IDS Fallback'); }
