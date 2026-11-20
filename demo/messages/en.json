@@ -913,5 +913,21 @@
   "fontMixer.composing": "Composing…",
   "fontMixer.preparing": "Preparing…",
   "fontMixer.empty": "Enter an ideographic description.",
-  "fontMixer.missing": "Missing glyphs: {glyphs}"
+  "fontMixer.missing": "Missing glyphs: {glyphs}",
+  "page.home.description": "Build and edit ideographic description sequences (IDS), find Han characters by their parts, preview Han and Tangut forms, and export SVG or PNG images.",
+  "page.sources.description": "Every source the IDS Workshop reads or cites: data, fonts, code, references and prior work, with the records behind its examples.",
+  "page.components.description": "Every part the IDS Workshop can put in a description: components, strokes, other scripts and unencoded forms, with search.",
+  "page.unencoded.description": "Every form no code point names in BabelStone IDS, CHISE IDS and zi.tools, with its identifier, names and equivalents.",
+  "page.component-atlas.description": "Every component the IDS corpus uses, how many descriptions name it and the characters it appears in.",
+  "page.ucv.description": "The IRG lists of unifiable and non-unifiable component variations, with each form drawn and its example characters.",
+  "page.normalization.description": "What the IDS Workshop reads as the same: structures, kana and Hangul shapes, component forms, stroke families, stroke chains and operator names.",
+  "page.history.description": "The systems that describe a Han character by its parts, from Academia Sinica’s CDP to Unicode’s description characters, CHISE, GlyphWiki, BabelStone and zi.tools, each with its source.",
+  "page.baishi.description": "The zi.tools IDS Extension: rows, operators, variant identifiers, stroke chains, overlap and index brackets, each example cited to its document and page.",
+  "page.baishi-railroad.description": "The grammar of the zi.tools IDS Extension as one railroad diagram that opens rule by rule, filling the window or the screen.",
+  "page.baishi-cheatsheet.description": "The extended IDS of the zi.tools database on one sheet: operators, variant identifiers, stroke chains, overlap and index brackets, each on a real character with its parts in colour.",
+  "page.open-data.description": "The IDS descriptions this project transcribed or read, and the kana and Hangul equivalences the search reads, as JSON and TSV under CC0 1.0.",
+  "page.compare.description": "Generated glyphs beside KAGE's composition of the same IDS, from real unencoded headwords: where the IDS Workshop's composer agrees with KAGE, and where it does not.",
+  "page.font-compare.description": "The same characters and descriptions drawn in the workshop's five faces: Sans, Serif, Fangsong, Regular and Pen.",
+  "page.font-mixer.description": "Blend a character between the workshop's five faces (Sans, Serif, Fangsong, Regular and Pen) and play the blend as a tour.",
+  "page.engines.description": "Feature comparison of IDS glyph engines: the IDS Workshop, KAGE, GlyphWiki, zi.tools, yedict, Mojidata, MetaHan and CHISE."
 }

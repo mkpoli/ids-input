@@ -910,5 +910,21 @@
   "fontMixer.composing": "正在組字…",
   "fontMixer.preparing": "準備中…",
   "fontMixer.empty": "請輸入表意文字描述序列。",
-  "fontMixer.missing": "缺少字形：{glyphs}"
+  "fontMixer.missing": "缺少字形：{glyphs}",
+  "page.home.description": "建立和編輯表意文字描述序列（IDS），依部件查找漢字，預覽漢字與西夏文字形，匯出SVG或PNG圖像。",
+  "page.sources.description": "IDS工坊讀取或引用的全部來源：資料、字體、程式碼、參考文獻與前人工作，以及範例所依據的記錄。",
+  "page.components.description": "搜尋IDS工坊可用於描述的所有部件：漢字部件、筆畫、其他文字與未編碼字形。",
+  "page.unencoded.description": "收錄BabelStone IDS、CHISE IDS與zi.tools中所有無碼位字形，附識別符、名稱與等價形式。",
+  "page.component-atlas.description": "IDS語料使用的全部部件、提及各部件的描述數量，以及包含它們的漢字。",
+  "page.ucv.description": "IRG的可認同與不可認同部件變體列表，展示各變體的字形與例字。",
+  "page.normalization.description": "IDS工坊視為相同的寫法：結構、假名與諺文字形、部件異形、筆畫族、筆畫鏈及運算子名稱。",
+  "page.history.description": "用部件描述漢字的記法沿革：從中央研究院CDP到Unicode表意文字描述字元、CHISE、GlyphWiki、BabelStone與zi.tools，逐項附來源。",
+  "page.baishi.description": "zi.tools IDS Extension的描述列、運算子、變體識別符、筆畫鏈、疊加括號與索引括號，每個範例均註明來源文件與頁碼。",
+  "page.baishi-railroad.description": "用一張鐵路圖呈現zi.tools IDS Extension的語法，可逐條展開規則，鋪滿視窗或全螢幕檢視。",
+  "page.baishi-cheatsheet.description": "一張速查表呈現zi.tools資料庫的擴展IDS：運算子、變體識別符、筆畫鏈、疊加括號與索引括號，均以實際漢字示例並用顏色區分部件。",
+  "page.open-data.description": "本專案轉錄或讀取的IDS描述，以及搜尋使用的假名與諺文等價關係，以JSON和TSV格式依CC0 1.0釋出。",
+  "page.compare.description": "以實際未編碼字頭為例，並排展示IDS工坊組字器與KAGE根據同一IDS產生的字形，比較兩者的相同與不同之處。",
+  "page.font-compare.description": "將同一組漢字與描述以工坊的黑體、宋體、仿宋、正楷、文楷五種字體並排呈現。",
+  "page.font-mixer.description": "在工坊的黑體、宋體、仿宋、正楷、文楷五種字體之間混合字形，並沿路線播放混合過程。",
+  "page.engines.description": "比較IDS字形引擎的功能：IDS工坊、KAGE、GlyphWiki、zi.tools、yedict、Mojidata、MetaHan與CHISE。"
 }
