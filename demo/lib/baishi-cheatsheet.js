@@ -144,7 +144,7 @@ export const SHEET = [
   { id: 'row', label: 'rows', rules: ['row', 'primary group', 'alternative group'], cards: [
     { id: 'row-entries', anchors: ['primary-group', 'entry-separator'], label: 'entries', hint: 'entries', quotes: [{ char: '十', text: '十\t⿻丨一.(.);⿻丨一t(.t)', row: 1346, glyphs: [
       { char: '十', parts: [[1], [0]] },
-      { char: '十', contours: tenGlyphs.raisedCross, parts: [[0], [1]] },
+      { char: '十', contours: fontGlyphs.glyphs['十.t'], parts: [[0], [1]] },
     ], focus: [';'] }] },
     { id: 'row-alternative', anchors: ['alternative-group'], label: 'alternative', hint: 'alternative', quotes: [{ char: '三', text: '三\t⿱一.二.\t⿱二.一.', row: 10, glyphs: [{ char: '三', parts: [[0], [1, 2]] }, { char: '三', parts: [[0, 1], [2]] }], focus: [[7, 8]] }] },
   ] },
@@ -277,7 +277,7 @@ export const SHEET = [
         { char: '𭬁', contours: tenGlyphs.pairedNoons, parts: [[0], [1], [2], [3]] },
       ], focus: ['午t', '午.'] },
       { char: '戢', text: '⿹⿽戈口.⿽十.t⿰丨二.(.)', row: 5155, glyphs: [
-        { char: '戢', contours: tenGlyphs.halberd, parts: [[1, 7, 8, 9], [0], [5, 6], [2], [3, 4]] },
+        { char: '戢', contours: fontGlyphs.glyphs.戢, parts: [[0, 1, 2, 3], [4, 5], [9, 10], [6], [7, 8]] },
       ], focus: ['十.t'] },
     ] },
     { id: 'worked-shi', hint: 'workedShi', quotes: [
