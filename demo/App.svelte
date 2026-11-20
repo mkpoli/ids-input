@@ -1952,7 +1952,7 @@
   .replacement-link{align-self:flex-start;padding:2px 0;border:0;background:transparent;color:var(--ui-color-accent);font:inherit;font-size:12px;cursor:pointer}
   .replacement-link:hover{text-decoration:underline}
   .replacement-link:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:2px}
-  .points-btn{height:24px;padding:0 8px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface);color:var(--ui-color-ink-muted);font:inherit;font-size:12px;cursor:pointer}
+  .points-btn{height:24px;padding:0 8px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface);color:var(--ui-color-ink-muted);font:inherit;font-size:12px;white-space:nowrap;cursor:pointer}
   .points-btn:hover{color:var(--ui-color-ink);border-color:var(--ui-color-border-strong)}
   .points-btn:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}
   .point-sheet{display:flex;flex-direction:column;gap:14px}

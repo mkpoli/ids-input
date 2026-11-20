@@ -533,7 +533,7 @@
 #said("compose", ("I26", "§4.3.3"))
 #examples("alternate")
 
-== #t("baishi.heading.other") <other>
+== #t("baishi.heading.misc") <other>
 #examples("other")
 #said("custom", ("I26", "§4.3.5"))
 
