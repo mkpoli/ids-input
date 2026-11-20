@@ -45,6 +45,7 @@
   import ExportPanel from './ui/ExportPanel.svelte'
   import PartFills from './ui/PartFills.svelte'
   import FaceSample from './ui/FaceSample.svelte'
+  import FontSwitch from './ui/FontSwitch.svelte'
   import TitleDialog from './ui/TitleDialog.svelte'
   import { download } from './lib/files.js'
   import Icon from './ui/Icon.svelte'
@@ -1489,25 +1490,24 @@
 </script>
 
 {#snippet fontSwitch(wait)}
-  <div class="font-switch" role="group" aria-label={t('app.font.label')}>
-    {#each FONT_FACES as option (option.key)}
-      <button type="button" class="font-choice" aria-pressed={face === option.key} aria-label={t(option.label)} title={t(option.label)} onclick={() => face = option.key}>
-        <span class="aa {option.key}"><FaceSample sequence={editor.whole} draw={sampleDraw(option)} delay={wait}>
-          {#snippet fallback()}<span class="specimen">Aa</span>{/snippet}
-        </FaceSample></span>
-        <span class="wide {option.key}">{t(option.label)}</span>
+  <FontSwitch faces={FONT_FACES} {face} onchange={key => face = key} label={t('app.font.label')} {t}>
+    {#snippet sample(option)}
+      <FaceSample sequence={editor.whole} draw={sampleDraw(option)} delay={wait}>
+        {#snippet fallback()}<span class="specimen">Aa</span>{/snippet}
+      </FaceSample>
+    {/snippet}
+    {#snippet children()}
+      <button type="button" class="font-choice" aria-pressed={mixed} aria-label={t('app.font.mix')} title={t('app.font.mix')} onclick={() => { mix = storedMix(); mixed = !mixed }}>
+        <Icon name="blend" size={16} />
+        <span class="wide">{t('app.font.mix')}</span>
       </button>
-    {/each}
-    <button type="button" class="font-choice" aria-pressed={mixed} aria-label={t('app.font.mix')} title={t('app.font.mix')} onclick={() => { mix = storedMix(); mixed = !mixed }}>
-      <Icon name="blend" size={16} />
-      <span class="wide">{t('app.font.mix')}</span>
-    </button>
-    {#if mixed}
-      <a class="font-choice" href={`./font-mixer.html?lang=${locale}${editor.tree === null ? '' : `&ids=${encodeURIComponent(editor.whole)}`}`} aria-label={t('app.font.mixSet')} title={t('app.font.mixSet')}>
-        <Icon name="settings" size={16} />
-      </a>
-    {/if}
-  </div>
+      {#if mixed}
+        <a class="font-choice" href={`./font-mixer.html?lang=${locale}${editor.tree === null ? '' : `&ids=${encodeURIComponent(editor.whole)}`}`} aria-label={t('app.font.mixSet')} title={t('app.font.mixSet')}>
+          <Icon name="settings" size={16} />
+        </a>
+      {/if}
+    {/snippet}
+  </FontSwitch>
 {/snippet}
 
 <svelte:window onkeydown={keys} ondragenter={dragFiles} ondragover={dragFiles} ondragleave={leaveFiles} ondrop={dropDocument}
@@ -1826,22 +1826,6 @@
     padding:max(8px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 8px max(16px,env(safe-area-inset-left))}
   .tools,.end,.group{display:flex;align-items:center;gap:6px}
   .group{gap:0;height:32px;border-radius:var(--ui-radius-md);background:var(--ui-color-surface);box-shadow:inset 0 0 0 1px var(--ui-color-border)}
-  .font-switch{display:flex;align-items:center;gap:2px;height:32px;padding:2px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface)}
-  .font-choice{display:flex;align-items:center;gap:5px;height:26px;padding:0 7px;border:0;border-radius:var(--ui-radius-sm);background:none;color:var(--ui-color-ink-muted);font:inherit;font-size:11px;cursor:pointer}
-  .font-choice .aa{display:grid;place-items:center;width:18px;height:18px;font-size:14px;line-height:1;color:var(--ui-color-ink);font-family:var(--cjk-label-sans)}
-  .font-choice .wide{font-family:var(--cjk-label-sans)}
-  .font-choice .aa.serif,.font-choice .wide.serif{font-family:var(--cjk-label-serif)}
-  .font-choice .aa.fangsong,.font-choice .wide.fangsong{font-family:var(--cjk-label-fangsong)}
-  .font-choice .aa.regular,.font-choice .wide.regular{font-family:var(--cjk-label-regular)}
-  .font-choice .aa.pen-writing,.font-choice .wide.pen-writing{font-family:var(--cjk-label-pen-writing)}
-  /* Kureedo draws neither 书 nor ả/ư; keep those names in one face. */
-  .font-choice .wide.pen-writing:lang(zh-Hans),.font-choice .wide.pen-writing:lang(vi){font-family:var(--cjk-label-sans)}
-  .font-choice .wide.regular:lang(ko),.font-choice .wide.regular:lang(vi){font-family:var(--cjk-label-sans)}
-  a.font-choice{text-decoration:none}
-  .font-choice:hover{color:var(--ui-color-ink)}
-  .font-choice[aria-pressed="true"]{background:var(--ui-color-accent-soft);color:var(--ui-color-accent)}
-  .font-choice:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}
-  @media (max-width:1100px){.font-choice .wide{display:none}}
   .group :global(.ui-button){height:32px;border:0;border-left:1px solid var(--ui-color-border);border-radius:0;background:none}
   .group > :global(.ui-button:first-child){border-left:0;border-radius:var(--ui-radius-md) 0 0 var(--ui-radius-md)}
   .group .wide-only:last-child :global(.ui-button){border-radius:0 var(--ui-radius-md) var(--ui-radius-md) 0}
@@ -1918,7 +1902,7 @@
   .large-dialog :global(.ids-preview){width:100%;max-width:100%}
   .large-dialog :global(.ids-preview-large){width:100%;border-radius:12px}
   .large-bar{position:sticky;top:max(0px,env(safe-area-inset-top));z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:4px;background:var(--ui-color-surface)}
-  .large-bar .font-switch{order:1}
+  .large-bar :global(.font-switch){order:1}
   .large-bar .large-close{order:4}
   .large-close{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;border:1px solid var(--ui-color-border);border-radius:50%;background:var(--ui-color-surface);color:var(--ui-color-ink);cursor:pointer}
   .large-ids{order:2;flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:1px;font-family:var(--ids-font);font-size:16px;line-height:1.3;color:var(--ui-color-ink);white-space:nowrap;overflow:hidden}

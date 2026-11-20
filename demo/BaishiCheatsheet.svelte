@@ -6,7 +6,7 @@
   // sequence beside the character it describes, a written part and the strokes it names in one
   // colour. The cards and their sources are demo/lib/baishi-cheatsheet.js; the outlines are prepared
   // by demo/scripts/build-baishi-cheatsheet.mjs.
-  import Menu from './ui/Menu.svelte'
+  import FontSwitch from './ui/FontSwitch.svelte'
   import { untrack } from 'svelte'
   import PageHeader from './ui/PageHeader.svelte'
   import Dialog from './ui/Dialog.svelte'
@@ -426,8 +426,8 @@
 
 <div class="page" class:serif={Boolean(serif)} bind:this={page}>
   <PageHeader page="baishi-cheatsheet" title={t('cheatsheet.title')} {t} bind:locale links={[{ href: `./baishi.html?lang=${locale}`, label: t('baishi.title') }, { href: `./baishi.html?lang=${locale}#parser`, label: t('baishi.heading.parser') }]}>
-    <Menu label={t(serif ? 'app.font.serif' : 'app.font.sans')} ariaLabel={t('app.font.label') + ' · ' + t(serif ? 'app.font.serif' : 'app.font.sans')} compact keyHints={false}
-      items={['sans', 'serif'].map(face => ({ label: t('app.font.' + face), checked: face === (serif ? 'serif' : 'sans'), run: () => selectFace(face) }))} />
+    <FontSwitch faces={[{ key: 'sans', label: 'app.font.sans' }, { key: 'serif', label: 'app.font.serif' }]}
+      face={serif ? 'serif' : 'sans'} label={t('app.font.label')} {t} onchange={selectFace} />
     <button type="button" class="ui-button" data-size="icon" data-variant="quiet" aria-label={t('cheatsheet.help.title')} title={t('cheatsheet.help.title')} onclick={() => { helpOpen = true }}><Icon name="info" /></button>
   </PageHeader>
 
