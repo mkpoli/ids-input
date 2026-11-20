@@ -97,6 +97,12 @@ try {
         assert.equal(await drawings.nth(i).locator('.part.lit title').textContent(), written)
         assert.equal(await drawings.nth(1 - i).locator('.part.lit,.part.dim').count(), 0)
       }
+      const raisedCross = drawings.last().locator('.part')
+      const boxes = await raisedCross.evaluateAll(parts => parts.map(part => {
+        const {width, height} = /** @type {SVGGraphicsElement} */ (part).getBBox()
+        return {width, height}
+      }))
+      assert.ok(boxes[0].height > boxes[0].width && boxes[1].width > boxes[1].height, '丨 and 一t highlight the upright and rising bar')
       await token.hover()
       // The entries of the component's row stand side by side, the font's glyph over the entry it is drawn for.
       const feet = await tip.locator('.variants li').evaluateAll(items => items.map(item => Math.round(item.getBoundingClientRect().bottom)))

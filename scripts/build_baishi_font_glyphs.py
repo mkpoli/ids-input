@@ -91,7 +91,7 @@ def main():
         # hani/ZHS locl in the pinned JP VF. SC 戢 connects the upper bar
         # across both halves; its bottom-left stroke rises through the upright.
         glyphs["戢"] = contours(font, "戢", "glyph18542")
-        glyphs["十.t"] = fit_together([glyphs["戢"][i] for i in [9, 10]])
+        glyphs["十.t"] = fit_together([glyphs["戢"][i] for i in [10, 9]])
         forms = cut_forms(font, CUTS)
         sc_duo = contours(font, "朵", "glyph20773")
         forms["几w"] = "".join(fit_together([sc_duo[i] for i in [0, 1, 6]]))
