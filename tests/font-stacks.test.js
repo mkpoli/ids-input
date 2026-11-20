@@ -28,7 +28,8 @@ describe('the workshop font stacks', () => {
 // The switch names each face on its own label, so the label stacks are separate from the glyph
 // stacks: the fallback outlines would draw a common character before the named face.
 describe('the font switch label stacks', () => {
-  const face = labelStacks(read('demo/app.css'))
+  const css = read('demo/app.css')
+  const face = labelStacks(css)
   it('covers the five faces', () => {
     expect(Object.keys(face).sort()).toEqual(['fangsong', 'pen-writing', 'regular', 'sans', 'serif'])
   })
@@ -40,9 +41,8 @@ describe('the font switch label stacks', () => {
     })
   }
   it('keeps the Wen Kai name in one face where Kureedo lacks its glyphs', () => {
-    const app = read('demo/App.svelte')
-    expect(app).toContain('.font-choice .wide.pen-writing:lang(zh-Hans)')
-    expect(app).toContain('.font-choice .wide.pen-writing:lang(vi)')
+    expect(css).toContain('.font-choice .wide.pen-writing:lang(zh-Hans)')
+    expect(css).toContain('.font-choice .wide.pen-writing:lang(vi)')
   })
 })
 
