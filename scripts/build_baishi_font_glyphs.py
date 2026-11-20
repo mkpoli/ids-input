@@ -50,7 +50,7 @@ CUTS = {
     "己w": ("𢁉", [4, 8]),              # ⿱⿰己w己w共.
     "人d": ("从", [1, 3]),              # ⿰人d人.
     "厂s": ("長", [6]),                 # ⿳⿸厂s二.一.𰀠t.
-    "匚w": ("亡", [0, 2]),              # ⿱丶s匚w(y)
+    "匚t": ("𠩐", [3, 6, 7]),           # ⿸厂.⿸匚t⿱二.⿺乀.丿
     "几t": ("殼", [3, 6, 7, 8]),        # ⿹𣪊J几t(J)
     "了s": ("𤴔", [0, 4, 5]),           # ⿱⿻了s⺊一.
 }
@@ -76,7 +76,7 @@ def main():
     name = "PlangothicP1-Regular.ttf"
     url, sha = FONTS[name]
     with TTFont(fetch(url, cache / name, sha)) as font:
-        forms.update(cut_forms(font, {"己z": ("𠃚", [0])}))  # ⿸己z𠃌
+        forms.update(cut_forms(font, {"己z": ("𠃚", [0]), "几w": ("𤻢", [5])}))  # ⿸己z𠃌, ⿸疒.⿰医.⿱几w𪠲.
     data = {"glyphs": glyphs, "variants": forms}
     out = ROOT / "demo/lib/baishi-font-glyphs.json"
     out.write_text(json.dumps(data, ensure_ascii=False, indent=1) + "\n")
