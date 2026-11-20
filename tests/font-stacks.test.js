@@ -55,7 +55,7 @@ describe('the Fangsong face', () => {
   it('registers the label subset for every name it draws', () => {
     const face = css.match(/@font-face\{font-family:"Zhuque Label";src:url\("\.\/Zhuque-label\.woff2"\)[^}]*unicode-range:([^}]*)\}/)
     expect(face).not.toBeNull()
-    for (const range of ['U+0020-007E', 'U+1ECF', 'U+1ED1', 'U+4EFF', 'U+5B8B']) expect(face[1]).toContain(range)
+    for (const range of ['U+0020-007E', 'U+1ECF', 'U+1ED1', 'U+4EFF', 'U+4F53', 'U+5B8B', 'U+671D']) expect(face[1]).toContain(range)
   })
   for (const file of ['ZhuqueFangsong-Regular.woff2', 'Zhuque-label.woff2']) it(`ships the ${file} whose digest the README records`, () => {
     const bytes = readFileSync(new URL(`../fonts/${file}`, import.meta.url))
