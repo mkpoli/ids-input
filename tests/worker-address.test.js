@@ -194,3 +194,14 @@ describe('a built file', () => {
     expect((await get('https://ids.mkpo.li/favicon.svg')).headers.get('cache-control') ?? '').not.toContain('immutable')
   })
 })
+
+describe('a plain-HTTP address', () => {
+  it('moves to the secure one, path and query kept', async () => {
+    const response = await ask('http://ids.mkpo.li/sources?lang=ja')
+    expect(response.status).toBe(301)
+    expect(response.headers.get('location')).toBe('https://ids.mkpo.li/sources?lang=ja')
+  })
+  it('is served as it is on another host, where a local server speaks HTTP', async () => {
+    expect((await ask('http://localhost:8787/')).status).toBe(200)
+  })
+})

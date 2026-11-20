@@ -126,6 +126,11 @@ export default {
   /** @param {Request} request @param {Env} env @param {ExecutionContext} ctx */
   async fetch(request, env, ctx) {
     const url = new URL(request.url)
+    // The site has one scheme: a plain-HTTP address is the same page, so it moves to the secure one.
+    if (url.protocol === 'http:' && url.hostname === 'ids.mkpo.li') {
+      url.protocol = 'https:'
+      return new Response(null, { status: 301, headers: { location: url.href } })
+    }
     // A report leaves the page on its own origin and is handed to the intake Worker, whose routes
     // start at its root. Without that Worker bound, the dialog is told rather than the throw escaping.
     if (url.pathname === '/api/report') {
