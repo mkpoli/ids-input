@@ -64,6 +64,9 @@ for line in open(IVD, encoding='utf-8'):
     base, selector = (int(point, 16) for point in points.split())
     registrations[(base, selector)].append(f'{collection}:{identifier}')
 sequences = sorted(registrations)
+selectors_of = collections.defaultdict(list)
+for base, selector in sequences:
+    selectors_of[base].append(selector)
 
 # BabelStone: each character's IDS by region.
 babelstone = collections.defaultdict(dict)
@@ -152,6 +155,24 @@ def component_char(name, of):
             return None
         text = chr(int(found.group(1), 16))
     return None if text[0] == of else text
+
+
+DIRECT = re.compile(r'u([0-9a-f]{4,6})(?:-[a-z]{1,2})?(?:-var-\d+)?')
+
+
+def component_form(name, text):
+    """A component written as the variation sequence GlyphWiki draws with the very glyph the
+    component is: a glyph used whole (u968a-k, uf9dc), whose drawing a registered sequence of its
+    character shares. A placed glyph (u5468-k01) is drawn for its place and need not match its
+    character's glyph alone, and a reference pinned to a revision (u9053-j@2) may draw an older
+    glyph, so neither has a form. A compatibility ideograph is written by its unified character's
+    sequence. Where several sequences share the glyph, the lowest selector names it."""
+    if len(text) != 1 or '@' in name or not DIRECT.fullmatch(name):
+        return text
+    unified = unicodedata.normalize('NFC', text)
+    drawn = head(name)
+    same = sorted(selector for selector in selectors_of.get(ord(unified), ()) if head(f'u{ord(unified):x}-u{selector:x}') == drawn)
+    return unified + chr(same[0]) if same else text
 
 
 def named_ids(name):
@@ -255,8 +276,9 @@ def arrange(items):
     return operator + outer[1] + inside
 
 
-def components(name, of):
-    """The IDS a GlyphWiki glyph's components give, or None where it has strokes of its own."""
+def components(name, of, forms=False):
+    """The IDS a GlyphWiki glyph's components give, or None where it has strokes of its own; with
+    `forms`, each component written as the variation sequence whose glyph it is, where one is."""
     name = head(name)
     spelled = named_ids(name)
     if spelled:
@@ -271,6 +293,8 @@ def components(name, of):
         box, text = ink(fields[7]), named_ids(head(fields[7])) or component_char(fields[7], of)
         if not box or not text:
             return None
+        if forms:
+            text = component_form(fields[7], text)
         sx, sy = (x2 - x1) / 200, (y2 - y1) / 200
         items.append(((x1 + box[0] * sx, y1 + box[1] * sy, x1 + box[2] * sx, y1 + box[3] * sy), text, fields[7]))
     return arrange(items)
@@ -395,6 +419,9 @@ for base, selector in sequences:
         read = components(gw_name, char)
         if whole(read):
             found.append(('glyphwiki', glyph, 'components', '', read))
+            formed = components(gw_name, char, forms=True)
+            if formed != read and whole(formed):
+                found.append(('glyphwiki', glyph, 'component-forms', '', formed))
     # The fonts.
     for witness in (noto, ipamj):
         drawn = witness['drawn'].get((base, selector))
@@ -456,12 +483,36 @@ for (witness, glyph), members in by_glyph.items():
 by_base = collections.defaultdict(list)
 for record, (base, selector) in zip(records, sequences):
     by_base[base].append((record, (base, selector)))
+def drawn_apart(pair, other_pair):
+    return any(glyph_of[pair].get(w) and glyph_of[other_pair].get(w) and glyph_of[pair][w] != glyph_of[other_pair][w]
+               for w in ('glyphwiki', 'noto', 'ipamj'))
+
+
+# A sequence's finer description also writes its components as the sequences they are drawn as.
+formed_of = {r[0]: r[5] for r in readings if r[3] == 'component-forms'}
+for record in records:
+    formed = formed_of.get(record['sequence'])
+    if record['ids'] and formed and formed != record['ids'] and plain(formed) == plain(record['ids']):
+        record['finer'] = formed
+
+
+def told_apart(text, other):
+    """Whether two descriptions of one shape name different forms of one component: written part
+    for part alike, with two different selectors on one character. A character without a selector
+    is any of its forms."""
+    mine, theirs = TOKEN.findall(text), TOKEN.findall(other)
+    if len(mine) != len(theirs) or any(a[0] != b[0] for a, b in zip(mine, theirs)):
+        return False
+    return any(len(a) == 2 and len(b) == 2 and a != b for a, b in zip(mine, theirs))
+
+
 for siblings in by_base.values():
     for record, pair in siblings:
         record['undistinguished'] = [
             other['sequence'] for other, other_pair in siblings if other is not record and record['ids'] and
-            plain(record['finer'] or record['ids'], True) == plain(other['finer'] or other['ids'], True) and
-            any(glyph_of[pair].get(w) and glyph_of[other_pair].get(w) and glyph_of[pair][w] != glyph_of[other_pair][w] for w in ('glyphwiki', 'noto', 'ipamj'))]
+            plain(record['ids']) == plain(other['ids']) and
+            not told_apart(record['finer'] or record['ids'], other['finer'] or other['ids']) and
+            drawn_apart(pair, other_pair)]
 
 OUT.mkdir(parents=True, exist_ok=True)
 
