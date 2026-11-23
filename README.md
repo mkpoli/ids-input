@@ -1310,8 +1310,8 @@ the kana and Hangul shapes the search reads as component spellings. The files li
 domain (CC0 1.0). Read the files, starting from `manifest.json`; do not scrape the rendered pages.
 
 `data/open-data/ivd/` describes each of the 29,642 sequences of the Ideographic Variation Database by
-an IDS read from GlyphWiki, Noto CJK and IPAmj明朝, also under CC0 1.0; its README gives the method,
-the status of each description and its limits. `scripts/build_ivd_ids.py` builds it.
+an IDS read from GlyphWiki, Noto CJK and IPAmj明朝, its descriptions also under CC0 1.0; its README
+gives the method, the status of each description and its limits. `scripts/build_ivd_ids.py` builds it.
 
 ## The workshop
 

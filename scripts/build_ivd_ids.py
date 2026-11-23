@@ -1,7 +1,7 @@
 """Describe every sequence of the Ideographic Variation Database by an IDS, from three witnesses.
 
 A witness is a drawing of the sequence: GlyphWiki's glyph (whose drawings Jigmo also carries), the
-glyph Noto Sans and Noto Serif CJK map the sequence to, and the glyph IPAmj明朝 maps it to. Each
+glyph Noto Sans CJK maps the sequence to, and the glyph IPAmj明朝 maps it to. Each
 witness reads the sequence two ways where it can:
 
 - `same-glyph`: the witness draws the sequence with the very glyph it draws for an encoded
@@ -9,14 +9,15 @@ witness reads the sequence two ways where it can:
   BabelStone's IDS for that character in that region then describes the sequence.
 - `components`: GlyphWiki builds the glyph from other glyphs, and their characters and places give
   an IDS (u81ed-j is u81ea-j above u5927-04-var-002: ⿱自大). A component that is itself a variation
-  sequence in GlyphWiki stays one (邦 E0105 as ⿰丰󠄁阝).
+  sequence in GlyphWiki stays one (聾 E0103 as ⿱龍󠄂耳). A part around another takes the operator
+  BabelStone writes for it (冂 ⿵); a glyph whose parts fit no operator is left unread.
 
 A sequence's IDS is `agreed` where two witnesses give it, `single` where one does, and empty with
-the status `conflict` or `unread` otherwise. Witnesses are compared with compatibility ideographs
-read as their unified ones and with the selectors inside a description dropped.
+the status `conflict` or `unread` otherwise. Witnesses are compared written out to the ends of
+BabelStone's descriptions, without the selectors inside them, and with ⿳ABC read as ⿱A⿱BC.
 
     uv run --with fonttools python scripts/build_ivd_ids.py IVD_Sequences.txt \\
-      dump_newest_only.txt IDS.TXT NotoSansCJK-Regular.ttc NotoSerifCJK-Regular.ttc ipamjm.ttf
+      dump_newest_only.txt IDS.TXT NotoSansCJK-Regular.ttc ipamjm.ttf
 
 Writes data/open-data/ivd/: sequences.tsv.gz, readings.tsv.gz, relations.tsv.gz and manifest.json.
 """
@@ -24,6 +25,7 @@ import collections
 import gzip
 import hashlib
 import io
+import itertools
 import json
 import re
 import sys
@@ -34,7 +36,7 @@ from fontTools.ttLib import TTCollection, TTFont
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / 'data/open-data/ivd'
-IVD, DUMP, BABELSTONE, NOTO_SANS, NOTO_SERIF, IPAMJ = sys.argv[1:7]
+IVD, DUMP, BABELSTONE, NOTO_SANS, IPAMJ = sys.argv[1:6]
 SELECTOR = range(0xE0100, 0xE01F0)
 # BabelStone's source letters by the GlyphWiki suffix and the Noto face that draws a region's form.
 GW_REGION = {'g': 'G', 'h': 'H', 'm': 'M', 't': 'T', 'j': 'J', 'k': 'K', 'kp': 'P', 'v': 'V', 'u': 'U'}
@@ -75,13 +77,24 @@ for line in open(BABELSTONE, encoding='utf-8-sig'):
             for region in found.group(2):
                 babelstone[fields[1]].setdefault(region, found.group(1))
 
+# The operator BabelStone writes for each part that encloses another (冂 ⿵, 勹 ⿹, 匚 ⿷), where it
+# writes one operator for it in at least nine of ten descriptions.
+ENCLOSING = '⿴⿵⿶⿷⿸⿹⿺⿼⿽'
+around_counts = collections.defaultdict(collections.Counter)
+for regions in babelstone.values():
+    for description in set(regions.values()):
+        if description[0] in ENCLOSING and len(description) > 1:
+            around_counts[description[1]][description[0]] += 1
+enclosure = {part: counts.most_common(1)[0][0] for part, counts in around_counts.items()
+             if counts.most_common(1)[0][1] >= 0.9 * sum(counts.values())}
 
-ARITY = {**dict.fromkeys('⿰⿱⿴⿵⿶⿷⿸⿹⿺⿻', 2), **dict.fromkeys('⿲⿳', 3)}
+ARITY = {**dict.fromkeys('⿰⿱⿴⿵⿶⿷⿸⿹⿺⿻⿼⿽㇯', 2), **dict.fromkeys('⿲⿳', 3), **dict.fromkeys('⿾⿿〾', 1)}
 
 
 def whole(text):
     """Whether `text` is one complete description with an operator: each operator has its parts, and
-    every part is a character, a character with a selector or a numbered component like {48}."""
+    every part is a character, a character with a selector or one of BabelStone's numbered
+    components like {48}."""
     tokens = re.findall(r'\{\d+\}|.[\U000E0100-\U000E01EF]?', text or '')
     if not tokens or tokens[0] not in ARITY or '？' in text:
         return False
@@ -127,21 +140,17 @@ def head(name):
 
 
 def component_char(name, of):
-    """The character a component glyph writes: a variation sequence, a character, or the one
-    GlyphWiki relates it to. A part of the character being described writes nothing."""
+    """The character a component glyph writes: a variation sequence or a character, by its name.
+    A glyph named otherwise, and a part of the character being described, write nothing."""
     name = name.split('@')[0]
     found = re.fullmatch(r'u([0-9a-f]{4,6})-u(e01[0-9a-f]{2})', name)
     if found:
         text = chr(int(found.group(1), 16)) + chr(int(found.group(2), 16))
     else:
         found = re.match(r'u([0-9a-f]{4,6})(?:-|$)', name)
-        rel = related.get(name, 'u3013')
-        if found:
-            text = chr(int(found.group(1), 16))
-        elif rel != 'u3013' and re.fullmatch(r'u[0-9a-f]{4,6}', rel):
-            text = chr(int(rel[1:], 16))
-        else:
+        if not found:
             return None
+        text = chr(int(found.group(1), 16))
     return None if text[0] == of else text
 
 
@@ -191,7 +200,10 @@ TOLERANCE = 12
 
 
 def place(name):
-    found = re.match(r'u[0-9a-f]+-(?:[a-z]+)?(\d\d)', name.split('@')[0])
+    """The place a component's name gives, as in u961d-02 or u4e30-t01; a selector (-ue0101) and a
+    variant number (-var-001) are not places."""
+    name = re.sub(r'-(?:ue01[0-9a-f]{2}|var-\d+)', '', name.split('@')[0])
+    found = re.fullmatch(r'u[0-9a-f]+-(?:[a-z]{1,2})?(\d\d)(?:-.*)?', name)
     return found.group(1) if found else ''
 
 
@@ -228,17 +240,18 @@ def arrange(items):
                     return three + ''.join(parts) if all(parts) else None
                 first, rest = arrange(order[:cuts[0]]), arrange(order[cuts[0]:])
                 return two + first + rest if first and rest else None
+    # One part around the rest: its operator is the one BabelStone writes for it, and the rest lie
+    # within its box. Anything else is left unread.
     outer = around[0] if around else max(items, key=lambda item: (item[0][2] - item[0][0]) * (item[0][3] - item[0][1]))
+    operator = enclosure.get(outer[1][0]) if len(outer[1]) <= 2 else None
     inner = [item for item in items if item is not outer]
-    inside = arrange(inner)
+    inside = arrange(inner) if operator else None
     if not inside:
         return None
     x1, y1, x2, y2 = outer[0]
-    w, h = x2 - x1, y2 - y1
-    open_sides = ''.join(side for side, gap in (
-        ('l', min(i[0][0] for i in inner) - x1), ('t', min(i[0][1] for i in inner) - y1),
-        ('r', x2 - max(i[0][2] for i in inner)), ('b', y2 - max(i[0][3] for i in inner))) if gap < 0.12 * (w if side in 'lr' else h))
-    operator = {'': '⿴', 'b': '⿵', 't': '⿶', 'r': '⿷', 'rb': '⿸', 'lb': '⿹', 'tr': '⿺'}.get(open_sides, '⿻')
+    margin = TOLERANCE
+    if not all(x1 - margin <= i[0][0] and y1 - margin <= i[0][1] and i[0][2] <= x2 + margin and i[0][3] <= y2 + margin for i in inner):
+        return None
     return operator + outer[1] + inside
 
 
@@ -306,24 +319,62 @@ def font_witness(paths, name, region_of):
     return {'name': name, 'drawn': drawn, 'encoded': encoded}
 
 
-noto = font_witness([NOTO_SANS, NOTO_SERIF], 'noto', lambda face: FACE_REGION.get(face.split()[-1]))
+noto = font_witness([NOTO_SANS], 'noto', lambda face: FACE_REGION.get(face.split()[-1]))
 ipamj = font_witness([IPAMJ], 'ipamj', lambda face: 'J')
 
 
-def plain(text):
-    """A description as witnesses are compared: compatibility ideographs read as unified ones, no
-    selector inside it, and every part written out to the end of BabelStone's descriptions (its
-    Japanese one where it has one), so ⿰氵卂 and ⿰氵⿹⺄𠂇 compare equal."""
-    text = ''.join(unicodedata.normalize('NFC', char) for char in text if ord(char) not in SELECTOR)
-    return ''.join(spelled(char, 0) for char in text)
+# BabelStone's numbered components, each with the fragment that writes it out.
+numbered = {}
+for line in (ROOT / 'data/open-data/components.tsv').read_text(encoding='utf-8').splitlines()[1:]:
+    component, _, fragment, _ = line.split('\t')
+    numbered[component] = fragment
+TOKEN = re.compile(r'\{\d+\}|.[\U000E0100-\U000E01EF]?')
 
 
-def spelled(char, depth):
-    found = babelstone.get(char, {})
+def tree(tokens, depth=0):
+    """The next part of a token list as a tree: a leaf, or (operator, parts), with each part written
+    out to the end of BabelStone's descriptions (its Japanese one where it has one) and a numbered
+    component written out by its fragment."""
+    token = tokens.pop(0)
+    if token in ARITY:
+        return (token, [tree(tokens, depth) for _ in range(ARITY[token])])
+    if depth > 20:
+        return token
+    if whole(numbered.get(token)):
+        return tree(TOKEN.findall(numbered[token]), depth + 1)
+    found = babelstone.get(token, {})
     description = found.get('J') or next(iter(found.values()), None)
-    if depth > 20 or not description or description == char or len(description) < 2 or not description[0] in '⿰⿱⿲⿳⿴⿵⿶⿷⿸⿹⿺⿻':
-        return char
-    return ''.join(spelled(part, depth + 1) for part in description)
+    if whole(description) and description != token:
+        return tree(TOKEN.findall(description), depth + 1)
+    return token
+
+
+def canonical(node):
+    """A tree arranged so that ⿳ABC, ⿱A⿱BC and ⿱⿱ABC read alike, as do ⿲ABC and its pairs."""
+    if isinstance(node, str):
+        return node
+    operator, parts = node
+    axis = {'⿱': '⿳', '⿳': '⿳', '⿰': '⿲', '⿲': '⿲'}.get(operator)
+    parts = [canonical(part) for part in parts]
+    if not axis:
+        return (operator, tuple(parts))
+    run = []
+    for part in parts:
+        run += part[1] if isinstance(part, tuple) and part[0] == axis else [part]
+    return (axis, tuple(run))
+
+
+def plain(text, selectors=False):
+    """A description as witnesses are compared: written out to BabelStone's ends and arranged alike,
+    with no selector inside it unless `selectors`. A compatibility ideograph stays itself: 者 U+FA5B
+    has the dot that 者 U+8005 lacks in some regions."""
+    tokens = TOKEN.findall(text)
+    if not selectors:
+        tokens = [token[0] if len(token) == 2 and ord(token[1]) in SELECTOR else token for token in tokens]
+    try:
+        return repr(canonical(tree(tokens)))
+    except IndexError:
+        return text
 
 
 readings, relations, records = [], [], []
@@ -357,32 +408,43 @@ for base, selector in sequences:
                 found.append((witness['name'], f'{file}:{glyph}', 'same-glyph', f'U+{ord(other):04X}({region})', stated(other, region)))
     for witness, glyph, method, anchor, ids in found:
         readings.append((sequence, witness, glyph, method, anchor, ids))
-    # Each witness gives one IDS: its same-glyph readings where they agree, else its components.
+    # Each witness gives one IDS: its same-glyph reading, or where the encoded forms it shares a
+    # glyph with are described apart, the one its components agree with; with no same-glyph reading,
+    # its components. A witness whose same-glyph readings stay apart gives none: it draws forms
+    # BabelStone describes apart with one glyph.
     given = {}
     for witness in ('glyphwiki', 'noto', 'ipamj'):
         mine = [r for r in found if r[0] == witness]
-        transfers = {plain(r[4]) for r in mine if r[2] == 'same-glyph'}
+        transfers = {plain(r[4]): r[4] for r in mine if r[2] == 'same-glyph'}
         read = [r[4] for r in mine if r[2] == 'components']
         if len(transfers) == 1:
-            given[witness] = next(r[4] for r in mine if r[2] == 'same-glyph')
-        elif not transfers and read:
+            given[witness] = next(iter(transfers.values()))
+        elif transfers:
+            agreed = [transfers[plain(text)] for text in read if plain(text) in transfers]
+            if agreed:
+                given[witness] = agreed[0]
+        elif read:
             given[witness] = read[0]
     agreeing = collections.Counter(plain(ids) for ids in given.values())
-    if not given:
-        status, ids = 'unread', ''
-    elif len(agreeing) > 1:
+    if len(agreeing) > 1:
         status, ids = 'conflict', ''
+    elif not given:
+        status, ids = 'unread', ''
     else:
         status = 'agreed' if len(given) > 1 else 'single'
-        ids = next(iter(given.values()))
-    # A finer description: GlyphWiki's components, where they name a component's form and agree.
-    finer = next((r[4] for r in found if r[2] == 'components' and any(ord(c) in SELECTOR for c in r[4]) and plain(r[4]) == plain(ids)), '') if ids else ''
+        # BabelStone's wording where a witness reached one, else the components'.
+        stated_text = [r[4] for r in found if r[2] == 'same-glyph' and r[4] in given.values()]
+        ids = stated_text[0] if stated_text else next(iter(given.values()))
+    # A finer description: GlyphWiki's components, where they name a component's form the IDS
+    # leaves open and otherwise agree.
+    finer = next((r[4] for r in found if r[2] == 'components' and r[4] != ids and any(ord(c) in SELECTOR for c in r[4])
+                  and plain(r[4]) == plain(ids)), '') if ids else ''
     records.append({'sequence': sequence, 'text': char + chr(selector), 'registrations': registrations[(base, selector)],
                     'ids': ids, 'finer': finer, 'status': status, 'witnesses': sorted(given)})
 
 # Two sequences one witness draws with one glyph are one form there.
 for (witness, glyph), members in by_glyph.items():
-    for (b1, s1), (b2, s2) in zip(members, members[1:]):
+    for (b1, s1), (b2, s2) in itertools.combinations(members, 2):
         relations.append((key(b1, s1), 'same-glyph', key(b2, s2), witness, glyph))
 
 # A sequence whose IDS a sibling shares though some witness draws the two differently is not told
@@ -398,7 +460,7 @@ for siblings in by_base.values():
     for record, pair in siblings:
         record['undistinguished'] = [
             other['sequence'] for other, other_pair in siblings if other is not record and record['ids'] and
-            plain(record['finer'] or record['ids']) == plain(other['finer'] or other['ids']) and
+            plain(record['finer'] or record['ids'], True) == plain(other['finer'] or other['ids'], True) and
             any(glyph_of[pair].get(w) and glyph_of[other_pair].get(w) and glyph_of[pair][w] != glyph_of[other_pair][w] for w in ('glyphwiki', 'noto', 'ipamj'))]
 
 OUT.mkdir(parents=True, exist_ok=True)
@@ -424,12 +486,12 @@ with table('relations.tsv.gz') as file:
         file.write('\t'.join(row) + '\n')
 counts = collections.Counter(r['status'] for r in records)
 manifest = {
-    'format': 'ids-input/ivd-ids', 'version': 1, 'licence': 'CC0-1.0',
+    'format': 'ids-input/ivd-ids', 'version': 1, 'licence': {'descriptions': 'CC0-1.0', 'registrations': 'Unicode-3.0'},
     'sequences': len(records), 'registrations': sum(len(v) for v in registrations.values()),
     'status': dict(sorted(counts.items())),
     'finer': sum(bool(r['finer']) for r in records),
     'undistinguished': sum(bool(r['undistinguished']) for r in records),
-    'inputs': {Path(path).name: sha256(path) for path in (IVD, DUMP, BABELSTONE, NOTO_SANS, NOTO_SERIF, IPAMJ)},
+    'inputs': {Path(path).name: sha256(path) for path in (IVD, DUMP, BABELSTONE, NOTO_SANS, IPAMJ)},
 }
 (OUT / 'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 print(json.dumps({k: v for k, v in manifest.items() if k != 'inputs'}, ensure_ascii=False))
