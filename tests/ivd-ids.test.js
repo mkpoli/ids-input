@@ -82,3 +82,18 @@ describe('the IVD readings', () => {
     expect(bySequence.get('3E02 E0100').undistinguished).not.toContain('3E02 E0101')
   })
 })
+
+describe('the forms of components', () => {
+  it('write a component as the sequence GlyphWiki draws it with, to tell siblings apart', () => {
+    expect(bySequence.get('589C E0100').finer).toBe('⿱隊󠄀土')
+    expect(bySequence.get('589C E0101').finer).toBe('⿱隊󠄁土')
+    expect(bySequence.get('589C E0101').undistinguished).toBe('')
+  })
+
+  it('give a finer description only where it names more than the description', () => {
+    for (const row of sequences.filter(row => row.finer)) {
+      expect(row.finer).not.toBe(row.ids)
+      expect([...row.finer].some(char => char.codePointAt(0) >= 0xE0100 && char.codePointAt(0) <= 0xE01EF)).toBe(true)
+    }
+  })
+})

@@ -27,6 +27,12 @@ A witness reads a sequence in two ways:
   the IDS. A component GlyphWiki draws as a variation sequence keeps its selector (聾 E0103 as
   ⿱龍󠄂耳). A part around another takes the operator BabelStone writes for that part (冂 ⿵, 勹 ⿹);
   a glyph whose parts fit no operator gives no reading.
+- `component-forms`: the components reading with each component written as the registered sequence
+  of its character that GlyphWiki draws with the component's own glyph. GlyphWiki names a component
+  by its character, region and place (`u968a-k`, `u97cb-t02`); the glyph of that character and region
+  alone (`u968a-k`, `u97cb-t`) is its form. The 隊 of 墜 E0101 is `u968a-k`, the glyph of 隊 E0101.
+  A placed variant (`u534a-01-var-001`) has no form alone, since a variant number belongs to one
+  name. A compatibility ideograph is written by its unified character's sequence.
 
 A witness gives its `same-glyph` reading. Where it draws forms that BabelStone describes apart with
 one glyph, it gives the one its components agree with, or nothing.
@@ -55,7 +61,7 @@ BabelStone's one entry for it. `manifest.json` counts each status.
 | `text` | The sequence as text. |
 | `registrations` | Each collection that registers it, with its identifier, `Moji_Joho:MJ030291`. |
 | `ids` | The description, in BabelStone's wording where a witness reached it; empty for `conflict` and `unread`. |
-| `finer` | GlyphWiki's description where it writes a component as a variation sequence and otherwise agrees: 膐 E0100 is ⿱旅肉, finer ⿱旅󠄁肉. |
+| `finer` | The description with a component written as the variation sequence it is drawn as, where it otherwise agrees: 膐 E0100 is ⿱旅肉, finer ⿱旅󠄁肉. It is given where GlyphWiki draws the component with a sequence's glyph, and where the forms of a component tell siblings apart (墜 E0100 ⿱隊󠄀土, 墜 E0101 ⿱隊󠄁土). |
 | `status` | As above. |
 | `witnesses` | The witnesses that gave an IDS. |
 | `undistinguished` | Sequences of the same base, separated by `;`, that a witness draws with another glyph though their descriptions, `finer` included, are the same. |
@@ -96,11 +102,12 @@ The release holds no outline from any font, only which glyph a font maps a seque
 
 ## Limits
 
-- 8,370 sequences share their description with a sibling a witness draws otherwise. Their glyphs
+- 5,102 sequences share their description, `finer` included, with a sibling a witness draws otherwise. Their glyphs
   differ, often in a component's form (the 半 of 叛, the 交 of 騃), which a component-level IDS does
   not write; some may be readings the components reader got wrong.
 - GlyphWiki's drawings are edited by its users; where GlyphWiki is the only witness the status is
-  `single`.
+  `single`. A component's form in `finer` rests on GlyphWiki alone, and a placed component is taken
+  to be the form of the glyph its name gives alone.
 - BabelStone describes a character's form in a region, which a font's glyph for that region need not
   follow.
 - The components reader is checked against BabelStone on the regional glyphs of encoded characters,
