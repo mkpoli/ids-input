@@ -1,0 +1,25 @@
+{
+  "format": "ids-input/ivd-ids",
+  "version": 1,
+  "licence": {
+    "descriptions": "CC0-1.0",
+    "registrations": "Unicode-3.0"
+  },
+  "sequences": 29642,
+  "registrations": 39509,
+  "status": {
+    "agreed": 16245,
+    "conflict": 305,
+    "single": 9752,
+    "unread": 3340
+  },
+  "finer": 221,
+  "undistinguished": 8370,
+  "inputs": {
+    "IVD_Sequences.txt": "2b466659c2bfde1c52e60bd9fc883ab14dfa5c583df024b80352420265d2cd87",
+    "dump_newest_only.txt": "5619d42567f3b75c15debe909d2ec50caeed34d50d9218710d4b1ad1622a8b9d",
+    "IDS.TXT": "cc2a0a97e6a51ed6ebe59870ef2af66e83f3c3c27387d79b4441bb2d791d78b1",
+    "NotoSansCJK-Regular.ttc": "b76b0433203017ca80401b2ee0dd69350349871c4b19d504c34dbdd80541690a",
+    "ipamjm.ttf": "a3e84f495f3c388db7a1473bf1985c1c076d0c814100f10a027ca6853eb1e8cb"
+  }
+}
