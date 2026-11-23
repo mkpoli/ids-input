@@ -75,7 +75,7 @@ describe('the IVD readings', () => {
 
   it('read stacked and nested descriptions alike', () => {
     expect(bySequence.get('5BDA E0100')).toMatchObject({ ids: '⿳宀王缶', status: 'agreed' })
-    expect(bySequence.get('8190 E0100')).toMatchObject({ ids: '⿱旅肉', finer: '⿱旅󠄁肉', status: 'agreed' })
+    expect(bySequence.get('8190 E0100')).toMatchObject({ ids: '⿱旅肉', finer: '⿱旅󠄁肉󠄀', status: 'agreed' })
   })
 
   it('tell siblings apart by their finer description', () => {
@@ -84,10 +84,17 @@ describe('the IVD readings', () => {
 })
 
 describe('the forms of components', () => {
-  it('write a component as the sequence GlyphWiki draws it with, to tell siblings apart', () => {
+  it('write a component used whole as the sequence drawn with its glyph, telling siblings apart', () => {
     expect(bySequence.get('589C E0100').finer).toBe('⿱隊󠄀土')
     expect(bySequence.get('589C E0101').finer).toBe('⿱隊󠄁土')
     expect(bySequence.get('589C E0101').undistinguished).toBe('')
+    expect(bySequence.get('4183 E0100').undistinguished).not.toContain('4183 E0101')
+  })
+
+  it('give no form to a placed glyph or a pinned reference, which stays any form', () => {
+    expect(bySequence.get('34EE E0100').finer).toBe('')
+    expect(bySequence.get('4183 E0102').finer).toBe('')
+    expect(bySequence.get('4183 E0102').undistinguished.split(';')).toEqual(['4183 E0100', '4183 E0101'])
   })
 
   it('give a finer description only where it names more than the description', () => {

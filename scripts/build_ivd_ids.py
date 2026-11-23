@@ -157,24 +157,20 @@ def component_char(name, of):
     return None if text[0] == of else text
 
 
-FORM_NAME = re.compile(r'u([0-9a-f]{4,6})(?:-([a-z]{1,2}))?(\d\d)?(?:-(var-\d+))?')
+DIRECT = re.compile(r'u([0-9a-f]{4,6})(?:-[a-z]{1,2})?(?:-var-\d+)?')
 
 
 def component_form(name, text):
-    """A component written as the variation sequence whose glyph it is. GlyphWiki names a component
-    by its character, region and place (u968a-k, u97cb-t02): the glyph of that character and region
-    alone is the component's form, and a registered sequence GlyphWiki draws with that glyph names
-    it. A variant number belongs to one name, so a placed variant (u534a-01-var-001) has no form
-    alone. A compatibility ideograph is written by its unified character's sequence."""
-    found = FORM_NAME.fullmatch(name.split('@')[0])
-    if len(text) != 1 or not found or (found.group(3) and found.group(4)):
-        return text
-    code, region, _, variant = found.groups()
-    alone = f'u{code}' + (f'-{region}' if region else '') + (f'-{variant}' if variant else '')
-    if alone not in glyphs:
+    """A component written as the variation sequence GlyphWiki draws with the very glyph the
+    component is: a glyph used whole (u968a-k, uf9dc), whose drawing a registered sequence of its
+    character shares. A placed glyph (u5468-k01) is drawn for its place and need not match its
+    character's glyph alone, and a reference pinned to a revision (u9053-j@2) may draw an older
+    glyph, so neither has a form. A compatibility ideograph is written by its unified character's
+    sequence. Where several sequences share the glyph, the lowest selector names it."""
+    if len(text) != 1 or '@' in name or not DIRECT.fullmatch(name):
         return text
     unified = unicodedata.normalize('NFC', text)
-    drawn = head(alone)
+    drawn = head(name)
     same = sorted(selector for selector in selectors_of.get(ord(unified), ()) if head(f'u{ord(unified):x}-u{selector:x}') == drawn)
     return unified + chr(same[0]) if same else text
 
@@ -492,27 +488,30 @@ def drawn_apart(pair, other_pair):
                for w in ('glyphwiki', 'noto', 'ipamj'))
 
 
-# Siblings drawn apart under one description are told apart by their components' forms, where
-# those differ and the description stands.
+# A sequence's finer description also writes its components as the sequences they are drawn as.
 formed_of = {r[0]: r[5] for r in readings if r[3] == 'component-forms'}
-for siblings in by_base.values():
-    for (record, pair), (other, other_pair) in itertools.combinations(siblings, 2):
-        if not (record['ids'] and other['ids'] and drawn_apart(pair, other_pair)):
-            continue
-        if plain(record['finer'] or record['ids'], True) != plain(other['finer'] or other['ids'], True):
-            continue
-        mine, theirs = formed_of.get(record['sequence']), formed_of.get(other['sequence'])
-        candidates = [(record, mine or record['finer'] or record['ids']), (other, theirs or other['finer'] or other['ids'])]
-        if (mine or theirs) and plain(candidates[0][1], True) != plain(candidates[1][1], True) and \
-                all(plain(text) == plain(row['ids']) for row, text in candidates):
-            for row, text in candidates:
-                if text != row['ids']:
-                    row['finer'] = text
+for record in records:
+    formed = formed_of.get(record['sequence'])
+    if record['ids'] and formed and formed != record['ids'] and plain(formed) == plain(record['ids']):
+        record['finer'] = formed
+
+
+def told_apart(text, other):
+    """Whether two descriptions of one shape name different forms of one component: written part
+    for part alike, with two different selectors on one character. A character without a selector
+    is any of its forms."""
+    mine, theirs = TOKEN.findall(text), TOKEN.findall(other)
+    if len(mine) != len(theirs) or any(a[0] != b[0] for a, b in zip(mine, theirs)):
+        return False
+    return any(len(a) == 2 and len(b) == 2 and a != b for a, b in zip(mine, theirs))
+
+
 for siblings in by_base.values():
     for record, pair in siblings:
         record['undistinguished'] = [
             other['sequence'] for other, other_pair in siblings if other is not record and record['ids'] and
-            plain(record['finer'] or record['ids'], True) == plain(other['finer'] or other['ids'], True) and
+            plain(record['ids']) == plain(other['ids']) and
+            not told_apart(record['finer'] or record['ids'], other['finer'] or other['ids']) and
             drawn_apart(pair, other_pair)]
 
 OUT.mkdir(parents=True, exist_ok=True)

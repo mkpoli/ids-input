@@ -27,12 +27,13 @@ A witness reads a sequence in two ways:
   the IDS. A component GlyphWiki draws as a variation sequence keeps its selector (聾 E0103 as
   ⿱龍󠄂耳). A part around another takes the operator BabelStone writes for that part (冂 ⿵, 勹 ⿹);
   a glyph whose parts fit no operator gives no reading.
-- `component-forms`: the components reading with each component written as the registered sequence
-  of its character that GlyphWiki draws with the component's own glyph. GlyphWiki names a component
-  by its character, region and place (`u968a-k`, `u97cb-t02`); the glyph of that character and region
-  alone (`u968a-k`, `u97cb-t`) is its form. The 隊 of 墜 E0101 is `u968a-k`, the glyph of 隊 E0101.
-  A placed variant (`u534a-01-var-001`) has no form alone, since a variant number belongs to one
-  name. A compatibility ideograph is written by its unified character's sequence.
+- `component-forms`: the components reading with each component written as the variation
+  sequence GlyphWiki draws with the very glyph the component is. That holds for a glyph used whole
+  (`u968a-k`, `uf9dc`): the 隊 of 墜 E0101 is `u968a-k`, the glyph of 隊 E0101. A glyph drawn for its
+  place (`u5468-k01`) need not match its character's glyph alone, and a reference pinned to a
+  revision (`u9053-j@2`) may draw an older glyph, so neither gets a form. A compatibility ideograph is
+  written by its unified character's sequence, and where several sequences share the glyph the lowest
+  selector names it.
 
 A witness gives its `same-glyph` reading. Where it draws forms that BabelStone describes apart with
 one glyph, it gives the one its components agree with, or nothing.
@@ -61,10 +62,10 @@ BabelStone's one entry for it. `manifest.json` counts each status.
 | `text` | The sequence as text. |
 | `registrations` | Each collection that registers it, with its identifier, `Moji_Joho:MJ030291`. |
 | `ids` | The description, in BabelStone's wording where a witness reached it; empty for `conflict` and `unread`. |
-| `finer` | The description with a component written as the variation sequence it is drawn as, where it otherwise agrees: 膐 E0100 is ⿱旅肉, finer ⿱旅󠄁肉. It is given where GlyphWiki draws the component with a sequence's glyph, and where the forms of a component tell siblings apart (墜 E0100 ⿱隊󠄀土, 墜 E0101 ⿱隊󠄁土). |
+| `finer` | The description with its components written as the variation sequences they are drawn as, where it otherwise agrees: 膐 E0100 is ⿱旅肉, finer ⿱旅󠄁肉󠄀; 墜 E0100 is ⿱隊󠄀土 and 墜 E0101 ⿱隊󠄁土. |
 | `status` | As above. |
 | `witnesses` | The witnesses that gave an IDS. |
-| `undistinguished` | Sequences of the same base, separated by `;`, that a witness draws with another glyph though their descriptions, `finer` included, are the same. |
+| `undistinguished` | Sequences of the same base, separated by `;`, that a witness draws with another glyph though their descriptions are the same and no component carries two different selectors in their `finer` descriptions. A character without a selector stands for any of its forms. |
 
 `readings.tsv.gz` holds each reading: `sequence`, `witness`, `glyph` (the GlyphWiki name or the font
 file and glyph), `method`, `anchor` (the encoded character and region of a `same-glyph` reading) and
@@ -102,12 +103,11 @@ The release holds no outline from any font, only which glyph a font maps a seque
 
 ## Limits
 
-- 5,102 sequences share their description, `finer` included, with a sibling a witness draws otherwise. Their glyphs
+- 8,484 sequences are not told apart from a sibling a witness draws otherwise. Their glyphs
   differ, often in a component's form (the 半 of 叛, the 交 of 騃), which a component-level IDS does
   not write; some may be readings the components reader got wrong.
 - GlyphWiki's drawings are edited by its users; where GlyphWiki is the only witness the status is
-  `single`. A component's form in `finer` rests on GlyphWiki alone, and a placed component is taken
-  to be the form of the glyph its name gives alone.
+  `single`. A component's form in `finer` rests on GlyphWiki alone.
 - BabelStone describes a character's form in a region, which a font's glyph for that region need not
   follow.
 - The components reader is checked against BabelStone on the regional glyphs of encoded characters,
