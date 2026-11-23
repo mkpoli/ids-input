@@ -26,6 +26,8 @@ The 8 Small Seal descriptions come from CHISE's GPL-2.0-or-later data. They stay
 | `equivalences.tsv` | The same table, one row per shape family. |
 | `manifest.json` | Counts and file sizes, read by the site page. |
 
+The IDS of the Ideographic Variation Database's sequences are a dataset of their own, in `ivd/`.
+
 ## Use the files
 
 Start from `manifest.json` and read the JSON or TSV it lists. The release is the data; the
