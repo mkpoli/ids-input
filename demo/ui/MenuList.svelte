@@ -26,7 +26,7 @@
     if (mode === 'unencoded' && !item.unencoded) return false
     const needle = query.trim().toLowerCase()
     if (!needle) return true
-    return [item.sequence, item.label, item.leading, item.reading, item.note].filter(Boolean).join(' ').toLowerCase().includes(needle)
+    return [item.sequence, item.label, item.leading, item.reading, item.noteLink?.label, item.note].filter(Boolean).join(' ').toLowerCase().includes(needle)
   }
   const visible = $derived(items.filter(matches))
   const groups = $derived.by(() => {
@@ -144,27 +144,52 @@
 {/snippet}
 
 {#snippet cardItem(item)}
-  <button type="button" class="ui-menu-item card" disabled={item.disabled}
-    aria-label={item.sequence !== undefined && item.reading === undefined ? `${item.leading ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
-    title={item.hint} onclick={() => { openSubmenu = -1; onpick?.(); item.run?.() }}>
-    {#if item.drawing?.d || item.drawing?.emoji?.length}
-      <svg class="card-art" viewBox="0 0 1000 1000" aria-hidden="true">
-        {#if item.drawing.d}<path d={item.drawing.d} />{/if}
-        {#each item.drawing.emoji ?? [] as text}
-          <text x={text.box[0] + text.box[2] / 2} y={text.box[1] + text.box[3] / 2} text-anchor="middle" dominant-baseline="central"
-            font-size={Math.max(0, Math.min(text.box[2], text.box[3]) * 0.85)}
-            font-family="system-ui, sans-serif">{text.text}</text>
-        {/each}
-      </svg>
-    {:else}
-      <span class="card-glyph" lang={item.lang}>{item.leading ?? item.sequence ?? item.label}</span>
-    {/if}
-    <span class="card-text">
-      {#if item.reading !== undefined && item.leading !== undefined}<span class="sr" lang={item.lang}>{item.leading}</span>{/if}
-      <span class="card-label" lang={item.lang}>{item.sequence ?? item.label}</span>
-      {#if item.note !== undefined || item.reading !== undefined}<span class="card-note" class:unencoded={item.unencoded}>{#if item.reading !== undefined}<span lang={item.readingLang}>{item.reading}</span>{' · '}{/if}{item.note}</span>{/if}
-    </span>
-  </button>
+  {#if item.noteLink}
+    <div class="ui-menu-item card card-linked" class:is-disabled={item.disabled}>
+      <button type="button" class="card-hit" disabled={item.disabled}
+        aria-label={[item.leading, item.sequence ?? item.label, item.reading, item.noteLink.label, item.note].filter(Boolean).join(' ')}
+        title={item.hint} onclick={() => { openSubmenu = -1; onpick?.(); item.run?.() }}></button>
+      {#if item.drawing?.d || item.drawing?.emoji?.length}
+        <svg class="card-art" viewBox="0 0 1000 1000" aria-hidden="true">
+          {#if item.drawing.d}<path d={item.drawing.d} />{/if}
+          {#each item.drawing.emoji ?? [] as text}
+            <text x={text.box[0] + text.box[2] / 2} y={text.box[1] + text.box[3] / 2} text-anchor="middle" dominant-baseline="central"
+              font-size={Math.max(0, Math.min(text.box[2], text.box[3]) * 0.85)}
+              font-family="system-ui, sans-serif">{text.text}</text>
+          {/each}
+        </svg>
+      {:else}
+        <span class="card-glyph" lang={item.lang}>{item.leading ?? item.sequence ?? item.label}</span>
+      {/if}
+      <span class="card-text">
+        {#if item.reading !== undefined && item.leading !== undefined}<span class="sr" lang={item.lang}>{item.leading}</span>{/if}
+        <span class="card-label" lang={item.lang}>{item.sequence ?? item.label}</span>
+        <span class="card-note">{#if item.reading !== undefined}<span lang={item.readingLang}>{item.reading}</span>{' · '}{/if}<a class="note-link" href={item.noteLink.href} target="_blank" rel="noopener noreferrer" title={item.noteLink.title}>{item.noteLink.label}<span class="out" aria-hidden="true">↗</span></a>{#if item.note}{' '}{item.note}{/if}</span>
+      </span>
+    </div>
+  {:else}
+    <button type="button" class="ui-menu-item card" disabled={item.disabled}
+      aria-label={item.sequence !== undefined && item.reading === undefined ? `${item.leading ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
+      title={item.hint} onclick={() => { openSubmenu = -1; onpick?.(); item.run?.() }}>
+      {#if item.drawing?.d || item.drawing?.emoji?.length}
+        <svg class="card-art" viewBox="0 0 1000 1000" aria-hidden="true">
+          {#if item.drawing.d}<path d={item.drawing.d} />{/if}
+          {#each item.drawing.emoji ?? [] as text}
+            <text x={text.box[0] + text.box[2] / 2} y={text.box[1] + text.box[3] / 2} text-anchor="middle" dominant-baseline="central"
+              font-size={Math.max(0, Math.min(text.box[2], text.box[3]) * 0.85)}
+              font-family="system-ui, sans-serif">{text.text}</text>
+          {/each}
+        </svg>
+      {:else}
+        <span class="card-glyph" lang={item.lang}>{item.leading ?? item.sequence ?? item.label}</span>
+      {/if}
+      <span class="card-text">
+        {#if item.reading !== undefined && item.leading !== undefined}<span class="sr" lang={item.lang}>{item.leading}</span>{/if}
+        <span class="card-label" lang={item.lang}>{item.sequence ?? item.label}</span>
+        {#if item.note !== undefined || item.reading !== undefined}<span class="card-note" class:unencoded={item.unencoded}>{#if item.reading !== undefined}<span lang={item.readingLang}>{item.reading}</span>{' · '}{/if}{item.note}</span>{/if}
+      </span>
+    </button>
+  {/if}
 {/snippet}
 
 <!-- Inline disclosure: the trigger uses aria-expanded and aria-controls for the group. -->
@@ -188,19 +213,36 @@
 {/snippet}
 
 {#snippet listRow(item)}
-  <button type="button" class="ui-menu-item item" class:rich={item.sequence !== undefined}
-    disabled={item.disabled} aria-label={item.sequence !== undefined && item.reading === undefined ? `${item.leading ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
-    title={item.hint} onclick={() => { openSubmenu = -1; onpick?.(); item.run?.() }}>
-    {#if item.leading !== undefined}
-      <span class="leading" lang={item.lang}>{item.leading}</span>
-    {:else if item.sequence !== undefined}
-      <span class="leading spacer" aria-hidden="true"></span>
-    {:else}
-      <span class="mark">{#if item.checked}<Icon name="check" size={14} />{:else if item.icon}<Icon name={item.icon} size={16} />{/if}</span>
-    {/if}
-    <span class="label" lang={item.lang}>{item.sequence ?? item.label}</span>
-    {#if item.note !== undefined || item.reading !== undefined}<span class="note" class:unencoded={item.unencoded}>{#if item.reading !== undefined}<span lang={item.readingLang}>{item.reading}</span>{' · '}{/if}{item.note}</span>{/if}
-  </button>
+  {#if item.noteLink}
+    <div class="ui-menu-item item item-linked" class:rich={item.sequence !== undefined} class:is-disabled={item.disabled}>
+      <button type="button" class="item-hit" disabled={item.disabled}
+        aria-label={[item.leading, item.sequence ?? item.label, item.reading, item.noteLink.label, item.note].filter(Boolean).join(' ')}
+        title={item.hint} onclick={() => { openSubmenu = -1; onpick?.(); item.run?.() }}></button>
+      {#if item.leading !== undefined}
+        <span class="leading" lang={item.lang}>{item.leading}</span>
+      {:else if item.sequence !== undefined}
+        <span class="leading spacer" aria-hidden="true"></span>
+      {:else}
+        <span class="mark">{#if item.checked}<Icon name="check" size={14} />{:else if item.icon}<Icon name={item.icon} size={16} />{/if}</span>
+      {/if}
+      <span class="label" lang={item.lang}>{item.sequence ?? item.label}</span>
+      <span class="note">{#if item.reading !== undefined}<span lang={item.readingLang}>{item.reading}</span>{' · '}{/if}<a class="note-link" href={item.noteLink.href} target="_blank" rel="noopener noreferrer" title={item.noteLink.title}>{item.noteLink.label}<span class="out" aria-hidden="true">↗</span></a>{#if item.note}{' '}{item.note}{/if}</span>
+    </div>
+  {:else}
+    <button type="button" class="ui-menu-item item" class:rich={item.sequence !== undefined}
+      disabled={item.disabled} aria-label={item.sequence !== undefined && item.reading === undefined ? `${item.leading ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
+      title={item.hint} onclick={() => { openSubmenu = -1; onpick?.(); item.run?.() }}>
+      {#if item.leading !== undefined}
+        <span class="leading" lang={item.lang}>{item.leading}</span>
+      {:else if item.sequence !== undefined}
+        <span class="leading spacer" aria-hidden="true"></span>
+      {:else}
+        <span class="mark">{#if item.checked}<Icon name="check" size={14} />{:else if item.icon}<Icon name={item.icon} size={16} />{/if}</span>
+      {/if}
+      <span class="label" lang={item.lang}>{item.sequence ?? item.label}</span>
+      {#if item.note !== undefined || item.reading !== undefined}<span class="note" class:unencoded={item.unencoded}>{#if item.reading !== undefined}<span lang={item.readingLang}>{item.reading}</span>{' · '}{/if}{item.note}</span>{/if}
+    </button>
+  {/if}
 {/snippet}
 
 <div class="list" role="group" aria-label={label} bind:this={root}>
@@ -299,5 +341,16 @@
   .card-label{font-family:var(--cjk);font-size:10.5px;line-height:1.35;color:var(--ui-color-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .card-note{color:var(--ui-color-ink-muted);font:var(--ui-weight-medium) 9.5px/1.4 var(--ui-font-mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .card-note.unencoded{font:inherit;font-size:10px;font-style:italic}
+  .card-linked,.item-linked{position:relative}
+  .card-linked.is-disabled,.item-linked.is-disabled{opacity:var(--ui-disabled-opacity);cursor:not-allowed}
+  .card-hit,.item-hit{position:absolute;inset:0;padding:0;border:0;border-radius:inherit;background:none;cursor:pointer}
+  .card-hit:disabled,.item-hit:disabled{cursor:not-allowed}
+  .card-hit:focus-visible,.item-hit:focus-visible{outline:var(--ui-ring-width) solid var(--ui-color-focus);outline-offset:calc(-1 * var(--ui-ring-width))}
+  .card-linked:not(.is-disabled):has(.card-hit:is(:hover,:focus-visible)),.item-linked:not(.is-disabled):has(.item-hit:is(:hover,:focus-visible)){background:var(--ui-color-surface-hover)}
+  .card-linked > :not(.card-hit),.item-linked > :not(.item-hit){position:relative;pointer-events:none}
+  .note-link{position:relative;z-index:1;pointer-events:auto;color:var(--ui-color-accent);text-decoration:none}
+  .note-link:hover{text-decoration:underline;text-underline-offset:2px}
+  .note-link:focus-visible{outline:var(--ui-ring-width) solid var(--ui-color-focus);outline-offset:1px;border-radius:var(--ui-radius-xs)}
+  .note-link .out{margin-inline-start:1px;font-size:.9em}
   .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 </style>
