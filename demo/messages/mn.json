@@ -929,5 +929,6 @@
   "page.compare.description": "Кодчилогдоогүй бодит толгой үгс дээр ижил IDS-ээр KAGE-ийн угсарсан дүрсийн дэргэд үүсгэсэн дүрсүүд: IDS Workshop-ийн бүтээгч KAGE-тэй хаана таарч, хаана зөрж байгааг харьцуулна.",
   "page.font-compare.description": "Ижил тэмдэгт болон дүрслэлүүдийг уг урлангийн Sans, Serif, Fangsong, Regular болон Pen таван хэвээр зурсан байдал.",
   "page.font-mixer.description": "Тэмдэгтийг уг урлангийн таван хэвийн (Sans, Serif, Fangsong, Regular, Pen) хооронд уусган хольж, уг хольцыг аялал мэт тоглуулах.",
-  "page.engines.description": "IDS дүрс бүтээх хөдөлгүүрүүдийн боломжуудын харьцуулалт: IDS Workshop, KAGE, GlyphWiki, zi.tools, yedict, Mojidata, MetaHan болон CHISE."
+  "page.engines.description": "IDS дүрс бүтээх хөдөлгүүрүүдийн боломжуудын харьцуулалт: IDS Workshop, KAGE, GlyphWiki, zi.tools, yedict, Mojidata, MetaHan болон CHISE.",
+  "app.rcc.open": "Rare Character Compendium дээр {code} нээх"
 }

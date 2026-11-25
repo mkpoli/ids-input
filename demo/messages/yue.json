@@ -929,5 +929,6 @@
   "page.compare.description": "以真實嘅未編碼字頭為例，將同一IDS由本工坊產生嘅字形同KAGE組字結果並排比較，呈現IDS工坊組字器同KAGE一致同唔同之處。",
   "page.font-compare.description": "將同一組漢字同描述以工坊嘅黑體、宋體、仿宋、正楷、文楷五種字體並排繪製。",
   "page.font-mixer.description": "喺工坊嘅黑體、宋體、仿宋、正楷、文楷五種字體之間混合字形，並沿路線播放混合過程。",
-  "page.engines.description": "比較IDS字形引擎嘅功能：IDS工坊、KAGE、GlyphWiki、zi.tools、yedict、Mojidata、MetaHan同CHISE。"
+  "page.engines.description": "比較IDS字形引擎嘅功能：IDS工坊、KAGE、GlyphWiki、zi.tools、yedict、Mojidata、MetaHan同CHISE。",
+  "app.rcc.open": "喺Rare Character Compendium打開{code}"
 }

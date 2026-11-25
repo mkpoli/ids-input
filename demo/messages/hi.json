@@ -929,5 +929,6 @@
   "page.compare.description": "वास्तविक अनएन्कोडेड शीर्ष शब्दों से, एक ही IDS के KAGE संयोजन के बगल में निर्मित ग्लिफ़: कहाँ IDS Workshop का संयोजक KAGE से सहमत है और कहाँ नहीं।",
   "page.font-compare.description": "वही वर्ण और विवरण वर्कशॉप के पाँच टाइपफ़ेस में बनाए गए: Sans, Serif, Fangsong, Regular और Pen।",
   "page.font-mixer.description": "वर्कशॉप के पाँच टाइपफ़ेस (Sans, Serif, Fangsong, Regular और Pen) के बीच किसी वर्ण को ब्लेंड करें और इस ब्लेंड को टूर के रूप में चलाएँ।",
-  "page.engines.description": "IDS ग्लिफ़ इंजनों की विशेषताओं की तुलना: IDS Workshop, KAGE, GlyphWiki, zi.tools, yedict, Mojidata, MetaHan और CHISE।"
+  "page.engines.description": "IDS ग्लिफ़ इंजनों की विशेषताओं की तुलना: IDS Workshop, KAGE, GlyphWiki, zi.tools, yedict, Mojidata, MetaHan और CHISE।",
+  "app.rcc.open": "Rare Character Compendium पर {code} खोलें"
 }
