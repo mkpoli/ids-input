@@ -143,5 +143,6 @@ a.font-choice{text-decoration:none}
 .font-choice:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}
 @media (max-width:1100px){:is(.bar,.large-bar) .font-choice .wide{display:none}}
 
-/* Thai needs a shaping font; the bundled fallback draws its letters one by one. */
+/* Devanagari and Thai need a shaping font; the bundled fallback draws their letters one by one. */
+:root:lang(hi) { --ids-glyph-fallback: 'Noto Sans Devanagari', 'Noto Sans Devanagari UI', 'Nirmala UI', 'Kohinoor Devanagari', 'Devanagari Sangam MN', 'Jigmo', 'Jigmo2', 'Jigmo3', 'Plangothic P1', 'Plangothic P2', var(--fallback-font, 'IDS Fallback'); }
 :root:lang(th) { --ids-glyph-fallback: 'Noto Sans Thai', 'Noto Sans Thai UI', 'Noto Looped Thai UI', 'Leelawadee UI', 'Thonburi', 'Tahoma', 'Jigmo', 'Jigmo2', 'Jigmo3', 'Plangothic P1', 'Plangothic P2', var(--fallback-font, 'IDS Fallback'); }
