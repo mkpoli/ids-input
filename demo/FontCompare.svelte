@@ -10,6 +10,7 @@
   import { composerPreview } from '@han-compose/composer'
   import { COMPOSER_BASES } from './lib/composer.js'
   import { EXAMPLES } from './lib/examples.js'
+  import { RCC_ORIGIN, rccCode, rccUrl } from './lib/rcc.js'
   import { createIconDrawings } from './lib/icons.js'
   import engineOutlines from 'ids-engine-outlines'
   import qianziwen from './lib/font-compare/qianziwen.json'
@@ -43,7 +44,7 @@
     return /** @type {ReturnType<typeof createIconDrawings>} */ (drawings.get(style))
   }
 
-  /** @typedef {{ key: string, sequence: string, note: string }} Row */
+  /** @typedef {{ key: string, sequence: string, note: string, rcc?: number }} Row */
   const SETS = [
     {
       id: 'qianziwen', label: 'fontCompare.set.qianziwen', rows: qianziwen.characters.map((char, index) => ({
@@ -57,12 +58,12 @@
     },
     {
       id: 'examples', label: 'fontCompare.set.examples', rows: EXAMPLES.map((example, index) => ({
-        key: `example-${index}`, sequence: example.sequence, note: example.char ?? '',
+        key: `example-${index}`, sequence: example.sequence, note: example.char ?? '', rcc: !example.char ? example.rcc : undefined,
       })),
     },
     {
       id: 'unencoded', label: 'fontCompare.set.unencoded', rows: unencoded.map(entry => ({
-        key: `unencoded-${entry.id}`, sequence: entry.ids ?? '', note: `#${entry.id}${entry.status ? ` · ${entry.status}` : ''}`,
+        key: `unencoded-${entry.id}`, sequence: entry.ids ?? '', note: entry.status ?? '', rcc: entry.status === 'encoded' ? undefined : entry.id,
       })),
     },
   ].map(set => ({ ...set, rows: set.rows.filter(row => row.sequence) }))
@@ -128,7 +129,9 @@
         <div class="row" role="row">
           <span class="label" role="rowheader">
             <b lang="zh">{row.sequence}</b>
-            {#if row.note}<small>{row.note}</small>{/if}
+            {#if row.rcc || row.note}
+              <small>{#if row.rcc}<a class="rcc-link" href={rccUrl(row.rcc, locale)} target="_blank" rel="noopener noreferrer" title={t('app.rcc.open', { code: rccCode(row.rcc) })}>{rccCode(row.rcc)}<span aria-hidden="true">↗</span></a>{#if row.note}{' · '}{/if}{/if}{row.note}</small>
+            {/if}
           </span>
           {#each FACES as face (face.key)}
             <span class="cell" role="cell">
@@ -149,7 +152,7 @@
       {t('fontCompare.source')}
       <a href="https://zh.wikisource.org/wiki/千字文" target="_blank" rel="noreferrer">千字文</a>
       {#each poems as poem (poem.title)}· <a href={poem.url} target="_blank" rel="noreferrer">{poem.title}</a>{/each}
-      · <a href="https://gaiji.glyphatlas.org" target="_blank" rel="noreferrer">unencoded-db</a>
+      · <a href={RCC_ORIGIN} target="_blank" rel="noreferrer">Rare Character Compendium</a>
     </p>
   </main>
 </div>
@@ -171,6 +174,9 @@
   .label{display:flex;flex-direction:column;gap:2px;padding:8px 6px 8px 10px;min-width:0}
   .label b{font-size:20px;font-weight:500}
   .label small{font-size:10px;color:var(--ui-color-ink-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .label .rcc-link{color:var(--ui-color-accent);font-family:var(--ui-font-mono);text-decoration:none}
+  .label .rcc-link:hover{text-decoration:underline;text-underline-offset:2px}
+  .label .rcc-link:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px;border-radius:var(--ui-radius-xs)}
   .cell{padding:4px;min-width:0;border-inline-start:1px solid var(--ui-color-border-faint)}
   .source{max-width:80ch;margin:18px 0 0;font-size:11px;line-height:1.6;color:var(--ui-color-ink-muted)}
   .source a{color:var(--ui-color-accent);text-decoration:none}

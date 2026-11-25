@@ -929,5 +929,6 @@
   "page.compare.description": "Glifos generados junto a la composición de KAGE para la misma IDS, a partir de lemas reales sin codificar: dónde coincide el compositor de IDS Workshop con KAGE y dónde difiere.",
   "page.font-compare.description": "Los mismos caracteres y descripciones dibujados con las cinco tipografías del taller: Sans, Serif, Fangsong, Regular y Pen.",
   "page.font-mixer.description": "Mezcla un carácter entre las cinco tipografías del taller (Sans, Serif, Fangsong, Regular y Pen) y reproduce la mezcla como un recorrido.",
-  "page.engines.description": "Comparativa de funciones de los motores de glifos IDS: IDS Workshop, KAGE, GlyphWiki, zi.tools, yedict, Mojidata, MetaHan y CHISE."
+  "page.engines.description": "Comparativa de funciones de los motores de glifos IDS: IDS Workshop, KAGE, GlyphWiki, zi.tools, yedict, Mojidata, MetaHan y CHISE.",
+  "app.rcc.open": "Abrir {code} en Rare Character Compendium"
 }

@@ -926,5 +926,6 @@
   "page.compare.description": "실제 미부호화 표제자의 같은 IDS를 IDS 공방 합성기와 KAGE로 그려 나란히 놓고, 두 자형의 일치하는 부분과 다른 부분을 비교합니다.",
   "page.font-compare.description": "같은 글자와 기술열을 공방의 다섯 글꼴인 산세리프, 세리프, 방송체, 해서, 펜해서로 나란히 그려 비교합니다.",
   "page.font-mixer.description": "공방의 다섯 글꼴인 산세리프, 세리프, 방송체, 해서, 펜해서를 섞어 글자 모양을 바꾸고, 경로를 따라 변화 과정을 재생합니다.",
-  "page.engines.description": "IDS 공방, KAGE, GlyphWiki, zi.tools, yedict, Mojidata, MetaHan, CHISE의 IDS 자형 엔진 기능을 비교합니다."
+  "page.engines.description": "IDS 공방, KAGE, GlyphWiki, zi.tools, yedict, Mojidata, MetaHan, CHISE의 IDS 자형 엔진 기능을 비교합니다.",
+  "app.rcc.open": "진자집람에서 {code} 열기"
 }

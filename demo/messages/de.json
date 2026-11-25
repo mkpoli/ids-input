@@ -929,5 +929,6 @@
   "page.compare.description": "Erzeugte Glyphen im Vergleich zu KAGEs Zusammensetzung derselben IDS anhand echter nicht kodierter Stichwörter: wo der Composer des IDS Workshop mit KAGE übereinstimmt und wo er abweicht.",
   "page.font-compare.description": "Dieselben Zeichen und Beschreibungen in den fünf Schriftstilen des Workshops: Sans, Serif, Fangsong, Regular und Pen.",
   "page.font-mixer.description": "Ein Zeichen zwischen den fünf Schriftstilen des Workshops (Sans, Serif, Fangsong, Regular und Pen) überblenden und den Übergang als Tour abspielen.",
-  "page.engines.description": "Funktionsvergleich von IDS-Glyphen-Engines: IDS Workshop, KAGE, GlyphWiki, zi.tools, yedict, Mojidata, MetaHan und CHISE."
+  "page.engines.description": "Funktionsvergleich von IDS-Glyphen-Engines: IDS Workshop, KAGE, GlyphWiki, zi.tools, yedict, Mojidata, MetaHan und CHISE.",
+  "app.rcc.open": "{code} im Rare Character Compendium öffnen"
 }

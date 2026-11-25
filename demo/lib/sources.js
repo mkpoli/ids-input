@@ -147,6 +147,7 @@ const USED_IN = /** @type {Record<string, string[]>} */ ({
   pinz: ['compare', 'composer'],
   kage: ['compare'],
   glyphwiki: ['compare', 'fonts', 'composer'],
+  rcc: ['info', 'examples', 'compare'],
 })
 
 /** @type {Source[]} */
@@ -1652,6 +1653,34 @@ export const SOURCES = [
       ru: 'Общая база глифов KAGE и позиционных вариантов; её данные можно использовать свободно, а варианты служат полезной внешней проверкой для этого компоновщика.',
       tr: 'KAGE gliflerinin ve konumsal alternatiflerin ortak veritabanı; verileri serbestçe kullanılabilir ve alternatifleri bu birleştirici için yararlı bir dış denetim sağlar.',
     },
+  },
+  {
+    id: 'rcc',
+    category: 'data',
+    tags: ['ids'],
+    title: 'Rare Character Compendium (珍字集覽)',
+    people: ['Glyph Atlas contributors'],
+    url: 'https://rare.glyphatlas.org/',
+    read: '2026-11-24',
+    summary: {
+      en: 'R+XXXX identifiers and record links for unencoded characters not in Unicode.',
+      ja: 'Unicode未収録の希少文字に対するR+XXXX識別子と記録リンク。',
+      'zh-Hans': '为Unicode未收录的罕见字提供R+XXXX编号与记录链接。',
+      'zh-Hant': '為Unicode未收錄的罕見字提供R+XXXX編號與記錄連結。',
+      ko: '유니코드에 수록되지 않은 희귀 문자의 R+XXXX 식별자와 기록 링크.',
+      vi: 'Mã định danh R+XXXX và liên kết bản ghi cho các chữ chưa có trong Unicode.',
+      es: 'Identificadores R+XXXX y enlaces a registros para caracteres no codificados que no están en Unicode.',
+      fr: 'Identifiants R+XXXX et liens vers les notices pour les caractères non encodés absents d\'Unicode.',
+      de: 'R+XXXX-Kennungen und Datensatzlinks für nicht kodierte Zeichen, die nicht in Unicode enthalten sind.',
+      pt: 'Identificadores R+XXXX e links para registros de caracteres não codificados que não estão no Unicode.',
+      it: 'Identificatori R+XXXX e link ai record per caratteri non codificati non presenti in Unicode.',
+      id: 'Pengidentifikasi R+XXXX dan tautan catatan untuk karakter belum dikodekan yang tidak ada di Unicode.',
+      ms: 'Pengecam R+XXXX dan pautan rekod bagi aksara tidak berkod yang tiada dalam Unicode.',
+      th: 'ตัวระบุ R+XXXX และลิงก์ระเบียนสำหรับอักขระที่ยังไม่ได้เข้ารหัสซึ่งไม่อยู่ใน Unicode',
+      ru: 'Идентификаторы R+XXXX и ссылки на записи для незакодированных символов, отсутствующих в Unicode.',
+      tr: 'Unicode\'da bulunmayan kodlanmamış karakterler için R+XXXX tanımlayıcıları ve kayıt bağlantıları.',
+    },
+    note: 'Looked up live via /api/match for descriptions without a Unicode code point, and linked by record id on matching starter examples and the font comparison page.',
   },
 ]
 
