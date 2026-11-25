@@ -4,13 +4,16 @@ import { translator } from '../src/svelte/i18n.js'
 import { STRUCTURAL_PRESETS } from '../src/core/structural-search.js'
 import { EXAMPLE_GROUPS } from '../demo/lib/examples.js'
 import { SOURCE_KINDS } from '../src/adapter/character-info.js'
+import { LOCALES } from '../demo/lib/locales.js'
+
+const CODES = LOCALES.map(([code]) => code)
 
 const catalogue = name => JSON.parse(readFileSync(new URL(`../messages/${name}.json`, import.meta.url), 'utf8'))
 const en = catalogue('en')
 
 describe('the message catalogues', () => {
   it('name every example group in every workshop locale', () => {
-    for (const locale of ['en', 'ja', 'ko', 'vi', 'zh-Hans', 'zh-Hant']) {
+    for (const locale of CODES) {
       const messages = JSON.parse(readFileSync(new URL(`../demo/messages/${locale}.json`, import.meta.url), 'utf8'))
       for (const { key } of EXAMPLE_GROUPS) {
         const label = messages[`app.examples.${key}`]
@@ -21,7 +24,7 @@ describe('the message catalogues', () => {
   })
   it('name every kind of source the character card can list', () => {
     // The card names a source by its kind, and the kinds extend the ones the adapter defines.
-    for (const name of ['en', 'ja', 'ko', 'vi', 'zh-Hans', 'zh-Hant']) {
+    for (const name of CODES) {
       const messages = catalogue(name)
       for (const kind of SOURCE_KINDS) expect(typeof messages[`info.site.${kind}`], `${name}: ${kind}`).toBe('string')
       expect(typeof messages['info.site.course'], name).toBe('string')
@@ -46,7 +49,7 @@ describe('the message catalogues', () => {
     for (const name of ['leftRight', 'variant']) expect(`ids.op.${name}` in en).toBe(true)
     for (const tab of ['find', 'parts', 'from', 'templates']) expect(`ids.pick.${tab}` in en).toBe(true)
     for (const key of ['ids.search.label', 'ids.search.none']) expect(key in en).toBe(true)
-    for (const name of ['en', 'ja', 'ko', 'vi', 'zh-Hans', 'zh-Hant']) {
+    for (const name of CODES) {
       const messages = catalogue(name)
       for (const preset of STRUCTURAL_PRESETS) expect(`ids.structural.${preset.id}` in messages, `${name}: ${preset.id}`).toBe(true)
       for (const key of ['mode', 'exact', 'unknown', 'unknownHelp', 'unknownInvalid'])

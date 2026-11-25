@@ -213,7 +213,7 @@
         if (tag) {
           const kind = kindOf(tag)
           lines.push(kind === 'default' ? t('cheatsheet.hint.tagDefault') : kind === 'source' ? t('cheatsheet.tip.tag.source', { source: sourceName(tag) })
-            : kind === 'style' || kind === 'position' ? t('cheatsheet.tip.tag.style') : t('cheatsheet.tip.tag.other'))
+            : kind === 'style' || kind === 'position' ? t('cheatsheet.tip.tag.style') : t('cheatsheet.tip.tag.misc'))
           if ((kind === 'style' || kind === 'position') && glossed(tag)) lines.push(glossed(tag))
         }
         return { kind: t('cheatsheet.kind.part'), lines }
@@ -233,7 +233,7 @@
       default: return { kind: t('cheatsheet.section.lists'), lines: listed(piece).map(id => {
         const kind = kindOf(id)
         const gloss = (kind === 'style' || kind === 'position') && glossed(id) ? ` (${glossed(id)})` : ''
-        return `${id}  ${kind === 'default' ? t('cheatsheet.hint.listDefault') : kind === 'source' ? t('cheatsheet.tip.list.source', { source: sourceName(id) }) : kind === 'mirror' ? t('cheatsheet.tip.list.mirror') : t(`cheatsheet.tip.list.${kind}`)}${gloss}`
+        return `${id}  ${kind === 'default' ? t('cheatsheet.hint.listDefault') : kind === 'source' ? t('cheatsheet.tip.list.source', { source: sourceName(id) }) : kind === 'mirror' ? t('cheatsheet.tip.list.mirror') : t(`cheatsheet.tip.list.${kind === 'other' ? 'misc' : kind}`)}${gloss}`
       }) }
     }
   }

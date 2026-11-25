@@ -159,7 +159,7 @@
   "ids.search.next": "下一頁",
   "ids.search.page": "第 {page} / {pages} 頁",
   "ids.hints.title": "{name}第{n}部分的常用部件",
-  "ids.hints.count.one": "此位置有1個字使用",
+  "ids.hints.count.one": "此位置有{count}個字使用",
   "ids.hints.count.other": "此位置有{count}個字使用",
   "ids.hints.more": "再顯示{count}個",
   "ids.hints.less": "收合",
