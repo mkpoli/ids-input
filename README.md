@@ -1617,10 +1617,17 @@ anchors are those of `demo/lib/baishi-sections.js`, shared with the specificatio
 The font switch selects the Serif illustrations at `?face=serif`. Rebuild the Serif export with
 `bun run build:baishi-serif [export-folder]`. Review changed contours against
 `demo/lib/baishi-serif-layers.json` before accepting a redraw with `--redrawn`.
-For the separately cited shapes, run `node scripts/build_baishi_ten.mjs`, then
+For the separately cited shapes, run `node scripts/build_baishi_ten.mjs`,
+`uv run scripts/build_baishi_variant_glyphs.py FONT_DIR`,
 `uv run scripts/build_baishi_font_glyphs.py FONT_DIR` and
 `uv run scripts/build_baishi_serif_glyphs.py FONT_DIR`. The sheets retain the guide's
 illustration for 父 (qq222). An unillustrated tooltip entry gives its original IDS.
+
+The `口y` specimen follows the upper enclosure of the KP form of 𢡌 in
+[Yi Bai’s row 37913](https://github.com/yi-bai/ids/blob/2597437b928e8d530b7ae09cf53fe5ec7868569c/ids_lv0.txt#L37913).
+The lower `口.` has the same lower-left serif in
+[KP1-43EE (Unicode 18.0, p. 187)](https://www.unicode.org/Public/18.0.0/charts/PDF/U20000.pdf#page=187).
+The illustration takes the upper frame from [GlyphWiki’s KP variant of 𡞔](https://glyphwiki.org/wiki/u21794-var-004@1).
 
 `data/sketch-parts.json.gz` is built by `scripts/build_sketch_parts.py` from the bundled faces and
 the system Noto Sans CJK JP (`NOTO_SANS_CJK` overrides its path). `tests/sketch-data.test.js` reads

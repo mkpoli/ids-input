@@ -155,7 +155,8 @@ try {
       assert.equal(await tip.count(), 0, `${scheme}: the tooltip leaves with the pointer`)
       // A source-specific form gets its own drawing; unsupported forms keep the source notation.
       for (const [written, identifier, ink] of /** @type {const} */ ([
-        ['口.', 'q3162', true], ['七.', '(t)', true], ['㠯.', '(T)', true],
+        ['口.', '(y)', true], ['囗.', '(y)', true], ['几.', '(n)', true],
+        ['匚.', '(g)', true], ['匚.', '(w)', true], ['口.', 'q3162', true], ['七.', '(t)', true], ['㠯.', '(T)', true],
         ['弓.', '(z)', true], ['門.', '(s)', true], ['十.', '(.t)', true],
         ['午t', '(t)', true], ['㠯.', '(x)', false], ['干t', '(t)', true], ['𤽄V', '(.)', true],
       ])) {
@@ -164,6 +165,9 @@ try {
         const entry = tip.locator('li').filter({ hasText: new RegExp(identifier.replace(/[().]/gu, '\\$&')) }).first()
         await entry.waitFor()
         assert.equal(await entry.locator('svg').count(), Number(ink), `${scheme}: ${written} ${identifier} evidence`)
+        if (written === '口.' && identifier === '(y)') {
+          assert.equal(await entry.locator('small').innerText(), '𢡌 (KP1-43EE)')
+        }
         await page.mouse.move(0, 0)
       }
       // All eleven 龜 leaves select their own ink, including each stroke of the chain.

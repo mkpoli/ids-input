@@ -44,6 +44,7 @@ def contours(font, text, regional=None):
 # Cuts from the indicated headwords in the sheet's pinned ids_lv0. Contour
 # numbers are specific to this face. The tag describes the extracted strokes.
 CUTS = {
+    "囗y": ("贯", [0, 1]),              # 贯 → 毌. → ⿻⿴囗y丨一.; counter and outer contour
     "一t": ("㇀", [0]),                 # #(T)
     "乚t": ("㇙", [0, 1]),              # #(ST), also the t form of 𠃊
     "丶s": ("宀", [0]),                 # ⿱丶s冖(J)

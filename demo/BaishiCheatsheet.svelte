@@ -340,6 +340,7 @@
               {:else if variant.ink}<svg class="mini" viewBox="0 0 1000 1000" role="img" aria-label={tip.char}><path class="ink" d={variant.ink} /></svg>
               {/if}
               <code>{variant.text}</code>
+              {#if tip.char === '口' && variant.ids.includes('y')}<small>𢡌 (KP1-43EE)</small>{/if}
               {#if variant.sourceOnly}<small lang={locale}>{t('cheatsheet.referenceGlyph')}</small>{/if}
             </li>
           {/each}
@@ -480,9 +481,15 @@
           <li><span class="what">{t('cheatsheet.source.notation')}</span> <b class="key">{GRAMMAR.key}</b> <a href={GRAMMAR.url} target="_blank" rel="noreferrer" lang="zh-Hans">{GRAMMAR.title}</a> · {GRAMMAR.date} · {t('cheatsheet.source.notationBy')} <span class="weak">{t('cheatsheet.source.notationNote')}</span></li>
           <li><span class="what">{t('cheatsheet.source.grammar')}</span> <a href={sectionHref('spec', 'row')}>{t('baishi.title')}</a> · <a href={`./baishi-railroad.html?lang=${locale}`}>{t('railroad.title')}</a> · <code>data/baishi-ids.ebnf</code></li>
           {#if serif}
-            <li><span class="what">{t('app.font.serif')}</span> <a href="https://github.com/notofonts/noto-cjk/tree/Serif2.003/Serif">Noto Serif CJK 2.003</a> · <a href="https://kamichikoichi.github.io/jigmo/">Jigmo 2025-09-12</a> · 凵. (凼) · 凵y (世) · 凶 (㐫) · <a href={serif.base + 'manifest.json'}>han-compose 8156f838798c</a></li>
+            <li><span class="what">{t('app.font.serif')}</span> <a href="https://github.com/notofonts/noto-cjk/tree/Serif2.003/Serif">Noto Serif CJK 2.003</a> · <a href="https://kamichikoichi.github.io/jigmo/">Jigmo 2025-09-12</a> (匚w: 𬼖) · 凵. (凼) · 凵y (世) · 凶 (㐫) · <a href={serif.base + 'manifest.json'}>han-compose 8156f838798c</a></li>
           {/if}
           <li><span class="what">{t('cheatsheet.source.outlines')}</span> <a href="https://github.com/notofonts/noto-cjk" target="_blank" rel="noreferrer">Noto Sans CJK</a> · <a href="https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project" target="_blank" rel="noreferrer">Plangothic</a> · <a href="https://github.com/mkpoli/han-compose" target="_blank" rel="noreferrer">han-compose</a> <code>{outlines.composer.commit}</code> · <a href="https://glyphwiki.org/wiki/jmj-034221@1">𡮂 JMJ-034221</a> · <a href="https://glyphwiki.org/wiki/u4d22-var-001@1">䴢 (u)</a> · <a href="https://github.com/NightFurySL2001/bai-ids/blob/0ca5ed48f51821d4d54246196f1f5f38c9d6bd6a/fonts/example.woff2">父 (qq222), 八d, 丰..p</a> © 2024–2025 -PT_AxH_RV- · <a href={exampleLicence}>SIL OFL 1.1</a> · <a href="https://glyphwiki.org/wiki/u2db01-j@5">午(t)</a> · <a href="https://glyphwiki.org/wiki/u4e42-j@2">乂J (GlyphWiki)</a> · {#each [
+            ['口y (𢡌, KP)', 'u2284c-kp@1'],
+            ['𡞔 (KP)', 'u21794-var-004@1'],
+            ['几n (𤙍)', 'u2464d-g@1'],
+            ['匚g (𤰴)', 'u24c34@4'],
+            ['CDP-86F1', 'cdp-86f1@2'],
+            ['匚w (𬼖)', 'u2cf16-j@3'],
             ['𤽄 (.)', 'u24f44-g@3'],
             ['木 (y)', 'u2097d-j@2'],
             ['門 (s)', 'u9580-05-var-002@1'],
@@ -493,7 +500,7 @@
             ['ユ (t)', 'u4e11-g01@1'],
             ['丰 (ptp)', 'u90a6-ue0102@12']
           ] as [label, source], i}{i ? ' · ' : ''}<a href={'https://glyphwiki.org/wiki/' + source}>{label}</a>{/each} · <a href="https://github.com/yi-bai/iwds/tree/8302302d615ff1c1f60ae335b118b10060be0ed4">IWDS 128, 316</a></li>
-          <li><a href={serif ? 'https://github.com/notofonts/noto-cjk/tree/Serif2.003/Serif/Variable/TTF' : 'https://github.com/notofonts/noto-cjk/tree/Sans2.004/Sans/Variable/TTF'}>{serif ? 'Noto Serif CJK JP 2.003 VF' : 'Noto Sans CJK JP 2.004 VF'}</a> · <a href="https://github.com/adobe-type-tools/Adobe-Japan1/blob/master/Adobe-Japan1_sequences.txt">工󠄁 (q4082, CID+13763)</a> · 午(.) · 戢 (SC) · 十.t · ㇀ · ㇙</li>
+          <li><a href={serif ? 'https://github.com/notofonts/noto-cjk/tree/Serif2.003/Serif/Variable/TTF' : 'https://github.com/notofonts/noto-cjk/tree/Sans2.004/Sans/Variable/TTF'}>{serif ? 'Noto Serif CJK JP 2.003 VF' : 'Noto Sans CJK JP 2.004 VF'}</a> · <a href="https://github.com/adobe-type-tools/Adobe-Japan1/blob/master/Adobe-Japan1_sequences.txt">工󠄁 (q4082, CID+13763)</a> · 午(.) · 戢 (SC) · 十.t · ㇀ · ㇙ · 囗y (贯)</li>
         </ul>
       </footer>
     </main>
