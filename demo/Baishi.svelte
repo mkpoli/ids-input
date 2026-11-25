@@ -76,7 +76,7 @@
   ])
   /** The message that names a section, where its id is not its key. */
   const TITLE = /** @type {Record<string, string>} */ ({ 'source-letters': 'sources', 'ucv-position': 'ucv', 'imaginary-ucv': 'imaginary',
-    'break-mark': 'break', closing: 'closed', 'quick-slice': 'slice', 'reverse-matrix': 'reverseMatrix', differences: 'data', sources: 'documents', 'other-sources': 'otherSources' })
+    'break-mark': 'break', closing: 'closed', 'quick-slice': 'slice', 'reverse-matrix': 'reverseMatrix', differences: 'data', sources: 'documents', 'other-sources': 'otherSources', other: 'misc' })
   /** @param {string} id */
   const titleOf = id => t(`baishi.heading.${TITLE[id] ?? id}`)
   const cheatsheet = new Set(/** @type {readonly string[]} */ (CHEATSHEET_SECTIONS))
