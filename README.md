@@ -1309,6 +1309,10 @@ the kana and Hangul shapes the search reads as component spellings. The files li
 `data/open-data/`, are built by `bun scripts/build_open_ids.mjs`, and are dedicated to the public
 domain (CC0 1.0). Read the files, starting from `manifest.json`; do not scrape the rendered pages.
 
+`data/open-data/ivd/` describes each of the 29,642 sequences of the Ideographic Variation Database by
+an IDS read from GlyphWiki, Noto CJK and IPAmj明朝, its descriptions also under CC0 1.0; its README
+gives the method, the status of each description and its limits. `scripts/build_ivd_ids.py` builds it.
+
 ## The workshop
 
 The demo is a full-width workshop with one tab for each description being edited, in a strip below
@@ -1610,7 +1614,7 @@ composer's drawing of each sequence no outline has, and each written component's
 tooltips; `tests/baishi-cheatsheet.test.js` fails while the cards and the file disagree. The sheet's
 anchors are those of `demo/lib/baishi-sections.js`, shared with the specification page.
 
-The font menu selects the Serif illustrations at `?face=serif`. Rebuild the Serif export with
+The font switch selects the Serif illustrations at `?face=serif`. Rebuild the Serif export with
 `bun run build:baishi-serif [export-folder]`. Review changed contours against
 `demo/lib/baishi-serif-layers.json` before accepting a redraw with `--redrawn`.
 For the separately cited shapes, run `node scripts/build_baishi_ten.mjs`, then

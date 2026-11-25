@@ -125,5 +125,23 @@
   --ids-font: var(--cjk-regular);
 }
 
+/* Font specimen controls used in the workshop and reference pages. */
+.font-switch{display:flex;align-items:center;gap:2px;height:32px;padding:2px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface)}
+.font-choice{display:flex;align-items:center;gap:5px;height:26px;padding:0 7px;border:0;border-radius:var(--ui-radius-sm);background:none;color:var(--ui-color-ink-muted);font:inherit;font-size:11px;cursor:pointer}
+.font-choice .aa{display:grid;place-items:center;width:18px;height:18px;font-size:14px;line-height:1;color:var(--ui-color-ink);font-family:var(--cjk-label-sans)}
+.font-choice .wide{font-family:var(--cjk-label-sans)}
+.font-choice .aa.serif,.font-choice .wide.serif{font-family:var(--cjk-label-serif)}
+.font-choice .aa.fangsong,.font-choice .wide.fangsong{font-family:var(--cjk-label-fangsong)}
+.font-choice .aa.regular,.font-choice .wide.regular{font-family:var(--cjk-label-regular)}
+.font-choice .aa.pen-writing,.font-choice .wide.pen-writing{font-family:var(--cjk-label-pen-writing)}
+/* Kureedo draws neither 书 nor ả/ư; keep those names in one face. */
+.font-choice .wide.pen-writing:lang(zh-Hans),.font-choice .wide.pen-writing:lang(vi){font-family:var(--cjk-label-sans)}
+.font-choice .wide.regular:lang(ko),.font-choice .wide.regular:lang(vi){font-family:var(--cjk-label-sans)}
+a.font-choice{text-decoration:none}
+.font-choice:hover{color:var(--ui-color-ink)}
+.font-choice[aria-pressed="true"]{background:var(--ui-color-accent-soft);color:var(--ui-color-accent)}
+.font-choice:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}
+@media (max-width:1100px){:is(.bar,.large-bar) .font-choice .wide{display:none}}
+
 /* Thai needs a shaping font; the bundled fallback draws its letters one by one. */
 :root:lang(th) { --ids-glyph-fallback: 'Noto Sans Thai', 'Noto Sans Thai UI', 'Noto Looped Thai UI', 'Leelawadee UI', 'Thonburi', 'Tahoma', 'Jigmo', 'Jigmo2', 'Jigmo3', 'Plangothic P1', 'Plangothic P2', var(--fallback-font, 'IDS Fallback'); }

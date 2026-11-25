@@ -10,17 +10,17 @@ try {
   const errors = []
   page.on('pageerror', error => errors.push(error.message))
   await page.goto(`${process.env.IDS_URL ?? 'http://localhost:5186'}#⿰女口`, { waitUntil: 'domcontentloaded', timeout: 120000 })
-  const choices = page.locator('.bar .font-choice')
+  const choices = page.locator('.bar .font-choice:has(.aa)')
   await choices.first().waitFor({ timeout: 120000 })
 
-  /** The four faces' sample paths, in the switch's order. */
+  /** The five faces' sample paths, in the switch's order. */
   const paths = () => choices.evaluateAll(buttons => buttons.map(button => button.querySelector('.aa svg path')?.getAttribute('d') ?? ''))
-  // The switch is drawn in each face from its own export: four paths, at least two of them different.
+  // The switch is drawn in each face from its own export: five paths, at least two of them different.
   await page.waitForFunction(() => [...document.querySelectorAll('.bar .font-choice .aa')].every(aa => aa.querySelector('svg path')), null, { timeout: 120000 })
   const first = await paths()
-  assert.equal(first.length, 4, 'the switch names four faces')
+  assert.equal(first.length, 5, 'the switch names five faces')
   assert.ok(first.every(Boolean), 'every face draws the description')
-  assert.ok(new Set(first).size >= 2, 'the faces draw their own outlines, not one drawing four times')
+  assert.ok(new Set(first).size >= 2, 'the faces draw their own outlines, not one drawing five times')
   assert.equal(await page.locator('.bar .font-choice .aa .specimen').count(), 0, 'no specimen stands in while a drawing is shown')
 
   // A new description replaces every sample.
