@@ -27,6 +27,7 @@
   import variationOutlinesSans from '../data/ucv-outlines-sans.json.gz?url'
   import { LOCALES, appMessages } from './lib/locales.js'
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
+  import { matchRcc, rccCode, rccUrl } from './lib/rcc.js'
   import { createIconDrawings } from './lib/icons.js'
   import { createSampleDrawings } from './lib/sample-drawings.js'
   import { createDrawingOrder } from './lib/drawing-order.js'
@@ -736,6 +737,8 @@
 
   // The output: the encoded characters the whole sequence describes, and its code points.
   let encoded = $state(/** @type {string[]} */ ([]))
+  /** @type {'idle' | 'ok' | 'error'} */
+  let encodedState = $state('idle')
   $effect(() => {
     const text = editor.tree === null ? '' : editor.whole, ask = adapter.encoded
     const example = EXAMPLES.find(example => example.sequence === text)
@@ -743,33 +746,64 @@
     encoded = known
     // An example that names a standard and no character is a form the project reads as unencoded;
     // the index's reading of the same IDS does not override it.
-    if (!editor.usable || !text || !ask || example?.standard && !example.char) return
+    if (!editor.usable || !text || !ask || example?.standard && !example.char) { encodedState = 'ok'; return }
+    encodedState = 'idle'
     let live = true
-    ask(text).then(found => { if (live) encoded = [...new Set([...known, ...found])] }, () => {})
+    ask(text).then(
+      found => { if (live) { encoded = [...new Set([...known, ...found])]; encodedState = 'ok' } },
+      () => { if (live) encodedState = 'error' },
+    )
     return () => { live = false }
   })
   // A description written with a visual substitute names the character its canonical description
   // does: ⿰彳ヱ is ⿰彳𠀄, and that is 𭛝. The typed sequence stays as written; the character and
   // code point are shown beside it.
   let substituted = $state(/** @type {{ sequence: string, char: string } | null} */ (null))
+  /** @type {'idle' | 'ok' | 'error'} */
+  let substitutedState = $state('idle')
   $effect(() => {
     const text = editor.tree === null ? '' : editor.whole
     const ask = adapter.encoded
     substituted = null
-    if (!editor.usable || !text || !ask || encoded.length) return
+    if (!editor.usable || !text || !ask || encoded.length) { substitutedState = 'ok'; return }
     const candidates = substituteSequences(text).slice(0, 8)
-    if (!candidates.length) return
+    if (!candidates.length) { substitutedState = 'ok'; return }
+    substitutedState = 'idle'
     let live = true
     const read = async () => {
+      let failed = false
       for (const sequence of candidates) {
         try {
           const chars = await ask(sequence)
-          if (live && chars.length) { substituted = { sequence, char: chars[0] }; return }
-        } catch { /* a description the adapter cannot encode */ }
+          if (live && chars.length) { substituted = { sequence, char: chars[0] }; substitutedState = 'ok'; return }
+        } catch { failed = true }
       }
+      if (live) substitutedState = failed ? 'error' : 'ok'
     }
     void read()
     return () => { live = false }
+  })
+  // When a description has no Unicode character, check the Rare Character Compendium for R+XXXX
+  // records describing the same sequence. Wait for the local Unicode lookups to succeed first so
+  // encoded characters, visual substitutes, and failed local lookups never trigger a remote check.
+  let rccMatches = $state(/** @type {import('./lib/rcc.js').RccMatch[]} */ ([]))
+  $effect(() => {
+    const text = editor.tree === null ? '' : editor.whole
+    if (!editor.usable || !text || [...text].length < 2 || encodedState !== 'ok' || substitutedState !== 'ok' || encoded.length || substituted) {
+      rccMatches = []
+      return
+    }
+    const example = EXAMPLES.find(example => example.sequence === text)
+    const known = example && !example.char && example.rcc ? [{ id: example.rcc }] : []
+    rccMatches = known
+    const controller = new AbortController()
+    let live = true
+    matchRcc(text, { signal: controller.signal }).then(found => {
+      if (!live || !found.length) return
+      const byId = new Map([...known, ...found].map(entry => [entry.id, entry]))
+      rccMatches = [...byId.values()].sort((a, b) => a.id - b.id)
+    })
+    return () => { live = false; controller.abort() }
   })
   // The strokes the output shows: an encoded character's recorded count when the description names
   // one, else the components' counts added up. A single component is its own character. The table
@@ -1331,29 +1365,38 @@
     } catch { note(t('app.edit.pasteFailed')) }
   }
   function selectAll() { if (editor.tree !== null) { editor.choose([], { toggle: false }); editor.focusChosen(work) } }
-  /** @param {{ sequence: string, char: string, refs?: number[], abbreviates?: string, modern?: string, standard?: string, traditional?: string, reading?: string }} example @param {string} lang @param {number[]} [groupRefs] @param {string} [readingLang] @param {string} [groupKey] */
+  /** @param {{ sequence: string, char: string, rcc?: number, refs?: number[], abbreviates?: string, modern?: string, standard?: string, traditional?: string, reading?: string }} example @param {string} lang @param {number[]} [groupRefs] @param {string} [readingLang] @param {string} [groupKey] */
   function exampleItem(example, lang, groupRefs = [], readingLang = 'ja', groupKey = '') {
     const point = example.char ? cp(example.char) : ''
+    const rccCodeText = !example.char && example.rcc ? rccCode(example.rcc) : ''
+    const noteLink = rccCodeText && example.rcc
+      ? { label: rccCodeText, href: rccUrl(example.rcc, locale), title: t('app.rcc.open', { code: rccCodeText }) }
+      : undefined
     const standard = example.standard ?? example.char
     const traditional = example.traditional ?? standard
     const target = example.char || example.abbreviates || ''
     const citation = (example.refs ?? groupRefs).map(/** @param {number} n */ n => `[${n}]`).join('')
     // A 二簡字 form names the standard it replaces. Where the form itself is unencoded, its note
-    // names that standard without marking a code point; where it is encoded, the note names the form.
+    // names that standard without marking a Unicode code point; where it is encoded, the note names the form.
     const replaces = groupKey === 'erjian' && standard ? `${standard}${traditional === standard ? '' : ` ${traditional}`}` : ''
     const encodedForm = groupKey === 'erjian' && example.char ? `${point}${replaces ? ` · ${replaces}` : ''}` : ''
-    const noteText = example.abbreviates ? `${example.abbreviates} · ${t('app.examples.abbreviation')}` : groupKey === 'erjian' && standard ? (encodedForm || replaces) : example.char ? [example.modern, point].filter(Boolean).join(' · ') : t('app.examples.none')
+    const noteText = example.abbreviates ? `${example.abbreviates} · ${t('app.examples.abbreviation')}`
+      : noteLink ? (replaces ? `· ${replaces}` : '')
+      : groupKey === 'erjian' && standard ? (encodedForm || replaces)
+      : example.char ? [example.modern, point].filter(Boolean).join(' · ')
+      : t('app.examples.none')
     return {
       leading: groupKey === 'erjian' && example.char ? undefined : target || undefined,
       label: example.sequence,
       sequence: example.sequence,
       note: [noteText, citation].filter(Boolean).join(' '),
+      noteLink,
       reading: example.reading,
       readingLang,
       unencoded: !example.char,
       lang,
       drawing: prepared.get(example.sequence),
-      hint: [groupKey === 'erjian' && example.char ? `${example.sequence}　${point}${replaces ? `　${replaces}` : ''}` : replaces ? `${example.sequence}　${replaces}　${t('app.examples.none')}` : example.abbreviates ? `${example.abbreviates}　${example.sequence}　${t('app.examples.abbreviation')}` : example.char ? `${example.char}${example.sequence === example.char ? '' : `　${example.sequence}`}　${point}` : `${example.sequence}　${t('app.examples.none')}`, citation].filter(Boolean).join('　'),
+      hint: [groupKey === 'erjian' && example.char ? `${example.sequence}　${point}${replaces ? `　${replaces}` : ''}` : replaces ? `${example.sequence}　${rccCodeText ? `${rccCodeText}　` : ''}${replaces}${rccCodeText ? '' : `　${t('app.examples.none')}`}` : example.abbreviates ? `${example.abbreviates}　${example.sequence}　${t('app.examples.abbreviation')}` : example.char ? `${example.char}${example.sequence === example.char ? '' : `　${example.sequence}`}　${point}` : `${example.sequence}　${rccCodeText || t('app.examples.none')}`, citation].filter(Boolean).join('　'),
       run: () => addTab(example.sequence),
     }
   }
@@ -1677,9 +1720,16 @@
                   {#each encoded as ch (ch)}
                     <span class="encoded-character"><code>{cp(ch)}</code><button type="button" title={t('app.copyChar', { char: ch })} aria-label={t('app.copyChar', { char: ch })} onclick={() => copy(ch)}><Icon name="copy" size={13} /></button></span>
                   {/each}
+                  {#each rccMatches as entry (entry.id)}
+                    {@const code = rccCode(entry.id)}
+                    <span class="encoded-character rcc-character">
+                      <a class="rcc-link" href={rccUrl(entry.id, locale)} target="_blank" rel="noopener noreferrer" title={t('app.rcc.open', { code })}><code>{code}</code><span class="out" aria-hidden="true">↗</span></a>
+                      <button type="button" title={t('app.copyChar', { char: code })} aria-label={t('app.copyChar', { char: code })} onclick={() => copy(code)}><Icon name="copy" size={13} /></button>
+                    </span>
+                  {/each}
                   {#if drawnStrokes}
                     <span class="component-counts" title={drawnStrokes.strokes == null ? undefined : t(drawnStrokes.approximate ? 'app.componentStrokes' : 'app.recordedStrokes')}>
-                      {#if encoded.length}<span class="strokes-sep" aria-hidden="true">·</span>{/if}
+                      {#if encoded.length || rccMatches.length}<span class="strokes-sep" aria-hidden="true">·</span>{/if}
                       {t('app.components', { count: drawnStrokes.components })}
                       {#if drawnStrokes.strokes != null}
                         <span class="strokes-sep" aria-hidden="true">·</span>
@@ -1733,6 +1783,11 @@
               <button type="button" class="large-copy" title={`${t('app.copySequence')}: ${editor.whole}`} aria-label={footerCopied ? t('app.copied', { text: '' }).trim() : t('app.copySequence')} onclick={() => copyFooter(editor.whole)}><Icon name={footerCopied ? 'check' : 'copy'} size={14} /></button>
               {#if encoded.length}
                 <button type="button" class="large-copy" title={`${t('app.copyPoints')}: ${encoded.map(cp).join(' ')}`} aria-label={t('app.copyPoints')} onclick={() => copyFooter(encoded.map(cp).join(' '))}><Icon name="copy" size={14} /></button>
+              {:else if rccMatches.length}
+                {#each rccMatches as entry (entry.id)}
+                  {@const code = rccCode(entry.id)}
+                  <a class="large-rcc" href={rccUrl(entry.id, locale)} target="_blank" rel="noopener noreferrer" title={t('app.rcc.open', { code })}><code>{code}</code><span class="out" aria-hidden="true">↗</span></a>
+                {/each}
               {/if}
             </div>
           </div>
@@ -1921,6 +1976,16 @@
   .encoded-character button{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;padding:0;border:0;border-radius:var(--ui-radius-xs);background:transparent;color:var(--ui-color-ink-muted);cursor:pointer}
   .encoded-character button:hover{color:var(--ui-color-ink);background:var(--ui-color-surface-hover)}
   .encoded-character button:focus-visible{outline:2px solid var(--ui-color-focus)}
+  .rcc-link{display:inline-flex;align-items:baseline;gap:2px;color:var(--ui-color-accent);text-decoration:none}
+  .rcc-link code{color:inherit}
+  .rcc-link .out{font-size:10px;line-height:1}
+  .rcc-link:hover{text-decoration:underline;text-underline-offset:2px}
+  .rcc-link:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:2px;border-radius:var(--ui-radius-xs)}
+  .large-rcc{display:inline-flex;align-items:baseline;gap:2px;height:28px;padding:0 8px;border:1px solid var(--ui-color-border);border-radius:7px;background:var(--ui-color-surface);color:var(--ui-color-accent);text-decoration:none;font:11px/26px ui-monospace,"SF Mono",Menlo,Consolas,monospace;white-space:nowrap}
+  .large-rcc code{color:inherit;font:inherit}
+  .large-rcc .out{font-size:10px}
+  .large-rcc:hover{border-color:var(--ui-color-border-strong);text-decoration:underline;text-underline-offset:2px}
+  .large-rcc:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:2px}
   .component-counts{display:inline-flex;align-items:center;gap:4px;color:var(--ui-color-ink-muted);font:11px ui-monospace,monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
   .component-counts .strokes-sep{opacity:.55}
   .preview :global(.ids-preview-meta){position:absolute;top:10px;left:10px;z-index:1}

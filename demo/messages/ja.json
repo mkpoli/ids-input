@@ -926,5 +926,6 @@
   "page.compare.description": "実際の未符号化見出し字のIDSから、IDS工房の組字器とKAGEの合成字形を並べて比較。両者が一致する点と異なる点を確認できます。",
   "page.font-compare.description": "同じ文字や記述をIDS工房の五つの書体（ゴシック、明朝、仿宋、正楷、文楷）で並べて比較します。",
   "page.font-mixer.description": "IDS工房の五つの書体（ゴシック、明朝、仿宋、正楷、文楷）の間で文字をブレンドし、書体間の変化を自動再生でたどれます。",
-  "page.engines.description": "IDS組字エンジンの機能比較。IDS工房、KAGE、GlyphWiki、zi.tools、yedict、Mojidata、MetaHan、CHISEを比較しています。"
+  "page.engines.description": "IDS組字エンジンの機能比較。IDS工房、KAGE、GlyphWiki、zi.tools、yedict、Mojidata、MetaHan、CHISEを比較しています。",
+  "app.rcc.open": "珍字集覧で{code}を開く"
 }

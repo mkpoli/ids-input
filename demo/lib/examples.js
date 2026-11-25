@@ -8,7 +8,7 @@
 // gukja's reading in Hangul, or a Jurchen character's reading as Unicode records it. `standard`
 // names the 1簡字 a 二簡字 form replaces; `traditional` gives its 繁體字 where it differs.
 /**
- * @typedef {{ sequence: string, refs?: number[], char: string, parts?: string, abbreviates?: string, reading?: string, modern?: string, standard?: string, traditional?: string, source?: string, editorial?: boolean }} Example
+ * @typedef {{ sequence: string, refs?: number[], char: string, rcc?: number, parts?: string, abbreviates?: string, reading?: string, modern?: string, standard?: string, traditional?: string, source?: string, editorial?: boolean }} Example
  * @typedef {{ key: string, refs?: number[], examples: Example[] }} ExampleGroup
  */
 
@@ -19,7 +19,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿿予', refs: [1,2], char: '𠄔' },
     { sequence: '⿿凹', char: '𠕄' },
     { sequence: '⿱不要', char: '嫑' },
-    { sequence: '⿱艹半', refs: [3], char: '' },
+    { sequence: '⿱艹半', refs: [3], char: '', rcc: 2097 },
     { sequence: '⿰舟邊', refs: [4], char: '' },
     { sequence: '⿻大㸚', char: '爽' },
     { sequence: '㇯豕㇒', char: '𧰧' },
@@ -126,7 +126,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰車卜', char: '𨊣' },
     { sequence: '⿰舟力', char: '𬜑' },
     { sequence: '⿴口도', refs: [15,24], char: '' },
-    { sequence: '⿰舟ラ', refs: [15,16,17], char: '' },
+    { sequence: '⿰舟ラ', refs: [15,16,17], char: '', rcc: 1579 },
     { sequence: '⿵门T', refs: [16,18], char: '' },
     { sequence: '⿰𛂦方', refs: [18,1], char: '𭤪' },
     { sequence: '⿰亻A', refs: [19], char: '' },
@@ -136,7 +136,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰木き', refs: [26], char: '' },
     { sequence: '⿴囗⿱エン', refs: [11,31,32,33,34,35,36], char: '' },
     { sequence: '⿱月朋', refs: [29], char: '' },
-    { sequence: '⿺廴占', refs: [59, 60, 61, 62, 63], char: '' },
+    { sequence: '⿺廴占', refs: [59, 60, 61, 62, 63], char: '', rcc: 2337 },
     // A car below 車, to show an emoji operand; it writes no character and no source records it.
     { sequence: '⿱車🚗', refs: [], char: '' },
   ] },
@@ -190,7 +190,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿸厂九', refs: [3], char: '', standard: '厩', traditional: '廄' },
     { sequence: '⿱亠公', refs: [3], char: '', standard: '衮', traditional: '袞' },
     { sequence: '⿰彳力', refs: [3], char: '', standard: '律' },
-    { sequence: '⿱力十', refs: [3], char: '', standard: '率' },
+    { sequence: '⿱力十', refs: [3], char: '', standard: '率', rcc: 2110 },
     { sequence: '⿱入寸', refs: [3], char: '', standard: '辱' },
     { sequence: '⿱甲弓', refs: [3], char: '', standard: '弹', traditional: '彈' },
     { sequence: '⿻弓冫', refs: [3], char: '', standard: '弱' },
@@ -281,9 +281,9 @@ export const EXAMPLE_GROUPS = [
   { key: 'navy', examples: [
     { sequence: '⿰艦ツ', refs: [15,23], char: '' },
     { sequence: '⿰掌キ', refs: [15,23], char: '' },
-    { sequence: '⿲木十木', refs: [73,74,75], char: '' },
-    { sequence: '⿰車ト', refs: [73,76], char: '' },
-    { sequence: '⿰米林', refs: [73,77], char: '' },
+    { sequence: '⿲木十木', refs: [73,74,75], char: '', rcc: 1603 },
+    { sequence: '⿰車ト', refs: [73,76], char: '', rcc: 1608 },
+    { sequence: '⿰米林', refs: [73,77], char: '', rcc: 1602 },
   ] },
   // Word ligatures put a phrase inside one square. 招財進寶 follows the glyph in L2/12-032;
   // 日日有見財 and 日進斗金 take their component order from the UHK article's photographs; 日日有見財
@@ -448,7 +448,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿱菸叱', char: '', reading: '엇' },
     { sequence: '⿱右乙', char: '', reading: '울' },
     { sequence: '⿱吐乙', char: '', reading: '톨' },
-    { sequence: '⿱坪乙', char: '', reading: '펼' },
+    { sequence: '⿱坪乙', char: '', reading: '펼', rcc: 1973 },
     { sequence: '⿱呼乙', char: '', reading: '홀' },
     // The article's last row gives 𬼝 no reading, only 음을 알 수 없음.
     { sequence: '⿱去乙', char: '𬼝' },
