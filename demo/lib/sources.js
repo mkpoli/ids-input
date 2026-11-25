@@ -147,6 +147,7 @@ const USED_IN = /** @type {Record<string, string[]>} */ ({
   pinz: ['compare', 'composer'],
   kage: ['compare'],
   glyphwiki: ['compare', 'fonts', 'composer'],
+  rcc: ['info', 'examples', 'compare'],
 })
 
 /** @type {Source[]} */
@@ -1547,6 +1548,24 @@ export const SOURCES = [
       ru: 'Общая база глифов KAGE и позиционных вариантов; её данные можно использовать свободно, а варианты служат полезной внешней проверкой для этого компоновщика.',
       tr: 'KAGE gliflerinin ve konumsal alternatiflerin ortak veritabanı; verileri serbestçe kullanılabilir ve alternatifleri bu birleştirici için yararlı bir dış denetim sağlar.',
     },
+  },
+  {
+    id: 'rcc',
+    category: 'data',
+    tags: ['ids'],
+    title: 'Rare Character Compendium (珍字集覽)',
+    people: ['Glyph Atlas contributors'],
+    url: 'https://rare.glyphatlas.org/',
+    read: '2026-11-24',
+    summary: {
+      en: 'R+XXXX identifiers and record links for unencoded characters not in Unicode.',
+      ja: 'Unicode未収録の希少文字に対するR+XXXX識別子と記録リンク。',
+      'zh-Hans': '为Unicode未收录的罕见字提供R+XXXX编号与记录链接。',
+      'zh-Hant': '為Unicode未收錄的罕見字提供R+XXXX編號與記錄連結。',
+      ko: '유니코드에 수록되지 않은 희귀 문자의 R+XXXX 식별자와 기록 링크.',
+      vi: 'Mã định danh R+XXXX và liên kết bản ghi cho các chữ chưa có trong Unicode.',
+    },
+    note: 'Looked up live via /api/match for descriptions without a Unicode code point, and linked by record id on matching starter examples and the font comparison page.',
   },
 ]
 

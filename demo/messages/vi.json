@@ -926,5 +926,6 @@
   "page.compare.description": "Đặt cạnh nhau hình do bộ tổng hợp của Xưởng IDS và KAGE tạo từ cùng một IDS của các chữ đầu mục chưa mã hóa có thật, để so sánh những điểm giống và khác nhau.",
   "page.font-compare.description": "Cùng những chữ và mô tả được vẽ cạnh nhau bằng năm phông của xưởng: Không chân, Có chân, Phỏng Tống, Khải thư và Khải thư bút.",
   "page.font-mixer.description": "Pha trộn hình chữ giữa năm phông của xưởng — Không chân, Có chân, Phỏng Tống, Khải thư và Khải thư bút — rồi phát quá trình biến đổi theo lộ trình.",
-  "page.engines.description": "So sánh tính năng các công cụ tạo hình chữ từ IDS: Xưởng IDS, KAGE, GlyphWiki, zi.tools, yedict, Mojidata, MetaHan và CHISE."
+  "page.engines.description": "So sánh tính năng các công cụ tạo hình chữ từ IDS: Xưởng IDS, KAGE, GlyphWiki, zi.tools, yedict, Mojidata, MetaHan và CHISE.",
+  "app.rcc.open": "Mở {code} trên Tuyển tập chữ quý"
 }
