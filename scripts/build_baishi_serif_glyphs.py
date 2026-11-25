@@ -24,6 +24,7 @@ SERIF_URL = "https://raw.githubusercontent.com/notofonts/noto-cjk/Serif2.003/Ser
 JIGMO_URL = "https://kamichikoichi.github.io/jigmo/Jigmo-20250912.zip"
 # Same headwords as the Sans witnesses, with the corresponding Serif contours.
 INDICES = {
+    "囗y": [2, 5, 8, 9],
     "一t": [0], "乚t": [0, 1, 2], "丶s": [0], "己t": [0, 1, 2, 3, 4, 5],
     "己w": [0, 11, 12, 13], "人d": [2, 3], "厂s": [1, 8], "匚t": [2, 3, 4, 5],
     "几t": [1, 2, 9, 10], "几z": [0, 1, 2], "𠃑p": [9, 10, 11, 12], "了s": [0, 2, 4],
@@ -90,7 +91,7 @@ def main():
         glyphs["𭬁"] = contours(font, "𭬁")
         variants.update(cut_forms(font, {
             "己z": ("𠃚", [1]), "止y": ("𠣏", [1]), "儿t": ("𬷼", [0, 2]),
-            "旦t": ("𠛣", [1, 3, 4, 5]),
+            "旦t": ("𠛣", [1, 3, 4, 5]), "匚w": ("𬼖", [0]),
         }))
     mincho_cards = json.loads((ROOT / "demo/lib/baishi-serif-kage.json").read_text())
     variants["𤽄V"] = "".join(fit_together([mincho_cards["smallJ"][1]]))
