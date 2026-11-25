@@ -929,5 +929,6 @@
   "page.compare.description": "รูปอักษรที่สร้างขึ้นวางเทียบกับการประกอบ IDS เดียวกันของ KAGE จากคำตั้งจริงที่ยังไม่เข้ารหัส แสดงจุดที่ตัวประกอบอักษรของ IDS Workshop ตรงกันและต่างจาก KAGE",
   "page.font-compare.description": "อักษรและคำอธิบายชุดเดียวกันที่วาดด้วยแบบอักษรทั้งห้าแบบของเวิร์กชอป ได้แก่ Sans, Serif, Fangsong, Regular และ Pen",
   "page.font-mixer.description": "ผสานรูปอักษรระหว่างแบบอักษรทั้งห้าแบบของเวิร์กชอป (Sans, Serif, Fangsong, Regular และ Pen) และเล่นลำดับการผสานต่อเนื่อง",
-  "page.engines.description": "เปรียบเทียบความสามารถของเอนจินสร้างรูปอักษรจาก IDS ได้แก่ IDS Workshop, KAGE, GlyphWiki, zi.tools, yedict, Mojidata, MetaHan และ CHISE"
+  "page.engines.description": "เปรียบเทียบความสามารถของเอนจินสร้างรูปอักษรจาก IDS ได้แก่ IDS Workshop, KAGE, GlyphWiki, zi.tools, yedict, Mojidata, MetaHan และ CHISE",
+  "app.rcc.open": "เปิด {code} บน Rare Character Compendium"
 }
