@@ -485,8 +485,10 @@
           {/if}
           <li><span class="what">{t('cheatsheet.source.outlines')}</span> <a href="https://github.com/notofonts/noto-cjk" target="_blank" rel="noreferrer">Noto Sans CJK</a> · <a href="https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project" target="_blank" rel="noreferrer">Plangothic</a> · <a href="https://github.com/mkpoli/han-compose" target="_blank" rel="noreferrer">han-compose</a> <code>{outlines.composer.commit}</code> · <a href="https://glyphwiki.org/wiki/jmj-034221@1">𡮂 JMJ-034221</a> · <a href="https://glyphwiki.org/wiki/u4d22-var-001@1">䴢 (u)</a> · <a href="https://github.com/NightFurySL2001/bai-ids/blob/0ca5ed48f51821d4d54246196f1f5f38c9d6bd6a/fonts/example.woff2">父 (qq222), 八d, 丰..p</a> © 2024–2025 -PT_AxH_RV- · <a href={exampleLicence}>SIL OFL 1.1</a> · <a href="https://glyphwiki.org/wiki/u2db01-j@5">午(t)</a> · <a href="https://glyphwiki.org/wiki/u4e42-j@2">乂J (GlyphWiki)</a> · {#each [
             ['口y (𢡌, KP)', 'u2284c-kp@1'],
+            ['𡞔 (KP)', 'u21794-var-004@1'],
             ['几n (𤙍)', 'u2464d-g@1'],
             ['匚g (𤰴)', 'u24c34@4'],
+            ['CDP-86F1', 'cdp-86f1@2'],
             ['匚w (𬼖)', 'u2cf16-j@3'],
             ['𤽄 (.)', 'u24f44-g@3'],
             ['木 (y)', 'u2097d-j@2'],

@@ -165,6 +165,9 @@ try {
         const entry = tip.locator('li').filter({ hasText: new RegExp(identifier.replace(/[().]/gu, '\\$&')) }).first()
         await entry.waitFor()
         assert.equal(await entry.locator('svg').count(), Number(ink), `${scheme}: ${written} ${identifier} evidence`)
+        if (written === '口.' && identifier === '(y)') {
+          assert.equal(await entry.locator('small').innerText(), '𢡌 (KP1-43EE)')
+        }
         await page.mouse.move(0, 0)
       }
       // All eleven 龜 leaves select their own ink, including each stroke of the chain.
