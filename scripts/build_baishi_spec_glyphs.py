@@ -74,7 +74,7 @@ NOTO_SPECS = [
     ("滿.", "滿", "ZHS"),
     ("父.", "父", "ZHS"),
     ("卮.", "卮", "ZHS"),              # ids_lv0 row 1391: 卮. = ⿸𠂋㔾.
-    ("卮qq123", "卮", "JAN"),          # ids_lv0 row 1391 & UCV 123: 卮qq123 = ⿸𠂋巳.
+    ("卮qq123", "卮", "JAN"),          # Previous JAN outline supplies this witness’s ink bounds.
     ("丰.", "丰", "ZHS"),
     ("邦.", "邦", "ZHS"),
     ("勳.", "勳", "ZHS"),
@@ -227,6 +227,20 @@ def fit_paths(paths):
     return "".join(out)
 
 
+def match_ink_bounds(path, reference):
+    source = BoundsPen(None)
+    target = BoundsPen(None)
+    parse_path(path, source)
+    parse_path(reference, target)
+    left, top, right, bottom = source.bounds
+    target_left, target_top, target_right, target_bottom = target.bounds
+    sx = (target_right - target_left) / (right - left)
+    sy = (target_bottom - target_top) / (bottom - top)
+    pen = SVGPathPen(None, ntos=lambda n: f"{n:.1f}".removesuffix(".0"))
+    parse_path(path, TransformPen(pen, (sx, 0, 0, sy, target_left - sx * left, target_top - sy * top)))
+    return pen.getCommands()
+
+
 def main():
     cache = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "cache"
     out = {}
@@ -281,7 +295,10 @@ def main():
 
     kage = subprocess.check_output(["node", ROOT / "scripts/build_baishi_spec_kage.mjs"], text=True)
     for key, path in json.loads(kage).items():
-        out[key] = fit_paths([path])
+        if key == "卮qq123":
+            out[key] = match_ink_bounds(path, out[key])
+        else:
+            out[key] = fit_paths([path])
 
     TARGET.write_text(json.dumps(out, ensure_ascii=False, indent=1) + "\n")
     print(f"Wrote {len(out)} glyphs ({TARGET.stat().st_size} bytes) -> {TARGET.relative_to(ROOT)}")

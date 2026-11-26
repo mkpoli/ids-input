@@ -86,6 +86,7 @@
   const GLYPHS = /** @type {Record<string, string>} */ (specGlyphs)
   const GLYPHWIKI_CREDITS = /** @type {const} */ ([
     ['烕 (q008a2)', 'u2ff5-u620a-u5929@3'],
+    ['卮 (qq123)', 'u2ff8-u2008b-u5df3@2'],
     ['叱 (V)', 'u53f1-v@3'],
     ['𡮂 (J)', 'koseki-085450@6'],
     ['𡭽 (J)', 'u21b7d-j@2'],
