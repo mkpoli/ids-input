@@ -45,6 +45,15 @@ describe('the zi.tools IDS Extension page glyph witnesses', () => {
     }
   })
 
+  it('pairs each stroke-level 七 glyph with its lv0 description', () => {
+    const seven = EXAMPLES.lists.find(example => example.char === '七')
+    expect(seven.at).toEqual(['DB', 'lv0 l.4'])
+    expect(seven.forms.map(({ glyph, body, tag }) => [glyph, body, tag])).toEqual([
+      ['七.', '⿻乚.一.', '.'], ['七T', '⿻乚w一.', 'T'], ['七t', '⿻乚t一.', 't'],
+    ])
+    expect(seven.text).toBe(seven.forms.map(({ body, tag }) => `${body}(${tag})`).join(';'))
+  })
+
   it('credits every GlyphWiki witness revision in GLYPHWIKI_CREDITS', () => {
     const kage = readFileSync(new URL('../scripts/build_baishi_spec_kage.mjs', import.meta.url), 'utf8')
     const revisions = [...kage.matchAll(/:\s*'([a-z0-9-]+@\d+)'/g)].map(m => m[1])
