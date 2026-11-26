@@ -635,7 +635,7 @@ export const PREFIX_COMPARISONS = [
   ] },
   { columns: [
     { char: '叱', line: 1522, entries: [
-      { glyph: '叱V', text: '{?叱}⿰口.七.(V)' }, { glyph: '叱.', text: '⿰口.𠤎.(.)' },
+      { glyph: '叱V', text: '{?叱}⿰口.七.(V)', reference: { label: 'U+20B9F · CID+59631', url: 'https://github.com/adobe-fonts/source-han-sans/blob/2.005R/Resources/AI0-SourceHanSans' } }, { glyph: '叱.', text: '⿰口.𠤎.(.)' },
     ] },
     { char: '𠮟', line: 30572, entries: [{ glyph: '𠮟', text: '⿰口.七.' }] },
   ] },

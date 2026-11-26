@@ -560,10 +560,14 @@
                       <div class="prefix-entry">
                         {#if entry.glyph}
                           <div class="glyph-tile">{@render glyphBox(entry.glyph, tag ? `${column.char} (${tag})` : column.char)}</div>
-                        {:else if entry.reference}
+                        {/if}
+                        {#if entry.reference && !entry.glyph}
                           <a class="at" href={entry.reference.url}>{entry.reference.label} ↗</a>
                         {/if}
                         <span class="ids" lang="zh-Hans">{#if prefix}<mark>{prefix}</mark>{/if}{body.slice(prefix.length)}{#if tag}<span class="tag">({tag})</span>{/if}</span>
+                        {#if entry.glyph && entry.reference}
+                          <a class="label" href={entry.reference.url}>{entry.reference.label}</a>
+                        {/if}
                       </div>
                     {/each}
                     <a class="at" href={`${DATABASE.url}/blob/${DATABASE.commit}/ids_lv0.txt#L${column.line}`}>DB lv0 l.{column.line}</a>
