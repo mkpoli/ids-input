@@ -18,6 +18,9 @@
   // draws them (`formed`), a form no code point names, written with its variant identifier (壬q0012).
   import { OPERATOR_GROUPS, isCustom, isNode, parse, partAt, samePath, write } from '../core/ids.js'
   import { codePoints, variationBase, variationOf, withVariation } from '../core/variation.js'
+  import IdsRateForms from './IdsRateForms.svelte'
+  import { rateFormsOfPart, rateFormText, readRateForm } from '../core/rate-forms.js'
+  import { marksOf, withMarks } from '../core/marks.js'
   import { componentForms, drawnForm } from '../core/forms.js'
   import { loadUcvIndex } from './ucv.js'
   import IdsPartIcon from './IdsPartIcon.svelte'
@@ -59,7 +62,7 @@
   /** What a component can be written as, its character first. None where it has no other form. A
    * component that is the whole text takes no variant identifier, which only a description carries.
    * @param {Part | undefined} part @param {Path} path */
-  const formsOf = (part, path) => componentForms(part, { sequences, ucv, variants: Boolean(editor.adapter.formed) && path.length > 0 })
+  const formsOf = (part, path) => componentForms(isNode(part) ? rateFormsOfPart(part)[0]?.host : part, { sequences, ucv, variants: Boolean(editor.adapter.formed) && path.length > 0 })
   /** The forms under one heading each: the character and its variation sequences, then each entry's.
    * @param {import('../core/forms.js').ComponentForm[]} forms */
   function formGroups(forms) {
@@ -78,6 +81,11 @@
   function chooseForm(form, path) {
     const part = partAt(editor.tree, path)
     // The form already written is left as it is, with no step to undo.
+    if (isNode(part)) {
+      const replacement = form.kind === 'variant' ? withMarks(form.write, marksOf(part)) : readRateForm(part, form.write)
+      if (replacement !== null) editor.put(replacement, path)
+      return
+    }
     if (typeof part !== 'string' || variationOf(part) === form.write) return
     if ((form.kind === 'plain' || form.kind === 'sequence') && editor.vary(form.write, path)) return
     // A component is put as it is written: the editor's own reading would take the letters of a
@@ -253,7 +261,7 @@
   function openMenu(path, x, y) {
     if (editor.disabled) return
     // Placed where it opened, over everything (so no scrolled or clipped box moves or cuts it), kept inside the window.
-    const W = 260, H = 280 + formGroups(formsOf(partAt(editor.tree, path), path)).reduce((sum, group) => sum + 30 + Math.ceil(group.forms.length / 6) * 42, 0)
+    const W = 260, H = 280 + (rateFormsOfPart(partAt(editor.tree, path)).length ? 132 : 0) + formGroups(formsOf(partAt(editor.tree, path), path)).reduce((sum, group) => sum + 30 + Math.ceil(group.forms.length / 6) * 42, 0)
     menu = { path, x: Math.max(8, Math.min(x, innerWidth - W - 8)), y: Math.max(8, Math.min(y, innerHeight - H - 8)) }
     editor.choose(path, { toggle: false })
     queueMicrotask(() => /** @type {HTMLElement | null | undefined} */ (menuEl?.querySelector('[role^="menuitem"]'))?.focus())
@@ -262,7 +270,9 @@
   function openForms(path, anchor) {
     if (editor.disabled) return
     const groups = formGroups(formsOf(partAt(editor.tree, path), path)), r = anchor.getBoundingClientRect()
-    const W = Math.min(Math.max(...groups.map(group => group.forms.length), 3), 6) * 42 + 14, H = groups.reduce((sum, group) => sum + 30 + Math.ceil(group.forms.length / 6) * 42, 10)
+    const rate = rateFormsOfPart(partAt(editor.tree, path)).length > 0
+    const W = Math.max(rate ? 248 : 0, Math.min(Math.max(...groups.map(group => group.forms.length), 3), 6) * 42 + 14)
+    const H = groups.reduce((sum, group) => sum + 30 + Math.ceil(group.forms.length / 6) * 42, rate ? 142 : 10)
     menu = { path, forms: true, x: Math.max(8, Math.min(r.left, innerWidth - W - 8)), y: r.bottom + 4 + H > innerHeight - 8 ? Math.max(8, r.top - H - 4) : r.bottom + 4 }
     editor.choose(path, { toggle: false })
     queueMicrotask(() => /** @type {HTMLElement | null | undefined} */ (menuEl?.querySelector('[aria-checked="true"]') ?? menuEl?.querySelector('[role^="menuitem"]'))?.focus())
@@ -315,6 +325,7 @@
     else if (event.key === 'Home' || event.key === 'End') { event.preventDefault(); items[event.key === 'Home' ? 0 : items.length - 1]?.focus() }
   }
   const menuPart = $derived(menu ? partAt(editor.tree, menu.path) : undefined)
+  const menuRate = $derived(rateFormsOfPart(menuPart))
   const menuForms = $derived(menu ? formsOf(menuPart, menu.path) : [])
   const menuGroups = $derived(formGroups(menuForms))
   /** A click on a node's frame, away from its parts and buttons, chooses it. @param {MouseEvent} event @param {Path} path */
@@ -329,6 +340,19 @@
 </script>
 
 <svelte:window onpointerdown={event => { if (menu && !menuEl?.contains(/** @type {Node} */ (event.target))) closeMenu({ refocus: false }) }} />
+
+{#snippet formsToggle(/** @type {Part} */ part, /** @type {Path} */ path)}
+  {#if formsOf(part, path).length || rateFormsOfPart(part).length}
+      {@const open = menu?.forms === true && samePath(menu.path, path)}
+      <button type="button" class="ids-forms-toggle" class:varied={varied(part) || isNode(part)} disabled={editor.disabled} aria-haspopup="menu" aria-expanded={open}
+        aria-label={t('ids.variants.label', { part: rateFormsOfPart(part)[0]?.host ?? variationBase(part) ?? '' })} title={t('ids.variants.label', { part: rateFormsOfPart(part)[0]?.host ?? variationBase(part) ?? '' })}
+        data-hover-path={key(path)} ondragover={event => dragover(event, path)} ondragleave={() => { overPath = null; overSwap = false }} ondrop={event => drop(event, path)}
+        onkeydown={event => { if (event.key === 'Backspace' || event.key === 'Delete') event.stopPropagation() }}
+        onpointerdown={event => { if (open) event.stopPropagation() }} onclick={event => { if (open) closeMenu(); else openForms(path, event.currentTarget) }}>
+        <svg viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+      </button>
+    {/if}
+{/snippet}
 
 {#snippet box(/** @type {Part} */ part, /** @type {Path} */ path, /** @type {{ op: string, n: number } | null} */ parent)}
   {@const selected = samePath(editor.chosen, path)}
@@ -350,6 +374,7 @@
         {:else}
           <span class="ids-subsequence" lang="ja" title={write(part)}>{write(part)}</span>
         {/if}
+        {#if rateFormsOfPart(part).length}{@render formsToggle(part, path)}{/if}
         <button type="button" class="ids-unwrap" tabindex="-1" disabled={editor.disabled} aria-label={t('ids.unwrapNode', { what })} title={t('ids.unwrapHint')}
           onclick={() => editor.remove(path)}>×</button>
       </div>
@@ -369,16 +394,7 @@
       aria-label={parent ? t('ids.part', { part: label, n: parent.n, name: editor.name(parent.op) }) : label}
       onclick={() => editor.choose(path)} oncontextmenu={event => contextmenu(event, path)} onkeydown={event => partKey(event, path)}
       ondragover={event => dragover(event, path)} ondragleave={() => { overPath = null; overSwap = false }} ondrop={event => drop(event, path)}>{#if part !== null && isCustom(part)}<span class="ids-custom"><IdsPartIcon sequence={part} adapter={editor.adapter} /><span class="ids-custom-name">{part}</span></span>{:else if part !== null && varied(part) && editor.adapter.icon}<span class="ids-form"><IdsPartIcon sequence={variationOf(part)} adapter={editor.adapter} />{part.slice(variationOf(part).length)}</span>{:else}{part ?? '⬚'}{/if}</button>
-    {#if formsOf(part, path).length}
-      {@const open = menu?.forms === true && samePath(menu.path, path)}
-      <button type="button" class="ids-forms-toggle" class:varied={varied(part)} disabled={editor.disabled} aria-haspopup="menu" aria-expanded={open}
-        aria-label={t('ids.variants.label', { part: variationBase(part) ?? '' })} title={t('ids.variants.label', { part: variationBase(part) ?? '' })}
-        data-hover-path={key(path)} ondragover={event => dragover(event, path)} ondragleave={() => { overPath = null; overSwap = false }} ondrop={event => drop(event, path)}
-        onkeydown={event => { if (event.key === 'Backspace' || event.key === 'Delete') event.stopPropagation() }}
-        onpointerdown={event => { if (open) event.stopPropagation() }} onclick={event => { if (open) closeMenu(); else openForms(path, event.currentTarget) }}>
-        <svg viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
-      </button>
-    {/if}
+    {@render formsToggle(part, path)}
     {/if}
   {/if}
 {/snippet}
@@ -417,12 +433,13 @@
     <!-- svelte-ignore a11y_interactive_supports_focus -->
     <div class="ids-menu" role="menu" tabindex="-1" aria-label={t('ids.menu.label', { part: editor.sequenceAt(menu.path) })} bind:this={menuEl}
       style:left="{menu.x}px" style:top="{menu.y}px" onkeydown={menuKey}>
-      {#if menuForms.length && typeof menuPart === 'string'}
+      {#if menuRate.length}<IdsRateForms {editor} path={menu.path} forms={menuRate} menu onchoose={() => closeMenu()} />{/if}
+      {#if menuForms.length}
         {#each menuGroups as group (group.key)}
           <p class="ids-menu-title">{group.title ?? t('ids.variants.label', { part: menuForms[0].write })}</p>
           <div class="ids-menu-forms" data-forms={group.key || 'own'}>
             {#each group.forms as form (form.write)}
-              <button type="button" role="menuitemradio" class="ids-menu-form" data-form={form.write} aria-checked={variationOf(menuPart) === form.write} title={formTitle(form)} aria-label={formTitle(form)}
+              <button type="button" role="menuitemradio" class="ids-menu-form" data-form={form.write} aria-checked={rateFormText(menuPart) === form.write} title={formTitle(form)} aria-label={formTitle(form)}
                 onclick={() => run(() => chooseForm(form, /** @type {Path} */ (menu?.path)))}><IdsPartIcon sequence={form.write} adapter={editor.adapter} /></button>
             {/each}
           </div>
@@ -538,6 +555,7 @@
   .ids-form{display:inline-flex;align-items:center}
   /* The variation sequences of a component, opened from its corner. */
   .ids-forms-toggle{position:absolute;z-index:1;right:3px;bottom:3px;display:grid;place-items:center;width:18px;height:18px;padding:0;border-radius:5px;color:var(--_muted);background:var(--_surface)}
+  .ids-head > .ids-forms-toggle{position:static;margin-inline-end:4px}
   .ids-forms-toggle svg{width:12px;height:12px}
   .ids-forms-toggle:not(:disabled):hover,.ids-forms-toggle[aria-expanded="true"],.ids-forms-toggle.varied{color:var(--_accent);border-color:var(--_accent)}
   /* An enclosing part keeps its button in the band its glyph stands in, clear of the part inside. */
