@@ -5,7 +5,7 @@ import { gunzipSync } from 'node:zlib'
 import { createParser, textOf } from '../demo/lib/baishi-parser.js'
 import { places, readChain, readEntry, readIndex, readOverlap, readPrefix, readRow, readVariant, variantIds } from '../demo/lib/baishi-reading.js'
 import { indexRows, REVISION, rowSource } from '../demo/lib/zi-tools-rows.js'
-import { MALFORMED } from '../demo/lib/baishi.js'
+import { MALFORMED, PREFIX_COMPARISONS, splitTag } from '../demo/lib/baishi.js'
 
 // The parser on the zi.tools IDS Extension appendix reads the grammar file itself, and the rows it
 // looks up are a pinned copy of yi-bai/ids.
@@ -41,6 +41,22 @@ describe('the pinned rows of yi-bai/ids', () => {
     rebuild().forEach((text, level) => {
       expect(createHash('sha256').update(text).digest('hex')).toBe(HASHES[/** @type {0 | 1 | 2} */ (level)])
     })
+  })
+  it('compares distinct code points at their cited lv0 rows and aligns matching IDS bodies', () => {
+    const rows = indexRows(table)
+    for (const { columns: [left, right] } of PREFIX_COMPARISONS) {
+      expect(left.char).not.toBe(right.char)
+      for (const column of [left, right]) {
+        const record = rows.get(column.char)[0]
+        expect([record.level, record.line]).toEqual([0, column.line])
+        const descriptions = record.text.split('\t').slice(1).flatMap(group => group.split(';'))
+        for (const { text } of column.entries) expect(descriptions).toContain(text)
+      }
+      const prefixed = left.entries.filter(entry => entry.text.startsWith('{'))
+      for (const [index, entry] of prefixed.entries()) {
+        expect(splitTag(entry.text).body.replace(/^\{[^}]+\}/u, '')).toBe(splitTag(right.entries[index].text).body)
+      }
+    }
   })
   it('are found by character, with the line of each level that differs', () => {
     const rows = indexRows(table)

@@ -4,6 +4,7 @@
   // the merge levels, each example cited to the guide's section or the database row it comes from
   // (demo/lib/baishi.js). What earlier drafts and a proposal say stands apart, under other sources.
   import PageHeader from './ui/PageHeader.svelte'
+  import { codePoints } from '../src/core/variation.js'
   import { translator } from '../src/svelte/index.js'
   import { watchFallback } from '../src/svelte/fallback-font.js'
   import { LOCALES, appMessages } from './lib/locales.js'
@@ -15,9 +16,10 @@
   import { railroad, readGrammar } from './lib/railroad.js'
   import {
     ANGLES, CELLS, CHANGES, COMPOUNDS, DATABASE, DATA_DIFFERENCES, EBNF, EXAMPLES, GUIDE, KINDS, MALFORMED, OPERATORS, OTHER_DOCUMENTS, OTHER_EXAMPLES,
-    OTHER_QUOTES, QUOTES, QU_STEPS, SLICES, SOURCES, SPECIAL, TOOLS, STROKE_LETTERS, STYLE_LETTERS, SUBTRACTIONS, UNSETTLED, splitTag,
+    OTHER_QUOTES, PREFIX_COMPARISONS, QUOTES, QU_STEPS, SLICES, SOURCES, SPECIAL, TOOLS, STROKE_LETTERS, STYLE_LETTERS, SUBTRACTIONS, UNSETTLED, splitTag,
   } from './lib/baishi.js'
   import specGlyphs from './lib/baishi-spec-glyphs.json'
+  import sourceHanLicence from '../fonts/OFL-SourceHanSans.txt?url'
   import exampleLicence from '../fonts/OFL-Baishi-example.txt?url'
   import en from './lib/baishi-quotes/en.json'
   import ja from './lib/baishi-quotes/ja.json'
@@ -86,7 +88,7 @@
   const GLYPHS = /** @type {Record<string, string>} */ (specGlyphs)
   const GLYPHWIKI_CREDITS = /** @type {const} */ ([
     ['烕 (q008a2)', 'u2ff5-u620a-u5929@3'],
-    ['叱 (V)', 'u53f1-v@3'],
+    ['暅 (P), 𣈶 (T)', 'u23236@14'],
     ['𡮂 (J)', 'koseki-085450@6'],
     ['𡭽 (J)', 'u21b7d-j@2'],
     ['𦥮 (T)', 'u2696e-t@1'],
@@ -546,7 +548,34 @@
         {@render said('uniqueSource', ['I26', '§7.1'])}
         {@render said('abstract', ['I26', '§7.1'])}
         <p class="link"><a href={DATABASE.abstractShape} target="_blank" rel="noreferrer">{DATABASE.abstractShape}</a> {@render at(['I26', '§7.1'])}</p>
-        {@render examples('unique')}
+        <div class="examples">
+          {#each PREFIX_COMPARISONS as comparison (comparison.columns[0].char)}
+            <article class="example prefix-example">
+              <div class="prefix-columns">
+                {#each comparison.columns as column (column.char)}
+                  <section class="prefix-column">
+                    <h3><span lang="zh-Hans">{column.char}</span> <code>{codePoints(column.char)}</code></h3>
+                    {#each column.entries as entry (entry.text)}
+                      {@const { body, tag } = splitTag(entry.text)}
+                      {@const prefix = body.match(/^\{[^}]+\}/u)?.[0] ?? ''}
+                      <div class="prefix-entry">
+                        <div class="glyph-tile">{@render glyphBox(entry.glyph, tag ? `${column.char} (${tag})` : column.char)}</div>
+                        <span class="ids" lang="zh-Hans">{#if prefix}<mark>{prefix}</mark>{/if}{body.slice(prefix.length)}{#if tag}<span class="tag">({tag})</span>{/if}</span>
+                        {#if entry.reference}
+                          <a class="label" href={entry.reference.url}>{entry.reference.label}</a>
+                        {/if}
+                      </div>
+                    {/each}
+                    <a class="at" href={`${DATABASE.url}/blob/${DATABASE.commit}/ids_lv0.txt#L${column.line}`}>DB lv0 l.{column.line}</a>
+                  </section>
+                {/each}
+              </div>
+              {#if comparison.quote}
+                {@render said(comparison.quote, ['I26', '§7.1'])}
+              {/if}
+            </article>
+          {/each}
+        </div>
       </section>
 
       <section id="replace" aria-labelledby="replace-title">
@@ -658,8 +687,11 @@
               <p class="doc-title">{t('cheatsheet.source.outlines')}</p>
               <p class="note">
                 <a href="https://github.com/notofonts/noto-cjk/tree/Sans2.004/Sans/Variable/TTF" target="_blank" rel="noreferrer">Noto Sans CJK JP 2.004 VF</a> (ZHS, ZHH, ZHT, JAN; 十.t ← 戢 SC, 子t ← 孩, 凵y ← 世) ·
+                <a href="https://github.com/adobe-fonts/source-han-sans/blob/2.005R/Resources/AI0-SourceHanSans" target="_blank" rel="noreferrer">Source Han Sans JP 2.005 (𠮟, 叱V)</a> © 2014–2025 Adobe (<a href={sourceHanLicence}>SIL OFL 1.1</a>) ·
                 <a href="https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project/releases/tag/V2.9.5795" target="_blank" rel="noreferrer">Plangothic P1/P2 V2.9.5795</a> ·
                 <a href="https://github.com/NightFurySL2001/bai-ids/blob/0ca5ed48f51821d4d54246196f1f5f38c9d6bd6a/fonts/example.woff2" target="_blank" rel="noreferrer">bai-ids example.woff2</a> © 2024–2025 -PT_AxH_RV- (<a href={exampleLicence}>SIL OFL 1.1</a>) ·
+                <a href="https://www.unicode.org/notes/tn50/tn50-6.html#Description" target="_blank" rel="noreferrer">Ken Lunde, UTN #50 (2026) · KP1-49AC (U+6685, U+23236)</a> ·
+                <a href="https://cdp.sinica.edu.tw/service/documents/transfer/trans20070824.pdf" target="_blank" rel="noreferrer">《明史》舊版造字轉碼說明 · 2198 (𣈶)</a> ·
                 <a href="https://github.com/yi-bai/iwds/tree/8302302d615ff1c1f60ae335b118b10060be0ed4" target="_blank" rel="noreferrer">IWDS UCV 316, 393, 438, 454a</a> ·
                 {#each GLYPHWIKI_CREDITS as [label, source], i (source)}{#if i} · {/if}<a href={`https://glyphwiki.org/wiki/${source}`} target="_blank" rel="noreferrer">{label}</a>{/each}
               </p>
@@ -799,6 +831,16 @@
   .glyph-svg{display:block;inline-size:100%;block-size:100%;fill:var(--ui-color-ink)}
   .glyph-svg.ref{fill:var(--ui-color-ink-soft)}
   .forms{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,104px),1fr));gap:8px}
+  .prefix-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .prefix-column{margin:0;display:flex;flex-direction:column;gap:8px;min-inline-size:0;padding:8px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-sm);background:var(--ui-color-surface-sunken)}
+  .prefix-column h3{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin:0;font-size:16px}
+  .prefix-column h3 code{font:normal 11px var(--ui-font-mono);color:var(--ui-color-ink-muted)}
+  .prefix-entry{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+  .prefix-entry .ids{font-size:14px}
+  .prefix-entry .glyph-tile{background:var(--ui-color-surface)}
+  .prefix-entry mark{background:var(--ui-color-accent-soft);color:var(--ui-color-accent)}
+  .prefix-column .at{align-self:flex-start;margin-block-start:auto}
+  .prefix-example blockquote{margin:0}
   .forms.many{grid-template-columns:repeat(auto-fill,minmax(min(100%,168px),1fr))}
   .form{display:flex;flex-direction:column;align-items:center;gap:5px;min-inline-size:0;padding:8px 6px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-sm);background:var(--ui-color-surface-sunken);text-align:center}
   .form.plain{justify-content:center;border-style:dashed;background:transparent}

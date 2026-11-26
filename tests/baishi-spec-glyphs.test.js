@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import { Resvg } from '@cf-wasm/resvg/node'
 import { enclosed, SQUARE } from '../scripts/lib/outline.mjs'
 import { readFileSync } from 'node:fs'
-import { EXAMPLES } from '../demo/lib/baishi.js'
+import { EXAMPLES, PREFIX_COMPARISONS } from '../demo/lib/baishi.js'
 
 const glyphs = JSON.parse(readFileSync(new URL('../demo/lib/baishi-spec-glyphs.json', import.meta.url), 'utf8'))
 const page = readFileSync(new URL('../demo/Baishi.svelte', import.meta.url), 'utf8')
@@ -22,6 +22,14 @@ describe('the zi.tools IDS Extension page glyph witnesses', () => {
           used.add(form.glyph)
           expect(typeof glyphs[form.glyph], `${group} ${ex.char ?? ex.text}: ${form.glyph}`).toBe('string')
           expect(glyphs[form.glyph]).toMatch(/^M/)
+        }
+      }
+    }
+    for (const { columns } of PREFIX_COMPARISONS) {
+      for (const { entries } of columns) {
+        for (const { glyph } of entries) {
+          used.add(glyph)
+          expect(glyphs[glyph]).toMatch(/^M/)
         }
       }
     }
