@@ -1,7 +1,7 @@
 {
   "unicode": "18.0.0",
   "scope": "Assigned fallback candidates excluding exact dedicated-bundle records and pinned host CJK outlines; private use excluded",
-  "count": 11367,
+  "count": 10406,
   "blocks": [
     {
       "block": "Archaic Cuneiform Numerals",
@@ -40,26 +40,6 @@
         [
           101760,
           101874
-        ]
-      ]
-    },
-    {
-      "block": "Jurchen",
-      "count": 910,
-      "ranges": [
-        [
-          101892,
-          102801
-        ]
-      ]
-    },
-    {
-      "block": "Jurchen Radicals",
-      "count": 51,
-      "ranges": [
-        [
-          102816,
-          102866
         ]
       ]
     },
