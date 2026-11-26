@@ -1,7 +1,8 @@
-// Run against a local devrun/preview server with IDS_URL. Verifies the zi.tools IDS Extension
-// specification page (/baishi) renders its attested variant glyph comparisons in light and dark
-// schemes on both desktop and phone widths with no page errors, no horizontal overflow, and
-// distinct SVG outlines for each multi-variant and reference-vs-variant card.
+// Run against a local devrun/preview server with IDS_URL set:
+//   IDS_URL=http://localhost:5193 bun demo/check-baishi.js
+// Verifies the zi.tools IDS Extension specification page (/baishi) renders its attested variant
+// glyph comparisons in light and dark schemes on both desktop and phone widths with no page errors,
+// no horizontal overflow, preserved printed IDS rows, and distinct SVG outlines per variant.
 import { chromium } from 'playwright-core'
 import { strict as assert } from 'node:assert'
 
@@ -47,6 +48,11 @@ try {
           lingRow: pathsFor('亽卩'),
           ucvKou: pathsFor('(q3162)'),
           ucvXu: pathsFor('(q008a2)'),
+          printedLeng: cards.find(el => el.textContent?.includes('令H'))?.querySelector('.printed')?.textContent ?? '',
+          segLabels: (() => {
+            const card = cards.find(el => el.textContent?.includes('⿻[a]㇉一'))
+            return card ? [...card.querySelectorAll('svg.glyph-svg')].map(s => s.getAttribute('aria-label')) : []
+          })(),
         }
       })
       assert.equal(new Set(checked.gong).size, 2, `${view}: 公 contrasts (.) and (T)`)
@@ -57,6 +63,8 @@ try {
       assert.equal(new Set(checked.lingRow).size, 6, `${view}: 令 shows its six attested variant outlines`)
       assert.equal(new Set(checked.ucvKou).size, 2, `${view}: 口 contrasts (.) and (q3162)`)
       assert.equal(new Set(checked.ucvXu).size, 2, `${view}: 烕 contrasts (.) and (q008a2)`)
+      assert.ok(checked.printedLeng.includes(';'), `${view}: variant cards preserve printed semicolon IDS row`)
+      assert.deepEqual(checked.segLabels, ['𠀁', '⿻[b]㇉一'], `${view}: 𠀁 segment comparison labels each SVG distinctly`)
 
       if (shots) {
         await page.locator('#variants .examples').first().scrollIntoViewIfNeeded()

@@ -94,7 +94,7 @@
     ['𡕆 (.)', 'u21546-g@1'],
     ['𡕆 (J)', 'u21546-j@2'],
     ['𡕆 (T)', 'u21546-var-001@2'],
-    ['𠕋 (T)', 'u2054b-g@1'],
+    ['𠕋', 'u2054b-g@1'],
   ])
   /** @type {HTMLElement | null} */ let page = $state(null)
   $effect(() => { if (page) return watchFallback(page) })
@@ -158,12 +158,17 @@
 
 {#snippet example(/** @type {import('./lib/baishi.js').Example} */ one)}
   {@const variantCards = one.forms?.some(form => form.body)}
+  {@const perFormTo = Boolean(one.forms?.some(form => form.to))}
   {@const contrastPair = Boolean(one.forms?.length && !variantCards)}
   {@const hasRef = Boolean(one.forms?.some(form => form.reference))}
   <article class="example" class:wide={one.wide}>
     {#if variantCards && one.forms}
       <header class="head">
         {#if one.char}<span class="char" lang="zh-Hans">{one.char}</span>{/if}
+        <span class="text printed">
+          {@render written(one.text)}
+          {#if one.to && perFormTo}<span class="to"><span class="arrow" aria-label={t('baishi.becomes')}>→</span>{@render written(one.to)}</span>{/if}
+        </span>
         <span class="meta">{#if one.label}<span class="label">{one.label}</span>{/if}{@render at(one.at)}</span>
       </header>
       <ul class="forms" class:many={one.forms.length > 3}>
@@ -175,12 +180,13 @@
             <div class="form-text">
               {#if form.tag}<span class="tag">({form.tag})</span>{/if}
               {#if form.body}<span class="ids" lang="zh-Hans">{form.body}</span>{/if}
+              {#if form.to}<span class="ids alt-ids" lang="zh-Hans"><span class="arrow" aria-label={t('baishi.becomes')}>→</span>{form.to}</span>{/if}
               {#if form.alt}<span class="ids alt-ids" lang="zh-Hans"><span class="tab" title="TAB">⇥</span>{form.alt}</span>{/if}
             </div>
           </li>
         {/each}
       </ul>
-      {#if one.to}
+      {#if one.to && !perFormTo}
         <div class="to-row"><span class="arrow" aria-label={t('baishi.becomes')}>→</span>{@render written(one.to)}</div>
       {/if}
     {:else}
@@ -214,7 +220,7 @@
             {#if i > 0}<span class="pair-arrow" aria-hidden="true">→</span>{/if}
             <div class="part-chip" class:ref={form.reference} class:target={!form.reference}>
               {#if form.glyph}
-                <div class="glyph-tile mini">{@render glyphBox(form.glyph, `${form.char ?? ''}${form.tag ?? ''}`, Boolean(form.reference))}</div>
+                <div class="glyph-tile mini">{@render glyphBox(form.glyph, `${form.char ?? ''}${form.tag ? ` (${form.tag})` : ''}`, Boolean(form.reference))}</div>
               {/if}
               <span class="part-label" lang="zh-Hans">{form.char ?? ''}<span class:tag={!form.reference} class:muted={form.reference}>{form.tag ?? ''}</span></span>
             </div>
@@ -650,8 +656,8 @@
             <div>
               <p class="doc-title">{t('cheatsheet.source.outlines')}</p>
               <p class="note">
-                <a href="https://github.com/notofonts/noto-cjk/tree/Sans2.004/Sans/Variable/TTF" target="_blank" rel="noreferrer">Noto Sans CJK JP 2.004 VF</a> (ZHS, ZHH, ZHT, JAN, KOR; 十.t ← 戢 SC, 子t ← 孩, 凵y ← 世) ·
-                <a href="https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project" target="_blank" rel="noreferrer">Plangothic P1/P2</a> ·
+                <a href="https://github.com/notofonts/noto-cjk/tree/Sans2.004/Sans/Variable/TTF" target="_blank" rel="noreferrer">Noto Sans CJK JP 2.004 VF</a> (ZHS, ZHH, ZHT, JAN; 十.t ← 戢 SC, 子t ← 孩, 凵y ← 世) ·
+                <a href="https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project/releases/tag/V2.9.5795" target="_blank" rel="noreferrer">Plangothic P1/P2 V2.9.5795</a> ·
                 <a href="https://github.com/NightFurySL2001/bai-ids/blob/0ca5ed48f51821d4d54246196f1f5f38c9d6bd6a/fonts/example.woff2" target="_blank" rel="noreferrer">bai-ids example.woff2</a> © 2024–2025 -PT_AxH_RV- (<a href={exampleLicence}>SIL OFL 1.1</a>) ·
                 <a href="https://github.com/yi-bai/iwds/tree/8302302d615ff1c1f60ae335b118b10060be0ed4" target="_blank" rel="noreferrer">IWDS UCV 316, 393, 438, 454a</a> ·
                 {#each GLYPHWIKI_CREDITS as [label, source], i (source)}{#if i} · {/if}<a href={`https://glyphwiki.org/wiki/${source}`} target="_blank" rel="noreferrer">{label}</a>{/each}
@@ -815,6 +821,7 @@
   .part-contrast .pair-arrow{padding-block-end:0}
   .part-label{font-family:var(--ids-font);font-size:13px;line-height:1.2;color:var(--ui-color-ink)}
   .text{display:flex;flex-direction:column;gap:2px;min-inline-size:0;flex:1 1 130px}
+  .text.printed .ids{font-size:13.5px;color:var(--ui-color-ink-soft)}
   .ids{font-family:var(--ids-font);font-size:15px;line-height:1.5;color:var(--ui-color-ink);overflow-wrap:anywhere;white-space:pre-wrap}
   .tag{color:var(--ui-color-accent)}
   .semi,.tab{color:var(--ui-color-ink-muted);padding:0 2px}

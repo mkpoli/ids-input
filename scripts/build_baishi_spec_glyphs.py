@@ -7,7 +7,7 @@
     uv run scripts/build_baishi_spec_glyphs.py ~/.cache/ids-input/fonts
 
 Every outline comes from a pinned source: Noto Sans CJK JP 2.004 VF (at wght=400,
-using its OpenType locl tables for ZHS, ZHH, ZHT, JAN and KOR), Plangothic P1/P2,
+using its OpenType locl tables for ZHS, ZHH, ZHT and JAN), Plangothic P1/P2 V2.9.5795,
 NightFurySL2001/bai-ids fonts/example.woff2 (SIL OFL 1.1), the repo's UCV Sans
 outlines, or pinned GlyphWiki revisions via scripts/build_baishi_spec_kage.mjs.
 """
@@ -49,8 +49,8 @@ NOTO_SPECS = [
     ("公.", "公", "ZHS"),
     ("公T", "公", "ZHT"),
     ("惠", "惠", "ZHS"),
-    ("叀.", "叀", "ZHS"),
-    ("叀y2002", "叀", "JAN"),
+    ("叀.", "叀", "ZHS"),              # ids_lv0: 叀. = ⿱𤰔厶.
+    ("叀y2002", "叀", "JAN"),          # ids_lv0: 叀y2002 = ⿱⿻十.日⿰一t丶. (matches top of 惠)
     ("冷.", "冷", "ZHS"),
     ("冷H", "冷", "ZHH"),
     ("冷J", "冷", "JAN"),
@@ -73,8 +73,8 @@ NOTO_SPECS = [
     ("龰.", "龰", "ZHS"),
     ("滿.", "滿", "ZHS"),
     ("父.", "父", "ZHS"),
-    ("卮.", "卮", "ZHS"),
-    ("卮qq123", "卮", "JAN"),
+    ("卮.", "卮", "ZHS"),              # ids_lv0 row 1391: 卮. = ⿸𠂋㔾.
+    ("卮qq123", "卮", "JAN"),          # ids_lv0 row 1391 & UCV 123: 卮qq123 = ⿸𠂋巳.
     ("丰.", "丰", "ZHS"),
     ("邦.", "邦", "ZHS"),
     ("勳.", "勳", "ZHS"),
@@ -99,8 +99,8 @@ NOTO_SPECS = [
     ("与J", "与", "JAN"),
     ("廴", "廴", "ZHS"),
     ("身", "身", "ZHS"),
-    ("径.", "径", "JAN"),
-    ("径T", "径", "ZHT"),
+    ("径.", "径", "JAN"),              # ids_lv0 row 4485: 径. = ⿰彳𢀖.
+    ("径T", "径", "ZHT"),              # ids_lv0 row 4485: {?0径}⿰彳圣(T)
     ("曰", "曰", "ZHS"),
     ("士", "士", "ZHS"),
     ("一.", "一", "ZHS"),

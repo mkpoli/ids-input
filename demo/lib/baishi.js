@@ -10,9 +10,10 @@
 /**
  * One visual glyph form shown on an example card: its key in baishi-spec-glyphs.json (omitted when
  * no attested outline exists), its variant tag or label, its IDS body, an optional alternative
- * decomposition, or whether it is a muted reference form (such as the default form shown beside a
- * tagged variant so the difference is visible at a glance).
- * @typedef {{ glyph?: string, tag?: string, body?: string, alt?: string, reference?: boolean, char?: string }} Form
+ * decomposition, an optional per-form simplification (`to`), or whether it is a muted reference
+ * form (such as the default form shown beside a tagged variant so the difference is visible at a
+ * glance).
+ * @typedef {{ glyph?: string, tag?: string, body?: string, alt?: string, to?: string, reference?: boolean, char?: string }} Form
  */
 /**
  * An example: the character it describes (none for a hypothetical one), the text as printed (rows
@@ -545,8 +546,8 @@ export const EXAMPLES = {
     {
       char: '𠀁', text: '⿻[a]㇉一', to: '⿻㇉一', quote: 'segmentDefault', at: ['I26', '§6.3'],
       forms: [
-        { glyph: '𠀁', body: '⿻[a]㇉一' },
-        { glyph: '⿻[b]㇉一', body: '⿻[b]㇉一' },
+        { glyph: '𠀁', char: '𠀁', body: '⿻[a]㇉一', to: '⿻㇉一' },
+        { glyph: '⿻[b]㇉一', char: '⿻[b]㇉一', body: '⿻[b]㇉一' },
       ],
     },
   ],
@@ -560,7 +561,7 @@ export const EXAMPLES = {
     { char: '身', text: '⿱丿⿹⿴⿻[.x]冂丿二一', glyph: '身', quote: 'shen', at: ['I26', '§6.3'] },
     { char: '𠥻', text: '⿻[,._]〢二t', glyph: '𠥻', quote: 'tiShape', at: ['I26', '§6.3'] },
     { char: '𠂀', text: '⿴⿻[,.x]〢二丶', glyph: '𠂀', at: ['I26', '§6.3'] },
-    { char: '𠕋', text: '⿻[_xx_,]𦉫T二', glyph: '𠕋T', quote: 'hookT', at: ['I26', '§6.3'] },
+    { char: '𠕋', text: '⿻[_xx_,]𦉫T二', glyph: '𠕋', quote: 'hookT', at: ['I26', '§6.3'] },
   ],
   reverseMatrix: [
     { char: '𫠣', text: '⿻[1:|b]𠃌⿱⿻𠃊.一.八d', glyph: '𫠣', at: ['I26', '§6.4'] },

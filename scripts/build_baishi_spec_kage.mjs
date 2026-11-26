@@ -6,7 +6,7 @@ import { Kage, Polygons } from '@kurgm/kage-engine'
 import { area } from './lib/outline.mjs'
 
 export const GLYPHWIKI_SOURCES = {
-  '烕q008a2': 'u2ff5-u620a-u5929@3',
+  '烕q008a2': 'u2ff5-u620a-u5929@3',    // ids_lv0 col 2: ⿵戊天.(q008a2); bai-ids images/ucv-8a.png
   '叱V': 'u53f1-v@3',
   '𡮂J': 'koseki-085450@6',
   '𡭽J': 'u21b7d-j@2',
@@ -14,8 +14,8 @@ export const GLYPHWIKI_SOURCES = {
   '伔J': 'u4f14-j@3',
   '𡕆.': 'u21546-g@1',
   '𡕆J': 'u21546-j@2',
-  '𡕆T': 'u21546-var-001@2',
-  '𠕋T': 'u2054b-g@1',
+  '𡕆T': 'u21546-var-001@2',            // ids_lv0: ⿰壴t咨T(T), 咨T = ⿱次T口. (u6b21-t@8)
+  '𠕋': 'u2054b-g@1',                   // I26 §6.3: ⿻[_xx_,]𦉫T二 (right vertical hooked)
 }
 
 const BUHIN = {

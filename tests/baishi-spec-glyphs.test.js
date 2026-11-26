@@ -36,10 +36,18 @@ describe('the zi.tools IDS Extension page glyph witnesses', () => {
     }
   })
 
-  it('credits every GlyphWiki witness revision in the sources section', () => {
+  it('credits every GlyphWiki witness revision in GLYPHWIKI_CREDITS', () => {
     const kage = readFileSync(new URL('../scripts/build_baishi_spec_kage.mjs', import.meta.url), 'utf8')
     const revisions = [...kage.matchAll(/:\s*'([a-z0-9-]+@\d+)'/g)].map(m => m[1])
+    const creditsBlock = page.match(/const GLYPHWIKI_CREDITS =[\s\S]*?\]\)/)?.[0] ?? ''
     expect(revisions.length).toBeGreaterThan(0)
-    for (const rev of revisions) expect(page).toContain(rev)
+    expect(creditsBlock.length).toBeGreaterThan(0)
+    for (const rev of revisions) expect(creditsBlock).toContain(rev)
+  })
+
+  it('gives contrasted segment forms distinct accessible names', () => {
+    const seg = Object.values(EXAMPLES).flat().find(ex => ex.char === '𠀁')
+    expect(seg?.forms?.map(f => f.char)).toEqual(['𠀁', '⿻[b]㇉一'])
+    expect(seg?.forms?.map(f => f.to)).toEqual(['⿻㇉一', undefined])
   })
 })
