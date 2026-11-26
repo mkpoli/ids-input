@@ -752,12 +752,6 @@
       "url": "https://archive.ubuntu.com/ubuntu/pool/main/f/fonts-noto/fonts-noto-core_20201225-2_all.deb"
     },
     {
-      "file": "Jigmo-20250912-Jigmo3.ttf",
-      "sha256": "815b18c1c670103723fe743090559208fdea47dc587ecb057a5a4721ee8dfeff",
-      "url": "https://kamichikoichi.github.io/jigmo/Jigmo-20250912.zip",
-      "license": "CC0-1.0"
-    },
-    {
       "file": "NotoEmoji.ttf",
       "sha256": "de6c18832938afc99caf132b39d6a30a19bac7f2e812e28db2535b4608d27551",
       "url": "https://raw.githubusercontent.com/google/fonts/8b0a1d0f5983c89bc2b93f1b5fb55f9e252744b5/ofl/notoemoji/NotoEmoji%5Bwght%5D.ttf",
@@ -770,6 +764,18 @@
       "license": "SIL OFL 1.1"
     },
     {
+      "file": "PlangothicP1-Regular.ttf",
+      "sha256": "550b5d0775b15405946b18f4843df439a51e69508d7e6778d94c1f7a53dc5ad6",
+      "url": "https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project/releases/download/V2.9.5795/PlangothicP1-Regular.ttf",
+      "license": "SIL OFL 1.1"
+    },
+    {
+      "file": "PlangothicP2-Regular.ttf",
+      "sha256": "681933370adfe0fc7253f77735275a82fea09fe4f8adba907bdeb46c110daf8f",
+      "url": "https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project/releases/download/V2.9.5795/PlangothicP2-Regular.ttf",
+      "license": "SIL OFL 1.1"
+    },
+    {
       "file": "Jigmo-20250912-Jigmo.ttf",
       "sha256": "c8f295b9bd8f9f117a76b3a454aaaa1bb5b4babc18e254978c6deb88464e40cf",
       "url": "https://kamichikoichi.github.io/jigmo/Jigmo-20250912.zip",
@@ -778,6 +784,12 @@
     {
       "file": "Jigmo-20250912-Jigmo2.ttf",
       "sha256": "5da3582efe77e22073b86b3b86b556d7111148a76b957cfb53318a91da2efff0",
+      "url": "https://kamichikoichi.github.io/jigmo/Jigmo-20250912.zip",
+      "license": "CC0-1.0"
+    },
+    {
+      "file": "Jigmo-20250912-Jigmo3.ttf",
+      "sha256": "815b18c1c670103723fe743090559208fdea47dc587ecb057a5a4721ee8dfeff",
       "url": "https://kamichikoichi.github.io/jigmo/Jigmo-20250912.zip",
       "license": "CC0-1.0"
     },
