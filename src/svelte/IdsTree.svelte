@@ -1,5 +1,5 @@
 <script>
-  import { untrack } from 'svelte'
+  import { tick, untrack } from 'svelte'
   import { tint } from './tokens.js'
   import { watchFallback } from './fallback-font.js'
   import IdsInlineEdit from './IdsInlineEdit.svelte'
@@ -82,6 +82,7 @@
     const part = partAt(editor.tree, path)
     // The form already written is left as it is, with no step to undo.
     if (isNode(part)) {
+      if (!editor.currentTree) return
       const replacement = form.kind === 'variant' ? withMarks(form.write, marksOf(part)) : readRateForm(part, form.write)
       if (replacement !== null) editor.put(replacement, path)
       return
@@ -305,12 +306,14 @@
       openMenu(path, r.left + 8, r.bottom)
     }
   }
-  function closeMenu({ refocus = true } = {}) {
+  async function closeMenu({ refocus = true } = {}) {
     // A list opened from a component's button gives the focus back to that button.
-    const toggle = menu?.forms ? /** @type {HTMLElement | null | undefined} */ (rootEl?.querySelector(`.ids-forms-toggle[data-hover-path="${CSS.escape(key(menu.path))}"]`)) : null
+    const path = menu?.forms ? menu.path : null
     menu = null
     if (!refocus) return
-    if (toggle) toggle.focus(); else editor.focusChosen(rootEl)
+    await tick()
+    const toggle = path && rootEl?.querySelector(`button.ids-forms-toggle[data-hover-path="${CSS.escape(key(path))}"]`)
+    if (toggle instanceof HTMLButtonElement) toggle.focus(); else editor.focusChosen(rootEl)
   }
   /** @param {() => void} act */
   function run(act) { act(); closeMenu() }

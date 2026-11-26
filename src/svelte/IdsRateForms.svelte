@@ -15,6 +15,7 @@
   const host = $derived(forms[0]?.host)
   /** @param {string} value */
   function choose(value) {
+    if (!editor.currentTree) return
     const replacement = readRateForm(part, value)
     if (replacement !== null && editor.put(replacement, path)) onchoose?.()
   }
@@ -26,13 +27,13 @@
       <span>{editor.t('ids.variants.label', { part: host })}</span>
       <button type="button" class="rate-original" role={menu ? 'menuitemradio' : undefined}
         aria-checked={menu ? current === host : undefined} aria-pressed={menu ? undefined : current === host}
-        disabled={editor.disabled} title={host} onclick={() => choose(host)}>{host}</button>
+        disabled={editor.disabled || !editor.currentTree} title={host} onclick={() => choose(host)}>{host}</button>
     </div>
     <div class="rate-grid">
       {#each forms as form (form.id)}
         <button type="button" data-rate-form={form.id} role={menu ? 'menuitemradio' : undefined}
           aria-checked={menu ? current === form.text : undefined} aria-pressed={menu ? undefined : current === form.text}
-          disabled={editor.disabled} title={form.text} onclick={() => choose(form.text)}>
+          disabled={editor.disabled || !editor.currentTree} title={form.text} onclick={() => choose(form.text)}>
           <svg viewBox="0 0 1000 1000" aria-hidden="true" focusable="false">
             {#await drawings then module}<path d={module.rateDrawing(form.text, editor.adapter.fontStyle ?? 'sans') ?? ''} />{/await}
           </svg>
