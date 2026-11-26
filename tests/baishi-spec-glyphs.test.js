@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
-import { readFileSync } from 'node:fs'
 import { Resvg } from '@cf-wasm/resvg/node'
 import { enclosed, SQUARE } from '../scripts/lib/outline.mjs'
+import { readFileSync } from 'node:fs'
 import { EXAMPLES } from '../demo/lib/baishi.js'
 
 const glyphs = JSON.parse(readFileSync(new URL('../demo/lib/baishi-spec-glyphs.json', import.meta.url), 'utf8'))
