@@ -5,6 +5,7 @@
   // (demo/lib/baishi.js). What earlier drafts and a proposal say stands apart, under other sources.
   import PageHeader from './ui/PageHeader.svelte'
   import { translator } from '../src/svelte/index.js'
+  import { watchFallback } from '../src/svelte/fallback-font.js'
   import { LOCALES, appMessages } from './lib/locales.js'
   import { load, save } from './lib/storage.js'
   import { onMount } from 'svelte'
@@ -16,6 +17,8 @@
     ANGLES, CELLS, CHANGES, COMPOUNDS, DATABASE, DATA_DIFFERENCES, EBNF, EXAMPLES, GUIDE, KINDS, MALFORMED, OPERATORS, OTHER_DOCUMENTS, OTHER_EXAMPLES,
     OTHER_QUOTES, QUOTES, QU_STEPS, SLICES, SOURCES, SPECIAL, TOOLS, STROKE_LETTERS, STYLE_LETTERS, SUBTRACTIONS, UNSETTLED, splitTag,
   } from './lib/baishi.js'
+  import specGlyphs from './lib/baishi-spec-glyphs.json'
+  import exampleLicence from '../fonts/OFL-Baishi-example.txt?url'
   import en from './lib/baishi-quotes/en.json'
   import ja from './lib/baishi-quotes/ja.json'
   import ko from './lib/baishi-quotes/ko.json'
@@ -80,6 +83,22 @@
     'break-mark': 'break', closing: 'closed', 'quick-slice': 'slice', 'reverse-matrix': 'reverseMatrix', differences: 'data', sources: 'documents', 'other-sources': 'otherSources', other: 'misc' })
   /** @param {string} id */
   const titleOf = id => t(`baishi.heading.${TITLE[id] ?? id}`)
+  const GLYPHS = /** @type {Record<string, string>} */ (specGlyphs)
+  const GLYPHWIKI_CREDITS = /** @type {const} */ ([
+    ['烕 (q008a2)', 'u2ff5-u620a-u5929@3'],
+    ['叱 (V)', 'u53f1-v@3'],
+    ['𡮂 (J)', 'koseki-085450@6'],
+    ['𡭽 (J)', 'u21b7d-j@2'],
+    ['𦥮 (T)', 'u2696e-t@1'],
+    ['伔 (J)', 'u4f14-j@3'],
+    ['𡕆 (.)', 'u21546-g@1'],
+    ['𡕆 (J)', 'u21546-j@2'],
+    ['𡕆 (T)', 'u21546-var-001@2'],
+    ['𠕋 (T)', 'u2054b-g@1'],
+  ])
+  /** @type {HTMLElement | null} */ let page = $state(null)
+  $effect(() => { if (page) return watchFallback(page) })
+
   const cheatsheet = new Set(/** @type {readonly string[]} */ (CHEATSHEET_SECTIONS))
   // A link to a section lands on it: the page is drawn after the browser looks for the anchor.
   onMount(() => {
@@ -129,28 +148,92 @@
   <span class="ids" lang="zh-Hans">{#each piecesOf(text) as group, g (g)}{#if g}<span class="tab" title="TAB">⇥</span>{/if}{#each group as piece, p (p)}{#if p}<span class="semi">;</span>{/if}{piece.lead}{piece.body}{#if piece.tag}<span class="tag">({piece.tag})</span>{/if}{/each}{/each}</span>
 {/snippet}
 
+{#snippet glyphBox(/** @type {string} */ key, /** @type {string} */ label, /** @type {boolean} */ reference = false)}
+  {#if GLYPHS[key]}
+    <svg class="glyph-svg" class:ref={reference} viewBox="0 0 1000 1000" role="img" aria-label={label}>
+      <path d={GLYPHS[key]} />
+    </svg>
+  {/if}
+{/snippet}
+
 {#snippet example(/** @type {import('./lib/baishi.js').Example} */ one)}
-  <div class="example">
-    <div class="head">
-      {#if one.char}<span class="char" lang="zh-Hans">{one.char}</span>{/if}
-      <span class="text">
-        {@render written(one.text)}
-        {#if one.to}<span class="to"><span class="arrow" aria-label={t('baishi.becomes')}>→</span>{@render written(one.to)}</span>{/if}
-      </span>
-      <span class="meta">{#if one.label}<span class="label">{one.label}</span>{/if}{@render at(one.at)}</span>
-    </div>
+  {@const variantCards = one.forms?.some(form => form.body)}
+  {@const contrastPair = Boolean(one.forms?.length && !variantCards)}
+  {@const hasRef = Boolean(one.forms?.some(form => form.reference))}
+  <article class="example" class:wide={one.wide}>
+    {#if variantCards && one.forms}
+      <header class="head">
+        {#if one.char}<span class="char" lang="zh-Hans">{one.char}</span>{/if}
+        <span class="meta">{#if one.label}<span class="label">{one.label}</span>{/if}{@render at(one.at)}</span>
+      </header>
+      <ul class="forms" class:many={one.forms.length > 3}>
+        {#each one.forms as form, i (i)}
+          <li class="form" class:plain={!form.glyph}>
+            {#if form.glyph}
+              <div class="glyph-tile">{@render glyphBox(form.glyph, `${form.char ?? one.char ?? form.body ?? ''}${form.tag ? ` (${form.tag})` : ''}`)}</div>
+            {/if}
+            <div class="form-text">
+              {#if form.tag}<span class="tag">({form.tag})</span>{/if}
+              {#if form.body}<span class="ids" lang="zh-Hans">{form.body}</span>{/if}
+              {#if form.alt}<span class="ids alt-ids" lang="zh-Hans"><span class="tab" title="TAB">⇥</span>{form.alt}</span>{/if}
+            </div>
+          </li>
+        {/each}
+      </ul>
+      {#if one.to}
+        <div class="to-row"><span class="arrow" aria-label={t('baishi.becomes')}>→</span>{@render written(one.to)}</div>
+      {/if}
+    {:else}
+      <div class="head">
+        {#if one.glyph}
+          <div class="glyph-tile">{@render glyphBox(one.glyph, one.char ?? one.text)}</div>
+        {:else if contrastPair && one.forms}
+          <div class="pair-tiles">
+            {#each one.forms as form, i (i)}
+              {#if i > 0 && hasRef}<span class="pair-arrow" aria-hidden="true">→</span>{/if}
+              <div class="pair-item" class:ref={form.reference} class:target={!form.reference && hasRef}>
+                {#if form.glyph}
+                  <div class="glyph-tile">{@render glyphBox(form.glyph, `${form.char ?? one.char ?? ''}${form.tag ? ` (${form.tag})` : ''}`, Boolean(form.reference))}</div>
+                {/if}
+                {#if form.tag}<span class="pair-tag" class:muted={form.reference}>({form.tag})</span>{/if}
+              </div>
+            {/each}
+          </div>
+        {:else if one.char}
+          <span class="char" lang="zh-Hans">{one.char}</span>
+        {/if}
+        <span class="text">
+          {@render written(one.text)}
+          {#if one.to}<span class="to"><span class="arrow" aria-label={t('baishi.becomes')}>→</span>{@render written(one.to)}</span>{/if}
+        </span>
+        <span class="meta">{#if one.label}<span class="label">{one.label}</span>{/if}{@render at(one.at)}</span>
+      </div>
+      {#if one.glyph && contrastPair && one.forms}
+        <div class="part-contrast">
+          {#each one.forms as form, i (i)}
+            {#if i > 0}<span class="pair-arrow" aria-hidden="true">→</span>{/if}
+            <div class="part-chip" class:ref={form.reference} class:target={!form.reference}>
+              {#if form.glyph}
+                <div class="glyph-tile mini">{@render glyphBox(form.glyph, `${form.char ?? ''}${form.tag ?? ''}`, Boolean(form.reference))}</div>
+              {/if}
+              <span class="part-label" lang="zh-Hans">{form.char ?? ''}<span class:tag={!form.reference} class:muted={form.reference}>{form.tag ?? ''}</span></span>
+            </div>
+          {/each}
+        </div>
+      {/if}
+    {/if}
     {#if one.quote}
       <p class="zh small" lang="zh-Hans">{QUOTES[one.quote]}</p>
       {#if gloss(one.quote)}<p class="gloss small">{gloss(one.quote)}</p>{/if}
     {/if}
-  </div>
+  </article>
 {/snippet}
 
 {#snippet examples(/** @type {string} */ key, current = true)}
   <div class="examples" class:other={!current}>{#each (current ? EXAMPLES : OTHER_EXAMPLES)[key] as one, i (i)}{@render example(one)}{/each}</div>
 {/snippet}
 
-<div class="page">
+<div class="page" bind:this={page}>
   <PageHeader page="baishi" title={t('baishi.title')} {t} bind:locale links={[{ href: `./baishi-cheatsheet.html?lang=${locale}`, label: t('cheatsheet.title') }]} />
 
   <div class="body">
@@ -562,6 +645,19 @@
               <p class="note">{t('baishi.database.note', { version: DATABASE.version, date: DATABASE.date })} <a href={DATABASE.tree} target="_blank" rel="noreferrer">{DATABASE.commit.slice(0, 8)}</a></p>
             </div>
           </li>
+          <li id="doc-outlines">
+            <span class="key">SVG</span>
+            <div>
+              <p class="doc-title">{t('cheatsheet.source.outlines')}</p>
+              <p class="note">
+                <a href="https://github.com/notofonts/noto-cjk/tree/Sans2.004/Sans/Variable/TTF" target="_blank" rel="noreferrer">Noto Sans CJK JP 2.004 VF</a> (ZHS, ZHH, ZHT, JAN, KOR; 十.t ← 戢 SC, 子t ← 孩, 凵y ← 世) ·
+                <a href="https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project" target="_blank" rel="noreferrer">Plangothic P1/P2</a> ·
+                <a href="https://github.com/NightFurySL2001/bai-ids/blob/0ca5ed48f51821d4d54246196f1f5f38c9d6bd6a/fonts/example.woff2" target="_blank" rel="noreferrer">bai-ids example.woff2</a> © 2024–2025 -PT_AxH_RV- (<a href={exampleLicence}>SIL OFL 1.1</a>) ·
+                <a href="https://github.com/yi-bai/iwds/tree/8302302d615ff1c1f60ae335b118b10060be0ed4" target="_blank" rel="noreferrer">IWDS UCV 316, 393, 438, 454a</a> ·
+                {#each GLYPHWIKI_CREDITS as [label, source], i (source)}{#if i} · {/if}<a href={`https://glyphwiki.org/wiki/${source}`} target="_blank" rel="noreferrer">{label}</a>{/each}
+              </p>
+            </div>
+          </li>
         </ol>
       </section>
 
@@ -685,18 +781,46 @@
   .download{margin-left:auto;font-size:13px;font-weight:400;padding-bottom:6px}
   .ebnf summary{cursor:pointer;font-size:13px;color:var(--ui-color-accent);margin:0 0 8px}
   .ebnf pre{max-height:70dvh}
-  .examples{align-items:start;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,400px),1fr));gap:8px;margin:0 0 12px}
+  .examples{align-items:start;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,400px),1fr));gap:10px;margin:0 0 12px}
   .examples.other .example{border-style:dashed}
-  .example{min-width:0;padding:9px 11px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-sm);background:var(--ui-color-surface)}
-  .head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .example{min-inline-size:0;padding:10px 12px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface);display:flex;flex-direction:column;gap:8px}
+  .example.wide{grid-column:1 / -1}
+  .head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-inline-size:0}
   .char{font-family:var(--ids-font);font-size:24px;line-height:1;color:var(--ui-color-ink)}
-  .text{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 180px}
+  .glyph-tile{flex:none;inline-size:50px;block-size:50px;aspect-ratio:1;padding:3px;box-sizing:border-box;border-radius:var(--ui-radius-sm);background:var(--ui-color-surface-sunken);border:1px solid var(--ui-color-border)}
+  .glyph-tile.mini{inline-size:38px;block-size:38px;padding:2px}
+  .glyph-svg{display:block;inline-size:100%;block-size:100%;fill:var(--ui-color-ink)}
+  .glyph-svg.ref{fill:var(--ui-color-ink-soft)}
+  .forms{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,104px),1fr));gap:8px}
+  .forms.many{grid-template-columns:repeat(auto-fill,minmax(min(100%,168px),1fr))}
+  .form{display:flex;flex-direction:column;align-items:center;gap:5px;min-inline-size:0;padding:8px 6px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-sm);background:var(--ui-color-surface-sunken);text-align:center}
+  .form.plain{justify-content:center;border-style:dashed;background:transparent}
+  .form .glyph-tile{inline-size:56px;block-size:56px;background:var(--ui-color-surface)}
+  .form-text{display:flex;flex-direction:column;align-items:center;gap:2px;min-inline-size:0;max-inline-size:100%}
+  .form-text .tag{font-family:var(--ui-font-mono);font-size:12px;font-weight:600;line-height:1.2}
+  .form-text .ids{font-size:13.5px;line-height:1.35}
+  .form-text .alt-ids{font-size:12.5px;color:var(--ui-color-ink-soft)}
+  .to-row{display:flex;align-items:baseline;gap:6px;padding-block-start:4px;border-top:1px solid var(--ui-color-border);min-inline-size:0}
+  .pair-tiles{display:flex;align-items:center;flex-wrap:wrap;flex-wrap:balance;gap:6px;flex:none}
+  .pair-item{display:flex;flex-direction:column;align-items:center;gap:3px}
+  .pair-item.ref .glyph-tile{border-style:dashed;background:transparent}
+  .pair-item.target .glyph-tile{border-color:var(--ui-color-accent);background:var(--ui-color-accent-soft)}
+  .pair-tag{font-family:var(--ui-font-mono);font-size:11px;font-weight:600;line-height:1.1;color:var(--ui-color-accent)}
+  .pair-tag.muted{font-weight:500;color:var(--ui-color-ink-muted)}
+  .pair-arrow{color:var(--ui-color-ink-muted);font-size:13px;padding-block-end:14px}
+  .part-contrast{display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding-block-start:6px;border-top:1px solid var(--ui-color-border)}
+  .part-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 8px 3px 3px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-sm);background:var(--ui-color-surface-sunken)}
+  .part-chip.ref{border-style:dashed;background:transparent}
+  .part-chip.target{border-color:var(--ui-color-accent);background:var(--ui-color-accent-soft)}
+  .part-contrast .pair-arrow{padding-block-end:0}
+  .part-label{font-family:var(--ids-font);font-size:13px;line-height:1.2;color:var(--ui-color-ink)}
+  .text{display:flex;flex-direction:column;gap:2px;min-inline-size:0;flex:1 1 130px}
   .ids{font-family:var(--ids-font);font-size:15px;line-height:1.5;color:var(--ui-color-ink);overflow-wrap:anywhere;white-space:pre-wrap}
   .tag{color:var(--ui-color-accent)}
   .semi,.tab{color:var(--ui-color-ink-muted);padding:0 2px}
   .to{display:flex;gap:6px;align-items:baseline}
   .arrow{color:var(--ui-color-ink-muted)}
-  .meta{display:flex;gap:6px;align-items:center;margin-left:auto}
+  .meta{display:flex;gap:6px;align-items:center;margin-inline-start:auto}
   .label{font-family:var(--ui-font-mono);font-size:11px;color:var(--ui-color-ink-muted)}
   .scroll{overflow-x:auto;margin:0 0 12px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-sm)}
   table{border-collapse:separate;border-spacing:0;width:100%;font-size:13px;line-height:1.45}
@@ -736,6 +860,5 @@
     .toc{position:static;max-height:none}
     .toc > ul{flex-direction:row;flex-wrap:wrap;gap:2px 4px}
     .toc ul ul{display:none}
-    .text{flex-basis:100%}
   }
 </style>
