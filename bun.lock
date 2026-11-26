@@ -117,7 +117,7 @@
 
     "@esbuild/win32-x64": ["@esbuild/win32-x64@0.28.2", "", { "os": "win32", "cpu": "x64" }, "sha512-5ebpxr3nWMzrL/rnUI755Jkuee0bHL/Gq0WTF9lvcpv73wAp5eu8MfBUgWK9bhWvZjj7yX8etf/8tI8Ney695g=="],
 
-    "@han-compose/composer": ["han-compose@github:mkpoli/han-compose#7f9ee91", { "dependencies": { "clipper-lib": "6.4.2", "d3-contour": "4.0.2" } }, "mkpoli-han-compose-7f9ee91", "sha512-SWZuf0RghJqNazhpsGYVIDSgZYZKnX2EQQ9wcRnMdbNX+FWTvuZcV+dReXlkgX870TOjukpxu5nUn6UeFa9xBw=="],
+    "@han-compose/composer": ["han-compose@github:mkpoli/han-compose#3962375", { "dependencies": { "clipper-lib": "6.4.2", "d3-contour": "4.0.2" } }, "mkpoli-han-compose-3962375", "sha512-i0WXwTLEOJnI8SbvT9uMdkZZrRO1nhztgC0Zd/lI5M9/fL2+BOWvxAgRCdRBzaRiH6mkTk7SFpBWxVdBEKfhOQ=="],
 
     "@img/colour": ["@img/colour@1.1.0", "", {}, "sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ=="],
 
