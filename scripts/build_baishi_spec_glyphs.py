@@ -50,7 +50,6 @@ NOTO_SPECS = [
     ("公T", "公", "ZHT"),
     ("惠", "惠", "ZHS"),
     ("叀.", "叀", "ZHS"),              # ids_lv0: 叀. = ⿱𤰔厶.
-    ("叀y2002", "叀", "JAN"),          # ids_lv0: 叀y2002 = ⿱⿻十.日⿰一t丶. (matches top of 惠)
     ("冷.", "冷", "ZHS"),
     ("冷H", "冷", "ZHH"),
     ("冷J", "冷", "JAN"),
@@ -113,6 +112,7 @@ NOTO_SPECS = [
 
 # Donor cuts from Noto Sans CJK JP VF (key, char, locl tag or None, contour indices).
 NOTO_CUTS = [
+    ("七t", "切", "ZHS", [2, 4, 5]),  # ids_lv0: 切 = ⿰七t刀(.)
     ("十.t", "戢", "ZHS", [9, 10]),    # SC 戢: bottom-left 十 with rising horizontal 一t
     ("子t", "孩", "JAN", [0, 1, 2, 3]),  # 孩 = ⿰子t亥J(J)
     ("凵y", "世", "JAN", [2, 4, 5]),    # 世 = ⿻⿺𠃊.凵y一.(.)
@@ -243,6 +243,11 @@ def main():
             d = draw_glyph(vf, glyph, is_vf=True)
             contours = ["M" + part for part in d.split("M")[1:]]
             out[key] = fit_paths([contours[i] for i in indices])
+
+    # ids_lv0 line 4833: 惠 = ⿱叀y2002心. Its first seven contours include
+    # the uninterrupted 丨. Fit them to the standalone 叀 tile's original ink box.
+    hui_top = ["M" + part for part in out["惠"].split("M")[1:8]]
+    out["叀y2002"] = fit_paths(hui_top, ink_box=(60.3, 41.1, 941.2, 967.6))
 
     p1_name, p2_name = "PlangothicP1-Regular.ttf", "PlangothicP2-Regular.ttf"
     with (

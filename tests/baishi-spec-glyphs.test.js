@@ -38,6 +38,15 @@ describe('the zi.tools IDS Extension page glyph witnesses', () => {
     }
   })
 
+  it('pairs each stroke-level 七 glyph with its lv0 description', () => {
+    const seven = EXAMPLES.lists.find(example => example.char === '七')
+    expect(seven.at).toEqual(['DB', 'lv0 l.4'])
+    expect(seven.forms.map(({ glyph, body, tag }) => [glyph, body, tag])).toEqual([
+      ['七.', '⿻乚.一.', '.'], ['七T', '⿻乚w一.', 'T'], ['七t', '⿻乚t一.', 't'],
+    ])
+    expect(seven.text).toBe(seven.forms.map(({ body, tag }) => `${body}(${tag})`).join(';'))
+  })
+
   it('encloses the 巳 counter in 卮qq123 at the previous ink size', async () => {
     const raster = glyph => Resvg.async(
       `<svg xmlns="http://www.w3.org/2000/svg" width="${SQUARE}" height="${SQUARE}" viewBox="0 0 1000 1000"><path d="${glyphs[glyph]}"/></svg>`,
