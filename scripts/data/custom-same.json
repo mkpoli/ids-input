@@ -1,0 +1,2212 @@
+{
+  "format": "ids-input/custom-same",
+  "version": 1,
+  "note": "Forms read as one shape where no table confirms it. Each row compares the glyphs of its names (BabelStone's private-use glyph, GlyphWiki's glyph for a CHISE name) with the characters a candidate expression was found on, in their Japanese, Chinese and Taiwanese glyphs (J/G/T).",
+  "basis": "editorial",
+  "sources": [
+    {
+      "title": "Glyph comparison for the project",
+      "author": "mkpoli",
+      "date": "2026-11-27",
+      "note": "Unpublished; one reader's identification from glyph sheets. Where GlyphWiki has no glyph for a CHISE name, the reading rests on the characters alone."
+    }
+  ],
+  "rows": [
+    {
+      "forms": [
+        "X-00001",
+        "X-01788"
+      ],
+      "names": [
+        "{1}",
+        "⿹⿺㇉一灬"
+      ],
+      "drawing": "⿹⿺㇉一灬",
+      "reason": "zi-tools candidate/difference on 𤉐 only; BabelStone's private-use glyph {1} and GlyphWiki cdp-8dbf are the 焉 bottom, and 𤉐 (J/G/T) has that same bottom (㇉-hooked frame over 灬), which ⿹⿺㇉一灬 reads"
+    },
+    {
+      "forms": [
+        "X-00002",
+        "X-01591"
+      ],
+      "names": [
+        "{2}",
+        "⿱⺈𫩏"
+      ],
+      "drawing": "⿱⺈𫩏",
+      "reason": "chise ⿱⺈𫩏 candidate/difference on 𭯍 (BabelStone {2} and &GT-K02380; verified on 象𬊟); 𭯍 top in J/G is ⺈ over the boxed 𫩏 with protruding vertical, the same as the {2} BabelStone's private-use glyph glyph and the tops of 免晩象"
+    },
+    {
+      "forms": [
+        "X-00010",
+        "X-00772"
+      ],
+      "names": [
+        "{10}",
+        "&CDP-88EC;"
+      ],
+      "drawing": "⿻⿻㇈丿丶",
+      "reason": "candidate/difference on 𠅴 only (BabelStone {10}, zi.tools ⿹㇈乂); GlyphWiki cdp-88ec is ㇈ with 乂 crossing, BabelStone's private-use glyph F2A8 is ㇈ with 丿 and a short 丶; zi.tools already names {10} ⿹㇈乂 (verified on 𤰑𦝠), so the 乀/丶 length is within X-00010; 𠅴 right part matches in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00028",
+        "X-01938"
+      ],
+      "names": [
+        "{28}",
+        "⿻弋一"
+      ],
+      "drawing": "⿻弋一",
+      "reason": "candidate/difference on 弐 only ({28}=&CDP-8CB8; verified on 武貮𢎁); BabelStone's private-use glyph {28} and GlyphWiki cdp-8cb8 are 弋 with a short 一 above its long horizontal, and 弐 in J/G/T has the same short top stroke over 弋, the second inner 一 left over"
+    },
+    {
+      "forms": [
+        "X-00094",
+        "X-00808"
+      ],
+      "names": [
+        "{95}",
+        "&CDP-89CE;"
+      ],
+      "drawing": "⿻尸一",
+      "reason": "candidate/difference on 𢀞 only; GlyphWiki cdp-89ce is 尸 with an inner horizontal, the same as BabelStone's private-use glyph {95} and the bottom of 𢀞 in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00112",
+        "X-01743"
+      ],
+      "names": [
+        "{113}",
+        "⿵冂八"
+      ],
+      "drawing": "⿵冂八",
+      "reason": "chise ⿵冂八 candidate/difference on 𠕉 (X-01743 also named for 冏 by &GT-36324;); 𠕉 bottom in J/G/T is 冂 enclosing 八, as in the {113} BabelStone's private-use glyph glyph and 奐/幣; 冏's 冂+八 reads the same"
+    },
+    {
+      "forms": [
+        "X-00124",
+        "X-01688"
+      ],
+      "names": [
+        "&A-CDP-8845;",
+        "⿱𠂈𰀠"
+      ],
+      "drawing": "⿱𠂈𰀠",
+      "reason": "babelstone candidate/difference on 𨒢 only; GlyphWiki cdp-8845 (A- form shown via cdp-8845) matches the inner part of 𨒢 in J/G/T, 𠂈 over the 𧘇-like 𰀠"
+    },
+    {
+      "forms": [
+        "X-00135",
+        "X-01834"
+      ],
+      "names": [
+        "&A-CDP-8CDE;",
+        "⿻⿱彐八⿰丨丨"
+      ],
+      "drawing": "⿻⿱彐八⿰丨丨",
+      "reason": "candidate/difference on 𬻵 only; GlyphWiki cdp-8cde is 兼 less 丷 (彐 over 八 crossed by two verticals) and the part under ⺈ in 𬻵 (J/G) matches it and the expression; 𭁐 agrees"
+    },
+    {
+      "forms": [
+        "X-00136",
+        "X-01686"
+      ],
+      "names": [
+        "&A-CDP-8CE5;",
+        "⿱龷𰀠"
+      ],
+      "drawing": "⿱龷𰀠",
+      "reason": "zi-tools candidate/difference on 𲓻 only; GlyphWiki cdp-8ce5 (A- form shown via cdp-8ce5) is 龷 over 𰀠, the same as the part under 尸 in 𲓻 (J/G) and in 展"
+    },
+    {
+      "forms": [
+        "X-00154",
+        "X-01555"
+      ],
+      "names": [
+        "&A-U-i001+65E7;",
+        "⿰丨臼"
+      ],
+      "drawing": "⿰丨臼",
+      "reason": "candidate/difference on 𫺼 only (BabelStone); single use; 𫺼 under ⺈ shows a vertical beside 臼 in J/G/T, as ⿰丨臼 reads and as a 旧 variant (U+65E7) would be; no CHISE glyph"
+    },
+    {
+      "forms": [
+        "X-00155",
+        "X-01661"
+      ],
+      "names": [
+        "&A-U-i002+34BC;",
+        "⿱卄両"
+      ],
+      "drawing": "⿱卄両",
+      "reason": "candidate/difference on 満 only (babelstone and zi.tools); right part of 満 in J/G/T is 卄 over 両 throughout; entity used nowhere else; CHISE glyph not seen"
+    },
+    {
+      "forms": [
+        "X-00156",
+        "X-01708"
+      ],
+      "names": [
+        "&A-U-i002+657B;",
+        "⿳⿱爫⿰丨冃罒又"
+      ],
+      "drawing": "⿳⿱爫⿰丨冃罒又",
+      "reason": "babelstone candidate/difference on 𬎝 only; no CHISE glyph for &A-U-i002+657B;; right side of 𬎝 in J/G/T/SimSun is 爫 over a framed 冃 over 又, which the expression reads (罒 band small but present in G)"
+    },
+    {
+      "forms": [
+        "X-00157",
+        "X-01987"
+      ],
+      "names": [
+        "&A-U-i002+70CF;",
+        "㇯烏一"
+      ],
+      "drawing": "㇯烏一",
+      "reason": "BabelStone ㇯烏一 candidate on 𫠕 (BabelStone J: ⿸㢈㇯烏一, CHISE ⿸㢈&A-U-i002+70CF;); both name the inner part of 𫠕, which in J/G/T reads as 烏 with one horizontal fewer; no glyph of the CHISE variant itself, and which 一 is dropped is not legible at font size"
+    },
+    {
+      "forms": [
+        "X-00158",
+        "X-01895"
+      ],
+      "names": [
+        "&A-U-i002+81FF;",
+        "⿻亻⿴囗丷"
+      ],
+      "drawing": "⿻亻⿴囗丷",
+      "reason": "candidate/difference on 𢭣 only (BabelStone, zi.tools agree); single use; 𢭣 right is 亻 whose vertical runs down beside a 囗 holding 丷 in J/G/T, as ⿻亻⿴囗丷 reads; no CHISE glyph"
+    },
+    {
+      "forms": [
+        "X-00159",
+        "X-01954"
+      ],
+      "names": [
+        "&A-U-i002+9FB9;",
+        "⿻𡗗丷"
+      ],
+      "drawing": "⿻𡗗丷",
+      "reason": "candidate/difference on 𰃤 only; top of 𰃤 in J/G is 龹 (丷 crossing 𡗗), as the expression writes; CHISE variant of 龹 used nowhere else, its glyph not seen"
+    },
+    {
+      "forms": [
+        "X-00160",
+        "X-01855"
+      ],
+      "names": [
+        "&A-U-i003+9EA6;",
+        "⿻三夂"
+      ],
+      "drawing": "⿻三夂",
+      "reason": "babelstone candidate/difference on 𪎍 only; no CHISE glyph; left of 𪎍 in J/G/T is 三 crossed by 夂 with no vertical through 三, as ⿻三夂 says"
+    },
+    {
+      "forms": [
+        "X-00161",
+        "X-01659"
+      ],
+      "names": [
+        "&A-U-i004+9EFD;",
+        "⿱冖⿰𰀄⿺乚𠁣"
+      ],
+      "drawing": "⿱冖⿰𰀄⿺乚𠁣",
+      "reason": "BabelStone ⿱冖⿰𰀄⿺乚𠁣 candidate on 𣀴 (CHISE ⿱敞&A-U-i004+9EFD;, a 黽 variant); the 𣀴 bottom in J/G/T is 冖 over a 黽-like part with the 乚 tail, as the expression reads; no glyph of the CHISE variant itself"
+    },
+    {
+      "forms": [
+        "X-00162",
+        "X-01765"
+      ],
+      "names": [
+        "&A-U-i005+233B5;",
+        "⿸⿹屮㇇㇏"
+      ],
+      "drawing": "⿸⿹屮㇇㇏",
+      "reason": "candidate/difference on 𢫂 only (BabelStone; zi.tools ⿻屮⿰㇇乀 separately); single use; 𢫂 right is 𣎵-like 屮 with two legs in J/G/T, read by ⿸⿹屮㇇㇏ (variant of 𣎵 U+233B5); no CHISE glyph"
+    },
+    {
+      "forms": [
+        "X-00303",
+        "X-01715"
+      ],
+      "names": [
+        "&AJ1-13763;",
+        "⿳一𠃑一"
+      ],
+      "drawing": "⿳一𠃑一",
+      "reason": "BabelStone and zi.tools ⿳一𠃑一 candidate on 𣲅; GlyphWiki aj1-13763 is 一, a 𠃑 zigzag, 一 (互-like), matching the right of 𣲅 in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00311",
+        "X-01611"
+      ],
+      "names": [
+        "&AJ1-17236;",
+        "⿱⿹𠃌㐅一"
+      ],
+      "drawing": "⿱⿹𠃌㐅一",
+      "reason": "candidate/difference on 𭴥 only; GlyphWiki aj1-17236 is 𠃌 enclosing 㐅 over a bar; 𭴥 right matches in J/G/T and reads as ⿱⿹𠃌㐅一"
+    },
+    {
+      "forms": [
+        "X-00438",
+        "X-01550"
+      ],
+      "names": [
+        "&C7-4B4A;",
+        "⿰⿱廿⿻口土隹"
+      ],
+      "drawing": "⿰⿱廿⿻口土隹",
+      "reason": "candidate/difference on 𤒿 only; left of 𤒿 in J/G/T is 廿 over 口 crossed by 土 beside 隹 (over 灬), as written; CNS C7-4B4A glyph not seen, used nowhere else"
+    },
+    {
+      "forms": [
+        "X-00441",
+        "X-01672"
+      ],
+      "names": [
+        "&CDP-8245;",
+        "⿱廿⿻冂从"
+      ],
+      "drawing": "⿱廿⿻冂从",
+      "reason": "babelstone candidate/difference on 𫆊 only; GlyphWiki cdp-8245 image is blank; right of 𫆊 in J/G/T is 廿 over 冂 crossed by 从, as the expression says"
+    },
+    {
+      "forms": [
+        "X-00448",
+        "X-01937"
+      ],
+      "names": [
+        "&CDP-8554;",
+        "⿻干㗊"
+      ],
+      "drawing": "⿻干㗊",
+      "reason": "BabelStone ⿻干㗊 candidate on 𡂤 (zi.tools reads it ⿻丅⿴㗊一, X-01854); GlyphWiki cdp-8554 is 㗊 crossed by 干 (top bar, central cross), matching the 𡂤 top in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00457",
+        "X-01917"
+      ],
+      "names": [
+        "&CDP-856F;",
+        "⿻厸大"
+      ],
+      "drawing": "⿻厸大",
+      "reason": "candidate/difference on 𠴃 only; GlyphWiki cdp-856f is 厸 over 大 with 大 crossing up between; 𠴃 right matches in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00459",
+        "X-01617"
+      ],
+      "names": [
+        "&CDP-8572;",
+        "⿱⿻土䀠八"
+      ],
+      "drawing": "⿱⿻土䀠八",
+      "reason": "candidate/difference on 𤪬 only; GlyphWiki cdp-8572 is 䀠 crossed by 土 and the right top of 𤪬 (J/G/T) matches it and ⿱⿻土䀠八"
+    },
+    {
+      "forms": [
+        "X-00460",
+        "X-01880"
+      ],
+      "names": [
+        "&CDP-8573;",
+        "⿻乇从"
+      ],
+      "drawing": "⿻乇从",
+      "reason": "babelstone candidate/difference on 𤈯 only; GlyphWiki cdp-8573 is 乇 crossed by 从, matching the right of 𤈯 and of 𡋸 (J/G/T)"
+    },
+    {
+      "forms": [
+        "X-00461",
+        "X-01741"
+      ],
+      "names": [
+        "&CDP-8574;",
+        "⿵冂㸚"
+      ],
+      "drawing": "⿵冂㸚",
+      "reason": "BabelStone and zi.tools ⿵冂㸚 candidate on 𣙡; GlyphWiki cdp-8574 is 冂 enclosing 㸚 with no central vertical, as in the 𣙡 bottom in J/G/T; 𮂢 with the vertical is a separate form (X-01740)"
+    },
+    {
+      "forms": [
+        "X-00465",
+        "X-01951"
+      ],
+      "names": [
+        "&CDP-857C;",
+        "⿻𠈌⿱丨大"
+      ],
+      "drawing": "⿻𠈌⿱丨大",
+      "reason": "candidate/difference on 𡙫 only; GlyphWiki cdp-857c is 𠈌 split by a vertical over 大; 𡙫 lower part and other uses 𡚅𦹬 match"
+    },
+    {
+      "forms": [
+        "X-00466",
+        "X-01832"
+      ],
+      "names": [
+        "&CDP-857D;",
+        "⿻⿱卝干誩"
+      ],
+      "drawing": "⿻⿱卝干誩",
+      "reason": "candidate/difference on 𡤮 only; GlyphWiki cdp-857d is 誩 with 卝干 crossing its top; right of 𡤮 and the other uses 𠑫𨟪 (J) match"
+    },
+    {
+      "forms": [
+        "X-00474",
+        "X-01934"
+      ],
+      "names": [
+        "&CDP-85AB;",
+        "⿻工⿱从吅"
+      ],
+      "drawing": "⿻工⿱从吅",
+      "reason": "babelstone candidate/difference on 𠮎 only; GlyphWiki cdp-85ab is 工 with 从 over 吅 inside (巫-like), matching the top of 𠮎 (J/G/T)"
+    },
+    {
+      "forms": [
+        "X-00475",
+        "X-01859"
+      ],
+      "names": [
+        "&CDP-85AE;",
+        "⿻丨⿱丷⿵冂㸚"
+      ],
+      "drawing": "⿻丨⿱丷⿵冂㸚",
+      "reason": "BabelStone ⿻丨⿱丷⿵冂㸚 candidate on 𤕨; GlyphWiki cdp-85ae (丷 over 冂㸚 with a central vertical through) matches the 𤕨 bottom under 𠆢 in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00477",
+        "X-01913"
+      ],
+      "names": [
+        "&CDP-85B0;",
+        "⿻十𠈌"
+      ],
+      "drawing": "⿻十𠈌",
+      "reason": "candidate/difference on 𢾶 only; GlyphWiki cdp-85b0 is 十 crossing 𠈌; 𢾶 top matches in J/G/T; other use 𤲷 agrees"
+    },
+    {
+      "forms": [
+        "X-00478",
+        "X-01921"
+      ],
+      "names": [
+        "&CDP-85B2;",
+        "⿻口⿻人丷"
+      ],
+      "drawing": "⿻口⿻人丷",
+      "reason": "candidate/difference on 𡏳 only (zi.tools reads it ⿻人⿱口丷); GlyphWiki cdp-85b2 is 口 crossed by 人 with two short strokes above; top of 𡏳 in J/G/T matches; 𦿴 agrees"
+    },
+    {
+      "forms": [
+        "X-00479",
+        "X-01886"
+      ],
+      "names": [
+        "&CDP-85B5;",
+        "⿻亅⿱凵⿰冫⿱丿丶"
+      ],
+      "drawing": "⿻亅⿱凵⿰冫⿱丿丶",
+      "reason": "zi-tools candidate/difference on 𢑘 only; GlyphWiki cdp-85b5 (亅 with 冫 left and 丿丶 right) matches the bottom of 𢑘 in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00481",
+        "X-01630"
+      ],
+      "names": [
+        "&CDP-85B7;",
+        "⿱一⿻山𠈌"
+      ],
+      "drawing": "⿱一⿻山𠈌",
+      "reason": "BabelStone ⿱一⿻山𠈌 candidate on 𡳘 (zi.tools ⿸一⿶凵⿻丨𠈌 is a separate form); GlyphWiki cdp-85b7 (一 over 山 crossed by 𠈌) matches the part under 尸 in 𡳘 in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00482",
+        "X-01959"
+      ],
+      "names": [
+        "&CDP-85B9;",
+        "⿻𦥔𠮛"
+      ],
+      "drawing": "⿻𦥔𠮛",
+      "reason": "candidate/difference on 𡡋 only; GlyphWiki cdp-85b9 is 𦥔 crossed down into 𠮛; 𡡋 top matches in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00484",
+        "X-01866"
+      ],
+      "names": [
+        "&CDP-85C0;",
+        "⿻丨𠆢"
+      ],
+      "drawing": "⿻丨𠆢",
+      "reason": "candidate/difference on 𣎴 only (zi.tools ⿻丨人); GlyphWiki cdp-85c0 is 个-like 丨 hanging from the apex of 𠆢; 𣎴 under its 一 and the other uses 𠆏𠦙𥁪 (J) show that shape"
+    },
+    {
+      "forms": [
+        "X-00486",
+        "X-01776"
+      ],
+      "names": [
+        "&CDP-85C5;",
+        "⿸尹㇏"
+      ],
+      "drawing": "⿸尹㇏",
+      "reason": "babelstone candidate/difference on 𢑺 only; GlyphWiki cdp-85c5 is ⺕ crossed by 丿 with a long ㇏, matching the top of 𢑺 (J/G/T); ⿸尹㇏ reads it"
+    },
+    {
+      "forms": [
+        "X-00487",
+        "X-01830"
+      ],
+      "names": [
+        "&CDP-85C6;",
+        "⿻⿱亠⿻⿱凵丨凵昍"
+      ],
+      "drawing": "⿻⿱亠⿻⿱凵丨凵昍",
+      "reason": "BabelStone ⿻⿱亠⿻⿱凵丨凵昍 candidate on 𡅟 (zi.tools ⿳亠凵⿻屮昍 separate); GlyphWiki cdp-85c6 matches the 𡅟 top above 冏 in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00489",
+        "X-01936"
+      ],
+      "names": [
+        "&CDP-85CA;",
+        "⿻干⿴囗从"
+      ],
+      "drawing": "⿻干⿴囗从",
+      "reason": "candidate/difference on 𩮟 only; GlyphWiki cdp-85ca is 干 crossing 囗 enclosing 从 (函-like); 𩮟 lower part matches in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00491",
+        "X-01914"
+      ],
+      "names": [
+        "&CDP-85CC;",
+        "⿻千⿱𠈌二"
+      ],
+      "drawing": "⿻千⿱𠈌二",
+      "reason": "candidate/difference on 𦡘 only; GlyphWiki cdp-85cc is 垂-like 千 crossing 𠈌 over 二; right of 𦡘 in J/G/T matches"
+    },
+    {
+      "forms": [
+        "X-00492",
+        "X-01829"
+      ],
+      "names": [
+        "&CDP-85CE;",
+        "⿻⿱乊一亅"
+      ],
+      "drawing": "⿻⿱乊一亅",
+      "reason": "babelstone candidate/difference on 𠰜 only; GlyphWiki cdp-85ce is 乎-like (丿, 丷, 一, 亅), matching the right of 𠰜 (J/G/T)"
+    },
+    {
+      "forms": [
+        "X-00493",
+        "X-01873"
+      ],
+      "names": [
+        "&CDP-85D3;",
+        "⿻丷大"
+      ],
+      "drawing": "⿻丷大",
+      "reason": "BabelStone ⿻丷大 candidate on 𢽇; GlyphWiki cdp-85d3 (丷 crossing 大) matches the part inside 匚 in 𢽇 in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00509",
+        "X-01957"
+      ],
+      "names": [
+        "&CDP-85EC;",
+        "⿻𦘒𠚪"
+      ],
+      "drawing": "⿻𦘒𠚪",
+      "reason": "babelstone candidate/difference on 𤌂 only; GlyphWiki cdp-85ec is 𦘒 over the 𠚪 frame (肅 form), matching the right of 𤌂 (J/G/T)"
+    },
+    {
+      "forms": [
+        "X-00510",
+        "X-01925"
+      ],
+      "names": [
+        "&CDP-85EE;",
+        "⿻吕氺"
+      ],
+      "drawing": "⿻吕氺",
+      "reason": "BabelStone ⿻吕氺 candidate on 𢠮; GlyphWiki cdp-85ee (吕 crossed by 氺, vertical through) matches the right of 𢠮 in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00512",
+        "X-01820"
+      ],
+      "names": [
+        "&CDP-85F0;",
+        "⿻⿰丨丨丷"
+      ],
+      "drawing": "⿻⿰丨丨丷",
+      "reason": "candidate/difference on 𭱪 only; GlyphWiki cdp-85f0 is 业 less its bottom bar (dots outside two verticals); 𭱪 matches in J/G and other uses 懞䝉 agree (verified inverse ㇯{4}冖); ⿻⿰丨丨丷 is a loose but correct reading"
+    },
+    {
+      "forms": [
+        "X-00517",
+        "X-01705"
+      ],
+      "names": [
+        "&CDP-85F8;",
+        "⿲𰀪丨𰀪"
+      ],
+      "drawing": "⿲𰀪丨𰀪",
+      "reason": "candidate/difference on 𠧳 only (𠧹 is read ⿰𰀪𰀠 by BabelStone); GlyphWiki cdp-85f8 is 氺-like with paired strokes either side of a hooked 丨; bottom of 𠧳 in J/G/T matches"
+    },
+    {
+      "forms": [
+        "X-00522",
+        "X-01745"
+      ],
+      "names": [
+        "&CDP-8643;",
+        "⿵吊口"
+      ],
+      "drawing": "⿵吊口",
+      "reason": "zi.tools ⿵吊口 candidate on 𤔬 (⿴𠬪⿵吊口); GlyphWiki cdp-8643 (口 atop a 冂 frame enclosing 口) matches the 𤔬 core in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00527",
+        "X-01942"
+      ],
+      "names": [
+        "&CDP-864A;",
+        "⿻彖丶"
+      ],
+      "drawing": "⿻彖丶",
+      "reason": "candidate/difference on 𣺵 only; GlyphWiki cdp-864a is 彖 with an added dot; 𣺵 right matches in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00532",
+        "X-01862"
+      ],
+      "names": [
+        "&CDP-8650;",
+        "⿻丨⿵冂⿰𰀁𰀁"
+      ],
+      "drawing": "⿻丨⿵冂⿰𰀁𰀁",
+      "reason": "candidate/difference on 𥧀 only (babelstone and zi.tools); GlyphWiki cdp-8650 is 爾 less its top (冂 with 丨 through two ⺧-like pairs); 𥧀 under 穴 matches in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00536",
+        "X-01833"
+      ],
+      "names": [
+        "&CDP-8657;",
+        "⿻⿱吕𠆢丨"
+      ],
+      "drawing": "⿻⿱吕𠆢丨",
+      "reason": "babelstone candidate/difference on 𡩪 only; GlyphWiki cdp-8657 is two separate boxes (吕) over 𠆢 with a vertical through, exactly ⿻⿱吕𠆢丨; the fonts draw 𡩪 with one divided box (G/SimSun/MingLiU), a glyph difference of the character shared by both names"
+    },
+    {
+      "forms": [
+        "X-00542",
+        "X-01787"
+      ],
+      "names": [
+        "&CDP-865D;",
+        "⿹⺄⿻丨㇒"
+      ],
+      "drawing": "⿹⺄⿻丨㇒",
+      "reason": "BabelStone ⿹⺄⿻丨㇒ candidate on 𠅂 (zi.tools ⿹㇈⿻丨丿 separate); GlyphWiki cdp-865d (丨 crossed by 丿 with ⺄ on the right) matches the 𠅂 bottom under 亠 in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00558",
+        "X-01943"
+      ],
+      "names": [
+        "&CDP-8677;",
+        "⿻日𠤎"
+      ],
+      "drawing": "⿻日𠤎",
+      "reason": "candidate/difference on 𤧜 only; GlyphWiki cdp-8677 is 日 crossed by a vertical ending in 乚 plus a slanting stroke (𠤎), 电-like; 𤧜 lower right matches in J/G"
+    },
+    {
+      "forms": [
+        "X-00563",
+        "X-01974"
+      ],
+      "names": [
+        "&CDP-867D;",
+        "⿾𦣞"
+      ],
+      "drawing": "⿾𦣞",
+      "reason": "babelstone and zi-tools candidate/difference on 𢍴 only; GlyphWiki cdp-867d is 𦣞 mirrored, matching the left of 𢍴 (J/G/T)"
+    },
+    {
+      "forms": [
+        "X-00570",
+        "X-01879"
+      ],
+      "names": [
+        "&CDP-86AA;",
+        "⿻乃丶"
+      ],
+      "drawing": "⿻乃丶",
+      "reason": "candidate/difference on 𩉶 only (zi.tools ⿹𠄎乂 separately); GlyphWiki cdp-86aa is 乃 with a crossing ㇏; 𩉶 right shows 乃 with crossing dot in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00572",
+        "X-01554"
+      ],
+      "names": [
+        "&CDP-86AC;",
+        "⿰丨三"
+      ],
+      "drawing": "⿰丨三",
+      "reason": "candidate/difference on 𤤃 only; GlyphWiki cdp-86ac is 丨 with 三 joined to it; right half of 𤤃 (J/G/T) and the 舛-right in 𨼺 match"
+    },
+    {
+      "forms": [
+        "X-00574",
+        "X-01902"
+      ],
+      "names": [
+        "&CDP-86B0;",
+        "⿻冄⿰丨丨"
+      ],
+      "drawing": "⿻冄⿰丨丨",
+      "reason": "babelstone candidate/difference on 𨱸 only; GlyphWiki cdp-86b0 is 冄 crossed by two more verticals, matching the right of 𨱸 (J/G/T)"
+    },
+    {
+      "forms": [
+        "X-00578",
+        "X-01828"
+      ],
+      "names": [
+        "&CDP-86B6;",
+        "⿻⿱一彐⿰丨丨"
+      ],
+      "drawing": "⿻⿱一彐⿰丨丨",
+      "reason": "BabelStone ⿻⿱一彐⿰丨丨 candidate on 𨘄 (zi.tools ⿻卄𫜹 separate); GlyphWiki cdp-86b6 (一 over 彐 crossed by two verticals) matches the part under 宀 in 𨘄 in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00581",
+        "X-01759"
+      ],
+      "names": [
+        "&CDP-86B9;",
+        "⿷匚二"
+      ],
+      "drawing": "⿷匚二",
+      "reason": "candidate/difference on 𨒎 only (babelstone and zi.tools); GlyphWiki cdp-86b9 is 匚 enclosing 二 and the part inside 辶 in 𨒎 (J/G/T) matches"
+    },
+    {
+      "forms": [
+        "X-00582",
+        "X-01853"
+      ],
+      "names": [
+        "&CDP-86BB;",
+        "⿻丅⿱八⿵冂⿰糸虫"
+      ],
+      "drawing": "⿻丅⿱八⿵冂⿰糸虫",
+      "reason": "babelstone candidate/difference on 𦇂 only; GlyphWiki cdp-86bb is 爾-like with 糸虫 inside, matching the part under 艹 in 𦇂 (J/G/T)"
+    },
+    {
+      "forms": [
+        "X-00583",
+        "X-01728"
+      ],
+      "names": [
+        "&CDP-86BF;",
+        "⿴⿻冂一十"
+      ],
+      "drawing": "⿴⿻冂一十",
+      "reason": "zi.tools ⿴⿻冂一十 candidate on 𫡒; GlyphWiki cdp-86bf (冂 crossed by a long 一 with 十 inside, 冉-like) matches the 𫡒 part in J/G/T and 𨀔"
+    },
+    {
+      "forms": [
+        "X-00586",
+        "X-01948"
+      ],
+      "names": [
+        "&CDP-86C4;",
+        "⿻龰亘"
+      ],
+      "drawing": "⿻龰亘",
+      "reason": "candidate/difference on 𦆍 only (zi.tools); GlyphWiki cdp-86c4 is 亘 with 龰 crossing (疐-like); 𦆍 right matches in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00591",
+        "X-01968"
+      ],
+      "names": [
+        "&CDP-86C9;",
+        "⿼己工"
+      ],
+      "drawing": "⿼己工",
+      "reason": "babelstone and zi-tools candidate/difference on 𤕦 only; GlyphWiki cdp-86c9 is 己 with 工 tucked inside, matching the left of 𤕦 and of 𦷠 (J/G/T)"
+    },
+    {
+      "forms": [
+        "X-00596",
+        "X-01821"
+      ],
+      "names": [
+        "&CDP-86D0;",
+        "⿻⿰丿㇂一"
+      ],
+      "drawing": "⿻⿰丿㇂一",
+      "reason": "candidate/difference on 𧘵 only; GlyphWiki cdp-86d0 is a bar crossed by 丿 and a hooked ㇂; 𧘵 right matches in J/G/T; other use 𦭂 agrees"
+    },
+    {
+      "forms": [
+        "X-00608",
+        "X-01570"
+      ],
+      "names": [
+        "&CDP-86DF;",
+        "⿰𠄌彐"
+      ],
+      "drawing": "⿰𠄌彐",
+      "reason": "candidate/difference on 𦕁 only; GlyphWiki cdp-86df is 𠄌 (vertical with rising foot) holding 彐; left of 𦕁 in J/G/T matches"
+    },
+    {
+      "forms": [
+        "X-00609",
+        "X-01922"
+      ],
+      "names": [
+        "&CDP-86E0;",
+        "⿻口㇉"
+      ],
+      "drawing": "⿻口㇉",
+      "reason": "babelstone candidate/difference on 𦕊 only; GlyphWiki cdp-86e0 is 口 crossed by a ㇉-hooked vertical, matching the right of 𦕊 (J/G/T)"
+    },
+    {
+      "forms": [
+        "X-00610",
+        "X-01836"
+      ],
+      "names": [
+        "&CDP-86E1;",
+        "⿻⿳⿻口一口𠮛丨"
+      ],
+      "drawing": "⿻⿳⿻口一口𠮛丨",
+      "reason": "BabelStone ⿻⿳⿻口一口𠮛丨 candidate on 𡫤; GlyphWiki cdp-86e1 (婁 top: stacked 口一口 with a vertical through) matches the part between 宀 and 女 in 𡫤 in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00617",
+        "X-01919"
+      ],
+      "names": [
+        "&CDP-86EA;",
+        "⿻口⿰丨丨"
+      ],
+      "drawing": "⿻口⿰丨丨",
+      "reason": "candidate/difference on 𤽚 only (zi.tools ⿻〢口); GlyphWiki cdp-86ea is 曲-like 口 with two verticals through it; bottom of 𤽚 (J/G/T) matches; the expression is also used for 𫾺, same shape"
+    },
+    {
+      "forms": [
+        "X-00623",
+        "X-01831"
+      ],
+      "names": [
+        "&CDP-86F2;",
+        "⿻⿱冖冂乚"
+      ],
+      "drawing": "⿻⿱冖冂乚",
+      "reason": "babelstone candidate/difference on 𥑯 only; GlyphWiki cdp-86f2 is 冖 over 冂 crossed by 乚 (屯-like), matching the right of 𥑯 (J/G/T)"
+    },
+    {
+      "forms": [
+        "X-00626",
+        "X-01739"
+      ],
+      "names": [
+        "&CDP-86F6;",
+        "⿵冂⿲⿱丶丶丨⿱丶丶"
+      ],
+      "drawing": "⿵冂⿲⿱丶丶丨⿱丶丶",
+      "reason": "BabelStone ⿵冂⿲⿱丶丶丨⿱丶丶 candidate on 𧷧; GlyphWiki cdp-86f6 (冂 enclosing two pairs of dots either side of 丨) matches the 𧷧 part under ⺊ in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00627",
+        "X-01910"
+      ],
+      "names": [
+        "&CDP-86F8;",
+        "⿻十⿵冂㸚"
+      ],
+      "drawing": "⿻十⿵冂㸚",
+      "reason": "candidate/difference on 𨗃 only; GlyphWiki cdp-86f8 is 十 over 冂 enclosing 㸚 with the vertical through; 𨗃 right matches in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00629",
+        "X-01906"
+      ],
+      "names": [
+        "&CDP-86FA;",
+        "⿻几二"
+      ],
+      "drawing": "⿻几二",
+      "reason": "candidate/difference on 𤊚 only; GlyphWiki cdp-86fa is 几 crossed by 二 (冄-like with a curled foot); right of 𤊚 in J/G/T matches"
+    },
+    {
+      "forms": [
+        "X-00636",
+        "X-01908"
+      ],
+      "names": [
+        "&CDP-8743;",
+        "⿻刀⿱丶丶"
+      ],
+      "drawing": "⿻刀⿱丶丶",
+      "reason": "babelstone candidate/difference on 𤘞 only; GlyphWiki cdp-8743 is 刀 with two dots, matching the right of 𤘞 (J/G/T)"
+    },
+    {
+      "forms": [
+        "X-00639",
+        "X-01850"
+      ],
+      "names": [
+        "&CDP-8746;",
+        "⿻一束"
+      ],
+      "drawing": "⿻一束",
+      "reason": "BabelStone ⿻一束 candidate on 𣷵 (zi.tools ⿻𰀁⿱口人 separate); GlyphWiki cdp-8746 (束 crossed by an extra 一, 柬-like) matches the right of 𣷵 in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00644",
+        "X-01978"
+      ],
+      "names": [
+        "&CDP-874B;",
+        "⿿止"
+      ],
+      "drawing": "⿿止",
+      "reason": "candidate/difference on 𣥒 only (babelstone and zi.tools); GlyphWiki cdp-874b is 止 turned upside down; the top of 𣥒 in J/G/T is the same turned 止 (GlyphWiki adds a hook to the hanging vertical, fonts do not)"
+    },
+    {
+      "forms": [
+        "X-00652",
+        "X-01973"
+      ],
+      "names": [
+        "&CDP-875B;",
+        "⿾犭"
+      ],
+      "drawing": "⿾犭",
+      "reason": "babelstone and zi-tools candidate/difference on 𢇖 only; GlyphWiki cdp-875b is 犭 mirrored, matching the bottom right of 𢇖 (J/G/T)"
+    },
+    {
+      "forms": [
+        "X-00654",
+        "X-01933"
+      ],
+      "names": [
+        "&CDP-875D;",
+        "⿻屮亼"
+      ],
+      "drawing": "⿻屮亼",
+      "reason": "BabelStone and zi.tools ⿻屮亼 candidate on 𡴡; GlyphWiki cdp-875d (屮 crossed by 亼) matches the 𡴡 top above 吅 in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00664",
+        "X-01912"
+      ],
+      "names": [
+        "&CDP-876E;",
+        "⿻十龷"
+      ],
+      "drawing": "⿻十龷",
+      "reason": "candidate/difference on 𬗜 only (zi.tools); GlyphWiki cdp-876e is 十 crossing 龷 (three verticals); the body of the right of 𬗜 under its 丿 (J/G) matches; 𪊩 agrees"
+    },
+    {
+      "forms": [
+        "X-00667",
+        "X-01961"
+      ],
+      "names": [
+        "&CDP-8773;",
+        "⿻𬺰乀"
+      ],
+      "drawing": "⿻𬺰乀",
+      "reason": "babelstone and zi-tools candidate/difference on 𠮼 only; GlyphWiki cdp-8773 is 𬺰 crossed by 乀, matching the right of 𠮼 (J/G/T)"
+    },
+    {
+      "forms": [
+        "X-00668",
+        "X-01926"
+      ],
+      "names": [
+        "&CDP-8775;",
+        "⿻囗𠃊"
+      ],
+      "drawing": "⿻囗𠃊",
+      "reason": "zi.tools ⿻囗𠃊 candidate on 𤰞 (CHISE ⿱&CDP-8775;十); GlyphWiki cdp-8775 (囗 with a middle stroke, left vertical running below into an L) matches the 𤰞 top in J/G/T; BabelStone reads 𤰞 ⿱田⿻丨十, so the 十's vertical crossing the box is outside the part"
+    },
+    {
+      "forms": [
+        "X-00679",
+        "X-01551"
+      ],
+      "names": [
+        "&CDP-87AC;",
+        "⿰⿱𠃊丆尸"
+      ],
+      "drawing": "⿰⿱𠃊丆尸",
+      "reason": "candidate/difference on 𠭝 only (zi.tools); GlyphWiki cdp-87ac is a two-stroke left piece against 尸; left top of 𠭝 in J/G/T matches"
+    },
+    {
+      "forms": [
+        "X-00680",
+        "X-01888"
+      ],
+      "names": [
+        "&CDP-87AD;",
+        "⿻二儿"
+      ],
+      "drawing": "⿻二儿",
+      "reason": "babelstone candidate/difference on 𠭌 only; GlyphWiki cdp-87ad is 二 crossed by 儿, matching the bottom of 𠭌 (J/G/T)"
+    },
+    {
+      "forms": [
+        "X-00681",
+        "X-01871"
+      ],
+      "names": [
+        "&CDP-87AE;",
+        "⿻串一"
+      ],
+      "drawing": "⿻串一",
+      "reason": "BabelStone ⿻串一 candidate on 𠫺 (zi.tools ⿻中𬺣 separate); GlyphWiki cdp-87ae (串 crossed by a long 一 between the two 口) matches the 𠫺 bottom in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00682",
+        "X-01869"
+      ],
+      "names": [
+        "&CDP-87AF;",
+        "⿻中𠆢"
+      ],
+      "drawing": "⿻中𠆢",
+      "reason": "candidate/difference on 𠫩 only (zi.tools ⿻中人 separately); GlyphWiki cdp-87af is 中 crossed by 𠆢 legs; 𠫩 top and other use 𡂥 match"
+    },
+    {
+      "forms": [
+        "X-00683",
+        "X-01851"
+      ],
+      "names": [
+        "&CDP-87B0;",
+        "⿻丁⿱𠃋㇀"
+      ],
+      "drawing": "⿻丁⿱𠃋㇀",
+      "reason": "candidate/difference on 𠡅 only (zi.tools ⿻㔿一); GlyphWiki cdp-87b0 is 牙-like and the left of 𠡅 in J/G/T matches ⿻丁⿱𠃋㇀"
+    },
+    {
+      "forms": [
+        "X-00687",
+        "X-01953"
+      ],
+      "names": [
+        "&CDP-87B7;",
+        "⿻𠘨㇒"
+      ],
+      "drawing": "⿻𠘨㇒",
+      "reason": "babelstone candidate/difference on 𠙊 only; GlyphWiki cdp-87b7 is 几 with a 丿 crossing inside, matching 𠙊 (J/G/T)"
+    },
+    {
+      "forms": [
+        "X-00690",
+        "X-01615"
+      ],
+      "names": [
+        "&CDP-87BD;",
+        "⿱⿻且⿲丨丨丨八"
+      ],
+      "drawing": "⿱⿻且⿲丨丨丨八",
+      "reason": "BabelStone ⿱⿻且⿲丨丨丨八 candidate on 𠔰 (zi.tools ⿱⿻〣冃𬺢 separate); GlyphWiki cdp-87bd (典-like, 且 crossed by three verticals over 八) matches the 𠔰 bottom in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00694",
+        "X-01852"
+      ],
+      "names": [
+        "&CDP-87C2;",
+        "⿻丂丨"
+      ],
+      "drawing": "⿻丂丨",
+      "reason": "candidate/difference on 𠁮 only; GlyphWiki cdp-87c2 is 丂 crossed by a vertical; 𠁮 lower part and other use 𠂔 match in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00701",
+        "X-01990"
+      ],
+      "names": [
+        "&CDP-87E2;",
+        "㇯𨸏㇒"
+      ],
+      "drawing": "㇯𨸏㇒",
+      "reason": "candidate/difference on 𠁲 only (zi.tools ⿷㠯コ); GlyphWiki cdp-87e2 is 𨸏 less its top 丿 (stacked boxes); left of 𠁲 in G/T matches (J adds a small tick at the top)"
+    },
+    {
+      "forms": [
+        "X-00702",
+        "X-01940"
+      ],
+      "names": [
+        "&CDP-87EB;",
+        "⿻弓人"
+      ],
+      "drawing": "⿻弓人",
+      "reason": "babelstone candidate/difference on 𢎮 only; GlyphWiki cdp-87eb is 弓 crossed by 人, matching 𢎮 (J/G/T)"
+    },
+    {
+      "forms": [
+        "X-00703",
+        "X-01737"
+      ],
+      "names": [
+        "&CDP-87EC;",
+        "⿵⿸丨𠃍𰀪"
+      ],
+      "drawing": "⿵⿸丨𠃍𰀪",
+      "reason": "BabelStone ⿵⿸丨𠃍𰀪 candidate on 𠄣 (zi.tools ⿷丨⿹𠃍𰀪 separate); GlyphWiki cdp-87ec (丨 and 𠃍 enclosing two slants) matches the part inside 𠄠 in 𠄣 in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00707",
+        "X-02039"
+      ],
+      "names": [
+        "&CDP-87FB;",
+        "⿱⿰𠮝口禸"
+      ],
+      "drawing": "⿱⿰𠮝口禸",
+      "reason": "candidate/difference on 𠎘 only (zi.tools); GlyphWiki cdp-87fb is two boxes side by side over 禸, which ⿱⿰𠮝口禸 reads; J/G/T draw 𠎘 with one 口 under a bar instead, so both names describe the same other source glyph"
+    },
+    {
+      "forms": [
+        "X-00712",
+        "X-01899"
+      ],
+      "names": [
+        "&CDP-8842;",
+        "⿻冂⿰二二"
+      ],
+      "drawing": "⿻冂⿰二二",
+      "reason": "candidate/difference on 𧊨 only; GlyphWiki cdp-8842 is 冂 crossed by 二 on both sides; right of 𧊨 (J/G/T) and 𧧛 match"
+    },
+    {
+      "forms": [
+        "X-00713",
+        "X-01667"
+      ],
+      "names": [
+        "&CDP-8843;",
+        "⿱己乂"
+      ],
+      "drawing": "⿱己乂",
+      "reason": "babelstone candidate/difference on 𤓷 only; GlyphWiki cdp-8843 is 己 over 乂, matching the right of 𤓷 and of 𧦮 (J/G/T)"
+    },
+    {
+      "forms": [
+        "X-00720",
+        "X-01927"
+      ],
+      "names": [
+        "&CDP-884C;",
+        "⿻土⿱丷丷"
+      ],
+      "drawing": "⿻土⿱丷丷",
+      "reason": "BabelStone ⿻土⿱丷丷 candidate on 𠉓; GlyphWiki cdp-884c (土 crossed by two pairs of dots) matches the 𠉓 bottom in J/G/T and 𨥄"
+    },
+    {
+      "forms": [
+        "X-00725",
+        "X-01915"
+      ],
+      "names": [
+        "&CDP-8856;",
+        "⿻千从"
+      ],
+      "drawing": "⿻千从",
+      "reason": "candidate/difference on 𠚏 only (BabelStone, zi.tools agree); GlyphWiki cdp-8856 is 千 crossing 从; 𠚏 inner part matches in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00727",
+        "X-01874"
+      ],
+      "names": [
+        "&CDP-8858;",
+        "⿻丷屮"
+      ],
+      "drawing": "⿻丷屮",
+      "reason": "candidate/difference on 𤰒 only; GlyphWiki cdp-8858 is 屮 with 丷 inside; bottom of 𤰒 under 亼 in J/G/T matches"
+    },
+    {
+      "forms": [
+        "X-00740",
+        "X-01923"
+      ],
+      "names": [
+        "&CDP-8872;",
+        "⿻口大"
+      ],
+      "drawing": "⿻口大",
+      "reason": "babelstone candidate/difference on 𠫪 only; GlyphWiki cdp-8872 is 大 crossing 口, matching the top of 𠫪 (J/G/T)"
+    },
+    {
+      "forms": [
+        "X-00746",
+        "X-01928"
+      ],
+      "names": [
+        "&CDP-88A5;",
+        "⿻土吅"
+      ],
+      "drawing": "⿻土吅",
+      "reason": "BabelStone ⿻土吅 candidate on 喪; GlyphWiki cdp-88a5 (土 crossing 吅) matches the 喪 top in J/G/T and 囊-family uses"
+    },
+    {
+      "forms": [
+        "X-00747",
+        "X-01952"
+      ],
+      "names": [
+        "&CDP-88A6;",
+        "⿻𠈌十"
+      ],
+      "drawing": "⿻𠈌十",
+      "reason": "candidate/difference on 傘 only; GlyphWiki cdp-88a6 is 𠈌 crossed by 十 (傘 without 人); 傘 and the other six uses match"
+    },
+    {
+      "forms": [
+        "X-00748",
+        "X-01556"
+      ],
+      "names": [
+        "&CDP-88AC;",
+        "⿰丨𠃎"
+      ],
+      "drawing": "⿰丨𠃎",
+      "reason": "candidate/difference on 𤽆 only (babelstone and zi.tools); GlyphWiki cdp-88ac is a vertical with a turned stroke at its right (卩-like); right of 𤽆 in J/G/T matches; 𠛲 agrees"
+    },
+    {
+      "forms": [
+        "X-00760",
+        "X-01764"
+      ],
+      "names": [
+        "&CDP-88C7;",
+        "⿸⿹丅丿丨"
+      ],
+      "drawing": "⿸⿹丅丿丨",
+      "reason": "babelstone candidate/difference on 𣱊 only; GlyphWiki cdp-88c7 is 丅 with 丿 and 丨 under it (示 without dots), matching the left of 𣱊 and the 15 示-side uses (J)"
+    },
+    {
+      "forms": [
+        "X-00761",
+        "X-01744"
+      ],
+      "names": [
+        "&CDP-88C8;",
+        "⿵卄二"
+      ],
+      "drawing": "⿵卄二",
+      "reason": "BabelStone and zi.tools ⿵卄二 candidate on 甚 (BabelStone 甚 ⿱⿵卄二匹); GlyphWiki cdp-88c8 (卄 enclosing 二, 甘 with an extra stroke) matches the 甚 top in J/G/T and 其/𦡾"
+    },
+    {
+      "forms": [
+        "X-00766",
+        "X-01911"
+      ],
+      "names": [
+        "&CDP-88D9;",
+        "⿻十吅"
+      ],
+      "drawing": "⿻十吅",
+      "reason": "candidate/difference on 𦃦 only (BabelStone, zi.tools agree); GlyphWiki cdp-88d9 is 十 crossing 吅; 𦃦 top and other uses 𠿧𡁦 match"
+    },
+    {
+      "forms": [
+        "X-00767",
+        "X-01622"
+      ],
+      "names": [
+        "&CDP-88DA;",
+        "⿱㇒⿻一止"
+      ],
+      "drawing": "⿱㇒⿻一止",
+      "reason": "candidate/difference on 𥥲 only (zi.tools gives 𬼉 for 𤸕); GlyphWiki cdp-88da is 乏-like 丿 and 一 over 止; bottom of 𥥲 and the other 8 uses (J) show the same shape"
+    },
+    {
+      "forms": [
+        "X-00770",
+        "X-01955"
+      ],
+      "names": [
+        "&CDP-88E1;",
+        "⿻𣄼丨"
+      ],
+      "drawing": "⿻𣄼丨",
+      "reason": "babelstone candidate/difference on 𠃫 and 𡞍; GlyphWiki cdp-88e1 is 日 between two horizontals with a vertical through, matching the top of 𠃫 and of 𡞍 (J/G/T)"
+    },
+    {
+      "forms": [
+        "X-00776",
+        "X-01975"
+      ],
+      "names": [
+        "&CDP-8954;",
+        "⿾𨸏"
+      ],
+      "drawing": "⿾𨸏",
+      "reason": "BabelStone and zi.tools ⿾𨸏 candidate on 𨺅; GlyphWiki cdp-8954 is 𨸏 mirrored, matching the right of 𨺅 in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00803",
+        "X-01825"
+      ],
+      "names": [
+        "&CDP-89C5;",
+        "⿻⿱⿻口一口丨"
+      ],
+      "drawing": "⿻⿱⿻口一口丨",
+      "reason": "babelstone candidate/difference on 婁 only; GlyphWiki cdp-89c5 is the 婁 top (stacked boxes, vertical through, horizontal out), matching 婁 in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00807",
+        "X-01703"
+      ],
+      "names": [
+        "&CDP-89CD;",
+        "⿲丿⿱⿰𠃎𠃊⿰𠃍厂丨"
+      ],
+      "drawing": "⿲丿⿱⿰𠃎𠃊⿰𠃍厂丨",
+      "reason": "zi.tools ⿲丿⿱⿰𠃎𠃊⿰𠃍厂丨 candidate on 𣶒 (⿴X一); GlyphWiki cdp-89cd matches the 𣶒 frame in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00814",
+        "X-01904"
+      ],
+      "names": [
+        "&CDP-89E2;",
+        "⿻冖丿"
+      ],
+      "drawing": "⿻冖丿",
+      "reason": "candidate/difference on 𢏐 only (zi.tools ⿻丿冖 separately); GlyphWiki cdp-89e2 is 冖 crossed by 丿 (top of 农); 𢏐 right matches"
+    },
+    {
+      "forms": [
+        "X-00817",
+        "X-01569"
+      ],
+      "names": [
+        "&CDP-89EB;",
+        "⿰𠄌丶"
+      ],
+      "drawing": "⿰𠄌丶",
+      "reason": "candidate/difference on 以 only (babelstone and zi.tools); GlyphWiki cdp-89eb is 以 less 人 (𠄌 and 丶) and 以 in J/G/T matches"
+    },
+    {
+      "forms": [
+        "X-00819",
+        "X-01889"
+      ],
+      "names": [
+        "&CDP-89ED;",
+        "⿻二巾"
+      ],
+      "drawing": "⿻二巾",
+      "reason": "babelstone candidate/difference on 乕 only; GlyphWiki cdp-89ed is 巾 crossed by 二, matching the lower part of 乕 and of 𧚜 (J/G/T)"
+    },
+    {
+      "forms": [
+        "X-00822",
+        "X-01734"
+      ],
+      "names": [
+        "&CDP-89F3;",
+        "⿴夂丶"
+      ],
+      "drawing": "⿴夂丶",
+      "reason": "BabelStone ⿴夂丶 candidate on 𤝇; GlyphWiki cdp-89f3 (夂 with 丶 inside, the right of 夜) matches the right of 𤝇 in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00838",
+        "X-01872"
+      ],
+      "names": [
+        "&CDP-8A64;",
+        "⿻丷十"
+      ],
+      "drawing": "⿻丷十",
+      "reason": "candidate/difference on 伞 only; GlyphWiki cdp-8a64 is 丷 crossed by 十 (半 with one horizontal); bottom of 伞 and other uses 𠬵𡅴𤁎𧄀 (J) match"
+    },
+    {
+      "forms": [
+        "X-00848",
+        "X-01707"
+      ],
+      "names": [
+        "&CDP-8ACE;",
+        "⿳⺊𠔿⿵冂厶"
+      ],
+      "drawing": "⿳⺊𠔿⿵冂厶",
+      "reason": "babelstone candidate/difference on 𦺃 only; GlyphWiki cdp-8ace is the 卨-like ⺊ / 𠔿 / 冂厶 stack, matching the part under 艹 in 𦺃 and in 竊 (J/G/T)"
+    },
+    {
+      "forms": [
+        "X-00849",
+        "X-01768"
+      ],
+      "names": [
+        "&CDP-8AD6;",
+        "⿸丆剡"
+      ],
+      "drawing": "⿸丆剡",
+      "reason": "BabelStone ⿸丆剡 candidate on 𣽄; GlyphWiki cdp-8ad6 (丆 over 剡, the 罽 bottom) matches the right of 𣽄 in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00851",
+        "X-01977"
+      ],
+      "names": [
+        "&CDP-8AEA;",
+        "⿿或"
+      ],
+      "drawing": "⿿或",
+      "reason": "candidate/difference on 𢨋 only (BabelStone, zi.tools agree); GlyphWiki cdp-8aea is 或 turned 180 degrees; 𢨋 lower part matches in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00853",
+        "X-01681"
+      ],
+      "names": [
+        "&CDP-8AEC;",
+        "⿱罒⿸厂罒"
+      ],
+      "drawing": "⿱罒⿸厂罒",
+      "reason": "candidate/difference on 𡙷 only (zi.tools); GlyphWiki cdp-8aec is 罒 over 厂 holding 罒; top of 𡙷 in J/G/T matches"
+    },
+    {
+      "forms": [
+        "X-00860",
+        "X-01960"
+      ],
+      "names": [
+        "&CDP-8B62;",
+        "⿻𫩏丷"
+      ],
+      "drawing": "⿻𫩏丷",
+      "reason": "babelstone candidate/difference on 𪐗 only; GlyphWiki cdp-8b62 is a box with two curved inner legs (四-like), matching the top of 𪐗 (J/G/T)"
+    },
+    {
+      "forms": [
+        "X-00874",
+        "X-01600"
+      ],
+      "names": [
+        "&CDP-8BB2;",
+        "⿱⿱十罒一"
+      ],
+      "drawing": "⿱⿱十罒一",
+      "reason": "candidate/difference on 𢛳 only (zi.tools ⿳十罒一); GlyphWiki cdp-8bb2 is 十 over 罒 over 一 with the vertical running into the box; top of 𢛳 in J/G/T matches (the expressions stack rather than cross)"
+    },
+    {
+      "forms": [
+        "X-00877",
+        "X-01635"
+      ],
+      "names": [
+        "&CDP-8BBD;",
+        "⿱业𦍌"
+      ],
+      "drawing": "⿱业𦍌",
+      "reason": "babelstone candidate/difference on 𤎀 only; GlyphWiki cdp-8bbd is 业 over 𦍌 (丵), matching the top of 𤎀, 對, 𣫩 (J/G/T)"
+    },
+    {
+      "forms": [
+        "X-00883",
+        "X-01797"
+      ],
+      "names": [
+        "&CDP-8BD1;",
+        "⿹耳𤣩"
+      ],
+      "drawing": "⿹耳𤣩",
+      "reason": "BabelStone ⿹耳𤣩 candidate on 聽 (BabelStone GJKPV; HT read ⿹耳𡈼); GlyphWiki cdp-8bd1 (耳 over 王) matches the 聽 left in J/G; T's 𡈼 form is the other source glyph, not the CHISE entity"
+    },
+    {
+      "forms": [
+        "X-00886",
+        "X-01664"
+      ],
+      "names": [
+        "&CDP-8BDD;",
+        "⿱囪心"
+      ],
+      "drawing": "⿱囪心",
+      "reason": "candidate/difference on 𣎗 only (zi.tools 悤 separately); GlyphWiki cdp-8bdd is 囪 over 心 (悤); 𣎗 right and other uses match"
+    },
+    {
+      "forms": [
+        "X-00897",
+        "X-01778"
+      ],
+      "names": [
+        "&CDP-8C46;",
+        "⿸廿又"
+      ],
+      "drawing": "⿸廿又",
+      "reason": "zi-tools candidate/difference on 度 only; GlyphWiki cdp-8c46 is 廿 standing on the ㇇ of 又, and 度 in J/G/T/SimSun/MingLiU joins them the same way"
+    },
+    {
+      "forms": [
+        "X-00899",
+        "X-01835"
+      ],
+      "names": [
+        "&CDP-8C4B;",
+        "⿻⿲丿凵乚一"
+      ],
+      "drawing": "⿻⿲丿凵乚一",
+      "reason": "zi.tools ⿻⿲丿凵乚一 candidate on 帶 (CHISE ⿱⿱&CDP-8C4B;冖巾); GlyphWiki cdp-8c4b (four short verticals with a middle 凵, crossed by 一) matches the 帶 top in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00902",
+        "X-01690"
+      ],
+      "names": [
+        "&CDP-8C55;",
+        "⿱𠂉子"
+      ],
+      "drawing": "⿱𠂉子",
+      "reason": "candidate/difference on 𨒣 only (BabelStone, zi.tools agree); GlyphWiki cdp-8c55 is 𠂉 over 子 (right of 斿); 𨒣 and 逰 match"
+    },
+    {
+      "forms": [
+        "X-00908",
+        "X-01689"
+      ],
+      "names": [
+        "&CDP-8C74;",
+        "⿱𠂉一"
+      ],
+      "drawing": "⿱𠂉一",
+      "reason": "candidate/difference on 𤂟 only; GlyphWiki cdp-8c74 is 𠂉 over a long 一; 𤂟 and the 臨-type uses 𥂭𥃉𥷷 etc. (J) show that right-top shape"
+    },
+    {
+      "forms": [
+        "X-00913",
+        "X-01746"
+      ],
+      "names": [
+        "&CDP-8CB3;",
+        "⿵戌𣥂"
+      ],
+      "drawing": "⿵戌𣥂",
+      "reason": "babelstone candidate/difference on 嵗 only; GlyphWiki cdp-8cb3 is 戌 enclosing 𣥂, matching 嵗 under 山 and 歲 under 止 (J/G/T)"
+    },
+    {
+      "forms": [
+        "X-00919",
+        "X-01682"
+      ],
+      "names": [
+        "&CDP-8CC1;",
+        "⿱肀口"
+      ],
+      "drawing": "⿱肀口",
+      "reason": "BabelStone and zi.tools ⿱肀口 candidate on 唐; GlyphWiki cdp-8cc1 (肀 over 口) matches the part under 广 in 唐 in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00923",
+        "X-01738"
+      ],
+      "names": [
+        "&CDP-8CC7;",
+        "⿵䒑山"
+      ],
+      "drawing": "⿵䒑山",
+      "reason": "candidate/difference on 岡 only (BabelStone, zi.tools agree); GlyphWiki cdp-8cc7 is 䒑 over 山 with the middle vertical rising to the bar; inside of 岡 matches in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00928",
+        "X-01696"
+      ],
+      "names": [
+        "&CDP-8CD5;",
+        "⿱𠃑大"
+      ],
+      "drawing": "⿱𠃑大",
+      "reason": "candidate/difference on 𡵗 only (babelstone and zi.tools); GlyphWiki cdp-8cd5 is 吳 less 口 (𠃑 over 大); bottom of 𡵗 and the other uses 𣅳𥸸𧦂𪄾 (J) match"
+    },
+    {
+      "forms": [
+        "X-00932",
+        "X-01680"
+      ],
+      "names": [
+        "&CDP-8CE0;",
+        "⿱白方"
+      ],
+      "drawing": "⿱白方",
+      "reason": "babelstone candidate/difference on 敫 only; GlyphWiki cdp-8ce0 is 白 over 方 with 方's dot taken by 白, matching the left of 敫 and 㰾 (J/G/T)"
+    },
+    {
+      "forms": [
+        "X-00935",
+        "X-01714"
+      ],
+      "names": [
+        "&CDP-8CE6;",
+        "⿳一由八"
+      ],
+      "drawing": "⿳一由八",
+      "reason": "BabelStone ⿳一由八 candidate on 寅 (zi.tools ⿱⿱一曱八 is a separate form); GlyphWiki cdp-8ce6 (一, 由 with the vertical up to it, 八) matches the 寅 part under 宀 in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00937",
+        "X-01660"
+      ],
+      "names": [
+        "&CDP-8CEA;",
+        "⿱刀巴"
+      ],
+      "drawing": "⿱刀巴",
+      "reason": "candidate/difference on 絕 only; GlyphWiki cdp-8cea is 刀-like ク over 巴; 絕 right matches in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00938",
+        "X-01669"
+      ],
+      "names": [
+        "&CDP-8CEC;",
+        "⿱廿⺝"
+      ],
+      "drawing": "⿱廿⺝",
+      "reason": "candidate/difference on 𣪚 only (zi.tools ⿱龷冃); GlyphWiki cdp-8cec is 廿 over ⺝ (散-type left); left of 𣪚 and 𢻎𣮠𭽬 (J) match"
+    },
+    {
+      "forms": [
+        "X-00944",
+        "X-01567"
+      ],
+      "names": [
+        "&CDP-8CFA;",
+        "⿰工口"
+      ],
+      "drawing": "⿰工口",
+      "reason": "babelstone and zi-tools candidate/difference on 𢙢 only; GlyphWiki cdp-8cfa is 工 beside 口, matching the top of 𢙢 and the middle of 尋 (J/G/T)"
+    },
+    {
+      "forms": [
+        "X-00946",
+        "X-01673"
+      ],
+      "names": [
+        "&CDP-8D40;",
+        "⿱廿巾"
+      ],
+      "drawing": "⿱廿巾",
+      "reason": "zi.tools ⿱廿巾 candidate on 𦆐 (CHISE ⿰糸⿻&CDP-8D40;𢆶); GlyphWiki cdp-8d40 (廿 over 巾, the 席 core) matches the middle of 𦆐 in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00955",
+        "X-01652"
+      ],
+      "names": [
+        "&CDP-8D57;",
+        "⿱乛𢖻"
+      ],
+      "drawing": "⿱乛𢖻",
+      "reason": "candidate/difference on 慶 only; GlyphWiki cdp-8d57 is a 乛 hook over 心夊 (𢖻); lower part of 慶 matches"
+    },
+    {
+      "forms": [
+        "X-00956",
+        "X-01775"
+      ],
+      "names": [
+        "&CDP-8D5A;",
+        "⿸厂彡"
+      ],
+      "drawing": "⿸厂彡",
+      "reason": "candidate/difference on 𢒊 only (zi.tools); GlyphWiki cdp-8d5a is 厂 holding 彡; lower part of 𢒊 and of 彥 (J/G/T) match"
+    },
+    {
+      "forms": [
+        "X-00964",
+        "X-01678"
+      ],
+      "names": [
+        "&CDP-8D6F;",
+        "⿱氺牛"
+      ],
+      "drawing": "⿱氺牛",
+      "reason": "babelstone and zi-tools candidate/difference on 犀 only; GlyphWiki cdp-8d6f is the 犀 inner part (氺-like strokes on the vertical of 牛), matching 犀 in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00972",
+        "X-01634"
+      ],
+      "names": [
+        "&CDP-8DA8;",
+        "⿱丗木"
+      ],
+      "drawing": "⿱丗木",
+      "reason": "BabelStone ⿱丗木 candidate on 𤟬 (BabelStone G; T reads ⿱⿻廿丨木); GlyphWiki cdp-8da8 is 丗 over 木 with one central vertical running through both, as in the right of 𤟬 in J/G/T and 棄; the stacked expression is the looser reading of that one shape"
+    },
+    {
+      "forms": [
+        "X-00973",
+        "X-01626"
+      ],
+      "names": [
+        "&CDP-8DA9;",
+        "⿱䙲巳"
+      ],
+      "drawing": "⿱䙲巳",
+      "reason": "candidate/difference on 𪄷 only; GlyphWiki cdp-8da9 is 䙲 over 巳; 𪄷 left and other uses 𥱺𦸊 match"
+    },
+    {
+      "forms": [
+        "X-00980",
+        "X-01796"
+      ],
+      "names": [
+        "&CDP-8DB8;",
+        "⿹弓土"
+      ],
+      "drawing": "⿹弓土",
+      "reason": "candidate/difference on 𠱣 only (babelstone and zi.tools); GlyphWiki cdp-8db8 is 弓 wrapped round 土 (疆 left); right of 𠱣 and 疆𨕿 (J) match"
+    },
+    {
+      "forms": [
+        "X-00982",
+        "X-01662"
+      ],
+      "names": [
+        "&CDP-8DBB;",
+        "⿱口𠕁"
+      ],
+      "drawing": "⿱口𠕁",
+      "reason": "babelstone and zi-tools candidate/difference on 翤 only; GlyphWiki cdp-8dbb is 口 over 𠕁, matching the left of 翤, 嗣 and 𪼺 (J/G/T)"
+    },
+    {
+      "forms": [
+        "X-00987",
+        "X-01719"
+      ],
+      "names": [
+        "&CDP-8DD1;",
+        "⿳山一糸"
+      ],
+      "drawing": "⿳山一糸",
+      "reason": "BabelStone ⿳山一糸 candidate on 𢾰; GlyphWiki cdp-8dd1 (山 over 一 over 糸) matches the left of 𢾰 in J/G/T"
+    },
+    {
+      "forms": [
+        "X-00989",
+        "X-01805"
+      ],
+      "names": [
+        "&CDP-8DD7;",
+        "⿺元攴"
+      ],
+      "drawing": "⿺元攴",
+      "reason": "candidate/difference on 冦 only (BabelStone, zi.tools agree); GlyphWiki cdp-8dd7 is 元 whose 乚 runs under 攴; 冦 under 冖 matches"
+    },
+    {
+      "forms": [
+        "X-01033",
+        "X-01679"
+      ],
+      "names": [
+        "&GT-36228;",
+        "⿱爫𠙻"
+      ],
+      "drawing": "⿱爫𠙻",
+      "reason": "BabelStone ⿱爫𠙻 candidate on 𢝾 (BabelStone G ⿰忄⿱爫𠙻); &GT-36228; has no GlyphWiki glyph; its uses 揺/𢝾/𧝾 all show 爫 over the 干凵 form of 缶 in J/G/T, as the expression reads"
+    },
+    {
+      "forms": [
+        "X-01057",
+        "X-01865"
+      ],
+      "names": [
+        "&GT-K00135;",
+        "⿻丨𠃍"
+      ],
+      "drawing": "⿻丨𠃍",
+      "reason": "candidate/difference on 𫝀 only (zi.tools); 𫝀 in G/T is 𠃍 crossed by a vertical over a bar (Jigmo clips the glyph), the crossing part reading as ⿻丨𠃍; GT-K00135 has no GlyphWiki glyph"
+    },
+    {
+      "forms": [
+        "X-01066",
+        "X-01695"
+      ],
+      "names": [
+        "&GT-K00383;",
+        "⿱𠃎丿"
+      ],
+      "drawing": "⿱𠃎丿",
+      "reason": "candidate/difference on 睂 only (BabelStone ⿱𠃎丿); &GT-K00383; = #(丨-一丿) verified; the top-left 尸-like piece of 睂 (J/G/T) and of 𢑚𥅱𥆞𰆄 (J) is 𠃎 over 丿"
+    },
+    {
+      "forms": [
+        "X-01077",
+        "X-01586"
+      ],
+      "names": [
+        "&GT-K00822;",
+        "⿱⺀乂"
+      ],
+      "drawing": "⿱⺀乂",
+      "reason": "candidate/difference on 図 only (zi.tools ⿱⿰丶丶乂 separately); inside of 図 is two dots over 乂 in J/G/T; GT-K00822 has no GlyphWiki glyph"
+    },
+    {
+      "forms": [
+        "X-01078",
+        "X-01784"
+      ],
+      "names": [
+        "&GT-K00845;",
+        "⿸𡰣𠃍"
+      ],
+      "drawing": "⿸𡰣𠃍",
+      "reason": "candidate/difference on 𣪃 only (zi.tools); left of 𣪃 in J/G/T reads as 𡰣 with 𠃍 under it; GT glyph not seen, used nowhere else"
+    },
+    {
+      "forms": [
+        "X-01080",
+        "X-01795"
+      ],
+      "names": [
+        "&GT-K00875;",
+        "⿹勹乂"
+      ],
+      "drawing": "⿹勹乂",
+      "reason": "zi-tools candidate/difference on 𱯗 only; no glyph of GT-K00875; top right of 𱯗 in J/G/T/SimSun is 勹 enclosing 乂, as ⿹勹乂 says"
+    },
+    {
+      "forms": [
+        "X-01104",
+        "X-01629"
+      ],
+      "names": [
+        "&GT-K02168;",
+        "⿱一⿻丷屮"
+      ],
+      "drawing": "⿱一⿻丷屮",
+      "reason": "candidate/difference on 𡴌 only; under the roof 𡴌 shows a bar over 丷 crossing 屮 in J/G/T; GT-K02168 has no GlyphWiki glyph"
+    },
+    {
+      "forms": [
+        "X-01116",
+        "X-01956"
+      ],
+      "names": [
+        "&GT-K03607;",
+        "⿻𦍌㇒"
+      ],
+      "drawing": "⿻𦍌㇒",
+      "reason": "BabelStone ⿻𦍌㇒ candidate on 𭃱; &GT-K03607; has no GlyphWiki glyph; 𭃱 in J/G shows 𦍌 crossed by a long left-falling stroke (差 top), as the expression reads"
+    },
+    {
+      "forms": [
+        "X-01130",
+        "X-01725"
+      ],
+      "names": [
+        "&GT-K07616;",
+        "⿴⿱㇒囗⿱㇒⿻丷⿻丨𠆢"
+      ],
+      "drawing": "⿴⿱㇒囗⿱㇒⿻丷⿻丨𠆢",
+      "reason": "candidate/difference on 粵 only (zi.tools ⿱丿⿴囗⿱丿⿻⺌人 separately); top of 粵 is 丿 over 囗 holding 丿 and 米 in G/T, as the expression reads; GT-K07616 has no GlyphWiki glyph"
+    },
+    {
+      "forms": [
+        "X-01143",
+        "X-01718"
+      ],
+      "names": [
+        "&HD-TK-01032130;",
+        "⿳十罒心"
+      ],
+      "drawing": "⿳十罒心",
+      "reason": "candidate/difference on 聴 only; the right of 聴 and of 徳 in J is 十 over 罒 over 心 without 一, as written; HD glyph not seen"
+    },
+    {
+      "forms": [
+        "X-01165",
+        "X-01700"
+      ],
+      "names": [
+        "&JX2-7461;",
+        "⿱𱼀缶"
+      ],
+      "drawing": "⿱𱼀缶",
+      "reason": "babelstone candidate/difference on 瑤 only; no glyph of JX2-7461, but its six uses (搖瑤謠遙嗂榣) all show 𱼀 (夕 with inner dots) over 缶 in J/G/T/SimSun/MingLiU"
+    },
+    {
+      "forms": [
+        "X-01192",
+        "X-01657"
+      ],
+      "names": [
+        "&MJ007645;",
+        "⿱关力"
+      ],
+      "drawing": "⿱关力",
+      "reason": "BabelStone ⿱关力 candidate on 𭰼; &MJ007645; has no GlyphWiki glyph; 𭰼 and 𮠲 in J/G show 关 over 力, as the expression reads"
+    },
+    {
+      "forms": [
+        "X-01228",
+        "X-01674"
+      ],
+      "names": [
+        "&MJ013489;",
+        "⿱日匂"
+      ],
+      "drawing": "⿱日匂",
+      "reason": "candidate/difference on 渇 only (BabelStone, zi.tools agree); right of 渇 is 日 over 匂 (Japanese form) in J/G/T, as is 掲 (other use); MJ013489 has no GlyphWiki glyph"
+    },
+    {
+      "forms": [
+        "X-01289",
+        "X-01794"
+      ],
+      "names": [
+        "&MJ057080;",
+        "⿹勹⿺𠃊㐅"
+      ],
+      "drawing": "⿹勹⿺𠃊㐅",
+      "reason": "candidate/difference on 𥑪 only; right of 𥑪 in J/G/T is 勹 round 㐅 on a 𠃊, as written; MJ glyph not seen, used nowhere else"
+    },
+    {
+      "forms": [
+        "X-01291",
+        "X-01623"
+      ],
+      "names": [
+        "&MJ057134;",
+        "⿱㇒犮"
+      ],
+      "drawing": "⿱㇒犮",
+      "reason": "babelstone candidate/difference on 𱦗 only; no glyph of MJ057134; right of 𱦗 in J/G is a short ㇒ over 犮; T font lacks the character"
+    },
+    {
+      "forms": [
+        "X-01300",
+        "X-01697"
+      ],
+      "names": [
+        "&U-i001+20122;",
+        "⿱𠄢一"
+      ],
+      "drawing": "⿱𠄢一",
+      "reason": "BabelStone ⿱𠄢一 candidate on 𣷻 (zi.tools stroke chain X-01710 separate); no glyph of &U-i001+20122; itself; the right of 𣷻 in J/G/T is 一 over a boxed 口 over 一, as the expression reads"
+    },
+    {
+      "forms": [
+        "X-01308",
+        "X-01971"
+      ],
+      "names": [
+        "&U-i001+2298F;",
+        "⿽弋十"
+      ],
+      "drawing": "⿽弋十",
+      "reason": "candidate/difference on 㢤 only (BabelStone, zi.tools agree); 㢤 is 弋 holding 十 in J/G/T (variant of 𢦏 U+2298F); no CHISE glyph"
+    },
+    {
+      "forms": [
+        "X-01309",
+        "X-01947"
+      ],
+      "names": [
+        "&U-i001+26614;",
+        "⿻肀𬺻"
+      ],
+      "drawing": "⿻肀𬺻",
+      "reason": "candidate/difference on 𨕛 only (zi.tools ⿹𦘒⿸丿⿰𰀪㇁); inside 辶 of 𨕛 J/G/T show 肀 over a 豕-like foot, as written; CHISE variant glyph not seen"
+    },
+    {
+      "forms": [
+        "X-01310",
+        "X-01785"
+      ],
+      "names": [
+        "&U-i001+27C27;",
+        "⿸𬺷乀"
+      ],
+      "drawing": "⿸𬺷乀",
+      "reason": "babelstone candidate/difference on 𩂚 only; no glyph of &U-i001+27C27;; under 雨 in J/G/T is a 豕-like shape (𬺷 with 乀), as the expression says"
+    },
+    {
+      "forms": [
+        "X-01311",
+        "X-01670"
+      ],
+      "names": [
+        "&U-i001+2C72F;",
+        "⿱廿⿻⿲㇒丨人冂"
+      ],
+      "drawing": "⿱廿⿻⿲㇒丨人冂",
+      "reason": "BabelStone ⿱廿⿻⿲㇒丨人冂 candidate on 𣺏 (zi.tools ⿻𱽓冂 separate); no glyph of &U-i001+2C72F; itself; the right of 𣺏 in J/G/T is 廿 over 冂 holding ㇒, 丨 and 人, as the expression reads"
+    },
+    {
+      "forms": [
+        "X-01317",
+        "X-01608"
+      ],
+      "names": [
+        "&U-i001+4889;",
+        "⿱⿴𦥑囟⿸丆⿱二⿰止㇂"
+      ],
+      "drawing": "⿱⿴𦥑囟⿸丆⿱二⿰止㇂",
+      "reason": "candidate/difference on 𤅌 only (zi.tools writes 厂 for 丆); right of 𤅌 in J/G/T is 𦥑 round 囟 over 丆 with 二, 止 and ㇂; CHISE variant of 䢉 glyph not seen"
+    },
+    {
+      "forms": [
+        "X-01324",
+        "X-01637"
+      ],
+      "names": [
+        "&U-i001+5C71;",
+        "⿱丨⿰𠃊亅"
+      ],
+      "drawing": "⿱丨⿰𠃊亅",
+      "reason": "candidate/difference on 𬺶 only (zi.tools ⿹亅⿺𠃊丨 separately); under the bar 𬺶 is 山 with its right side a hooked 亅 in J/G, read by ⿱丨⿰𠃊亅 (variant of 山)"
+    },
+    {
+      "forms": [
+        "X-01325",
+        "X-01713"
+      ],
+      "names": [
+        "&U-i001+5DEB;",
+        "⿳一从工"
+      ],
+      "drawing": "⿳一从工",
+      "reason": "candidate/difference on 𪂐 only; left of 𪂐 in J/G/T is 巫-like 一, 从, 工 stacked, as written; CHISE variant of 巫 glyph not seen"
+    },
+    {
+      "forms": [
+        "X-01328",
+        "X-01568"
+      ],
+      "names": [
+        "&U-i001+65DB;",
+        "⿰方⿱𠂉畨"
+      ],
+      "drawing": "⿰方⿱𠂉畨",
+      "reason": "babelstone candidate/difference on 𤃳 only; no glyph of &U-i001+65DB;; right of 𤃳 in J/G/T is 方 beside 𠂉 over 畨, as the expression says"
+    },
+    {
+      "forms": [
+        "X-01336",
+        "X-01946"
+      ],
+      "names": [
+        "&U-i001+96B6;",
+        "⿻肀⿱𠃊人"
+      ],
+      "drawing": "⿻肀⿱𠃊人",
+      "reason": "candidate/difference on 𦀱 only (zi.tools); left of 𦀱 is a 隶 variant (肀 crossed, 𠃊 and 人 below) in J/G/T, as ⿻肀⿱𠃊人 reads"
+    },
+    {
+      "forms": [
+        "X-01342",
+        "X-01549"
+      ],
+      "names": [
+        "&U-i002+22F38;",
+        "⿰⿱山𠮛攵"
+      ],
+      "drawing": "⿰⿱山𠮛攵",
+      "reason": "BabelStone ⿰⿱山𠮛攵 candidate on 𡠾; no glyph of &U-i002+22F38; itself; the right of 𡠾 and of 㣲 in J/G/T read 山 over 𠮛 beside 攵, as the expression reads"
+    },
+    {
+      "forms": [
+        "X-01358",
+        "X-01972"
+      ],
+      "names": [
+        "&U-i003+2007E;",
+        "⿾巴"
+      ],
+      "drawing": "⿾巴",
+      "reason": "candidate/difference on 𨙨 only (zi.tools); lower part of 𨙨 is a mirrored 巴 in J/G/T, as ⿾巴 reads"
+    },
+    {
+      "forms": [
+        "X-01364",
+        "X-01983"
+      ],
+      "names": [
+        "&U-i003+66F0;",
+        "⿿𠃛"
+      ],
+      "drawing": "⿿𠃛",
+      "reason": "candidate/difference on 𲦌 only (zi.tools); right of 𲦌 in J/G/T is 曰 opened on its left side, 𠃛 turned round, as written; CHISE variant of 曰 glyph not seen"
+    },
+    {
+      "forms": [
+        "X-01374",
+        "X-01900"
+      ],
+      "names": [
+        "&U-i004+821F;",
+        "⿻冂丄"
+      ],
+      "drawing": "⿻冂丄",
+      "reason": "BabelStone ⿻冂丄 candidate on 𠯧 (zi.tools ⿻丨⿻冂一 separate); no glyph of &U-i004+821F; itself; the 𠯧 bottom in J/G/T is 冂 crossed by 丄, as the expression reads"
+    },
+    {
+      "forms": [
+        "X-01375",
+        "X-01980"
+      ],
+      "names": [
+        "&U-i004+89C1;",
+        "⿿见"
+      ],
+      "drawing": "⿿见",
+      "reason": "candidate/difference on 𲁓 only (BabelStone, zi.tools agree); right of 𲁓 is 见 turned 180 degrees in J/G, as ⿿见 reads"
+    },
+    {
+      "forms": [
+        "X-01376",
+        "X-01981"
+      ],
+      "names": [
+        "&U-i004+96B9;",
+        "⿿隹"
+      ],
+      "drawing": "⿿隹",
+      "reason": "candidate/difference on 𰨇 only (babelstone and zi.tools); the top of 𰨇 in J/G is 隹 upside down, as written; CHISE variant glyph not seen"
+    },
+    {
+      "forms": [
+        "X-01379",
+        "X-01671"
+      ],
+      "names": [
+        "&U-i005+34BC;",
+        "⿱廿⿻丨网"
+      ],
+      "drawing": "⿱廿⿻丨网",
+      "reason": "babelstone candidate/difference on 𤂒 only; no glyph of &U-i005+34BC;; right of 𤂒 in J/G/T/SimSun is 廿 over 网 with a vertical through, as the expression says"
+    },
+    {
+      "forms": [
+        "X-01382",
+        "X-01789"
+      ],
+      "names": [
+        "&U-i005+624D;",
+        "⿹⿻乛亅㇒"
+      ],
+      "drawing": "⿹⿻乛亅㇒",
+      "reason": "BabelStone ⿹⿻乛亅㇒ candidate on 𭩩; no glyph of &U-i005+624D; itself; the right of 𭩩 in J/G is 乛 crossed by 亅 with ㇒ (才-like), as the expression reads"
+    },
+    {
+      "forms": [
+        "X-01396",
+        "X-01897"
+      ],
+      "names": [
+        "&U-i016+91D1;",
+        "⿻全丷"
+      ],
+      "drawing": "⿻全丷",
+      "reason": "babelstone candidate/difference on 𤐻 only; no glyph of &U-i016+91D1;; bottom of 𤐻 in J/G/T/MingLiU is 全 with 丷 crossing it (a 金 form), as the expression says"
+    },
+    {
+      "forms": [
+        "X-01398",
+        "X-01699"
+      ],
+      "names": [
+        "&U-v001+2585E;",
+        "⿱𮂱旨"
+      ],
+      "drawing": "⿱𮂱旨",
+      "reason": "BabelStone ⿱𮂱旨 candidate on 𬭿; no glyph of &U-v001+2585E; itself; the right of 𬭿 and 鑙 in J/G shows 𮂱 over 旨, as the expression reads"
+    },
+    {
+      "forms": [
+        "X-01412",
+        "X-01712"
+      ],
+      "names": [
+        "&U-v004+5DE5;",
+        "⿳一丨一"
+      ],
+      "drawing": "⿳一丨一",
+      "reason": "candidate/difference on 𢒅 only (zi.tools 工 separately); the 工 variant in 𢒅 has its vertical at the left edge (匚-like) in J/G/T; same three strokes as ⿳一丨一, position only"
+    },
+    {
+      "forms": [
+        "X-01518",
+        "X-01644"
+      ],
+      "names": [
+        "#(丿乚)",
+        "⿱丿⺃"
+      ],
+      "drawing": "⿱丿⺃",
+      "reason": "chise ⿱丿⺃ candidate on 𥟯; the zi.tools chain #(丿乚) (乚 starting where 丿 ends) and the 𥟯 right in J/G/T (丿 atop 乚, 乇 skeleton) read the same; 𢩺 also shows it"
+    }
+  ]
+}

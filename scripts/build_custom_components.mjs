@@ -306,6 +306,29 @@ for (const { a, b } of same) {
   leader.set(two, one)
   for (const source of theirs) mine.add(source)
 }
+// Forms read as one shape where no table confirms it, each row with what it rests on
+// (scripts/data/custom-same.json). A row's first name is a component; the others are components of
+// other sources or expressions nothing confirms, which become names of the first one's form.
+const judged = JSON.parse(await readFile(new URL('./data/custom-same.json', import.meta.url), 'utf8'))
+/** @type {Map<string, string>} */
+const judgedSpelling = new Map()
+for (const row of judged.rows) {
+  const [named, ...others] = /** @type {string[]} */ (row.names)
+  if (!leader.has(named)) throw new Error(`custom-same.json: no table writes ${named}`)
+  for (const other of others) {
+    if (!leader.has(other)) {
+      if (!isNode(plainTree(other))) throw new Error(`custom-same.json: ${other} is neither a component nor an expression`)
+      judgedSpelling.set(other, named)
+      continue
+    }
+    const [one, two] = [find(named), find(other)].sort(byName)
+    if (one === two) throw new Error(`custom-same.json: ${named} and ${other} are one form already`)
+    const mine = /** @type {Set<string>} */ (sourcesOf.get(one)), theirs = /** @type {Set<string>} */ (sourcesOf.get(two))
+    if ([...theirs].some(source => mine.has(source))) throw new Error(`custom-same.json: ${named} and ${other} share a source`)
+    leader.set(two, one)
+    for (const source of theirs) mine.add(source)
+  }
+}
 /** @type {Map<string, string[]>} */
 const members = new Map()
 for (const name of names) members.set(find(name), [...(members.get(find(name)) ?? []), name])
@@ -315,6 +338,11 @@ const spellingOf = new Map()
 for (const [text, users] of spelled) {
   const forms = new Set(users.map(user => find(user.name)))
   if (forms.size === 1) spellingOf.set(text, [...forms][0])
+}
+for (const [text, named] of judgedSpelling) {
+  const form = find(named), confirmed = spellingOf.get(text)
+  if (confirmed && confirmed !== form) throw new Error(`custom-same.json: ${text} is confirmed as ${confirmed}`)
+  spellingOf.set(text, form)
 }
 /** @type {{ first: string, aliases: string[] }[]} */
 const forms = [...members].map(([first, list]) => ({ first, aliases: [...list, ...[...spellingOf].filter(([, form]) => form === first).map(([text]) => text).sort()] }))
@@ -455,6 +483,7 @@ const document = {
     verified: components.filter(row => row.equivalents.some(item => item.status === 'verified')).length,
     drawable,
     editorial: editorial.rows.length,
+    same: judged.rows.length,
     characters: characters.length,
     forms: formRows.length,
   },
@@ -463,6 +492,7 @@ const document = {
   strokeLetters: strokeLetters.strokes,
   chainNames: CHAIN_NAMES,
   editorial: editorial.rows,
+  same: judged.rows,
   components,
   characters,
 }
