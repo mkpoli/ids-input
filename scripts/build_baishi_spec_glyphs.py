@@ -49,7 +49,7 @@ NOTO_SPECS = [
     ("公.", "公", "ZHS"),
     ("公T", "公", "ZHT"),
     ("惠", "惠", "ZHS"),
-    ("叀.", "叀", "ZHS"),              # ids_lv0: 叀. = ⿱𤰔厶.
+    ("叀.", "叀", "JAN"),              # ids_lv0 l.1473: 叀. = ⿱𤰔厶.
     ("冷.", "冷", "ZHS"),
     ("冷H", "冷", "ZHH"),
     ("冷J", "冷", "JAN"),
@@ -245,8 +245,11 @@ def main():
             contours = ["M" + part for part in d.split("M")[1:]]
             out[key] = fit_paths([contours[i] for i in indices])
 
+    # Fit the standalone Japanese 叀 to the existing default tile’s ink box.
+    out["叀."] = fit_paths([out["叀."]], ink_box=(64.2, 39.6, 937.4, 951.3))
+
     # ids_lv0 line 4833: 惠 = ⿱叀y2002心. Its first seven contours include
-    # the uninterrupted 丨. Fit them to the standalone 叀 tile's original ink box.
+    # the uninterrupted 丨. Fit them to the y2002 tile's original ink box.
     hui_top = ["M" + part for part in out["惠"].split("M")[1:8]]
     out["叀y2002"] = fit_paths(hui_top, ink_box=(60.3, 41.1, 941.2, 967.6))
 
