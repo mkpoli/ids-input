@@ -1,58 +1,8 @@
 {
   "unicode": "18.0.0",
   "scope": "Assigned fallback candidates excluding exact dedicated-bundle records and pinned host CJK outlines; private use excluded",
-  "count": 10406,
+  "count": 9945,
   "blocks": [
-    {
-      "block": "Archaic Cuneiform Numerals",
-      "count": 311,
-      "ranges": [
-        [
-          75088,
-          75398
-        ]
-      ]
-    },
-    {
-      "block": "Tangut",
-      "count": 8,
-      "ranges": [
-        [
-          100344,
-          100351
-        ]
-      ]
-    },
-    {
-      "block": "Tangut Supplement",
-      "count": 24,
-      "ranges": [
-        [
-          101641,
-          101664
-        ]
-      ]
-    },
-    {
-      "block": "Tangut Components Supplement",
-      "count": 115,
-      "ranges": [
-        [
-          101760,
-          101874
-        ]
-      ]
-    },
-    {
-      "block": "Latin Extended-G",
-      "count": 3,
-      "ranges": [
-        [
-          122829,
-          122831
-        ]
-      ]
-    },
     {
       "block": "Seal",
       "count": 9945,

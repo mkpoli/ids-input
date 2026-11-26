@@ -48,10 +48,18 @@ describe('the fallback webfont', () => {
     expect(css).toContain('font-family:"IDS Fallback"')
   })
 
-  it('orders GNU Unifont last behind every vector fallback font', () => {
+  it('orders Plangothic ahead of Jigmo and keeps GNU Unifont last behind every vector fallback font', () => {
     const lock = JSON.parse(read('data/unicode-fonts.json'))
     const files = lock.fonts.map(entry => entry.file)
     expect(files.slice(-2)).toEqual(['unifont-18.0.01.otf', 'unifont_upper-18.0.01.otf'])
     expect(files.slice(0, -2).some(file => file.startsWith('unifont'))).toBe(false)
+    const notoCjk = files.indexOf('NotoSansCJKjp-VF-2.004.ttf')
+    const p1 = files.indexOf('PlangothicP1-Regular.ttf')
+    const p2 = files.indexOf('PlangothicP2-Regular.ttf')
+    const jigmo = files.indexOf('Jigmo-20250912-Jigmo.ttf')
+    expect(notoCjk).toBeGreaterThanOrEqual(0)
+    expect(p1).toBeGreaterThan(notoCjk)
+    expect(p2).toBeGreaterThan(p1)
+    expect(jigmo).toBeGreaterThan(p2)
   })
 })
