@@ -610,7 +610,7 @@ export const EXAMPLES = {
 /** Each column is a separate code point. The first entry in each column shares
  * its IDS body with the entry opposite it, apart from the uniqueness prefix.
  * Entries and line numbers are from DATABASE.commit, ids_lv0.txt.
- * @typedef {{char: string, line: number, entries: {glyph?: string, text: string, reference?: {label: string, url: string}}[]}} PrefixColumn
+ * @typedef {{char: string, line: number, entries: {glyph: string, text: string, reference?: {label: string, url: string}}[]}} PrefixColumn
  * @type {{columns: [PrefixColumn, PrefixColumn], quote?: string}[]}
  */
 export const PREFIX_COMPARISONS = [
@@ -636,7 +636,7 @@ export const PREFIX_COMPARISONS = [
   ] },
   { columns: [
     { char: '叱', line: 1522, entries: [
-      { glyph: '叱V', text: '{?叱}⿰口.七.(V)', reference: { label: 'U+20B9F · CID+59631', url: 'https://github.com/adobe-fonts/source-han-sans/blob/2.005R/Resources/AI0-SourceHanSans' } }, { glyph: '叱.', text: '⿰口.𠤎.(.)' },
+      { glyph: '叱V', text: '{?叱}⿰口.七.(V)', reference: { label: 'U+20B9F', url: 'https://github.com/adobe-fonts/source-han-sans/blob/2.005R/Resources/AI0-SourceHanSans' } }, { glyph: '叱.', text: '⿰口.𠤎.(.)' },
     ] },
     { char: '𠮟', line: 30572, entries: [{ glyph: '𠮟', text: '⿰口.七.' }] },
   ] },
@@ -650,7 +650,7 @@ export const PREFIX_COMPARISONS = [
   ], quote: 'oral' },
   { columns: [
     { char: '暅', line: 6278, entries: [
-      { text: '{?0暅}⿰日恆(P)', reference: { label: 'KP1-49AC', url: 'https://www.unicode.org/charts/PDF/U4E00.pdf#page=161' } }, { glyph: '暅.', text: '⿰日恒(.)' },
+      { glyph: '𣈶T', text: '{?0暅}⿰日恆(P)', reference: { label: 'KP1-49AC', url: 'https://www.unicode.org/charts/PDF/U4E00.pdf#page=161' } }, { glyph: '暅.', text: '⿰日恒(.)' },
     ] },
     { char: '𣈶', line: 40451, entries: [{ glyph: '𣈶T', text: '⿰日恆(T)' }] },
   ] },

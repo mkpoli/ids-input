@@ -26,7 +26,6 @@ describe('the zi.tools IDS Extension page glyph witnesses', () => {
     for (const { columns } of PREFIX_COMPARISONS) {
       for (const { entries } of columns) {
         for (const { glyph } of entries) {
-          if (!glyph) continue
           used.add(glyph)
           expect(glyphs[glyph]).toMatch(/^M/)
         }

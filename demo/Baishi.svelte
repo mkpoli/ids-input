@@ -88,7 +88,7 @@
   const GLYPHS = /** @type {Record<string, string>} */ (specGlyphs)
   const GLYPHWIKI_CREDITS = /** @type {const} */ ([
     ['烕 (q008a2)', 'u2ff5-u620a-u5929@3'],
-    ['𣈶 (T)', 'u23236@14'],
+    ['暅 (P), 𣈶 (T)', 'u23236@14'],
     ['𡮂 (J)', 'koseki-085450@6'],
     ['𡭽 (J)', 'u21b7d-j@2'],
     ['𦥮 (T)', 'u2696e-t@1'],
@@ -558,14 +558,9 @@
                       {@const { body, tag } = splitTag(entry.text)}
                       {@const prefix = body.match(/^\{[^}]+\}/u)?.[0] ?? ''}
                       <div class="prefix-entry">
-                        {#if entry.glyph}
-                          <div class="glyph-tile">{@render glyphBox(entry.glyph, tag ? `${column.char} (${tag})` : column.char)}</div>
-                        {/if}
-                        {#if entry.reference && !entry.glyph}
-                          <a class="at" href={entry.reference.url}>{entry.reference.label} ↗</a>
-                        {/if}
+                        <div class="glyph-tile">{@render glyphBox(entry.glyph, tag ? `${column.char} (${tag})` : column.char)}</div>
                         <span class="ids" lang="zh-Hans">{#if prefix}<mark>{prefix}</mark>{/if}{body.slice(prefix.length)}{#if tag}<span class="tag">({tag})</span>{/if}</span>
-                        {#if entry.glyph && entry.reference}
+                        {#if entry.reference}
                           <a class="label" href={entry.reference.url}>{entry.reference.label}</a>
                         {/if}
                       </div>
@@ -691,9 +686,10 @@
               <p class="doc-title">{t('cheatsheet.source.outlines')}</p>
               <p class="note">
                 <a href="https://github.com/notofonts/noto-cjk/tree/Sans2.004/Sans/Variable/TTF" target="_blank" rel="noreferrer">Noto Sans CJK JP 2.004 VF</a> (ZHS, ZHH, ZHT, JAN; 十.t ← 戢 SC, 子t ← 孩, 凵y ← 世) ·
-                <a href="https://github.com/adobe-fonts/source-han-sans/blob/2.005R/Resources/AI0-SourceHanSans" target="_blank" rel="noreferrer">Source Han Sans JP 2.005 · CID+59631 (𠮟, 叱V)</a> © 2014–2025 Adobe (<a href={sourceHanLicence}>SIL OFL 1.1</a>) ·
+                <a href="https://github.com/adobe-fonts/source-han-sans/blob/2.005R/Resources/AI0-SourceHanSans" target="_blank" rel="noreferrer">Source Han Sans JP 2.005 (𠮟, 叱V)</a> © 2014–2025 Adobe (<a href={sourceHanLicence}>SIL OFL 1.1</a>) ·
                 <a href="https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project/releases/tag/V2.9.5795" target="_blank" rel="noreferrer">Plangothic P1/P2 V2.9.5795</a> ·
                 <a href="https://github.com/NightFurySL2001/bai-ids/blob/0ca5ed48f51821d4d54246196f1f5f38c9d6bd6a/fonts/example.woff2" target="_blank" rel="noreferrer">bai-ids example.woff2</a> © 2024–2025 -PT_AxH_RV- (<a href={exampleLicence}>SIL OFL 1.1</a>) ·
+                <a href="https://www.unicode.org/notes/tn50/tn50-6.html#Description" target="_blank" rel="noreferrer">Ken Lunde, UTN #50 (2026) · KP1-49AC (U+6685, U+23236)</a> ·
                 <a href="https://cdp.sinica.edu.tw/service/documents/transfer/trans20070824.pdf" target="_blank" rel="noreferrer">《明史》舊版造字轉碼說明 · 2198 (𣈶)</a> ·
                 <a href="https://github.com/yi-bai/iwds/tree/8302302d615ff1c1f60ae335b118b10060be0ed4" target="_blank" rel="noreferrer">IWDS UCV 316, 393, 438, 454a</a> ·
                 {#each GLYPHWIKI_CREDITS as [label, source], i (source)}{#if i} · {/if}<a href={`https://glyphwiki.org/wiki/${source}`} target="_blank" rel="noreferrer">{label}</a>{/each}

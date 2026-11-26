@@ -261,7 +261,7 @@ def main():
 
     # Yi Bai, ids_lv0 lines 1522 and 30572 (2597437b), gives ⿰口.七. for
     # both the 叱 V form and 𠮟. Source Han Sans 2.005 maps U+20B9F to
-    # CID+59631 (u20B9F-JP). Preserve the previous 叱V witness’s ink box.
+    # its Japanese outline. Preserve the previous 叱V witness’s ink box.
     with TTFont(fetch(SOURCE_HAN_JP[0], cache / "SourceHanSansJP-Regular-2.005.otf", SOURCE_HAN_JP[1])) as source_han:
         outline = draw_glyph(source_han, source_han.getBestCmap()[ord("𠮟")])
         out["叱V"] = out["𠮟"] = fit_paths([outline], ink_box=(60, 90.2, 940, 909.8))
