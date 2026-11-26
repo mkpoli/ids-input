@@ -50,7 +50,6 @@ NOTO_SPECS = [
     ("公T", "公", "ZHT"),
     ("惠", "惠", "ZHS"),
     ("叀.", "叀", "ZHS"),              # ids_lv0: 叀. = ⿱𤰔厶.
-    ("叀y2002", "叀", "JAN"),          # ids_lv0: 叀y2002 = ⿱⿻十.日⿰一t丶. (matches top of 惠)
     ("冷.", "冷", "ZHS"),
     ("冷H", "冷", "ZHH"),
     ("冷J", "冷", "JAN"),
@@ -205,20 +204,19 @@ def draw_glyph(font, glyph_name, is_vf=False):
     return pen.getCommands()
 
 
-def fit_paths(paths):
+def fit_paths(paths, ink_box=None):
     bounds = BoundsPen(None)
     for path in paths:
         parse_path(path, bounds)
     left, top, right, bottom = bounds.bounds
-    scale = 880 / max(right - left, bottom - top)
-    transform = (
-        scale,
-        0,
-        0,
-        scale,
-        500 - scale * (left + right) / 2,
-        500 - scale * (top + bottom) / 2,
-    )
+    if ink_box is None:
+        sx = sy = 880 / max(right - left, bottom - top)
+        cx = cy = 500
+    else:
+        x0, y0, x1, y1 = ink_box
+        sx, sy = (x1 - x0) / (right - left), (y1 - y0) / (bottom - top)
+        cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    transform = (sx, 0, 0, sy, cx - sx * (left + right) / 2, cy - sy * (top + bottom) / 2)
     out = []
     for path in paths:
         pen = SVGPathPen(None, ntos=lambda n: f"{n:.1f}".removesuffix(".0"))
@@ -245,6 +243,11 @@ def main():
             d = draw_glyph(vf, glyph, is_vf=True)
             contours = ["M" + part for part in d.split("M")[1:]]
             out[key] = fit_paths([contours[i] for i in indices])
+
+    # ids_lv0 line 4833: 惠 = ⿱叀y2002心. Its first seven contours include
+    # the uninterrupted 丨. Fit them to the standalone 叀 tile's original ink box.
+    hui_top = ["M" + part for part in out["惠"].split("M")[1:8]]
+    out["叀y2002"] = fit_paths(hui_top, ink_box=(60.3, 41.1, 941.2, 967.6))
 
     p1_name, p2_name = "PlangothicP1-Regular.ttf", "PlangothicP2-Regular.ttf"
     with (
