@@ -912,8 +912,8 @@ recognition falls back to them.
 
 A description is drawn by [han-compose](https://github.com/mkpoli/han-compose)'s composing engine,
 the package `@han-compose/composer` (MIT): the same engine that draws it in the terminal and in the
-static files its `export-web` writes. `package.json` reads it from han-compose's `package` branch.
-Han descriptions read that export — a manifest, the learned
+static files its `export-web` writes. `package.json` reads it from han-compose's `package` branch, and
+the `han-compose` workflow moves `bun.lock` to each package published there. Han descriptions read that export — a manifest, the learned
 layout, and the records of every character and the host lists of every (place, operand), packed into
 gzipped shards by the first three hex digits of their SHA-256 (`g/<hhh>.json`, `p/<hhh>.json`) — so a
 sequence loads only the shards its parts fall in. Tangut, Bopomofo, New Korean, Shuishu, Small Seal,
