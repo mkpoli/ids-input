@@ -114,6 +114,7 @@ NOTO_SPECS = [
 
 # Donor cuts from Noto Sans CJK JP VF (key, char, locl tag or None, contour indices).
 NOTO_CUTS = [
+    ("七t", "切", "ZHS", [2, 4, 5]),  # ids_lv0: 切 = ⿰七t刀(.)
     ("十.t", "戢", "ZHS", [9, 10]),    # SC 戢: bottom-left 十 with rising horizontal 一t
     ("子t", "孩", "JAN", [0, 1, 2, 3]),  # 孩 = ⿰子t亥J(J)
     ("凵y", "世", "JAN", [2, 4, 5]),    # 世 = ⿻⿺𠃊.凵y一.(.)

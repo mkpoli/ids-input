@@ -366,10 +366,11 @@ export const EXAMPLES = {
       ],
     },
     {
-      char: '七', text: '⿻乚一(.,T)', at: row(1, 4),
+      char: '七', text: '⿻乚.一.(.);⿻乚w一.(T);⿻乚t一.(t)', at: row(0, 4),
       forms: [
-        { glyph: '七.', tag: '.' },
-        { glyph: '七T', tag: 'T' },
+        { glyph: '七.', tag: '.', body: '⿻乚.一.' },
+        { glyph: '七T', tag: 'T', body: '⿻乚w一.' },
+        { glyph: '七t', tag: 't', body: '⿻乚t一.' },
       ],
     },
     { char: '丁', text: '⿱一.亅', glyph: '丁', at: row(0, 2) },
