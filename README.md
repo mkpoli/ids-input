@@ -1619,6 +1619,7 @@ The font switch selects the Serif illustrations at `?face=serif`. Rebuild the Se
 `demo/lib/baishi-serif-layers.json` before accepting a redraw with `--redrawn`.
 For the separately cited shapes, run `node scripts/build_baishi_ten.mjs`,
 `uv run scripts/build_baishi_variant_glyphs.py FONT_DIR`,
+`uv run scripts/build_baishi_spec_glyphs.py FONT_DIR`,
 `uv run scripts/build_baishi_font_glyphs.py FONT_DIR` and
 `uv run scripts/build_baishi_serif_glyphs.py FONT_DIR`. The sheets retain the guide's
 illustration for 父 (qq222). An unillustrated tooltip entry gives its original IDS.

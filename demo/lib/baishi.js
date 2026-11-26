@@ -8,10 +8,20 @@
 /** The guide (I26), an earlier draft or a proposal, and DB for the database. @typedef {'I26' | 'D1' | 'D2' | 'D3' | 'A4' | 'R101' | 'R102' | 'J22' | 'DB'} Doc */
 /** A place in a document: its key and the section, page or slide, or a line of the database. @typedef {[Doc, string]} Cite */
 /**
+ * One visual glyph form shown on an example card: its key in baishi-spec-glyphs.json (omitted when
+ * no attested outline exists), its variant tag or label, its IDS body, an optional alternative
+ * decomposition, an optional per-form simplification (`to`), or whether it is a muted reference
+ * form (such as the default form shown beside a tagged variant so the difference is visible at a
+ * glance).
+ * @typedef {{ glyph?: string, tag?: string, body?: string, alt?: string, to?: string, reference?: boolean, char?: string }} Form
+ */
+/**
  * An example: the character it describes (none for a hypothetical one), the text as printed (rows
  * keep their TAB, groups their `;`), what the text becomes (`to`), a quotation about it, a short
- * label that needs no translation, and where it is printed.
- * @typedef {{ char?: string, text: string, to?: string, quote?: string, label?: string, at: Cite }} Example
+ * label that needs no translation, an optional single attested `glyph` key, optional per-variant
+ * `forms` (for multi-variant rows or reference-vs-variant contrasts), whether the card spans the
+ * full grid width (`wide`), and where it is printed.
+ * @typedef {{ char?: string, text: string, to?: string, quote?: string, label?: string, glyph?: string, forms?: Form[], wide?: boolean, at: Cite }} Example
  */
 
 /** The guide: exact title, people as it credits them, the date it prints, the commit read and where it is published. */
@@ -289,135 +299,351 @@ export const SUBTRACTIONS = /** @type {const} */ ([
 /** The examples of the notation, from the guide and the database. @type {Record<string, Example[]>} */
 export const EXAMPLES = {
   row: [
-    { char: '十', text: '⿻丨一.(.);⿻丨一t(.t)', at: row(0, 1346) },
-    { char: '三', text: '⿱一.二.\t⿱二.一.', at: row(0, 10) },
-    { char: '滟', text: '⿰氵.艳.\t⿰沣.色.', quote: 'rowYan', at: ['I26', '§3.1'] },
-    { char: '令', text: '⿱亽龴.(.);⿱亼.龴.(H);⿱人.𪜁(J);⿳人d丶.龴.(d..);⿱亼d龴.(dh.);⿱人d𪜁(dhs);⿱亽卩(hdx);⿱亼.卩(hsx)\t⿱亼.𰆊(J);⿱亼d𰆊(dhs)', at: ['I26', '§4.2'] },
+    {
+      char: '十', text: '⿻丨一.(.);⿻丨一t(.t)', at: row(0, 1346),
+      forms: [
+        { glyph: '十.', tag: '.', body: '⿻丨一.' },
+        { glyph: '十.t', tag: '.t', body: '⿻丨一t' },
+      ],
+    },
+    { char: '三', text: '⿱一.二.\t⿱二.一.', glyph: '三', at: row(0, 10) },
+    { char: '滟', text: '⿰氵.艳.\t⿰沣.色.', glyph: '滟', quote: 'rowYan', at: ['I26', '§3.1'] },
+    {
+      char: '令',
+      text: '⿱亽龴.(.);⿱亼.龴.(H);⿱人.𪜁(J);⿳人d丶.龴.(d..);⿱亼d龴.(dh.);⿱人d𪜁(dhs);⿱亽卩(hdx);⿱亼.卩(hsx)\t⿱亼.𰆊(J);⿱亼d𰆊(dhs)',
+      wide: true,
+      at: ['I26', '§4.2'],
+      forms: [
+        { glyph: '令.', tag: '.', body: '⿱亽龴.' },
+        { glyph: '令H', tag: 'H', body: '⿱亼.龴.' },
+        { glyph: '令J', tag: 'J', body: '⿱人.𪜁', alt: '⿱亼.𰆊' },
+        { glyph: '令d..', tag: 'd..', body: '⿳人d丶.龴.' },
+        { glyph: '令dh.', tag: 'dh.', body: '⿱亼d龴.' },
+        { glyph: '令dhs', tag: 'dhs', body: '⿱人d𪜁', alt: '⿱亼d𰆊' },
+        { tag: 'hdx', body: '⿱亽卩' },
+        { tag: 'hsx', body: '⿱亼.卩' },
+      ],
+    },
   ],
   tags: [
-    { char: '公', text: '⿱八T厶.(T)', at: row(0, 877) },
-    { char: '惠', text: '⿱叀y2002心', at: row(0, 4833) },
-    { char: '冷', text: '⿰冫令.(.);⿰冫令H(H);⿰冫令J(J)', at: ['I26', '§4.2'] },
-    { char: '刢', text: '⿰令d..刂(.);⿰令dhs刂(J);⿰令dh.刂(T)', at: ['I26', '§4.2'] },
+    {
+      char: '公', text: '⿱八T厶.(T)', at: row(0, 877),
+      forms: [
+        { glyph: '公.', tag: '.', reference: true },
+        { glyph: '公T', tag: 'T' },
+      ],
+    },
+    {
+      char: '惠', text: '⿱叀y2002心', glyph: '惠', at: row(0, 4833),
+      forms: [
+        { glyph: '叀.', char: '叀', tag: '.', reference: true },
+        { glyph: '叀y2002', char: '叀', tag: 'y2002' },
+      ],
+    },
+    {
+      char: '冷', text: '⿰冫令.(.);⿰冫令H(H);⿰冫令J(J)', at: ['I26', '§4.2'],
+      forms: [
+        { glyph: '冷.', tag: '.', body: '⿰冫令.' },
+        { glyph: '冷H', tag: 'H', body: '⿰冫令H' },
+        { glyph: '冷J', tag: 'J', body: '⿰冫令J' },
+      ],
+    },
+    {
+      char: '刢', text: '⿰令d..刂(.);⿰令dhs刂(J);⿰令dh.刂(T)', at: ['I26', '§4.2'],
+      forms: [
+        { glyph: '刢.', tag: '.', body: '⿰令d..刂' },
+        { glyph: '刢J', tag: 'J', body: '⿰令dhs刂' },
+        { glyph: '刢T', tag: 'T', body: '⿰令dh.刂' },
+      ],
+    },
   ],
   lists: [
-    { char: '斎', text: '⿵斉J小.(J,J)', at: row(0, 6031) },
-    { char: '七', text: '⿻乚一(.,T)', at: row(1, 4) },
-    { char: '丁', text: '⿱一.亅', at: row(0, 2) },
+    {
+      char: '斎', text: '⿵斉J小.(J,J)', at: row(0, 6031),
+      forms: [
+        { glyph: '斎.', tag: '.', reference: true },
+        { glyph: '斎J', tag: 'J,J' },
+      ],
+    },
+    {
+      char: '七', text: '⿻乚一(.,T)', at: row(1, 4),
+      forms: [
+        { glyph: '七.', tag: '.' },
+        { glyph: '七T', tag: 'T' },
+      ],
+    },
+    { char: '丁', text: '⿱一.亅', glyph: '丁', at: row(0, 2) },
   ],
   katakana: [
-    { char: '已', text: '⿹コ乚.(.)', at: row(0, 4083) },
-    { char: '归', text: '⿰リ𫜹(.)', at: row(0, 4435) },
-    { char: '丑', text: '⿼ユ.十.(.)', at: row(0, 18) },
-    { char: '久', text: '⿸丿スn(.)', at: row(0, 70) },
+    { char: '已', text: '⿹コ乚.(.)', glyph: '已', at: row(0, 4083) },
+    { char: '归', text: '⿰リ𫜹(.)', glyph: '归', at: row(0, 4435) },
+    { char: '丑', text: '⿼ユ.十.(.)', glyph: '丑', at: row(0, 18) },
+    { char: '久', text: '⿸丿スn(.)', glyph: '久', at: row(0, 70) },
   ],
   precedence: [
-    { char: '伨', text: '⿰亻匀.(.);⿰亻勻(H)', at: ['I26', '§4.3.1'] },
-    { char: '𣂀', text: '⿰⿸厂.兆t斗(.);⿰𠩓斗(Q)', at: ['I26', '§4.3.1'] },
-    { char: '睹', text: '⿰目者.(.);⿰目者K(J)', to: '⿰目者(.);⿰目者(J)', at: ['I26', '§4.3.1'] },
+    {
+      char: '伨', text: '⿰亻匀.(.);⿰亻勻(H)', at: ['I26', '§4.3.1'],
+      forms: [
+        { glyph: '伨.', tag: '.', body: '⿰亻匀.' },
+        { glyph: '伨H', tag: 'H', body: '⿰亻勻' },
+      ],
+    },
+    {
+      char: '𣂀', text: '⿰⿸厂.兆t斗(.);⿰𠩓斗(Q)', at: ['I26', '§4.3.1'],
+      forms: [
+        { glyph: '𣂀.', tag: '.', body: '⿰⿸厂.兆t斗' },
+        { glyph: '𣂀Q', tag: 'Q', body: '⿰𠩓斗' },
+      ],
+    },
+    {
+      char: '睹', text: '⿰目者.(.);⿰目者K(J)', to: '⿰目者(.);⿰目者(J)', at: ['I26', '§4.3.1'],
+      forms: [
+        { glyph: '睹.', tag: '.', body: '⿰目者.' },
+        { glyph: '睹J', tag: 'J', body: '⿰目者K' },
+      ],
+    },
   ],
   ucv: [
-    { char: '口', text: '⿴〢二.(q3162)', label: 'UCV 316 · 2', at: row(0, 1508) },
-    { char: '烕', text: '⿵戌大.(q008a2)', label: 'UCV 008a · 2', at: ['I26', '§4.3.2'] },
-    { char: '龰', text: '⿱丷乀.(q3932)', label: 'UCV 393 · 2', at: ['I26', '§4.3.2'] },
-    { char: '滿', text: '⿰氵.⿱艹.⿵冂.干.(q454a17)', label: 'UCV 454a · 17', at: ['I26', '§4.3.2'] },
+    {
+      char: '口', text: '⿴〢二.(q3162)', label: 'UCV 316 · 2', at: row(0, 1508),
+      forms: [
+        { glyph: '口.', tag: '.', reference: true },
+        { glyph: '口q3162', tag: 'q3162' },
+      ],
+    },
+    {
+      char: '烕', text: '⿵戌大.(q008a2)', label: 'UCV 008a · 2', at: ['I26', '§4.3.2'],
+      forms: [
+        { glyph: '烕.', tag: '.', reference: true },
+        { glyph: '烕q008a2', tag: 'q008a2' },
+      ],
+    },
+    {
+      char: '龰', text: '⿱丷乀.(q3932)', label: 'UCV 393 · 2', at: ['I26', '§4.3.2'],
+      forms: [
+        { glyph: '龰.', tag: '.', reference: true },
+        { glyph: '龰q3932', tag: 'q3932' },
+      ],
+    },
+    {
+      char: '滿', text: '⿰氵.⿱艹.⿵冂.干.(q454a17)', label: 'UCV 454a · 17', at: ['I26', '§4.3.2'],
+      forms: [
+        { glyph: '滿.', tag: '.', reference: true },
+        { glyph: '滿q454a17', tag: 'q454a17' },
+      ],
+    },
   ],
   imaginary: [
-    { char: '父', text: '⿱八d乂.(.); ⿱儿.乂.(qq222)', label: 'UCV 222', at: ['I26', '§4.3.2'] },
-    { char: '𡕙', text: '⿱夂.月.(.); ⿱攵.⺼.(qq053194)', quote: 'qq2', label: 'UCV 053 · 194', at: ['I26', '§4.3.2'] },
-    { char: '卮', text: '⿸𠂋㔾.(.);⿸𠂋巳.(qq123)', label: 'UCV 123', at: row(0, 1391) },
+    {
+      char: '父', text: '⿱八d乂.(.); ⿱儿.乂.(qq222)', label: 'UCV 222', at: ['I26', '§4.3.2'],
+      forms: [
+        { glyph: '父.', tag: '.', body: '⿱八d乂.' },
+        { glyph: '父qq222', tag: 'qq222', body: '⿱儿.乂.' },
+      ],
+    },
+    {
+      char: '𡕙', text: '⿱夂.月.(.); ⿱攵.⺼.(qq053194)', quote: 'qq2', label: 'UCV 053 · 194', at: ['I26', '§4.3.2'],
+      forms: [
+        { glyph: '𡕙.', tag: '.', body: '⿱夂.月.' },
+        { glyph: '𡕙qq053194', tag: 'qq053194', body: '⿱攵.⺼.' },
+      ],
+    },
+    {
+      char: '卮', text: '⿸𠂋㔾.(.);⿸𠂋巳.(qq123)', label: 'UCV 123', at: row(0, 1391),
+      forms: [
+        { glyph: '卮.', tag: '.', body: '⿸𠂋㔾.' },
+        { glyph: '卮qq123', tag: 'qq123', body: '⿸𠂋巳.' },
+      ],
+    },
   ],
   alternate: [
-    { char: '丰', text: '⿻丿三(..p)', quote: 'feng', at: ['I26', '§4.3.3'] },
-    { char: '邦', text: '⿰丰..p阝(.)', at: ['I26', '§4.3.3'] },
-    { char: '勳', text: '⿺熏力(r)', quote: 'xun', at: ['I26', '§4.3.3'] },
-    { char: '刍', text: '⿱⺈⺕(x)', at: ['I26', '§4.3.3'] },
-    { char: '务', text: '⿱攵力(y)', at: ['I26', '§4.3.3'] },
-    { char: '子', text: '⿻了.一.(.)', at: ['I26', '§4.3.3'] },
-    { char: '子', text: '⿻了.一t(t)', quote: 'zi', at: ['I26', '§4.3.3'] },
-    { char: '孑', text: '⿻了.㇀', at: ['I26', '§4.3.3'] },
+    {
+      char: '丰', text: '⿻丿三(..p)', quote: 'feng', at: ['I26', '§4.3.3'],
+      forms: [
+        { glyph: '丰.', tag: '.', reference: true },
+        { glyph: '丰..p', tag: '..p' },
+      ],
+    },
+    { char: '邦', text: '⿰丰..p阝(.)', glyph: '邦.', at: ['I26', '§4.3.3'] },
+    {
+      char: '勳', text: '⿺熏力(r)', quote: 'xun', at: ['I26', '§4.3.3'],
+      forms: [
+        { glyph: '勳.', tag: '.', reference: true },
+        { glyph: '勳r', tag: 'r' },
+      ],
+    },
+    {
+      char: '刍', text: '⿱⺈⺕(x)', at: ['I26', '§4.3.3'],
+      forms: [
+        { glyph: '刍.', tag: '.', reference: true },
+        { glyph: '刍x', tag: 'x' },
+      ],
+    },
+    {
+      char: '务', text: '⿱攵力(y)', at: ['I26', '§4.3.3'],
+      forms: [
+        { glyph: '务.', tag: '.', reference: true },
+        { glyph: '务y', tag: 'y' },
+      ],
+    },
+    { char: '子', text: '⿻了.一.(.)', glyph: '子.', at: ['I26', '§4.3.3'] },
+    { char: '子', text: '⿻了.一t(t)', glyph: '子t', quote: 'zi', at: ['I26', '§4.3.3'] },
+    { char: '孑', text: '⿻了.㇀', glyph: '孑', at: ['I26', '§4.3.3'] },
   ],
   other: [
-    { char: '𱤻', text: '⿾止.(m)', quote: 'mirror', at: ['I26', '§4.3.4'] },
-    { char: '𡴧', text: '⿳屮.⿰止.𱤻m⿱人.亡.(m)', at: ['I26', '§4.3.4'] },
+    { char: '𱤻', text: '⿾止.(m)', glyph: '𱤻m', quote: 'mirror', at: ['I26', '§4.3.4'] },
+    { char: '𡴧', text: '⿳屮.⿰止.𱤻m⿱人.亡.(m)', glyph: '𡴧m', at: ['I26', '§4.3.4'] },
     { char: '𠪧', text: '⿰𠂬果.(e)', quote: 'similar', at: ['I26', '§4.3.4'] },
-    { char: '𠁁', text: '⿱⿰⿸#(丿𠃊)#(丨-一𠃑)#(一-𠃍𠃑-一丨)一.(y2)', quote: 'otherKinds', at: ['I26', '§4.3.4'] },
+    {
+      char: '𠁁', text: '⿱⿰⿸#(丿𠃊)#(丨-一𠃑)#(一-𠃍𠃑-一丨)一.(y2)', quote: 'otherKinds', at: ['I26', '§4.3.4'],
+      forms: [
+        { glyph: '𠁁.', tag: '.', reference: true },
+        { glyph: '𠁁y2', tag: 'y2' },
+      ],
+    },
   ],
   modifiers: [
-    { char: '㇄', text: '#(SHw)', quote: 'modW', at: ['I26', '§5.3'] },
-    { char: '㇈', text: '#(HSHwg)', quote: 'modG', at: ['I26', '§5.3'] },
+    { char: '㇄', text: '#(SHw)', glyph: '㇄', quote: 'modW', at: ['I26', '§5.3'] },
+    { char: '㇈', text: '#(HSHwg)', glyph: '㇈', quote: 'modG', at: ['I26', '§5.3'] },
   ],
   reverse: [
-    { char: '人', text: '#(-丿乀)(.)', at: row(0, 187) },
-    { char: '𠃎', text: '#(一-丨)', at: ['I26', '§5.3'] },
-    { char: '匚', text: '#(-一𠃊)', at: ['I26', '§5.3'] },
-    { char: '巳', text: '#(一-𠃍乚)', at: ['I26', '§5.3'] },
-    { char: '乌', text: '⿱丿⿹#(-𠃌㇉)一.(.)', at: ['I26', '§5.3'] },
+    { char: '人', text: '#(-丿乀)(.)', glyph: '人', at: row(0, 187) },
+    { char: '𠃎', text: '#(一-丨)', glyph: '𠃎', at: ['I26', '§5.3'] },
+    { char: '匚', text: '#(-一𠃊)', glyph: '匚', at: ['I26', '§5.3'] },
+    { char: '巳', text: '#(一-𠃍乚)', glyph: '巳', at: ['I26', '§5.3'] },
+    { char: '乌', text: '⿱丿⿹#(-𠃌㇉)一.(.)', glyph: '乌', at: ['I26', '§5.3'] },
   ],
   cross: [
-    { char: '母', text: '⿻⿴#(-𠃌𠃊x0)⺀一', at: ['I26', '§5.3'] },
-    { char: '又', text: '#(-乀x1㇇)', at: ['I26', '§5.3'] },
-    { char: '𡆢', text: '⿴囗#(◞x3◟◜◝-◟)', at: ['I26', '§5.3'] },
-    { char: '𠇇', text: '⿰亻⿺⿻#(丨x3◞◟◜)二丶', at: ['I26', '§5.3'] },
-    { char: '𠍋', text: '⿲亻⿱丶#(㇇◝x4◞◟◜)𧈧', at: ['I26', '§5.3'] },
+    { char: '母', text: '⿻⿴#(-𠃌𠃊x0)⺀一', glyph: '母', at: ['I26', '§5.3'] },
+    { char: '又', text: '#(-乀x1㇇)', glyph: '又', at: ['I26', '§5.3'] },
+    { char: '𡆢', text: '⿴囗#(◞x3◟◜◝-◟)', glyph: '𡆢', at: ['I26', '§5.3'] },
+    { char: '𠇇', text: '⿰亻⿺⿻#(丨x3◞◟◜)二丶', glyph: '𠇇', at: ['I26', '§5.3'] },
+    { char: '𠍋', text: '⿲亻⿱丶#(㇇◝x4◞◟◜)𧈧', glyph: '𠍋', at: ['I26', '§5.3'] },
   ],
   break: [
-    { char: '凵', text: '#(丨b一-丨)(y)', at: ['I26', '§5.3'] },
-    { char: '廿', text: '⿻凵y一.', quote: 'nian', at: ['I26', '§5.3'] },
-    { char: '凹', text: '#(一-𠃍丨b一-𠃍丨b一)(q4382)', at: row(0, 1018) },
+    {
+      char: '凵', text: '#(丨b一-丨)(y)', at: ['I26', '§5.3'],
+      forms: [
+        { glyph: '凵.', tag: '.', reference: true },
+        { glyph: '凵y', tag: 'y' },
+      ],
+    },
+    { char: '廿', text: '⿻凵y一.', glyph: '廿', quote: 'nian', at: ['I26', '§5.3'] },
+    {
+      char: '凹', text: '#(一-𠃍丨b一-𠃍丨b一)(q4382)', at: row(0, 1018),
+      forms: [
+        { glyph: '凹.', tag: '.', reference: true },
+        { glyph: '凹q4382', tag: 'q4382' },
+      ],
+    },
   ],
   closed: [
-    { char: '口', text: '#(-丨𠃍-一z)', at: ['I26', '§5.3'] },
-    { char: '〇', text: '#(◟◜◝◞z)', at: ['I26', '§5.3'] },
-    { char: '𱍫', text: '#(-𠃊㇎z)', at: ['I26', '§5.3'] },
+    { char: '口', text: '#(-丨𠃍-一z)', glyph: '口.', at: ['I26', '§5.3'] },
+    { char: '〇', text: '#(◟◜◝◞z)', glyph: '〇', at: ['I26', '§5.3'] },
+    { char: '𱍫', text: '#(-𠃊㇎z)', glyph: '𱍫', at: ['I26', '§5.3'] },
   ],
   segments: [
-    { char: '𠀁', text: '⿻[a]㇉一', to: '⿻㇉一', quote: 'segmentDefault', at: ['I26', '§6.3'] },
+    {
+      char: '𠀁', text: '⿻[a]㇉一', to: '⿻㇉一', quote: 'segmentDefault', at: ['I26', '§6.3'],
+      forms: [
+        { glyph: '𠀁', char: '𠀁', body: '⿻[a]㇉一', to: '⿻㇉一' },
+        { glyph: '⿻[b]㇉一', char: '⿻[b]㇉一', body: '⿻[b]㇉一' },
+      ],
+    },
   ],
   matrix: [
-    { char: '及', text: '⿻[l,b]㇋人.(.)', at: row(0, 1483) },
-    { char: '包', text: '⿻[l,l,.]勹巳.(.)', at: row(0, 1286) },
-    { char: '与', text: '⿺⿻[b]㇉一.一.(J)', at: row(0, 15) },
-    { char: '廴', text: '⿻[b]㇋乀', quote: 'yin', at: ['I26', '§6.3'] },
-    { char: '𤓷', text: '⿺爪⿻[c]弓z丶', quote: 'zhao', at: ['I26', '§6.3'] },
-    { char: '𦫵', text: '⿻[bx]⿰𠃑丨一', at: ['I26', '§6.3'] },
-    { char: '身', text: '⿱丿⿹⿴⿻[.x]冂丿二一', quote: 'shen', at: ['I26', '§6.3'] },
-    { char: '𠥻', text: '⿻[,._]〢二t', quote: 'tiShape', at: ['I26', '§6.3'] },
-    { char: '𠂀', text: '⿴⿻[,.x]〢二丶', at: ['I26', '§6.3'] },
-    { char: '𠕋', text: '⿻[_xx_,]𦉫T二', quote: 'hookT', at: ['I26', '§6.3'] },
+    { char: '及', text: '⿻[l,b]㇋人.(.)', glyph: '及.', at: row(0, 1483) },
+    { char: '包', text: '⿻[l,l,.]勹巳.(.)', glyph: '包.', at: row(0, 1286) },
+    { char: '与', text: '⿺⿻[b]㇉一.一.(J)', glyph: '与J', at: row(0, 15) },
+    { char: '廴', text: '⿻[b]㇋乀', glyph: '廴', quote: 'yin', at: ['I26', '§6.3'] },
+    { char: '𤓷', text: '⿺爪⿻[c]弓z丶', glyph: '𤓷', quote: 'zhao', at: ['I26', '§6.3'] },
+    { char: '𦫵', text: '⿻[bx]⿰𠃑丨一', glyph: '𦫵', at: ['I26', '§6.3'] },
+    { char: '身', text: '⿱丿⿹⿴⿻[.x]冂丿二一', glyph: '身', quote: 'shen', at: ['I26', '§6.3'] },
+    { char: '𠥻', text: '⿻[,._]〢二t', glyph: '𠥻', quote: 'tiShape', at: ['I26', '§6.3'] },
+    { char: '𠂀', text: '⿴⿻[,.x]〢二丶', glyph: '𠂀', at: ['I26', '§6.3'] },
+    { char: '𠕋', text: '⿻[_xx_,]𦉫T二', glyph: '𠕋', quote: 'hookT', at: ['I26', '§6.3'] },
   ],
   reverseMatrix: [
-    { char: '𫠣', text: '⿻[1:|b]𠃌⿱⿻𠃊.一.八d', at: ['I26', '§6.4'] },
-    { text: '⿻[xl,.l|r.,rx]口口', quote: 'hypothetical', at: ['I26', '§6.4'] },
+    { char: '𫠣', text: '⿻[1:|b]𠃌⿱⿻𠃊.一.八d', glyph: '𫠣', at: ['I26', '§6.4'] },
+    { text: '⿻[xl,.l|r.,rx]口口', glyph: '⿻[xl,.l|r.,rx]口口', quote: 'hypothetical', at: ['I26', '§6.4'] },
   ],
   curveCase: [
-    { char: '𢀓', text: '⿻[r,r,l,l]工.#(◝◞-◜-◟)', quote: 'curveCase', at: ['I26', '§6.5'] },
+    { char: '𢀓', text: '⿻[r,r,l,l]工.#(◝◞-◜-◟)', glyph: '𢀓', quote: 'curveCase', at: ['I26', '§6.5'] },
   ],
   index: [
-    { char: '𫡆', text: '⿴[1]⿴㠯一一', quote: 'indexYi', at: ['I26', '§6.6'] },
-    { char: '𢧟', text: '⿹戈⿴[2]⿴[1]⿴⿻[1:]丨#(𠃍-一𠃑-一丿)丶丶丶', at: ['I26', '§6.6'] },
-    { char: '𦥮', text: '⿱⿷[1]#(-一𠃑-一𠃊)一.⿼[1]#(一-𠃑一-𠃍)一.(T)', at: row(0, 54587) },
+    { char: '𫡆', text: '⿴[1]⿴㠯一一', glyph: '𫡆', quote: 'indexYi', at: ['I26', '§6.6'] },
+    { char: '𢧟', text: '⿹戈⿴[2]⿴[1]⿴⿻[1:]丨#(𠃍-一𠃑-一丿)丶丶丶', glyph: '𢧟', at: ['I26', '§6.6'] },
+    {
+      char: '𦥮', text: '⿱⿷[1]#(-一𠃑-一𠃊)一.⿼[1]#(一-𠃑一-𠃍)一.(T)', at: row(0, 54587),
+      forms: [
+        { glyph: '𦥮.', tag: '.', reference: true },
+        { glyph: '𦥮T', tag: 'T' },
+      ],
+    },
   ],
   unique: [
-    { char: '径', text: '{?0径}⿰彳圣(T)', at: row(0, 4485) },
-    { char: '曰', text: '{曰}⿴囗一', quote: 'yue', at: ['I26', '§3.1, §7.1'] },
-    { char: '士', text: '{士}⿱十一', at: ['I26', '§7.1'] },
-    { char: '一', text: '#(H)(.);{一}#(T)(t)', at: ['I26', '§7.1'] },
-    { char: '叱', text: '{?叱}⿰口.七.(V)', at: ['I26', '§7.1'] },
-    { char: '𡮂', text: '{𡮂J}⿱小.𤽄V(J)', at: ['I26', '§7.1'] },
-    { char: '𡮂', text: '{𡮂T}⿱小s𤽄V(T)', quote: 'oral', at: ['I26', '§7.1'] },
-    { char: '𡭽', text: '⿱小s𤽄V(.);⿱小.𤽄V(J)', at: ['I26', '§7.1'] },
-    { char: '暅', text: '⿰日恒(.);{?0暅}⿰日恆(P)', at: row(0, 6278) },
+    {
+      char: '径', text: '{?0径}⿰彳圣(T)', at: row(0, 4485),
+      forms: [
+        { glyph: '径.', tag: '.', reference: true },
+        { glyph: '径T', tag: 'T' },
+      ],
+    },
+    { char: '曰', text: '{曰}⿴囗一', glyph: '曰', quote: 'yue', at: ['I26', '§3.1, §7.1'] },
+    { char: '士', text: '{士}⿱十一', glyph: '士', at: ['I26', '§7.1'] },
+    {
+      char: '一', text: '#(H)(.);{一}#(T)(t)', at: ['I26', '§7.1'],
+      forms: [
+        { glyph: '一.', tag: '.', body: '#(H)' },
+        { glyph: '一t', tag: 't', body: '{一}#(T)' },
+      ],
+    },
+    {
+      char: '叱', text: '{?叱}⿰口.七.(V)', at: ['I26', '§7.1'],
+      forms: [
+        { glyph: '叱.', tag: '.', reference: true },
+        { glyph: '叱V', tag: 'V' },
+      ],
+    },
+    { char: '𡮂', text: '{𡮂J}⿱小.𤽄V(J)', glyph: '𡮂J', at: ['I26', '§7.1'] },
+    { char: '𡮂', text: '{𡮂T}⿱小s𤽄V(T)', glyph: '𡮂T', quote: 'oral', at: ['I26', '§7.1'] },
+    {
+      char: '𡭽', text: '⿱小s𤽄V(.);⿱小.𤽄V(J)', at: ['I26', '§7.1'],
+      forms: [
+        { glyph: '𡭽.', tag: '.', body: '⿱小s𤽄V' },
+        { glyph: '𡭽J', tag: 'J', body: '⿱小.𤽄V' },
+      ],
+    },
+    {
+      char: '暅', text: '⿰日恒(.);{?0暅}⿰日恆(P)', at: row(0, 6278),
+      forms: [
+        { glyph: '暅.', tag: '.', body: '⿰日恒' },
+        { tag: 'P', body: '{?0暅}⿰日恆' },
+      ],
+    },
   ],
   replace: [
-    { char: '嬴', text: '🔄赢贝女', at: ['I26', '§3.2'] },
-    { char: '輿', text: '🔄興同車', at: ['I26', '§3.2'] },
+    { char: '嬴', text: '🔄赢贝女', glyph: '嬴', at: ['I26', '§3.2'] },
+    { char: '輿', text: '🔄興同車', glyph: '輿', at: ['I26', '§3.2'] },
   ],
   merge: [
-    { char: '𡕆', text: '⿰壴t咨.(.);⿰壴t咨J(J);⿰壴t咨T(T)', to: '⿰壴咨(.,T,J)', at: ['I26', '§7.2'] },
+    {
+      char: '𡕆', text: '⿰壴t咨.(.);⿰壴t咨J(J);⿰壴t咨T(T)', to: '⿰壴咨(.,T,J)', at: ['I26', '§7.2'],
+      forms: [
+        { glyph: '𡕆.', tag: '.', body: '⿰壴t咨.' },
+        { glyph: '𡕆J', tag: 'J', body: '⿰壴t咨J' },
+        { glyph: '𡕆T', tag: 'T', body: '⿰壴t咨T' },
+      ],
+    },
   ],
   levels: [
-    { char: '伔', text: '⿰亻冗(.);⿰亻⿱冖儿(J)', to: '⿰亻冗(.,J)', label: 'UCV 119', at: ['I26', '§7.3'] },
+    {
+      char: '伔', text: '⿰亻冗(.);⿰亻⿱冖儿(J)', to: '⿰亻冗(.,J)', label: 'UCV 119', at: ['I26', '§7.3'],
+      forms: [
+        { glyph: '伔.', tag: '.', body: '⿰亻冗' },
+        { glyph: '伔J', tag: 'J', body: '⿰亻⿱冖儿' },
+      ],
+    },
   ],
 }
 
