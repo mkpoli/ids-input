@@ -74,7 +74,6 @@ NOTO_SPECS = [
     ("滿.", "滿", "ZHS"),
     ("父.", "父", "ZHS"),
     ("卮.", "卮", "ZHS"),              # ids_lv0 row 1391: 卮. = ⿸𠂋㔾.
-    ("卮qq123", "卮", "JAN"),          # Previous JAN outline supplies this witness’s ink bounds.
     ("丰.", "丰", "ZHS"),
     ("邦.", "邦", "ZHS"),
     ("勳.", "勳", "ZHS"),
@@ -205,40 +204,25 @@ def draw_glyph(font, glyph_name, is_vf=False):
     return pen.getCommands()
 
 
-def fit_paths(paths):
+def fit_paths(paths, ink_box=None):
     bounds = BoundsPen(None)
     for path in paths:
         parse_path(path, bounds)
     left, top, right, bottom = bounds.bounds
-    scale = 880 / max(right - left, bottom - top)
-    transform = (
-        scale,
-        0,
-        0,
-        scale,
-        500 - scale * (left + right) / 2,
-        500 - scale * (top + bottom) / 2,
-    )
+    if ink_box is None:
+        sx = sy = 880 / max(right - left, bottom - top)
+        cx = cy = 500
+    else:
+        x0, y0, x1, y1 = ink_box
+        sx, sy = (x1 - x0) / (right - left), (y1 - y0) / (bottom - top)
+        cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    transform = (sx, 0, 0, sy, cx - sx * (left + right) / 2, cy - sy * (top + bottom) / 2)
     out = []
     for path in paths:
         pen = SVGPathPen(None, ntos=lambda n: f"{n:.1f}".removesuffix(".0"))
         parse_path(path, TransformPen(pen, transform))
         out.append(pen.getCommands())
     return "".join(out)
-
-
-def match_ink_bounds(path, reference):
-    source = BoundsPen(None)
-    target = BoundsPen(None)
-    parse_path(path, source)
-    parse_path(reference, target)
-    left, top, right, bottom = source.bounds
-    target_left, target_top, target_right, target_bottom = target.bounds
-    sx = (target_right - target_left) / (right - left)
-    sy = (target_bottom - target_top) / (bottom - top)
-    pen = SVGPathPen(None, ntos=lambda n: f"{n:.1f}".removesuffix(".0"))
-    parse_path(path, TransformPen(pen, (sx, 0, 0, sy, target_left - sx * left, target_top - sy * top)))
-    return pen.getCommands()
 
 
 def main():
@@ -295,10 +279,9 @@ def main():
 
     kage = subprocess.check_output(["node", ROOT / "scripts/build_baishi_spec_kage.mjs"], text=True)
     for key, path in json.loads(kage).items():
-        if key == "卮qq123":
-            out[key] = match_ink_bounds(path, out[key])
-        else:
-            out[key] = fit_paths([path])
+        # Preserve the previous 卮qq123 witness’s ink box at the same em size.
+        ink_box = (31.6, 46.3, 962.8, 962) if key == "卮qq123" else None
+        out[key] = fit_paths([path], ink_box=ink_box)
 
     TARGET.write_text(json.dumps(out, ensure_ascii=False, indent=1) + "\n")
     print(f"Wrote {len(out)} glyphs ({TARGET.stat().st_size} bytes) -> {TARGET.relative_to(ROOT)}")
