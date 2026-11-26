@@ -13,7 +13,7 @@
  * decomposition, an optional per-form simplification (`to`), or whether it is a muted reference
  * form (such as the default form shown beside a tagged variant so the difference is visible at a
  * glance).
- * @typedef {{ glyph?: string, tag?: string, body?: string, alt?: string, to?: string, reference?: boolean, char?: string }} Form
+ * @typedef {{ glyph?: string, tag?: string, body?: string, alt?: string, to?: string, reference?: boolean, char?: string, ucv?: { entry: string, position: number } }} Form
  */
 /**
  * An example: the character it describes (none for a hypothetical one), the text as printed (rows
@@ -337,7 +337,7 @@ export const EXAMPLES = {
       char: '惠', text: '⿱叀y2002心', glyph: '惠', at: row(0, 4833),
       forms: [
         { glyph: '叀.', char: '叀', tag: '.', reference: true },
-        { glyph: '叀y2002', char: '叀', tag: 'y2002' },
+        { glyph: '叀y2002', char: '叀', tag: 'y2002', ucv: { entry: '200', position: 2 } },
       ],
     },
     {
