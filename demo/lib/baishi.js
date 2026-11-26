@@ -581,47 +581,6 @@ export const EXAMPLES = {
       ],
     },
   ],
-  unique: [
-    {
-      char: '径', text: '{?0径}⿰彳圣(T)', at: row(0, 4485),
-      forms: [
-        { glyph: '径.', tag: '.', reference: true },
-        { glyph: '径T', tag: 'T' },
-      ],
-    },
-    { char: '曰', text: '{曰}⿴囗一', glyph: '曰', quote: 'yue', at: ['I26', '§3.1, §7.1'] },
-    { char: '士', text: '{士}⿱十一', glyph: '士', at: ['I26', '§7.1'] },
-    {
-      char: '一', text: '#(H)(.);{一}#(T)(t)', at: ['I26', '§7.1'],
-      forms: [
-        { glyph: '一.', tag: '.', body: '#(H)' },
-        { glyph: '一t', tag: 't', body: '{一}#(T)' },
-      ],
-    },
-    {
-      char: '叱', text: '{?叱}⿰口.七.(V)', at: ['I26', '§7.1'],
-      forms: [
-        { glyph: '叱.', tag: '.', reference: true },
-        { glyph: '叱V', tag: 'V' },
-      ],
-    },
-    { char: '𡮂', text: '{𡮂J}⿱小.𤽄V(J)', glyph: '𡮂J', at: ['I26', '§7.1'] },
-    { char: '𡮂', text: '{𡮂T}⿱小s𤽄V(T)', glyph: '𡮂T', quote: 'oral', at: ['I26', '§7.1'] },
-    {
-      char: '𡭽', text: '⿱小s𤽄V(.);⿱小.𤽄V(J)', at: ['I26', '§7.1'],
-      forms: [
-        { glyph: '𡭽.', tag: '.', body: '⿱小s𤽄V' },
-        { glyph: '𡭽J', tag: 'J', body: '⿱小.𤽄V' },
-      ],
-    },
-    {
-      char: '暅', text: '⿰日恒(.);{?0暅}⿰日恆(P)', at: row(0, 6278),
-      forms: [
-        { glyph: '暅.', tag: '.', body: '⿰日恒' },
-        { tag: 'P', body: '{?0暅}⿰日恆' },
-      ],
-    },
-  ],
   replace: [
     { char: '嬴', text: '🔄赢贝女', glyph: '嬴', at: ['I26', '§3.2'] },
     { char: '輿', text: '🔄興同車', glyph: '輿', at: ['I26', '§3.2'] },
@@ -646,6 +605,55 @@ export const EXAMPLES = {
     },
   ],
 }
+
+/** Each column is a separate code point. The first entry in each column shares
+ * its IDS body with the entry opposite it, apart from the uniqueness prefix.
+ * Entries and line numbers are from DATABASE.commit, ids_lv0.txt.
+ * @typedef {{char: string, line: number, entries: {glyph?: string, text: string, reference?: {label: string, url: string}}[]}} PrefixColumn
+ * @type {{columns: [PrefixColumn, PrefixColumn], quote?: string}[]}
+ */
+export const PREFIX_COMPARISONS = [
+  { columns: [
+    { char: '径', line: 4485, entries: [
+      { glyph: '径T', text: '{?0径}⿰彳圣(T)' }, { glyph: '径.', text: '⿰彳𢀖.(.)' },
+    ] },
+    { char: '𮱻', line: 97217, entries: [{ glyph: '𮱻', text: '⿰彳圣' }] },
+  ] },
+  { columns: [
+    { char: '曰', line: 6385, entries: [{ glyph: '曰', text: '{曰}⿴囗.一.' }] },
+    { char: '日', line: 6118, entries: [{ glyph: '日', text: '⿴囗.一.' }] },
+  ], quote: 'yue' },
+  { columns: [
+    { char: '士', line: 2796, entries: [{ glyph: '士', text: '{士}⿱十.一.(.)' }] },
+    { char: '土', line: 2336, entries: [{ glyph: '土', text: '⿱十.一.(.)' }] },
+  ] },
+  { columns: [
+    { char: '一', line: 1, entries: [
+      { glyph: '一t', text: '{一}#(T)(t)' }, { glyph: '一.', text: '#(H)(.)' },
+    ] },
+    { char: '㇀', line: 102018, entries: [{ glyph: '一t', text: '#(T)' }] },
+  ] },
+  { columns: [
+    { char: '叱', line: 1522, entries: [
+      { glyph: '叱V', text: '{?叱}⿰口.七.(V)' }, { glyph: '叱.', text: '⿰口.𠤎.(.)' },
+    ] },
+    { char: '𠮟', line: 30572, entries: [{ glyph: '𠮟', text: '⿰口.七.' }] },
+  ] },
+  { columns: [
+    { char: '𡮂', line: 34639, entries: [
+      { glyph: '𡮂J', text: '{𡮂J}⿱小.𤽄V(J)' }, { glyph: '𡮂T', text: '{𡮂T}⿱小s𤽄V(T)' },
+    ] },
+    { char: '𡭽', line: 34634, entries: [
+      { glyph: '𡭽J', text: '⿱小.𤽄V(J)' }, { glyph: '𡭽.', text: '⿱小s𤽄V(.)' },
+    ] },
+  ], quote: 'oral' },
+  { columns: [
+    { char: '暅', line: 6278, entries: [
+      { text: '{?0暅}⿰日恆(P)', reference: { label: 'KP1-49AC', url: 'https://www.unicode.org/charts/PDF/U4E00.pdf#page=161' } }, { glyph: '暅.', text: '⿰日恒(.)' },
+    ] },
+    { char: '𣈶', line: 40451, entries: [{ glyph: '𣈶T', text: '⿰日恆(T)' }] },
+  ] },
+]
 
 /** The crossing matrix of 曲 as ⿻〢日, step by step (§6.3). */
 export const QU_STEPS = ['[(x,x), (x,x), (.,.)]', '["", "", (.,.)]', '["", "", "."]', '[:-1]']
