@@ -30,3 +30,4 @@ export { componentForms, drawnForm, formedText, formedTree, glyphReference, ucvF
 export { isOwnDescription, readVariantDescriptions } from './variant-descriptions.js'
 
 export { compatibilitySequences } from './compatibility.js'
+export { rateFormsOfPart } from './rate-forms.js'
