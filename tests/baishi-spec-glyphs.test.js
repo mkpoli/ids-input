@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'bun:test'
 import { readFileSync } from 'node:fs'
-import { Resvg } from '@cf-wasm/resvg/node'
 import { EXAMPLES } from '../demo/lib/baishi.js'
 
 const glyphs = JSON.parse(readFileSync(new URL('../demo/lib/baishi-spec-glyphs.json', import.meta.url), 'utf8'))
@@ -38,6 +37,7 @@ describe('the zi.tools IDS Extension page glyph witnesses', () => {
   })
 
   it('gives default 叀 the projecting lower stroke and preserves the 惠 stem in y2002', async () => {
+    const { Resvg } = await import('@cf-wasm/resvg/node')
     const render = key => Resvg.async(
       `<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 1000 1000"><path d="${glyphs[key]}"/></svg>`,
     )
