@@ -318,6 +318,8 @@ for (const row of judged.rows) {
   for (const other of others) {
     if (!leader.has(other)) {
       if (!isNode(plainTree(other))) throw new Error(`custom-same.json: ${other} is neither a component nor an expression`)
+      if (spelled.has(other)) throw new Error(`custom-same.json: ${other} is a confirmed expression`)
+      if (judgedSpelling.has(other)) throw new Error(`custom-same.json: ${other} is joined twice`)
       judgedSpelling.set(other, named)
       continue
     }
@@ -339,11 +341,7 @@ for (const [text, users] of spelled) {
   const forms = new Set(users.map(user => find(user.name)))
   if (forms.size === 1) spellingOf.set(text, [...forms][0])
 }
-for (const [text, named] of judgedSpelling) {
-  const form = find(named), confirmed = spellingOf.get(text)
-  if (confirmed && confirmed !== form) throw new Error(`custom-same.json: ${text} is confirmed as ${confirmed}`)
-  spellingOf.set(text, form)
-}
+for (const [text, named] of judgedSpelling) spellingOf.set(text, find(named))
 /** @type {{ first: string, aliases: string[] }[]} */
 const forms = [...members].map(([first, list]) => ({ first, aliases: [...list, ...[...spellingOf].filter(([, form]) => form === first).map(([text]) => text).sort()] }))
 // An expression nothing confirms, or the same parts arranged another way, is a form of its own.
