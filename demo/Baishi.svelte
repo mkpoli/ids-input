@@ -41,8 +41,9 @@
 
   // A quotation's rendering in the reader's language; a Chinese reader reads the quotation itself.
   const GLOSSES = /** @type {Record<string, Record<string, string>>} */ ({ en, ja, ko, vi })
+  const chinese = $derived(locale.startsWith('zh') || locale === 'yue')
   /** @param {string} id */
-  const gloss = id => locale.startsWith('zh') ? '' : (GLOSSES[locale]?.[id] ?? en[/** @type {keyof typeof en} */ (id)] ?? '')
+  const gloss = id => chinese ? '' : (GLOSSES[locale]?.[id] ?? en[/** @type {keyof typeof en} */ (id)] ?? '')
 
   /** Save a file the site serves, under its own name. @param {string} url @param {string} name */
   function download(url, name) {
@@ -76,7 +77,7 @@
   ])
   /** The message that names a section, where its id is not its key. */
   const TITLE = /** @type {Record<string, string>} */ ({ 'source-letters': 'sources', 'ucv-position': 'ucv', 'imaginary-ucv': 'imaginary',
-    'break-mark': 'break', closing: 'closed', 'quick-slice': 'slice', 'reverse-matrix': 'reverseMatrix', differences: 'data', sources: 'documents', 'other-sources': 'otherSources' })
+    'break-mark': 'break', closing: 'closed', 'quick-slice': 'slice', 'reverse-matrix': 'reverseMatrix', differences: 'data', sources: 'documents', 'other-sources': 'otherSources', other: 'misc' })
   /** @param {string} id */
   const titleOf = id => t(`baishi.heading.${TITLE[id] ?? id}`)
   const cheatsheet = new Set(/** @type {readonly string[]} */ (CHEATSHEET_SECTIONS))
@@ -168,7 +169,7 @@
 
       <section id="parser" aria-labelledby="parser-title">
         <h2 id="parser-title">{t('baishi.heading.parser')}</h2>
-        <BaishiParser grammar={corrected} {t} {gloss} zh={locale.startsWith('zh')} />
+        <BaishiParser grammar={corrected} {t} {gloss} zh={chinese} />
       </section>
 
       <section id="rows" aria-labelledby="rows-title">
@@ -267,7 +268,7 @@
         </section>
 
         <section id="other" aria-labelledby="other-title">
-          <h3 id="other-title">{t('baishi.heading.other')}</h3>
+          <h3 id="other-title">{t('baishi.heading.misc')}</h3>
           {@render examples('other')}
           {@render said('custom', ['I26', '§4.3.5'])}
         </section>

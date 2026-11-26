@@ -93,7 +93,7 @@
 
     <div class="faces">
       <span class="faces-label">{t('app.font.label')}</span>
-      <FontSwitch faces={[...FACES]} bind:face label={t('app.font.label')} {t} />
+      <FontSwitch faces={FACES} {face} onchange={key => face = key} label={t('app.font.label')} {t} />
     </div>
 
     <div class="controls">
@@ -190,6 +190,7 @@
   .method .caveat{color:var(--ui-color-ink-muted)}
 
   .faces{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  .faces :global(.font-switch){flex-wrap:wrap;height:auto}
   .faces-label{font-size:12px;color:var(--ui-color-ink-muted)}
   .controls{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:18px 0 4px}
   .controls .select{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--ui-color-ink-muted)}

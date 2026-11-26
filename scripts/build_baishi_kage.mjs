@@ -5,6 +5,26 @@ import { Kage, Polygons } from '@kurgm/kage-engine'
 import { area } from './lib/outline.mjs'
 
 const records = {
+  // The KP reading of 𢡌 names the upper 口y and the lower 口. Keep the
+  // component placement from u2284c-kp@1 so the upper frame has its source proportions.
+  "口y": ['99:0:0:49:0:198:200:upper-box'],
+  // 𤙍 (G), u2464d-g@1: remove 牛, 丨 and 凵 to isolate the two legs.
+  "几n": [
+    '7:12:7:96:101:96:126:96:166:71:188',
+    '1:2:2:96:101:161:101',
+    '6:7:0:164:118:160:149:173:168:184:183',
+    '7:1022:7:161:101:161:110:161:140:168:162',
+  ],
+  // 𤰴, u24c34@4: cdp-86f1@2 strokes 0 and 2 form the hooked frame.
+  "匚g": [
+    '1:2:0:36:31:171:31',
+    '3:12:5:36:31:36:169:176:169',
+  ],
+  // 𬼖, u2cf16-j@3: omit the horizontal inside the rounded frame.
+  "匚w": [
+    '1:2:0:33:34:173:34',
+    '3:12:0:33:34:33:174:172:174',
+  ],
   // u90a6-ue0102@12. 邦 (VS19): the top stroke falls left, the lowest rises right.
   "丰ptp": [
     '2:0:7:102:37:70:50:16:60',
@@ -93,8 +113,17 @@ const records = {
 }
 
 const kage = new Kage()
-kage.kShotai = kage.kGothic
-kage.kFont.kWidth = 5
+// u21794-var-004@1 strokes 0–3; the horizontal through this frame is a separate IDS leaf.
+kage.kBuhin.push('upper-box', [
+  '1:12:13:45:24:45:65',
+  '1:2:2:45:65:155:65',
+  '1:2:2:45:24:155:24',
+  '1:22:23:155:24:155:65',
+].join('$'))
+if (!process.argv.includes('--serif')) {
+  kage.kShotai = kage.kGothic
+  kage.kFont.kWidth = 5
+}
 const paths = {}
 for (const [key, strokes] of Object.entries(records)) {
   const polygons = new Polygons()

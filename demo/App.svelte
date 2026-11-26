@@ -16,6 +16,7 @@
   import { composerPreview as composerAt } from '@han-compose/composer'
   import { variationSequences } from '@han-compose/composer/variants'
   import engineOutlines from 'ids-engine-outlines'
+  import { FONT_STYLES } from '@han-compose/composer/font-mix'
   import { EMPTY_MARKS, OPERATORS, characterStrokes, componentQuery, drawnText, isJurchen, isShuishu, parse, substituteSequences, unalias } from '../src/core/index.js'
   import { loadStrokeRecords } from '../src/svelte/strokes.js'
   import { createDocumentSession, DOCUMENT_FACES, layerAtPath, sessionRecord, toSequence } from '../src/document/index.js'
@@ -26,6 +27,7 @@
   import variationOutlinesSans from '../data/ucv-outlines-sans.json.gz?url'
   import { LOCALES, appMessages } from './lib/locales.js'
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
+  import { matchRcc, rccCode, rccUrl } from './lib/rcc.js'
   import { createIconDrawings } from './lib/icons.js'
   import { createSampleDrawings } from './lib/sample-drawings.js'
   import { createDrawingOrder } from './lib/drawing-order.js'
@@ -44,6 +46,7 @@
   import ExportPanel from './ui/ExportPanel.svelte'
   import PartFills from './ui/PartFills.svelte'
   import FaceSample from './ui/FaceSample.svelte'
+  import FontSwitch from './ui/FontSwitch.svelte'
   import TitleDialog from './ui/TitleDialog.svelte'
   import { download } from './lib/files.js'
   import Icon from './ui/Icon.svelte'
@@ -434,6 +437,71 @@
     return /** @type {ReturnType<typeof createSampleDrawings>} */ (sampleDrawings.get(key))
   }
   const componentStyle = $derived(FONT_FACES.find(option => option.key === face)?.style ?? 'sans')
+  // The blend the font mixer page keeps: with it on, the previews are drawn in that blend of the
+  // five faces. The chosen face still names the text face and the layers' own adjustments.
+  let mixed = $state(load('font-mixed', false) === true)
+  $effect(() => save('font-mixed', mixed || undefined))
+  /** The shares and weight the mixer page saved, or an even blend. */
+  const storedMix = () => {
+    const kept = load('font-mix', null)
+    const even = Object.fromEntries(FONT_STYLES.map(style => [style, 1]))
+    const shares = FONT_STYLES.every(style => Number.isFinite(kept?.shares?.[style]) && kept.shares[style] >= 0) && FONT_STYLES.some(style => kept.shares[style] > 0)
+      ? Object.fromEntries(FONT_STYLES.map(style => [style, kept.shares[style]])) : even
+    const weight = Number.isFinite(kept?.weight) ? Math.min(1.5, Math.max(0.65, kept.weight)) : 1
+    return { shares, weight }
+  }
+  let mix = $state.raw(storedMix())
+  onMount(() => {
+    // The mixer page in another tab changes the blend.
+    const reread = () => {
+      const next = storedMix()
+      if (JSON.stringify(next) !== JSON.stringify(mix)) mix = next
+    }
+    const changed = (/** @type {StorageEvent} */ event) => { if (event.key === 'ids-input:font-mix') reread() }
+    // Coming back from the mixer page in this tab restores the editor without a storage event.
+    const shown = (/** @type {PageTransitionEvent} */ event) => { if (event.persisted) reread() }
+    window.addEventListener('storage', changed)
+    window.addEventListener('pageshow', shown)
+    return () => { window.removeEventListener('storage', changed); window.removeEventListener('pageshow', shown) }
+  })
+  /** One composer of the blend per layout, whatever the shares. @type {Map<boolean, ReturnType<typeof composerPreview>>} */
+  const blenders = new Map()
+  /** @param {boolean} split */
+  const blender = split => {
+    if (!blenders.has(split)) blenders.set(split, composerPreview({
+      base: readFrom(COMPOSER_BASE),
+      faceBases: Object.fromEntries(FONT_STYLES.map(style => [style, readFrom(COMPOSER_BASES[style])])),
+      separate: split,
+      loaders: bundlesFor('sans'),
+    }))
+    return /** @type {ReturnType<typeof composerPreview>} */ (blenders.get(split))
+  }
+  /** The last blended preview, kept so the same face gives the same function whatever the blend:
+   *  the editor's tools hold on to the adapter, and a new blend only needs a new drawing.
+   *  @type {{ inner: unknown, split: boolean, preview: ReturnType<typeof composerPreview> } | null} */
+  let blend = null
+  /** A preview drawn in the current blend. The face's own preview draws what the blend cannot: a
+   *  description the face resolves to a character it names, one with missing glyphs, and one whose
+   *  faces split it into different parts, which the layers could not adjust.
+   *  @param {ReturnType<typeof composerPreview>} inner @param {boolean} split */
+  const blended = (inner, split) => {
+    if (blend && blend.inner === inner && blend.split === split) return blend.preview
+    const draw = blender(split)
+    /** @type {ReturnType<typeof composerPreview>} */
+    const preview = Object.assign(async (sequence, options) => {
+      if (!sequence.includes('[') && !APPROXIMATE.some(operator => sequence.includes(operator))) {
+        try {
+          const drawn = await draw(sequence, { ...options, mix: untrack(() => mix) })
+          if (!drawn?.missing?.length && (drawn?.parts?.length || !drawn?.d)) return drawn
+        } catch (error) {
+          if (options?.signal?.aborted || stopping(error)) throw error
+        }
+      }
+      return inner(sequence, options)
+    }, { warm: inner.warm })
+    blend = { inner, split, preview }
+    return preview
+  }
   const icons = $derived(iconsAt(base, componentStyle))
   // One function for each export, so a tree asks again only when the face changes.
   /** @type {Map<string, () => Promise<Map<string, string[]>>>} */
@@ -443,7 +511,8 @@
     if (!sequenceLists.has(at)) sequenceLists.set(at, () => variationSequences(readFrom(at)))
     return /** @type {() => Promise<Map<string, string[]>>} */ (sequenceLists.get(at))
   }
-  const adapter = $derived({ ...babel, preview: previewFor(base, separate, componentStyle), icon: icons, fontStyle: componentStyle, variationSequences: sequencesAt(base) })
+  const facePreview = $derived(previewFor(base, separate, componentStyle))
+  const adapter = $derived({ ...babel, preview: mixed ? blended(facePreview, separate) : facePreview, icon: icons, fontStyle: componentStyle, variationSequences: sequencesAt(base) })
   const wanted = String(params.get('lang') ?? load('locale', null) ?? navigator.language ?? '')
   // A browser asking for Traditional Chinese names its region or script, never the catalogue's code.
   const traditional = /^zh-(?:Hant|TW|HK|MO)\b/i
@@ -668,6 +737,8 @@
 
   // The output: the encoded characters the whole sequence describes, and its code points.
   let encoded = $state(/** @type {string[]} */ ([]))
+  /** @type {'idle' | 'ok' | 'error'} */
+  let encodedState = $state('idle')
   $effect(() => {
     const text = editor.tree === null ? '' : editor.whole, ask = adapter.encoded
     const example = EXAMPLES.find(example => example.sequence === text)
@@ -675,33 +746,64 @@
     encoded = known
     // An example that names a standard and no character is a form the project reads as unencoded;
     // the index's reading of the same IDS does not override it.
-    if (!editor.usable || !text || !ask || example?.standard && !example.char) return
+    if (!editor.usable || !text || !ask || example?.standard && !example.char) { encodedState = 'ok'; return }
+    encodedState = 'idle'
     let live = true
-    ask(text).then(found => { if (live) encoded = [...new Set([...known, ...found])] }, () => {})
+    ask(text).then(
+      found => { if (live) { encoded = [...new Set([...known, ...found])]; encodedState = 'ok' } },
+      () => { if (live) encodedState = 'error' },
+    )
     return () => { live = false }
   })
   // A description written with a visual substitute names the character its canonical description
   // does: ⿰彳ヱ is ⿰彳𠀄, and that is 𭛝. The typed sequence stays as written; the character and
   // code point are shown beside it.
   let substituted = $state(/** @type {{ sequence: string, char: string } | null} */ (null))
+  /** @type {'idle' | 'ok' | 'error'} */
+  let substitutedState = $state('idle')
   $effect(() => {
     const text = editor.tree === null ? '' : editor.whole
     const ask = adapter.encoded
     substituted = null
-    if (!editor.usable || !text || !ask || encoded.length) return
+    if (!editor.usable || !text || !ask || encoded.length) { substitutedState = 'ok'; return }
     const candidates = substituteSequences(text).slice(0, 8)
-    if (!candidates.length) return
+    if (!candidates.length) { substitutedState = 'ok'; return }
+    substitutedState = 'idle'
     let live = true
     const read = async () => {
+      let failed = false
       for (const sequence of candidates) {
         try {
           const chars = await ask(sequence)
-          if (live && chars.length) { substituted = { sequence, char: chars[0] }; return }
-        } catch { /* a description the adapter cannot encode */ }
+          if (live && chars.length) { substituted = { sequence, char: chars[0] }; substitutedState = 'ok'; return }
+        } catch { failed = true }
       }
+      if (live) substitutedState = failed ? 'error' : 'ok'
     }
     void read()
     return () => { live = false }
+  })
+  // When a description has no Unicode character, check the Rare Character Compendium for R+XXXX
+  // records describing the same sequence. Wait for the local Unicode lookups to succeed first so
+  // encoded characters, visual substitutes, and failed local lookups never trigger a remote check.
+  let rccMatches = $state(/** @type {import('./lib/rcc.js').RccMatch[]} */ ([]))
+  $effect(() => {
+    const text = editor.tree === null ? '' : editor.whole
+    if (!editor.usable || !text || [...text].length < 2 || encodedState !== 'ok' || substitutedState !== 'ok' || encoded.length || substituted) {
+      rccMatches = []
+      return
+    }
+    const example = EXAMPLES.find(example => example.sequence === text)
+    const known = example && !example.char && example.rcc ? [{ id: example.rcc }] : []
+    rccMatches = known
+    const controller = new AbortController()
+    let live = true
+    matchRcc(text, { signal: controller.signal }).then(found => {
+      if (!live || !found.length) return
+      const byId = new Map([...known, ...found].map(entry => [entry.id, entry]))
+      rccMatches = [...byId.values()].sort((a, b) => a.id - b.id)
+    })
+    return () => { live = false; controller.abort() }
   })
   // The strokes the output shows: an encoded character's recorded count when the description names
   // one, else the components' counts added up. A single component is its own character. The table
@@ -1263,29 +1365,38 @@
     } catch { note(t('app.edit.pasteFailed')) }
   }
   function selectAll() { if (editor.tree !== null) { editor.choose([], { toggle: false }); editor.focusChosen(work) } }
-  /** @param {{ sequence: string, char: string, refs?: number[], abbreviates?: string, modern?: string, standard?: string, traditional?: string, reading?: string }} example @param {string} lang @param {number[]} [groupRefs] @param {string} [readingLang] @param {string} [groupKey] */
+  /** @param {{ sequence: string, char: string, rcc?: number, refs?: number[], abbreviates?: string, modern?: string, standard?: string, traditional?: string, reading?: string }} example @param {string} lang @param {number[]} [groupRefs] @param {string} [readingLang] @param {string} [groupKey] */
   function exampleItem(example, lang, groupRefs = [], readingLang = 'ja', groupKey = '') {
     const point = example.char ? cp(example.char) : ''
+    const rccCodeText = !example.char && example.rcc ? rccCode(example.rcc) : ''
+    const noteLink = rccCodeText && example.rcc
+      ? { label: rccCodeText, href: rccUrl(example.rcc, locale), title: t('app.rcc.open', { code: rccCodeText }) }
+      : undefined
     const standard = example.standard ?? example.char
     const traditional = example.traditional ?? standard
     const target = example.char || example.abbreviates || ''
     const citation = (example.refs ?? groupRefs).map(/** @param {number} n */ n => `[${n}]`).join('')
     // A 二簡字 form names the standard it replaces. Where the form itself is unencoded, its note
-    // names that standard without marking a code point; where it is encoded, the note names the form.
+    // names that standard without marking a Unicode code point; where it is encoded, the note names the form.
     const replaces = groupKey === 'erjian' && standard ? `${standard}${traditional === standard ? '' : ` ${traditional}`}` : ''
     const encodedForm = groupKey === 'erjian' && example.char ? `${point}${replaces ? ` · ${replaces}` : ''}` : ''
-    const noteText = example.abbreviates ? `${example.abbreviates} · ${t('app.examples.abbreviation')}` : groupKey === 'erjian' && standard ? (encodedForm || replaces) : example.char ? [example.modern, point].filter(Boolean).join(' · ') : t('app.examples.none')
+    const noteText = example.abbreviates ? `${example.abbreviates} · ${t('app.examples.abbreviation')}`
+      : noteLink ? (replaces ? `· ${replaces}` : '')
+      : groupKey === 'erjian' && standard ? (encodedForm || replaces)
+      : example.char ? [example.modern, point].filter(Boolean).join(' · ')
+      : t('app.examples.none')
     return {
       leading: groupKey === 'erjian' && example.char ? undefined : target || undefined,
       label: example.sequence,
       sequence: example.sequence,
       note: [noteText, citation].filter(Boolean).join(' '),
+      noteLink,
       reading: example.reading,
       readingLang,
       unencoded: !example.char,
       lang,
       drawing: prepared.get(example.sequence),
-      hint: [groupKey === 'erjian' && example.char ? `${example.sequence}　${point}${replaces ? `　${replaces}` : ''}` : replaces ? `${example.sequence}　${replaces}　${t('app.examples.none')}` : example.abbreviates ? `${example.abbreviates}　${example.sequence}　${t('app.examples.abbreviation')}` : example.char ? `${example.char}${example.sequence === example.char ? '' : `　${example.sequence}`}　${point}` : `${example.sequence}　${t('app.examples.none')}`, citation].filter(Boolean).join('　'),
+      hint: [groupKey === 'erjian' && example.char ? `${example.sequence}　${point}${replaces ? `　${replaces}` : ''}` : replaces ? `${example.sequence}　${rccCodeText ? `${rccCodeText}　` : ''}${replaces}${rccCodeText ? '' : `　${t('app.examples.none')}`}` : example.abbreviates ? `${example.abbreviates}　${example.sequence}　${t('app.examples.abbreviation')}` : example.char ? `${example.char}${example.sequence === example.char ? '' : `　${example.sequence}`}　${point}` : `${example.sequence}　${rccCodeText || t('app.examples.none')}`, citation].filter(Boolean).join('　'),
       run: () => addTab(example.sequence),
     }
   }
@@ -1422,16 +1533,24 @@
 </script>
 
 {#snippet fontSwitch(wait)}
-  <div class="font-switch" role="group" aria-label={t('app.font.label')}>
-    {#each FONT_FACES as option (option.key)}
-      <button type="button" class="font-choice" aria-pressed={face === option.key} aria-label={t(option.label)} title={t(option.label)} onclick={() => face = option.key}>
-        <span class="aa {option.key}"><FaceSample sequence={editor.whole} draw={sampleDraw(option)} delay={wait}>
-          {#snippet fallback()}<span class="specimen">Aa</span>{/snippet}
-        </FaceSample></span>
-        <span class="wide {option.key}">{t(option.label)}</span>
+  <FontSwitch faces={FONT_FACES} {face} onchange={key => face = key} label={t('app.font.label')} {t}>
+    {#snippet sample(option)}
+      <FaceSample sequence={editor.whole} draw={sampleDraw(option)} delay={wait}>
+        {#snippet fallback()}<span class="specimen">Aa</span>{/snippet}
+      </FaceSample>
+    {/snippet}
+    {#snippet children()}
+      <button type="button" class="font-choice" aria-pressed={mixed} aria-label={t('app.font.mix')} title={t('app.font.mix')} onclick={() => { mix = storedMix(); mixed = !mixed }}>
+        <Icon name="blend" size={16} />
+        <span class="wide">{t('app.font.mix')}</span>
       </button>
-    {/each}
-  </div>
+      {#if mixed}
+        <a class="font-choice" href={`./font-mixer.html?lang=${locale}${editor.tree === null ? '' : `&ids=${encodeURIComponent(editor.whole)}`}`} aria-label={t('app.font.mixSet')} title={t('app.font.mixSet')}>
+          <Icon name="settings" size={16} />
+        </a>
+      {/if}
+    {/snippet}
+  </FontSwitch>
 {/snippet}
 
 <svelte:window onkeydown={keys} ondragenter={dragFiles} ondragover={dragFiles} ondragleave={leaveFiles} ondrop={dropDocument}
@@ -1582,7 +1701,7 @@
       <section class="pane output" class:phone-active={phonePane === 'output'} class:adjusting={adjusting} id="output-panel" aria-label={t('app.output')}>
         <div class="preview" data-character-info-avoid ondblclick={startAdjust}>
           {#if !large}
-            {#key `${activeId}:${face}`}
+            {#key `${activeId}:${face}:${mixed ? JSON.stringify(mix) : ''}`}
               <IdsPreview {adapter} {face} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false}
                 document={currentSession()?.document} session={currentSession()} version={documentTick} bind:scopes bind:slots
                 editable={adjusting} onchoose={path => editor.choose(path, { toggle: false })} onedit={layerChanged} bind:drawing bind:emoji bind:cut bind:cutLeaf bind:step={previewStep}>
@@ -1601,9 +1720,16 @@
                   {#each encoded as ch (ch)}
                     <span class="encoded-character"><code>{cp(ch)}</code><button type="button" title={t('app.copyChar', { char: ch })} aria-label={t('app.copyChar', { char: ch })} onclick={() => copy(ch)}><Icon name="copy" size={13} /></button></span>
                   {/each}
+                  {#each rccMatches as entry (entry.id)}
+                    {@const code = rccCode(entry.id)}
+                    <span class="encoded-character rcc-character">
+                      <a class="rcc-link" href={rccUrl(entry.id, locale)} target="_blank" rel="noopener noreferrer" title={t('app.rcc.open', { code })}><code>{code}</code><span class="out" aria-hidden="true">↗</span></a>
+                      <button type="button" title={t('app.copyChar', { char: code })} aria-label={t('app.copyChar', { char: code })} onclick={() => copy(code)}><Icon name="copy" size={13} /></button>
+                    </span>
+                  {/each}
                   {#if drawnStrokes}
                     <span class="component-counts" title={drawnStrokes.strokes == null ? undefined : t(drawnStrokes.approximate ? 'app.componentStrokes' : 'app.recordedStrokes')}>
-                      {#if encoded.length}<span class="strokes-sep" aria-hidden="true">·</span>{/if}
+                      {#if encoded.length || rccMatches.length}<span class="strokes-sep" aria-hidden="true">·</span>{/if}
                       {t('app.components', { count: drawnStrokes.components })}
                       {#if drawnStrokes.strokes != null}
                         <span class="strokes-sep" aria-hidden="true">·</span>
@@ -1657,11 +1783,16 @@
               <button type="button" class="large-copy" title={`${t('app.copySequence')}: ${editor.whole}`} aria-label={footerCopied ? t('app.copied', { text: '' }).trim() : t('app.copySequence')} onclick={() => copyFooter(editor.whole)}><Icon name={footerCopied ? 'check' : 'copy'} size={14} /></button>
               {#if encoded.length}
                 <button type="button" class="large-copy" title={`${t('app.copyPoints')}: ${encoded.map(cp).join(' ')}`} aria-label={t('app.copyPoints')} onclick={() => copyFooter(encoded.map(cp).join(' '))}><Icon name="copy" size={14} /></button>
+              {:else if rccMatches.length}
+                {#each rccMatches as entry (entry.id)}
+                  {@const code = rccCode(entry.id)}
+                  <a class="large-rcc" href={rccUrl(entry.id, locale)} target="_blank" rel="noopener noreferrer" title={t('app.rcc.open', { code })}><code>{code}</code><span class="out" aria-hidden="true">↗</span></a>
+                {/each}
               {/if}
             </div>
           </div>
           {#if large}
-            {#key face}
+            {#key `${face}:${mixed ? JSON.stringify(mix) : ''}`}
               <IdsPreview {adapter} {face} tree={editor.tree} {messages} {locale} small={false} notes={false}
                 document={currentSession()?.document} session={currentSession()} version={documentTick} editable={false} bind:step={previewStep} />
             {/key}
@@ -1750,21 +1881,6 @@
     padding:max(8px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 8px max(16px,env(safe-area-inset-left))}
   .tools,.end,.group{display:flex;align-items:center;gap:6px}
   .group{gap:0;height:32px;border-radius:var(--ui-radius-md);background:var(--ui-color-surface);box-shadow:inset 0 0 0 1px var(--ui-color-border)}
-  .font-switch{display:flex;align-items:center;gap:2px;height:32px;padding:2px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface)}
-  .font-choice{display:flex;align-items:center;gap:5px;height:26px;padding:0 7px;border:0;border-radius:var(--ui-radius-sm);background:none;color:var(--ui-color-ink-muted);font:inherit;font-size:11px;cursor:pointer}
-  .font-choice .aa{display:grid;place-items:center;width:18px;height:18px;font-size:14px;line-height:1;color:var(--ui-color-ink);font-family:var(--cjk-label-sans)}
-  .font-choice .wide{font-family:var(--cjk-label-sans)}
-  .font-choice .aa.serif,.font-choice .wide.serif{font-family:var(--cjk-label-serif)}
-  .font-choice .aa.fangsong,.font-choice .wide.fangsong{font-family:var(--cjk-label-fangsong)}
-  .font-choice .aa.regular,.font-choice .wide.regular{font-family:var(--cjk-label-regular)}
-  .font-choice .aa.pen-writing,.font-choice .wide.pen-writing{font-family:var(--cjk-label-pen-writing)}
-  /* Kureedo draws neither 书 nor ả/ư; keep those names in one face. */
-  .font-choice .wide.pen-writing:lang(zh-Hans),.font-choice .wide.pen-writing:lang(vi){font-family:var(--cjk-label-sans)}
-  .font-choice .wide.regular:lang(ko),.font-choice .wide.regular:lang(vi){font-family:var(--cjk-label-sans)}
-  .font-choice:hover{color:var(--ui-color-ink)}
-  .font-choice[aria-pressed="true"]{background:var(--ui-color-accent-soft);color:var(--ui-color-accent)}
-  .font-choice:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}
-  @media (max-width:1100px){.font-choice .wide{display:none}}
   .group :global(.ui-button){height:32px;border:0;border-left:1px solid var(--ui-color-border);border-radius:0;background:none}
   .group > :global(.ui-button:first-child){border-left:0;border-radius:var(--ui-radius-md) 0 0 var(--ui-radius-md)}
   .group .wide-only:last-child :global(.ui-button){border-radius:0 var(--ui-radius-md) var(--ui-radius-md) 0}
@@ -1841,7 +1957,7 @@
   .large-dialog :global(.ids-preview){width:100%;max-width:100%}
   .large-dialog :global(.ids-preview-large){width:100%;border-radius:12px}
   .large-bar{position:sticky;top:max(0px,env(safe-area-inset-top));z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:4px;background:var(--ui-color-surface)}
-  .large-bar .font-switch{order:1}
+  .large-bar :global(.font-switch){order:1}
   .large-bar .large-close{order:4}
   .large-close{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;border:1px solid var(--ui-color-border);border-radius:50%;background:var(--ui-color-surface);color:var(--ui-color-ink);cursor:pointer}
   .large-ids{order:2;flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:1px;font-family:var(--ids-font);font-size:16px;line-height:1.3;color:var(--ui-color-ink);white-space:nowrap;overflow:hidden}
@@ -1860,6 +1976,16 @@
   .encoded-character button{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;padding:0;border:0;border-radius:var(--ui-radius-xs);background:transparent;color:var(--ui-color-ink-muted);cursor:pointer}
   .encoded-character button:hover{color:var(--ui-color-ink);background:var(--ui-color-surface-hover)}
   .encoded-character button:focus-visible{outline:2px solid var(--ui-color-focus)}
+  .rcc-link{display:inline-flex;align-items:baseline;gap:2px;color:var(--ui-color-accent);text-decoration:none}
+  .rcc-link code{color:inherit}
+  .rcc-link .out{font-size:10px;line-height:1}
+  .rcc-link:hover{text-decoration:underline;text-underline-offset:2px}
+  .rcc-link:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:2px;border-radius:var(--ui-radius-xs)}
+  .large-rcc{display:inline-flex;align-items:baseline;gap:2px;height:28px;padding:0 8px;border:1px solid var(--ui-color-border);border-radius:7px;background:var(--ui-color-surface);color:var(--ui-color-accent);text-decoration:none;font:11px/26px ui-monospace,"SF Mono",Menlo,Consolas,monospace;white-space:nowrap}
+  .large-rcc code{color:inherit;font:inherit}
+  .large-rcc .out{font-size:10px}
+  .large-rcc:hover{border-color:var(--ui-color-border-strong);text-decoration:underline;text-underline-offset:2px}
+  .large-rcc:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:2px}
   .component-counts{display:inline-flex;align-items:center;gap:4px;color:var(--ui-color-ink-muted);font:11px ui-monospace,monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
   .component-counts .strokes-sep{opacity:.55}
   .preview :global(.ids-preview-meta){position:absolute;top:10px;left:10px;z-index:1}
@@ -1875,7 +2001,7 @@
   .replacement-link{align-self:flex-start;padding:2px 0;border:0;background:transparent;color:var(--ui-color-accent);font:inherit;font-size:12px;cursor:pointer}
   .replacement-link:hover{text-decoration:underline}
   .replacement-link:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:2px}
-  .points-btn{height:24px;padding:0 8px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface);color:var(--ui-color-ink-muted);font:inherit;font-size:12px;cursor:pointer}
+  .points-btn{height:24px;padding:0 8px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface);color:var(--ui-color-ink-muted);font:inherit;font-size:12px;white-space:nowrap;cursor:pointer}
   .points-btn:hover{color:var(--ui-color-ink);border-color:var(--ui-color-border-strong)}
   .points-btn:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}
   .point-sheet{display:flex;flex-direction:column;gap:14px}

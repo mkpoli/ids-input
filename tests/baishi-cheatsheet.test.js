@@ -126,8 +126,8 @@ describe('the cheatsheet\'s cards', () => {
       ...SHEET.map(section => `cheatsheet.section.${section.label}`), ...Object.values(GROUP_LABELS).map(name => `cheatsheet.${name}`),
       ...cards.flatMap(card => [card.label && `cheatsheet.label.${card.label}`, card.hint && `cheatsheet.hint.${card.hint}`]),
       ...SHEET.flatMap(section => (section.groups ?? []).flatMap(group => (group.legends ?? []).flatMap(legend => [`cheatsheet.label.${legend.id}`, `cheatsheet.hint.${legend.id}`]))),
-      ...['default', 'source', 'style', 'position', 'ucv', 'analogy', 'mirror', 'other'].filter(kind => kind !== 'default').map(kind => `cheatsheet.tip.list.${kind}`),
-      'cheatsheet.tip.operator.1', 'cheatsheet.tip.operator.2', 'cheatsheet.tip.operator.3', 'cheatsheet.tip.tag.source', 'cheatsheet.tip.tag.style', 'cheatsheet.tip.tag.other',
+      ...['default', 'source', 'style', 'position', 'ucv', 'analogy', 'mirror', 'misc'].filter(kind => kind !== 'default').map(kind => `cheatsheet.tip.list.${kind}`),
+      'cheatsheet.tip.operator.1', 'cheatsheet.tip.operator.2', 'cheatsheet.tip.operator.3', 'cheatsheet.tip.tag.source', 'cheatsheet.tip.tag.style', 'cheatsheet.tip.tag.misc',
     ].filter(Boolean)
     for (const [code] of LOCALES) for (const key of keys) expect(appMessages(code)[key], `${code} ${key}`).toBeString()
   })
@@ -205,5 +205,26 @@ describe('the prepared outlines', () => {
   })
   it('spell each stroke letter as a chain the page can read', () => {
     for (const [letters, stroke] of STROKE_LETTERS) expect(chainStrokes(`#(${letters})`)?.strokes.map(part => part.stroke).join(''), stroke).toBe(letters)
+  })
+})
+
+describe('the Serif cheatsheet', () => {
+  it('assigns every contour of each Serif drawing to the quoted parts', async () => {
+    const serif = await import('../demo/lib/baishi-serif.js')
+    const { COMPOSER_BASES } = await import('../demo/lib/composer.js')
+    expect(serif.base).toBe(COMPOSER_BASES.serif)
+    for (const card of cards) for (const quote of card.quotes) {
+      for (const [entry, original] of quote.glyphs.entries()) {
+        if (!original || original === 'composed') continue
+        const glyph = serif.glyphFor(original, entriesOf(quote.text)[entry])
+        const parts = glyph.parts ?? []
+        expect(parts.length).toBe(original.parts?.length ?? 0)
+        expect(parts.every(part => part.length > 0)).toBe(true)
+        const pieces = [...parts.flat(), ...(glyph.rest ?? [])]
+        expect(contoursOf(pieces).sort((a, b) => a - b), quote.text).toEqual(glyph.contours.map((_, i) => i))
+        expect(glyph.joins?.length).toBe(original.joins?.length)
+      }
+    }
+    expect(Object.keys(serif.composed).sort()).toEqual(composedDrawn().sort())
   })
 })
