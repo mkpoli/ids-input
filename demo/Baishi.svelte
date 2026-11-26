@@ -95,6 +95,7 @@
     ['𡕆 (J)', 'u21546-j@2'],
     ['𡕆 (T)', 'u21546-var-001@2'],
     ['𠕋', 'u2054b-g@1'],
+    ['卮 (qq123)', 'u2ff8-u2008b-u5df3@2'],
   ])
   /** @type {HTMLElement | null} */ let page = $state(null)
   $effect(() => { if (page) return watchFallback(page) })

@@ -73,7 +73,6 @@ NOTO_SPECS = [
     ("滿.", "滿", "ZHS"),
     ("父.", "父", "ZHS"),
     ("卮.", "卮", "ZHS"),              # ids_lv0 row 1391: 卮. = ⿸𠂋㔾.
-    ("卮qq123", "卮", "JAN"),          # ids_lv0 row 1391 & UCV 123: 卮qq123 = ⿸𠂋巳.
     ("丰.", "丰", "ZHS"),
     ("邦.", "邦", "ZHS"),
     ("勳.", "勳", "ZHS"),
@@ -285,7 +284,9 @@ def main():
 
     kage = subprocess.check_output(["node", ROOT / "scripts/build_baishi_spec_kage.mjs"], text=True)
     for key, path in json.loads(kage).items():
-        out[key] = fit_paths([path])
+        # Preserve the previous 卮qq123 witness’s ink box at the same em size.
+        ink_box = (31.6, 46.3, 962.8, 962) if key == "卮qq123" else None
+        out[key] = fit_paths([path], ink_box=ink_box)
 
     TARGET.write_text(json.dumps(out, ensure_ascii=False, indent=1) + "\n")
     print(f"Wrote {len(out)} glyphs ({TARGET.stat().st_size} bytes) -> {TARGET.relative_to(ROOT)}")
