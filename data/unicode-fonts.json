@@ -764,18 +764,6 @@
       "license": "SIL OFL 1.1"
     },
     {
-      "file": "unifont-18.0.01.otf",
-      "sha256": "88d0a14d4aa9a96419720b39ba5da921a59560d76d4ec7d523acc06ed85cd3c2",
-      "url": "https://unifoundry.com/pub/unifont/unifont-18.0.01/font-builds/unifont-18.0.01.otf",
-      "license": "SIL OFL 1.1"
-    },
-    {
-      "file": "unifont_upper-18.0.01.otf",
-      "sha256": "472201e45a050bff4c7658208b8c73e34ebce3764b287a5a46c7774038ef9391",
-      "url": "https://unifoundry.com/pub/unifont/unifont-18.0.01/font-builds/unifont_upper-18.0.01.otf",
-      "license": "SIL OFL 1.1"
-    },
-    {
       "file": "UniHieroglyphica.ttf",
       "sha256": "ad60bb2f469697837b556388d47b500a21d866370a49a8be770b206108aaf664",
       "url": "https://raw.githubusercontent.com/thesaurus-linguae-aegyptiae/unihieroglyphica/9375eba4e2b626658e57e3a526118b8225c0581e/font_files/UniHieroglyphica.ttf",
@@ -797,6 +785,18 @@
       "file": "Iosevka-Regular.ttf",
       "sha256": "1ba24b81d82df65a68c9d0bb44bda306fdcdb5d7763afe89b0dea29ea827d1a2",
       "url": "https://github.com/be5invis/Iosevka/releases/download/v34.9.1/PkgTTF-Iosevka-34.9.1.zip",
+      "license": "SIL OFL 1.1"
+    },
+    {
+      "file": "unifont-18.0.01.otf",
+      "sha256": "88d0a14d4aa9a96419720b39ba5da921a59560d76d4ec7d523acc06ed85cd3c2",
+      "url": "https://unifoundry.com/pub/unifont/unifont-18.0.01/font-builds/unifont-18.0.01.otf",
+      "license": "SIL OFL 1.1"
+    },
+    {
+      "file": "unifont_upper-18.0.01.otf",
+      "sha256": "472201e45a050bff4c7658208b8c73e34ebce3764b287a5a46c7774038ef9391",
+      "url": "https://unifoundry.com/pub/unifont/unifont-18.0.01/font-builds/unifont_upper-18.0.01.otf",
       "license": "SIL OFL 1.1"
     }
   ]

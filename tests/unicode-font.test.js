@@ -47,4 +47,11 @@ describe('the fallback webfont', () => {
     expect(read('fonts/fonts.css').toString()).toContain('@import url("./unicode.css")')
     expect(css).toContain('font-family:"IDS Fallback"')
   })
+
+  it('orders GNU Unifont last behind every vector fallback font', () => {
+    const lock = JSON.parse(read('data/unicode-fonts.json'))
+    const files = lock.fonts.map(entry => entry.file)
+    expect(files.slice(-2)).toEqual(['unifont-18.0.01.otf', 'unifont_upper-18.0.01.otf'])
+    expect(files.slice(0, -2).some(file => file.startsWith('unifont'))).toBe(false)
+  })
 })
