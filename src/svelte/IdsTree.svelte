@@ -18,8 +18,8 @@
   // draws them (`formed`), a form no code point names, written with its variant identifier (壬q0012).
   import { OPERATOR_GROUPS, isCustom, isNode, parse, partAt, samePath, write } from '../core/ids.js'
   import { codePoints, variationBase, variationOf, withVariation } from '../core/variation.js'
-  import IdsRateForms from './IdsRateForms.svelte'
-  import { rateFormsOfPart, rateFormText, readRateForm } from '../core/rate-forms.js'
+  import IdsVariationFamily from './IdsVariationFamily.svelte'
+  import { rateFormsOfPart, formSpelling, readFormSpelling, variationFamiliesOfPart } from '../core/variation-families.js'
   import { marksOf, withMarks } from '../core/marks.js'
   import { componentForms, drawnForm } from '../core/forms.js'
   import { loadUcvIndex } from './ucv.js'
@@ -63,6 +63,10 @@
    * component that is the whole text takes no variant identifier, which only a description carries.
    * @param {Part | undefined} part @param {Path} path */
   const formsOf = (part, path) => componentForms(isNode(part) ? rateFormsOfPart(part)[0]?.host : part, { sequences, ucv, variants: Boolean(editor.adapter.formed) && path.length > 0 })
+  /** @param {Part | undefined} part */
+  const familiesOf = part => variationFamiliesOfPart(part, editor.adapter.variationFamilies)
+  /** @param {Part | undefined} part */
+  const familyHeight = part => familiesOf(part).reduce((height, group) => height + 30 + 56 * Math.ceil(group.forms.length / 2), 0)
   /** The forms under one heading each: the character and its variation sequences, then each entry's.
    * @param {import('../core/forms.js').ComponentForm[]} forms */
   function formGroups(forms) {
@@ -83,7 +87,7 @@
     // The form already written is left as it is, with no step to undo.
     if (isNode(part)) {
       if (!editor.currentTree) return
-      const replacement = form.kind === 'variant' ? withMarks(form.write, marksOf(part)) : readRateForm(part, form.write)
+      const replacement = form.kind === 'variant' ? withMarks(form.write, marksOf(part)) : readFormSpelling(part, form.write)
       if (replacement !== null) editor.put(replacement, path)
       return
     }
@@ -262,7 +266,7 @@
   function openMenu(path, x, y) {
     if (editor.disabled) return
     // Placed where it opened, over everything (so no scrolled or clipped box moves or cuts it), kept inside the window.
-    const W = 260, H = 280 + (rateFormsOfPart(partAt(editor.tree, path)).length ? 132 : 0) + formGroups(formsOf(partAt(editor.tree, path), path)).reduce((sum, group) => sum + 30 + Math.ceil(group.forms.length / 6) * 42, 0)
+    const W = 260, H = 280 + familyHeight(partAt(editor.tree, path)) + formGroups(formsOf(partAt(editor.tree, path), path)).reduce((sum, group) => sum + 30 + Math.ceil(group.forms.length / 6) * 42, 0)
     menu = { path, x: Math.max(8, Math.min(x, innerWidth - W - 8)), y: Math.max(8, Math.min(y, innerHeight - H - 8)) }
     editor.choose(path, { toggle: false })
     queueMicrotask(() => /** @type {HTMLElement | null | undefined} */ (menuEl?.querySelector('[role^="menuitem"]'))?.focus())
@@ -271,9 +275,9 @@
   function openForms(path, anchor) {
     if (editor.disabled) return
     const groups = formGroups(formsOf(partAt(editor.tree, path), path)), r = anchor.getBoundingClientRect()
-    const rate = rateFormsOfPart(partAt(editor.tree, path)).length > 0
-    const W = Math.max(rate ? 248 : 0, Math.min(Math.max(...groups.map(group => group.forms.length), 3), 6) * 42 + 14)
-    const H = groups.reduce((sum, group) => sum + 30 + Math.ceil(group.forms.length / 6) * 42, rate ? 142 : 10)
+    const familyH = familyHeight(partAt(editor.tree, path))
+    const W = Math.max(familyH ? 248 : 0, Math.min(Math.max(...groups.map(group => group.forms.length), 3), 6) * 42 + 14)
+    const H = groups.reduce((sum, group) => sum + 30 + Math.ceil(group.forms.length / 6) * 42, familyH + 10)
     menu = { path, forms: true, x: Math.max(8, Math.min(r.left, innerWidth - W - 8)), y: r.bottom + 4 + H > innerHeight - 8 ? Math.max(8, r.top - H - 4) : r.bottom + 4 }
     editor.choose(path, { toggle: false })
     queueMicrotask(() => /** @type {HTMLElement | null | undefined} */ (menuEl?.querySelector('[aria-checked="true"]') ?? menuEl?.querySelector('[role^="menuitem"]'))?.focus())
@@ -328,7 +332,7 @@
     else if (event.key === 'Home' || event.key === 'End') { event.preventDefault(); items[event.key === 'Home' ? 0 : items.length - 1]?.focus() }
   }
   const menuPart = $derived(menu ? partAt(editor.tree, menu.path) : undefined)
-  const menuRate = $derived(rateFormsOfPart(menuPart))
+  const menuFamilies = $derived(familiesOf(menuPart))
   const menuForms = $derived(menu ? formsOf(menuPart, menu.path) : [])
   const menuGroups = $derived(formGroups(menuForms))
   /** A click on a node's frame, away from its parts and buttons, chooses it. @param {MouseEvent} event @param {Path} path */
@@ -345,10 +349,10 @@
 <svelte:window onpointerdown={event => { if (menu && !menuEl?.contains(/** @type {Node} */ (event.target))) closeMenu({ refocus: false }) }} />
 
 {#snippet formsToggle(/** @type {Part} */ part, /** @type {Path} */ path)}
-  {#if formsOf(part, path).length || rateFormsOfPart(part).length}
+  {#if formsOf(part, path).length || familiesOf(part).length}
       {@const open = menu?.forms === true && samePath(menu.path, path)}
       <button type="button" class="ids-forms-toggle" class:varied={varied(part) || isNode(part)} disabled={editor.disabled} aria-haspopup="menu" aria-expanded={open}
-        aria-label={t('ids.variants.label', { part: rateFormsOfPart(part)[0]?.host ?? variationBase(part) ?? '' })} title={t('ids.variants.label', { part: rateFormsOfPart(part)[0]?.host ?? variationBase(part) ?? '' })}
+        aria-label={t('ids.variants.label', { part: rateFormsOfPart(part)[0]?.host ?? variationBase(part) ?? formSpelling(part) })} title={t('ids.variants.label', { part: rateFormsOfPart(part)[0]?.host ?? variationBase(part) ?? formSpelling(part) })}
         data-hover-path={key(path)} ondragover={event => dragover(event, path)} ondragleave={() => { overPath = null; overSwap = false }} ondrop={event => drop(event, path)}
         onkeydown={event => { if (event.key === 'Backspace' || event.key === 'Delete') event.stopPropagation() }}
         onpointerdown={event => { if (open) event.stopPropagation() }} onclick={event => { if (open) closeMenu(); else openForms(path, event.currentTarget) }}>
@@ -377,7 +381,7 @@
         {:else}
           <span class="ids-subsequence" lang="ja" title={write(part)}>{write(part)}</span>
         {/if}
-        {#if rateFormsOfPart(part).length}{@render formsToggle(part, path)}{/if}
+        {#if familiesOf(part).length}{@render formsToggle(part, path)}{/if}
         <button type="button" class="ids-unwrap" tabindex="-1" disabled={editor.disabled} aria-label={t('ids.unwrapNode', { what })} title={t('ids.unwrapHint')}
           onclick={() => editor.remove(path)}>×</button>
       </div>
@@ -436,13 +440,13 @@
     <!-- svelte-ignore a11y_interactive_supports_focus -->
     <div class="ids-menu" role="menu" tabindex="-1" aria-label={t('ids.menu.label', { part: editor.sequenceAt(menu.path) })} bind:this={menuEl}
       style:left="{menu.x}px" style:top="{menu.y}px" onkeydown={menuKey}>
-      {#if menuRate.length}<IdsRateForms {editor} path={menu.path} forms={menuRate} menu onchoose={() => closeMenu()} />{/if}
+      {#each menuFamilies as family (family.id)}<IdsVariationFamily {editor} path={menu.path} {family} menu onchoose={() => closeMenu()} />{/each}
       {#if menuForms.length}
         {#each menuGroups as group (group.key)}
           <p class="ids-menu-title">{group.title ?? t('ids.variants.label', { part: menuForms[0].write })}</p>
           <div class="ids-menu-forms" data-forms={group.key || 'own'}>
             {#each group.forms as form (form.write)}
-              <button type="button" role="menuitemradio" class="ids-menu-form" data-form={form.write} aria-checked={rateFormText(menuPart) === form.write} title={formTitle(form)} aria-label={formTitle(form)}
+              <button type="button" role="menuitemradio" class="ids-menu-form" data-form={form.write} aria-checked={formSpelling(menuPart) === form.write} title={formTitle(form)} aria-label={formTitle(form)}
                 onclick={() => run(() => chooseForm(form, /** @type {Path} */ (menu?.path)))}><IdsPartIcon sequence={form.write} adapter={editor.adapter} /></button>
             {/each}
           </div>

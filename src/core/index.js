@@ -29,4 +29,4 @@ export { createUcvIndex, entryCharacters } from './ucv.js'
 export { componentForms, drawnForm, formedText, formedTree, glyphReference, ucvFormOf, ucvIdentifier, writtenForm } from './forms.js'
 export { isOwnDescription, readVariantDescriptions } from './variant-descriptions.js'
 
-export { rateFormsOfPart } from './rate-forms.js'
+export { rateFormsOfPart, variationFamiliesOfPart } from './variation-families.js'
