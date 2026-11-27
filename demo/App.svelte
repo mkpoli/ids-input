@@ -16,7 +16,7 @@
   import { composerPreview as composerAt } from '@han-compose/composer'
   import { variationSequences } from '@han-compose/composer/variants'
   import engineOutlines from 'ids-engine-outlines'
-  import { EMPTY_MARKS, OPERATORS, characterStrokes, componentQuery, drawnText, isJurchen, isShuishu, parse, substituteSequences, unalias } from '../src/core/index.js'
+  import { EMPTY_MARKS, OPERATORS, characterStrokes, componentQuery, drawnText, isJurchen, isSelector, isShuishu, parse, selectorInfo, substituteSequences, unalias } from '../src/core/index.js'
   import { loadStrokeRecords } from '../src/svelte/strokes.js'
   import { createDocumentSession, DOCUMENT_FACES, layerAtPath, sessionRecord, toSequence } from '../src/document/index.js'
   import { documentFile, readDocumentFile } from './lib/documents.js'
@@ -720,7 +720,24 @@
   })
   /** @param {string} ch */
   const cp = ch => `U+${/** @type {number} */ (ch.codePointAt(0)).toString(16).toUpperCase().padStart(4, '0')}`
-  const points = $derived([...editor.whole].map(ch => ({ ch, cp: cp(ch) })))
+  const points = $derived([...editor.whole].map(ch => ({ ch, cp: cp(ch), vs: selectorInfo(ch)?.tag ?? null })))
+  /** Units of the sequence for display in the large preview header, keeping each variation selector with its base. */
+  const largeUnits = $derived.by(() => {
+    const chars = [...editor.whole]
+    /** @type {{ text: string, op: boolean, vs: string | null }[]} */
+    const out = []
+    for (let i = 0; i < chars.length; i++) {
+      const ch = chars[i]
+      if (!operatorSet.has(ch) && isSelector(chars[i + 1])) {
+        const info = selectorInfo(chars[i + 1])
+        out.push({ text: ch + chars[i + 1], op: false, vs: info && info.kind !== 'presentation' ? info.tag : null })
+        i++
+      } else {
+        out.push({ text: ch, op: operatorSet.has(ch), vs: null })
+      }
+    }
+    return out
+  })
   const ziToolsHref = $derived(editor.whole ? `https://zi.tools/zi/?secondary=ids&seq=${encodeURIComponent(editor.whole)}` : '')
   /** @param {string} text */
   async function copy(text) {
@@ -1649,8 +1666,8 @@
             <button type="button" class="large-close" title={t('app.close')} aria-label={t('app.close')} onclick={() => { large = false }}><Icon name="close" /></button>
             {#if large}{@render fontSwitch(0)}{/if}
             <span class="large-ids" data-sequence={editor.whole} title={editor.whole} aria-label={editor.whole}>
-              {#each [...editor.whole] as ch}
-                {#if operatorSet.has(ch)}<OperatorIcon op={ch} size={18} />{:else}<span>{ch}</span>{/if}
+              {#each largeUnits as unit}
+                {#if unit.op}<OperatorIcon op={unit.text} size={18} />{:else if unit.vs}<span class="large-vs" data-vs={unit.vs}>{unit.text}<sup aria-hidden="true">{unit.vs}</sup></span>{:else}<span>{unit.text}</span>{/if}
               {/each}
             </span>
             <div class="large-actions">
@@ -1720,7 +1737,7 @@
   oncanvas={() => { layerOpen = false; adjusting = true }} />
 <Dialog bind:open={pointsOpen} title={t('app.codePoints', { count: points.length })} closeLabel={t('app.close')}>
   <div class="point-sheet">
-    <ol class="point-list">{#each points as p, i (i)}<li><span lang="ja">{p.ch}</span><code>{p.cp}</code></li>{/each}</ol>
+    <ol class="point-list">{#each points as p, i (i)}<li>{#if p.vs}<span class="point-vs">{p.vs}</span>{:else}<span lang="ja">{p.ch}</span>{/if}<code>{p.cp}</code></li>{/each}</ol>
     <button type="button" class="ui-button" onclick={() => copy(points.map(p => p.cp).join(' '))}><Icon name="copy" /><span>{t('app.copyPoints')}</span></button>
   </div>
 </Dialog>
@@ -1882,6 +1899,9 @@
   .point-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:6px 10px;margin:0;padding:0;list-style:none}
   .point-list li{display:flex;align-items:baseline;gap:5px;padding:4px 6px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-sm)}
   .point-list li span{font-family:var(--cjk);font-size:18px}
+  .point-list li .point-vs{padding:1px 4px;border-radius:4px;background:var(--ui-color-accent-soft);color:var(--ui-color-accent);font:600 10px/1.3 var(--ui-font-sans);font-variant-numeric:tabular-nums}
+  .large-vs{display:inline-flex;align-items:baseline;gap:1px}
+  .large-vs sup{font:600 9px/1 var(--ui-font-sans);color:var(--ui-color-accent);vertical-align:super}
   code{font:12px ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--ui-color-ink-muted)}
 
   .middle{display:flex;flex-direction:column;gap:16px;min-width:0}

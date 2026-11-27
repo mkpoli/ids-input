@@ -10,7 +10,9 @@
   // sibling moves there or on any other row switches places with it. Arrow keys move, ArrowRight
   // opens a row or steps into it, ArrowLeft closes it or steps out, and Enter edits the row in place
   // as a double click does.
-  import { isNode, samePath, write } from '../core/ids.js'
+  import { isJurchen, isNode, samePath, write } from '../core/ids.js'
+  import { variationSelector } from '../core/variation.js'
+  import IdsPartIcon from './IdsPartIcon.svelte'
   import OperatorIcon from './OperatorIcon.svelte'
 
   /** @typedef {import('../core/ids.js').Part} Part */
@@ -263,10 +265,11 @@
 }}>
   <ul role="tree" aria-label={t('ids.structure')}>
     {#each rows as row, index (row.key)}
+      {@const vs = row.node ? null : variationSelector(row.part)}
       <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-      <li role="treeitem" data-character={row.node ? undefined : row.part ?? undefined} draggable={!editor.disabled && row.path.length > 0 && (!editing || key(editing.path) !== row.key)} ondragstart={event => startDrag(event, row.path)} ondragend={endDrag} class:dragged={dragging !== null && key(dragging.path) === row.key} class:node={row.node} class:carried={carry !== null && carry.path.join('.') === row.key} class:chosen={selected(row)} class:hovered={editor.isHovered(row.path)} class:tinted={editor.isTinted(row.path)} class:over={overKind(row) === 'move'} class:swap={overKind(row) === 'swap'} data-path={row.key}
+      <li role="treeitem" data-character={row.node ? undefined : row.part ?? undefined} data-vs={vs?.tag} draggable={!editor.disabled && row.path.length > 0 && (!editing || key(editing.path) !== row.key)} ondragstart={event => startDrag(event, row.path)} ondragend={endDrag} class:dragged={dragging !== null && key(dragging.path) === row.key} class:node={row.node} class:vs={Boolean(vs)} class:carried={carry !== null && carry.path.join('.') === row.key} class:chosen={selected(row)} class:hovered={editor.isHovered(row.path)} class:tinted={editor.isTinted(row.path)} class:over={overKind(row) === 'move'} class:swap={overKind(row) === 'swap'} data-path={row.key}
         aria-level={row.level + 1} aria-selected={selected(row)} aria-expanded={row.node ? !collapsed.has(row.key) : undefined} aria-keyshortcuts="Space"
-        aria-label={rowLabel(row)} title={`${rowLabel(row)}${row.path.length ? ` · ${t('ids.dragSibling')}` : ''}`} tabindex={row.key === tabStop ? 0 : -1}
+        aria-label={`${rowLabel(row)}${vs ? ` (${vs.tag})` : ''}`} title={`${rowLabel(row)}${vs ? ` · ${vs.tag} (${vs.codePoint})` : ''}${row.path.length ? ` · ${t('ids.dragSibling')}` : ''}`} tabindex={row.key === tabStop ? 0 : -1}
         style:--level={row.level} style:--tint={tint(row.path, row.node)}
         onpointerenter={() => editor.hover(row.path)} onpointerleave={() => editor.hover(null)} onfocus={() => focusKey = row.key} onclick={event => clickRow(event, row)} onkeydown={event => keyRow(event, index)}
         ondragover={event => dragOver(event, row)} ondragleave={() => { overKey = null; overSwap = false }} ondrop={event => drop(event, row)}>
@@ -278,8 +281,9 @@
           <OperatorIcon {op} size={16} />
           <span class="name">{row.name}</span>
         {:else}
-          <span class="part" class:empty={row.part === null} lang="ja">{row.part ?? '⬚'}</span>
-          <span class="name">{row.part === null ? t('ids.empty') : ''}</span>
+          <span class="part" class:empty={row.part === null} lang="ja">{#if vs && editor.adapter.icon && !isJurchen(vs.base)}<span class="part-form"><IdsPartIcon sequence={vs.sequence} adapter={editor.adapter} />{(row.part ?? '').slice(vs.sequence.length)}</span>{:else}{row.part ?? '⬚'}{/if}</span>
+          {#if vs}<span class="vs-tag">{vs.tag}</span>{/if}
+          <span class="name">{row.part === null ? t('ids.empty') : vs ? vs.codePoint : ''}</span>
         {/if}
       </li>
     {/each}
@@ -308,7 +312,9 @@
   li:focus-visible{outline:2px solid var(--_focus);outline-offset:-2px}
   .toggle{display:grid;place-items:center;width:14px;flex:none;color:var(--_muted);font-size:11px}
   .part{display:grid;place-items:center;min-width:22px;font-family:var(--_font);font-size:20px;line-height:1.1}
+  .part-form{display:inline-flex;align-items:center}
   .part.empty{font-size:15px;color:var(--_muted)}
+  .vs-tag{flex:none;padding:1px 5px;border-radius:4px;background:var(--_accent-light);color:var(--_accent);border:1px solid color-mix(in oklab,var(--_accent) 35%,transparent);font:600 10px/1.2 var(--ids-ui-font,system-ui,sans-serif);font-variant-numeric:tabular-nums;white-space:nowrap}
   .name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--_muted)}
   li:where(.tinted){background:color-mix(in oklab,var(--tint) 9%,var(--_surface));color:color-mix(in oklab,var(--_ink) 80%,var(--tint))}
   li.hovered{position:relative;border-left:2px solid var(--_accent);border-right:2px solid var(--_accent);border-radius:0;padding-left:calc(3px + var(--level) * 16px);padding-right:7px}

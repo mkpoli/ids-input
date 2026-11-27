@@ -429,5 +429,11 @@
   "ids.ucv.failed": "Không tải được danh sách.",
   "ids.ucv.kind": "Danh sách",
   "ids.ucv.form": "Dạng {name}",
-  "ids.alternatives.unifiable": "Dạng hợp nhất được"
+  "ids.alternatives.unifiable": "Dạng hợp nhất được",
+  "info.vs.title": "Bộ chọn biến thể",
+  "info.vs.ivs": "Bộ chọn biến thể chữ biểu ý",
+  "info.vs.svs": "Bộ chọn biến thể chuẩn hóa",
+  "info.vs.plain": "Gốc",
+  "info.vs.input": "Bộ chọn biến thể khác",
+  "info.vs.use": "Dùng {form}"
 }

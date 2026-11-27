@@ -8,6 +8,7 @@
   import { loadFallbackText } from './fallback-font.js'
   import { sequenceScopes } from './sequence-scopes.js'
   import { isNode, write } from '../core/ids.js'
+  import { variationSelector } from '../core/variation.js'
   import IdsAlternatives, { hasAlternatives } from './IdsAlternatives.svelte'
   /** @type {HTMLDivElement | null} */ let textRun = $state(null)
   /** @type {{left:number, right:number, inkLeft:number}[]} */ let bounds = $state([])
@@ -69,6 +70,8 @@
   /** @type {{ editor: import('./editor.svelte.js').Editor, label?: boolean, placeholder?: string, onenter?: () => void }} */
   let { editor, label = true, placeholder = '⿰⿱匕失⿱コ疋', onenter } = $props()
   const spans = $derived(tokens(editor.draft))
+  const hasVariation = $derived(spans.some(token => variationSelector(token.text) !== null))
+  const vsHeight = $derived(hasVariation ? 14 : 0)
   /** @param {import('./tokens.js').Token} token */
   const operatorToken = token => { const char = Array.from(token.text)[0]; return Boolean(char && arity(char)) }
   const scopes = $derived(sequenceScopes(spans, bounds))
@@ -103,6 +106,10 @@
   // The field draws what is typed into it, including characters only the shards have.
   $effect(() => { loadFallbackText(editor.draft, field ? getComputedStyle(field).fontFamily : undefined) })
   $effect(() => {
+    // Re-read computed padding when top/bottom strips appear or disappear: ResizeObserver does not
+    // always fire synchronously for padding-only changes.
+    void vsHeight
+    void scopeHeight
     if (!field) return
     const element = field
     const measure = () => {
@@ -121,7 +128,13 @@
     void editor.selectionVersion
     untrack(() => {
       const range = editor.selectionRange
-      if (field && range) field.setSelectionRange(range.start, range.end)
+      if (field && range) {
+        // A programmatic selection after an edit (such as picking a form from the character card)
+        // must not immediately re-open the card when Chromium fires its async `select` event.
+        const chosen = editor.chosen, part = editor.picked
+        announced = chosen && typeof part === 'string' && range.start !== range.end ? `${chosen.join('.')}\u0000${part}` : ''
+        field.setSelectionRange(range.start, range.end)
+      }
     })
   })
   function select() {
@@ -292,7 +305,8 @@
     const elements = paint?.querySelectorAll('span') ?? []
     const index = [...elements].findIndex(element => {
       const box = element.getBoundingClientRect()
-      return event.clientX >= box.left && event.clientX < box.right && event.clientY >= box.top && event.clientY < box.bottom
+      const top = element.hasAttribute('data-vs') ? box.top - vsHeight : box.top
+      return event.clientX >= box.left && event.clientX < box.right && event.clientY >= top && event.clientY < box.bottom
     })
     editor.hover(spans[index]?.path ?? null)
   }
@@ -302,8 +316,8 @@
 
 <label class="ids-field">
   {#if label}<span class="ids-title">{t('ids.label')}</span>{/if}
-  <div class="sequence-wrap" class:composing style:--scope-height={`${scopeHeight}px`}>
-    <div class="sequence-paint" bind:this={paint} style={metrics} aria-hidden="true"><div class="sequence-viewport"><div class="sequence-run" bind:this={textRun} style:transform={`translateX(${-scroll}px)`}>{#if spans.length}{#each spans as token}<span data-character={token.text || '◌'} data-path={token.path.join('.')} class:missing={!token.text} class:custom={isCustom(token.text)} class:tinted={editor.isTinted(token.path)} class:hovered={editor.isHovered(token.path)} class:selected={editor.isSelected(token.path)} style:--tint={tint(token.path, operatorToken(token))}>{token.text || '◌'}</span>{/each}{:else}{editor.draft}{/if}{#if paintedScopes.length}<svg class="sequence-scopes" width="100%" height={scopeHeight} aria-hidden="true">{#each paintedScopes as scope}<g data-path={scope.path.join('.')}><path class="scope-lead" class:scope-tinted={scope.tinted} class:scope-hovered={scope.hovered} class:scope-selected={scope.selected} style:--tint={tint(scope.path, true)} data-path={scope.path.join('.')} d={scope.lead}/>{#each scope.segments as segment}<path class="scope-segment" class:scope-missing={segment.missing} class:scope-tinted={segment.tinted} class:scope-hovered={segment.hovered} class:scope-selected={segment.selected} style:--tint={tint(segment.path)} data-path={segment.path.join('.')} d={segment.d}/>{/each}</g>{/each}</svg>{/if}</div></div></div>
+  <div class="sequence-wrap" class:composing style:--scope-height={`${scopeHeight}px`} style:--vs-height={`${vsHeight}px`}>
+    <div class="sequence-paint" bind:this={paint} style={metrics} aria-hidden="true"><div class="sequence-viewport"><div class="sequence-run" bind:this={textRun} style:transform={`translateX(${-scroll}px)`}>{#if spans.length}{#each spans as token}{@const vs = variationSelector(token.text)}<span data-character={token.text || '◌'} data-path={token.path.join('.')} data-vs={vs?.tag} class:missing={!token.text} class:custom={isCustom(token.text)} class:varied={Boolean(vs)} class:tinted={editor.isTinted(token.path)} class:hovered={editor.isHovered(token.path)} class:selected={editor.isSelected(token.path)} style:--tint={tint(token.path, operatorToken(token))}>{token.text || '◌'}</span>{/each}{:else}{editor.draft}{/if}{#if paintedScopes.length}<svg class="sequence-scopes" width="100%" height={scopeHeight} aria-hidden="true">{#each paintedScopes as scope}<g data-path={scope.path.join('.')}><path class="scope-lead" class:scope-tinted={scope.tinted} class:scope-hovered={scope.hovered} class:scope-selected={scope.selected} style:--tint={tint(scope.path, true)} data-path={scope.path.join('.')} d={scope.lead}/>{#each scope.segments as segment}<path class="scope-segment" class:scope-missing={segment.missing} class:scope-tinted={segment.tinted} class:scope-hovered={segment.hovered} class:scope-selected={segment.selected} style:--tint={tint(segment.path)} data-path={segment.path.join('.')} d={segment.d}/>{/each}</g>{/each}</svg>{/if}</div></div></div>
   <input bind:this={field} value={editor.draft} style:padding-right={`calc(10px + ${drawnSlots + 8}px)`} disabled={editor.disabled} lang="ja" spellcheck="false" autocomplete="off"
     aria-label={label ? undefined : t('ids.label')} {placeholder} aria-invalid={Boolean(editor.problem)}
     onselect={select} onkeyup={select} onclick={select} onbeforeinput={beforeInput} onpaste={paste} onpointermove={hover} onpointerleave={() => editor.hover(null)} onscroll={() => scroll = field?.scrollLeft ?? 0} oninput={edit} oncompositionstart={startComposition} oncompositionend={endComposition} onblur={() => editor.settle()} onfocusout={leaveSelection}
@@ -346,18 +360,25 @@
   @media (pointer: coarse){ .ids-selection-close{width:44px;height:44px;font-size:20px} }
   .sequence-wrap{position:relative;min-width:0}
   .sequence-paint{position:absolute;inset:1px;padding:6px 10px;overflow:hidden;pointer-events:none;border-radius:7px;font:22px var(--_font);white-space:pre}
+  /* A character carrying a variation selector shows which selector it uses above the glyph,
+     keeping its horizontal advance identical to the input beneath. Placed before `.tinted` so
+     layer tints and hover/selection highlights override the subtle default wash. */
+  .sequence-paint span.varied{position:relative;background:color-mix(in oklab,var(--_accent) 11%,transparent);border-radius:3px}
+  .sequence-paint span.varied::after{content:attr(data-vs);position:absolute;left:50%;bottom:calc(100% - 2px);transform:translateX(-50%);padding:0 2px;border-radius:3px;
+    background:var(--_accent-light);color:var(--_accent);border:1px solid color-mix(in oklab,var(--_accent) 35%,transparent);
+    font:600 8.5px/1.15 system-ui,-apple-system,sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap;pointer-events:none}
   .sequence-paint span.tinted{color:color-mix(in oklab,var(--_ink) 76%,var(--tint));background:color-mix(in oklab,var(--tint) 12%,transparent)}
   /* A part no code point names is written by its code: marked, so it does not read as loose punctuation. */
   .sequence-paint span.custom{text-decoration:underline dotted color-mix(in oklab,var(--_accent) 70%,transparent);text-decoration-thickness:2px;text-underline-offset:5px}
   .sequence-paint span:first-child{border-radius:3px 0 0 3px}
   .sequence-paint span:last-of-type{border-radius:0 3px 3px 0}
   .sequence-paint span:only-of-type{border-radius:3px}
-  input{position:relative;box-sizing:border-box;width:100%;caret-color:var(--_ink);-webkit-text-fill-color:transparent;min-width:0;font:inherit;font-size:22px;line-height:1.5;padding:6px 10px calc(6px + var(--scope-height,0px)) 10px;font-family:var(--_font);color:inherit;
+  input{position:relative;box-sizing:border-box;width:100%;caret-color:var(--_ink);-webkit-text-fill-color:transparent;min-width:0;font:inherit;font-size:22px;line-height:1.5;padding:calc(6px + var(--vs-height,0px)) 10px calc(6px + var(--scope-height,0px)) 10px;font-family:var(--_font);color:inherit;
     border:1px solid var(--_control-border);border-radius:8px;background:transparent}
   input::placeholder{-webkit-text-fill-color:var(--_muted);color:color-mix(in srgb,var(--_muted) 70%,transparent)}
   input:focus-visible{outline:2px solid var(--_focus);outline-offset:1px}
   input[aria-invalid="true"]{border-color:var(--_fault)}
-  .sequence-viewport{overflow:hidden;padding-bottom:var(--scope-height,0px);margin-bottom:calc(-1 * var(--scope-height,0px))}
+  .sequence-viewport{overflow:hidden;padding-top:var(--vs-height,0px);margin-top:calc(-1 * var(--vs-height,0px));padding-bottom:var(--scope-height,0px);margin-bottom:calc(-1 * var(--scope-height,0px))}
   .sequence-run{position:relative;width:max-content;min-width:0}
   .sequence-scopes{position:absolute;top:100%;left:0;overflow:visible;fill:none}
   .sequence-scopes path{stroke:var(--_muted);stroke-width:1;stroke-linecap:round;stroke-linejoin:round}
@@ -372,6 +393,7 @@
   @media (forced-colors: active){
     .sequence-paint{visibility:hidden}
     .sequence-scopes{visibility:visible}
+    .sequence-paint span.varied::after{visibility:visible;background:Canvas;color:Highlight;border-color:Highlight}
     .sequence-scopes path,.sequence-scopes path.scope-tinted{stroke:CanvasText;stroke-width:1.5}
     .sequence-scopes path.scope-hovered,.sequence-scopes path.scope-selected{stroke:Highlight;stroke-width:2}
     input{-webkit-text-fill-color:CanvasText}
