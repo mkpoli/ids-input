@@ -1,5 +1,6 @@
 <script>
-  import { partAt } from '../core/ids.js'
+  import { isSelector, partAt } from '../core/ids.js'
+  import { codePoints } from '../core/variation.js'
   import { rateFormText, readRateForm } from '../core/rate-forms.js'
   const drawings = import('@han-compose/composer/rate-drawing')
 
@@ -13,6 +14,8 @@
   const part = $derived(partAt(editor.tree, path))
   const current = $derived(rateFormText(part))
   const host = $derived(forms[0]?.host)
+  /** Spell out invisible selectors, including those inside a compound IDS. @param {string} text */
+  const spelling = text => [...text].map(char => isSelector(char) ? ' ' + codePoints(char) + ' ' : char).join('').trim()
   /** @param {string} value */
   function choose(value) {
     if (!editor.currentTree) return
@@ -31,13 +34,13 @@
     </div>
     <div class="rate-grid">
       {#each forms as form (form.id)}
+        {@const label = spelling(form.text)}
         <button type="button" data-rate-form={form.id} role={menu ? 'menuitemradio' : undefined}
           aria-checked={menu ? current === form.text : undefined} aria-pressed={menu ? undefined : current === form.text}
-          disabled={editor.disabled || !editor.currentTree} title={form.text} onclick={() => choose(form.text)}>
+          disabled={editor.disabled || !editor.currentTree} title={label} aria-label={label} onclick={() => choose(form.text)}>
           <svg viewBox="0 0 1000 1000" aria-hidden="true" focusable="false">
             {#await drawings then module}<path d={module.rateDrawing(form.text, editor.adapter.fontStyle ?? 'sans') ?? ''} />{/await}
           </svg>
-          <span>{form.id.startsWith('cn-') ? 'CN' : 'JP'}幺 · {form.id.endsWith('-chevron') ? '＞＜' : '𰀪⺀'}</span>
         </button>
       {/each}
     </div>
@@ -52,7 +55,6 @@
   button:focus-visible{outline:2px solid var(--_focus);outline-offset:1px}
   .rate-original{font-family:var(--_font);padding:1px 5px}
   .rate-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
-  .rate-grid button{display:flex;align-items:center;justify-content:center;gap:4px;min-height:38px;padding:3px 6px;font-size:24px}
-  .rate-grid svg{width:1.3em;height:1.3em;fill:currentColor}
-  .rate-grid button>span{font-size:11px;white-space:nowrap}
+  .rate-grid button{display:flex;align-items:center;justify-content:center;min-height:52px;padding:3px 6px}
+  .rate-grid svg{width:44px;height:44px;fill:currentColor}
 </style>
