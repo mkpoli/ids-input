@@ -2,11 +2,13 @@
   import { tick } from 'svelte'
   import { characterScript } from '../adapter/character-info.js'
   import { componentDrawing } from '@han-compose/composer/component-forms'
-  import { isJurchen } from '../core/ids.js'
+  import { isJurchen, write } from '../core/ids.js'
   import { isCustom } from '../core/custom.js'
   import { componentForms } from '../core/forms.js'
   import { codePoints, parseVariationSelector, variationOf, variationSelector, withVariation } from '../core/variation.js'
   import { chainPath } from '../core/chain-shape.js'
+  import { variationFamiliesOfPart } from '../core/variation-families.js'
+  import IdsVariationFamily from './IdsVariationFamily.svelte'
   import IdsPartIcon from './IdsPartIcon.svelte'
   import { componentIdentity } from '../core/component-identity.js'
   import { strokeClassName, translator } from './i18n.js'
@@ -18,7 +20,7 @@
   // moves off it. `extra` adds a section under a separator for the part the card describes, at
   // `path` in the sequence when it has one; `close` puts the reader back where the card was opened.
   // `customHref` answers where a custom component's form is listed, by its identifier (X-00053).
-  /** @type {{ root: HTMLElement | null, adapter: import('../adapter/types.js').IdsAdapter, messages?: Record<string, string>, locale?: string, disabled?: boolean, onpick?: (part: string, path?: number[]) => void, customHref?: (id: string) => string, extra?: import('svelte').Snippet<[{ path: number[] | undefined, close: () => void }]> }} */
+  /** @type {{ root: HTMLElement | null, adapter: import('../adapter/types.js').IdsAdapter, messages?: Record<string, string>, locale?: string, disabled?: boolean, onpick?: (part: string, path?: number[]) => void, customHref?: (id: string) => string, extra?: import('svelte').Snippet<[{ path: number[] | undefined, close: () => void, hasFamilies: boolean }]> }} */
   let { root, adapter, messages, locale = 'en', disabled = false, onpick, customHref, extra } = $props()
   const t = $derived(translator(messages, locale))
   /** A reading system's name for the card's locale; the CJK names are the ones readers know it by.
@@ -62,6 +64,7 @@
   const customChar = $derived(isCustom(char))
   const vs = $derived(variationSelector(char))
   const baseChar = $derived(vs ? vs.base : char)
+  const families = $derived(open ? variationFamiliesOfPart(char, adapter.variationFamilies) : [])
   const copyText = $derived(vs ? vs.sequence : char)
   /** @type {import('../adapter/types.js').CustomPartInfo | null} */ let custom = $state.raw(null)
   /** How many subtractions the card lists; the table has the rest. */
@@ -352,7 +355,7 @@
     // A mark records strokes but no script and no Unicode identity (々, 〡), and the panel is the
     // only place its strokes are laid out; it opens for the stroke record too. Any character modified
     // with a variation selector always opens so its selector details and form picker are reachable.
-    if (!always && !valueVs && !(adapter.customPart && isCustom(value)) && !componentIdentity(lookup) && !(adapter.characterInfo && characterScript(lookup)) && !strokeRecords?.has(lookup) && !(isJurchen(lookup) && (jurchenStrokes?.has(value) || jurchenStrokes?.has(lookup)))) { leave(); return }
+    if (!always && !valueVs && !variationFamiliesOfPart(value, adapter.variationFamilies).length && !(adapter.customPart && isCustom(value)) && !componentIdentity(lookup) && !(adapter.characterInfo && characterScript(lookup)) && !strokeRecords?.has(lookup) && !(isJurchen(lookup) && (jurchenStrokes?.has(value) || jurchenStrokes?.has(lookup)))) { leave(); return }
     keep()
     if (anchor === element && char === value && (open || showTimer !== undefined)) return
     close(); anchor = element; anchorPath = pathOf(element); char = value
@@ -650,6 +653,12 @@
       </div>
       {#if pinned}<button class="close" type="button" aria-label={t('info.close')} onclick={() => { const el = anchor; close(); restoreFocus(el) }}>×</button>{/if}
     </header>
+    {#each families as family (family.id)}
+      <section class="glyph-family">
+        <IdsVariationFamily {adapter} {t} {family} part={char} disabled={disabled || !onpick}
+          onreplace={replacement => pick(write(replacement))} />
+      </section>
+    {/each}
     {#if vs}
       <section class="vs-section" aria-labelledby={`${uid}-vs`}>
         <div class="vs-head">
@@ -766,12 +775,13 @@
     {#if sources.length}
       <p class="sources">{#each sources as source, index (source.key)}{#if index > 0}<span class="sep" aria-hidden="true">·</span>{/if}<a href={source.url} target="_blank" rel="noopener noreferrer" title={source.what}>{source.site}</a>{/each}</p>
     {/if}
-    {#if extra}<div class="extra">{@render extra({ path: anchorPath, close: finish })}</div>{/if}
+    {#if extra}<div class="extra">{@render extra({ path: anchorPath, close: finish, hasFamilies: families.length > 0 })}</div>{/if}
   {/if}
 </div>
 
 <style>
   .ids-character-info{position:fixed;inset:auto;margin:0;box-sizing:border-box;width:320px;max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);overflow:auto;scrollbar-width:thin;scrollbar-color:var(--ids-line-strong,light-dark(#c2c2cc,#4a4a55)) transparent;padding:16px;border:1px solid var(--ids-line,light-dark(#e1e1e8,#484850));border-radius:12px;background:var(--ids-surface,light-dark(#fff,#24242b));color:var(--ids-ink,light-dark(#24242b,#f0f0f5));box-shadow:0 8px 30px #0003;font:13px/1.5 system-ui,sans-serif;--info-muted:var(--ids-muted,light-dark(#686874,#b4b4c0));--info-font:"IDS Numbered","IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Jurchen","IDS Operators","Noto Sans CJK JP",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif}
+  .glyph-family{--_ink:var(--ids-ink,light-dark(#24242b,#f0f0f5));--_muted:var(--info-muted);--_surface:var(--ids-surface,light-dark(#fff,#24242b));--_line:var(--ids-line,light-dark(#e1e1e8,#484850));--_accent:var(--ids-accent,light-dark(#2944c7,#8ea8ff));--_focus:var(--ids-focus,light-dark(#2944c7,#8ea8ff));--_font:var(--info-font)}
   @supports not (scrollbar-color: auto){.ids-character-info::-webkit-scrollbar{width:6px;height:6px}.ids-character-info::-webkit-scrollbar-thumb{border-radius:999px;background:var(--ids-line-strong,light-dark(#c2c2cc,#4a4a55))}.ids-character-info::-webkit-scrollbar-track{background:transparent}}
   header{display:flex;align-items:center;gap:14px;margin-bottom:12px}header>div{display:flex;flex-direction:column;gap:3px}.glyph{font:56px/1.15 var(--info-font)}.script{font-size:12px;color:var(--info-muted)}code{font-size:11px;letter-spacing:.02em}
   .code{display:flex;align-items:center;gap:4px;min-height:24px}.stroke-glyph{font-family:var(--info-font);font-size:16px;line-height:1;color:var(--ids-ink,light-dark(#24242b,#f0f0f5))}.stroke-facts{display:flex;align-items:center;gap:5px;margin:2px 0 0;font-size:12px;white-space:nowrap}.stroke-count{color:var(--ids-ink,light-dark(#24242b,#f0f0f5));font-weight:600;font-variant-numeric:tabular-nums}.stroke-first{color:var(--info-muted)}.stroke-sep{align-self:stretch;width:1px;background:var(--ids-line,light-dark(#e1e1e8,#3a3a43))}.copy{display:grid;place-items:center;flex:none;width:24px;height:24px;padding:0;border:0;border-radius:5px;background:none;color:var(--info-muted);cursor:pointer}.copy:hover{background:var(--ids-surface-subtle,light-dark(#f6f6f9,#16161a));color:inherit}.copy svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.copy-note{font-size:11px;color:var(--ids-accent,light-dark(#2944c7,#8ea8ff))}.copy-note.failed{color:var(--ids-fault,light-dark(#b42318,#ff8a80))}

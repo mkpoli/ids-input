@@ -80,8 +80,8 @@
 
 <IdsCharacterInfo {root} {adapter} {messages} {locale} {disabled} onpick={(part, path) => editor.take(part, path)}>
   <!-- A part chosen by selecting its text lists what can stand in its place under its card. -->
-  {#snippet extra({ path, close })}
-    {#if path && editor.chosenInField && path.join('.') === editor.chosen?.join('.')}<IdsAlternatives {editor} onchoose={close} />{/if}
+  {#snippet extra({ path, close, hasFamilies })}
+    {#if path && editor.chosenInField && path.join('.') === editor.chosen?.join('.')}<IdsAlternatives {editor} showFamilies={!hasFamilies} onchoose={close} />{/if}
   {/snippet}
 </IdsCharacterInfo>
 

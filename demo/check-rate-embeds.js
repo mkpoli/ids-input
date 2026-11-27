@@ -35,6 +35,22 @@ try {
     assert.equal(await page.locator('output.used').textContent(), expected)
   })
 
+  // A selector in the character card can also be changed to a structural catalogue form.
+  // Hovering the second copy edits the hovered operand, independently of the existing selection.
+  const field = page.locator('.sequence-wrap input').first()
+  await field.fill('⿰率󠄀率󠄀')
+  const hovered = page.locator('.ids-tree .ids-part[data-path="1"]')
+  await hovered.hover()
+  const card = page.locator('.ids-character-info:popover-open')
+  const group = card.locator('[data-variation-family="rate/率"]')
+  await group.locator('button[data-form-id] svg path').first().waitFor()
+  assert.equal(await group.locator('button[data-form-id]').count(), 4)
+  assert.equal(await card.locator('.vs-pill').innerText(), 'VS17')
+  assert.ok(await card.locator('.vs-input').isVisible())
+  const structural = rateFormsFor('率')[0]
+  await group.locator('button[data-form-id]').first().click()
+  assert.equal(await field.inputValue(), '⿰率󠄀' + structural.text)
+
   const parentURL = new URL('check-rate-embeds', base).href
   await page.route(parentURL, route => route.fulfill({
     contentType: 'text/html',

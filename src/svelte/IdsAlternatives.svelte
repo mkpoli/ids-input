@@ -46,8 +46,8 @@
   import IdsVariationFamily from './IdsVariationFamily.svelte'
   import { createUnifiable } from './unifiable.svelte.js'
 
-  /** @type {{ editor: import('./editor.svelte.js').Editor, variations?: boolean, variationsHref?: ((entry: string) => string) | null, onchoose?: () => void, onspent?: () => void }} */
-  let { editor, variations = false, variationsHref = null, onchoose, onspent } = $props()
+  /** @type {{ editor: import('./editor.svelte.js').Editor, variations?: boolean, showFamilies?: boolean, variationsHref?: ((entry: string) => string) | null, onchoose?: () => void, onspent?: () => void }} */
+  let { editor, showFamilies = true, variations = false, variationsHref = null, onchoose, onspent } = $props()
   const t = $derived(editor.t)
   const uid = $props.id()
   const search = $derived(editor.alternatives)
@@ -74,7 +74,7 @@
 
 {#if hasAlternatives(editor, unifiable.entries.length)}
 <div class="ids-options">
-  {#if editor.chosen}{#each families as family (family.id)}<IdsVariationFamily {editor} path={editor.chosen} {family} {onchoose} />{/each}{/if}
+  {#if showFamilies && editor.chosen}{#each families as family (family.id)}<IdsVariationFamily adapter={editor.adapter} part={picked} {t} {family} disabled={editor.disabled || !editor.currentTree} onreplace={replacement => choose(() => editor.put(replacement, editor.chosen))} />{/each}{/if}
   {#if grass}
     <div class="ids-option-group" role="group" aria-labelledby={`${uid}-grass`}>
       <span class="ids-option-label" id={`${uid}-grass`}>{t('ids.grass.head')}</span>

@@ -441,7 +441,7 @@
     <!-- svelte-ignore a11y_interactive_supports_focus -->
     <div class="ids-menu" role="menu" tabindex="-1" aria-label={t('ids.menu.label', { part: editor.sequenceAt(menu.path) })} bind:this={menuEl}
       style:left="{menu.x}px" style:top="{menu.y}px" onkeydown={menuKey}>
-      {#each menuFamilies as family (family.id)}<IdsVariationFamily {editor} path={menu.path} {family} menu onchoose={() => closeMenu()} />{/each}
+      {#each menuFamilies as family (family.id)}<IdsVariationFamily adapter={editor.adapter} part={menuPart} {t} {family} menu disabled={editor.disabled || !editor.currentTree} onreplace={replacement => { if (menu && editor.put(replacement, menu.path)) closeMenu() }} />{/each}
       {#if menuForms.length}
         {#each menuGroups as group (group.key)}
           <p class="ids-menu-title">{group.title ?? t('ids.variants.label', { part: menuForms[0].write })}</p>
