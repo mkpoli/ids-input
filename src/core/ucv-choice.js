@@ -138,8 +138,14 @@ export function occurrenceChoices(index, picked, splits) {
       sites.add(site)
       // Another spelling of a component in the same place is read; its expansion is not.
       if (opened.some(at => within(at, path) && (at.length < path.length || isNode(part)))) continue
-      let entries = matches.get(token)
-      if (!entries) { entries = ucvChoices(index, part); matches.set(token, entries) }
+      let found = matches.get(token)
+      if (!found) { found = ucvChoices(index, part); matches.set(token, found) }
+      const entries = found.filter(entry => {
+        const catalogued = index.entries.find(one => one.id === entry.id)
+        if (!catalogued) return true
+        if (catalogued.forms.every(form => isOperator(form.text))) return !path.length && Boolean(host && catalogued.unified?.includes(host))
+        return typeof part !== 'string' || !(index.patterns.get(catalogued) ?? []).every(pattern => isNode(parse(pattern, { open: true }).tree ?? null))
+      })
       if (!entries.length) continue
       if (typeof part === 'string') opened.push(path)
       const context = write(replaceAt(source, path, '〔' + token + '〕'))
@@ -148,9 +154,6 @@ export function occurrenceChoices(index, picked, splits) {
         const earlier = offered.get(entry.id) ?? []
         const same = around && earlier.find(at => at.around === around)
         if (!same && earlier.some(at => within(at.path, path))) continue
-        const catalogued = index.entries.find(found => found.id === entry.id)
-        if (catalogued?.forms.every(form => isOperator(form.text)) && (path.length || !(host && catalogued.unified?.includes(host)))) continue
-        if (typeof part === 'string' && catalogued && (index.patterns.get(catalogued) ?? []).every(pattern => isNode(parse(pattern, { open: true }).tree ?? null))) continue
         const forms = entry.forms.flatMap(form => {
           const tree = /** @type {Part} */ (withMarks(replaceAt(source, path, form.tree), marks))
           const written = write(tree)

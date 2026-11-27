@@ -92,8 +92,9 @@
     const texts = [...new Set(occurrenceForms(menuPart, menu.path).map(form => form.write))].filter(text => unnamed(text) && !untrack(() => drawable.has(text)))
     if (!texts.length) return
     const ask = editor.adapter.drawable
-    Promise.all(texts.map(text => ask ? ask(text).then(swap => !swap.approximate?.length && !customsOf(parse(swap.text, { open: true }).tree ?? null).length, () => false) : false))
-      .then(found => { drawable = new Map([...drawable, ...texts.map((text, i) => /** @type {[string, boolean]} */ ([text, found[i]]))]) })
+    Promise.all(texts.map(text => ask ? ask(text).then(swap => !swap.approximate?.length && !customsOf(parse(swap.text, { open: true }).tree ?? null).length, () => null) : false))
+      // A failed answer is not kept, so the form is asked about again when the menu next opens.
+      .then(found => { drawable = new Map([...drawable, ...texts.flatMap((text, i) => found[i] === null ? [] : [/** @type {[string, boolean]} */ ([text, found[i]])])]) })
   })
   /** @param {Part | undefined} part */
   const familiesOf = part => variationFamiliesOfPart(part, editor.adapter.variationFamilies)

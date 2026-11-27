@@ -94,3 +94,8 @@ it('reads each spelling of a component in the same place into one entry', () => 
   expect(forms.length).toBe(1)
   expect(forms[0].forms.map(form => form.write)).toEqual(['⿱⺌月󠄀', '⿱⺌月󠄁', '⿱⺌舟󠄁', '⿱⺌⺼'])
 })
+
+it('opens a component further when none of its entries applies there', () => {
+  const ids = splits => occurrenceChoices(index, '𣴎', splits).map(entry => entry.id).sort()
+  expect(ids(['⿰氵㒼', '⿰氵⿱廿巾'])).toEqual(ids(['⿰氵⿱廿巾']))
+})
