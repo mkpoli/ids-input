@@ -225,7 +225,12 @@
               {#if form.glyph}
                 <div class="glyph-tile mini">{@render glyphBox(form.glyph, `${form.char ?? ''}${form.tag ? ` (${form.tag})` : ''}`, Boolean(form.reference))}</div>
               {/if}
-              <span class="part-label" lang="zh-Hans">{form.char ?? ''}<span class:tag={!form.reference} class:muted={form.reference}>{form.tag ?? ''}</span></span>
+              <div class="part-caption">
+                <span class="part-label" lang="zh-Hans">{form.char ?? ''}<span class:tag={!form.reference} class:muted={form.reference}>{form.tag ?? ''}</span></span>
+                {#if form.ucv}
+                  <a class="part-ucv" href={`./ucv.html?lang=${locale}#ucv-${form.ucv.entry}`}>UCV {form.ucv.entry} · {form.ucv.position}</a>
+                {/if}
+              </div>
             </div>
           {/each}
         </div>
@@ -862,6 +867,8 @@
   .part-chip.ref{border-style:dashed;background:transparent}
   .part-chip.target{border-color:var(--ui-color-accent);background:var(--ui-color-accent-soft)}
   .part-contrast .pair-arrow{padding-block-end:0}
+  .part-caption{display:grid;gap:2px}
+  .part-ucv{font:11px/1.4 var(--ui-font-mono);color:var(--ui-color-accent);text-decoration:underline;text-underline-offset:2px}
   .part-label{font-family:var(--ids-font);font-size:13px;line-height:1.2;color:var(--ui-color-ink)}
   .text{display:flex;flex-direction:column;gap:2px;min-inline-size:0;flex:1 1 130px}
   .text.printed .ids{font-size:13.5px;color:var(--ui-color-ink-soft)}
