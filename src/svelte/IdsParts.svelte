@@ -1242,7 +1242,7 @@
   .part[data-mark]{font-family:"Noto Sans","DejaVu Sans","Liberation Sans",var(--ids-font,var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif)}
   .seal-estimate{position:absolute;right:3px;bottom:1px;font:11px system-ui;color:var(--_muted);user-select:none}
   .part.vs{border-color:color-mix(in oklab,var(--_accent) 40%,transparent)}
-  .part-vs{position:absolute;top:1px;right:1px;padding:0 2px;border-radius:3px;background:var(--_accent-light);color:var(--_accent);font:600 7.5px/1.2 var(--ids-ui-font,system-ui,sans-serif);font-variant-numeric:tabular-nums;pointer-events:none;user-select:none}
+  .part-vs{position:absolute;top:1px;right:1px;padding:0 2px;border-radius:3px;background:var(--_accent-light);color:var(--_accent);font:600 8.5px/1.15 var(--ids-ui-font,system-ui,sans-serif);font-variant-numeric:tabular-nums;pointer-events:none;user-select:none}
   .part:has(> .part-ids){padding-bottom:12px;font-size:20px}
   .part-ids{font-family:"IDS Operators","IDS Shuishu","IDS Jurchen",var(--ids-font,var(--ids-glyph-fallback,sans-serif));position:absolute;inset:auto 1px 1px;font-size:10px;line-height:1;text-align:center;color:var(--_ink);background:inherit;white-space:nowrap;overflow:hidden;user-select:none}
   .gongche-guide p{margin:8px 0;font-size:12px;color:var(--_muted)}

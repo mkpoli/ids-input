@@ -50,19 +50,17 @@ export function variationSelector(part) {
   if (base === null || typeof part !== 'string') return null
   const sequence = variationOf(part)
   const chars = [...sequence]
-  if (chars.length !== 2 || !isSelector(chars[1])) return null
-  const selector = chars[1]
-  const point = /** @type {number} */ (selector.codePointAt(0))
-  const ivs = point >= 0xE0100
-  const number = ivs ? point - 0xE0100 + 17 : point - 0xFE00 + 1
+  if (chars.length !== 2) return null
+  const info = selectorInfo(chars[1])
+  if (!info || info.kind === 'presentation') return null
   return {
     base,
-    selector,
+    selector: info.selector,
     sequence,
-    number,
-    tag: `VS${number}`,
-    codePoint: `U+${point.toString(16).toUpperCase().padStart(4, '0')}`,
-    kind: ivs ? 'ivs' : 'svs',
+    number: info.number,
+    tag: info.tag,
+    codePoint: info.codePoint,
+    kind: info.kind,
   }
 }
 
@@ -113,9 +111,15 @@ export function parseVariationSelector(input) {
     }
   }
   if (point === null) return null
-  const info = selectorInfo(String.fromCodePoint(point))
-  if (!info || info.kind === 'presentation') return null
-  return /** @type {{ selector: string, number: number, tag: string, codePoint: string, kind: 'ivs' | 'svs' }} */ (info)
+  const ivs = point >= 0xE0100
+  const number = ivs ? point - 0xE0100 + 17 : point - 0xFE00 + 1
+  return {
+    selector: String.fromCodePoint(point),
+    number,
+    tag: `VS${number}`,
+    codePoint: `U+${point.toString(16).toUpperCase().padStart(4, '0')}`,
+    kind: ivs ? 'ivs' : 'svs',
+  }
 }
 
 /** A sequence's code points as `U+8005 U+E0101`. @param {string} sequence */

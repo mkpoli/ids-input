@@ -2025,9 +2025,9 @@
   .point-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:6px 10px;margin:0;padding:0;list-style:none}
   .point-list li{display:flex;align-items:baseline;gap:5px;padding:4px 6px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-sm)}
   .point-list li span{font-family:var(--cjk);font-size:18px}
-  .point-list li .point-vs{padding:1px 4px;border-radius:4px;background:var(--ui-color-accent-soft,var(--ids-accent-light));color:var(--ui-color-accent);font:600 10px/1.3 var(--ui-font-sans,system-ui,sans-serif);font-variant-numeric:tabular-nums}
+  .point-list li .point-vs{padding:1px 4px;border-radius:4px;background:var(--ui-color-accent-soft);color:var(--ui-color-accent);font:600 10px/1.3 var(--ui-font-sans);font-variant-numeric:tabular-nums}
   .large-vs{display:inline-flex;align-items:baseline;gap:1px}
-  .large-vs sup{font:600 9px/1 var(--ui-font-sans,system-ui,sans-serif);color:var(--ui-color-accent);vertical-align:super}
+  .large-vs sup{font:600 9px/1 var(--ui-font-sans);color:var(--ui-color-accent);vertical-align:super}
   code{font:12px ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--ui-color-ink-muted)}
 
   .middle{display:flex;flex-direction:column;gap:16px;min-width:0}

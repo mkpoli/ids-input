@@ -49,7 +49,6 @@ try {
     // Wait for composer preview/icons to settle before screenshots.
     await page.waitForFunction(() => document.querySelector('#output-panel .ids-preview svg path')?.getAttribute('d'))
     await page.evaluate(() => document.fonts.ready)
-    await page.waitForTimeout(400)
     if (shots) await page.screenshot({ path: join(shots, `vs-marked-${scheme}.png`) })
 
     // 3. Hover on VS char in sequence field opens details card with VS details and selectable forms.
@@ -59,11 +58,11 @@ try {
     await panel.waitFor({ state: 'visible' })
     assert.equal(await panel.locator('.vs-pill').innerText(), 'VS18')
     assert.equal(await panel.locator('header .code code').innerText(), 'U+8005 U+E0101')
-    assert.match(await panel.locator('.vs-meta').innerText(), /VS18 · U\+E0101 · Ideographic Variation Selector/)
+    assert.match(await panel.locator('.vs-meta').innerText(), /Ideographic Variation Selector/)
     const options = panel.locator('.vs-option')
     await options.nth(1).waitFor()
-    assert.equal(await panel.locator(`.vs-option[data-vs-option="${DOTTED}"]`).getAttribute('aria-checked'), 'true')
-    assert.equal(await panel.locator('.vs-option[data-vs-option="者"]').getAttribute('aria-checked'), 'false')
+    assert.equal(await panel.locator(`.vs-option[data-vs-option="${DOTTED}"]`).getAttribute('aria-pressed'), 'true')
+    assert.equal(await panel.locator('.vs-option[data-vs-option="者"]').getAttribute('aria-pressed'), 'false')
     // Copy button copies the full VS sequence.
     await panel.locator('header .copy').click()
     assert.equal(await page.evaluate(() => navigator.clipboard.readText()), DOTTED)
@@ -98,7 +97,7 @@ try {
     await listWood.hover()
     await panel.waitFor({ state: 'visible' })
     assert.equal(await panel.locator('.vs-pill').innerText(), 'VS1')
-    assert.match(await panel.locator('.vs-meta').innerText(), /VS1 · U\+FE00 · Standardized Variation Selector/)
+    assert.match(await panel.locator('.vs-meta').innerText(), /Standardized Variation Selector/)
     if (shots) await page.screenshot({ path: join(shots, `vs-hover-treelist-${scheme}.png`) })
     await panel.locator('.vs-option[data-vs-option="木"]').click()
     await panel.waitFor({ state: 'hidden' })

@@ -106,6 +106,8 @@
   // The field draws what is typed into it, including characters only the shards have.
   $effect(() => { loadFallbackText(editor.draft, field ? getComputedStyle(field).fontFamily : undefined) })
   $effect(() => {
+    // Re-read computed padding when top/bottom strips appear or disappear: ResizeObserver does not
+    // always fire synchronously for padding-only changes.
     void vsHeight
     void scopeHeight
     if (!field) return
@@ -126,7 +128,13 @@
     void editor.selectionVersion
     untrack(() => {
       const range = editor.selectionRange
-      if (field && range) field.setSelectionRange(range.start, range.end)
+      if (field && range) {
+        // A programmatic selection after an edit (such as picking a form from the character card)
+        // must not immediately re-open the card when Chromium fires its async `select` event.
+        const chosen = editor.chosen, part = editor.picked
+        announced = chosen && typeof part === 'string' && range.start !== range.end ? `${chosen.join('.')}\u0000${part}` : ''
+        field.setSelectionRange(range.start, range.end)
+      }
     })
   })
   function select() {
@@ -297,7 +305,7 @@
     const elements = paint?.querySelectorAll('span') ?? []
     const index = [...elements].findIndex(element => {
       const box = element.getBoundingClientRect()
-      const top = element.hasAttribute('data-vs') ? box.top - 16 : box.top
+      const top = element.hasAttribute('data-vs') ? box.top - vsHeight : box.top
       return event.clientX >= box.left && event.clientX < box.right && event.clientY >= top && event.clientY < box.bottom
     })
     editor.hover(spans[index]?.path ?? null)
@@ -352,15 +360,16 @@
   @media (pointer: coarse){ .ids-selection-close{width:44px;height:44px;font-size:20px} }
   .sequence-wrap{position:relative;min-width:0}
   .sequence-paint{position:absolute;inset:1px;padding:6px 10px;overflow:hidden;pointer-events:none;border-radius:7px;font:22px var(--_font);white-space:pre}
-  .sequence-paint span.tinted{color:color-mix(in oklab,var(--_ink) 76%,var(--tint));background:color-mix(in oklab,var(--tint) 12%,transparent)}
-  /* A part no code point names is written by its code: marked, so it does not read as loose punctuation. */
-  .sequence-paint span.custom{text-decoration:underline dotted color-mix(in oklab,var(--_accent) 70%,transparent);text-decoration-thickness:2px;text-underline-offset:5px}
   /* A character carrying a variation selector shows which selector it uses above the glyph,
-     keeping its horizontal advance identical to the input beneath. */
+     keeping its horizontal advance identical to the input beneath. Placed before `.tinted` so
+     layer tints and hover/selection highlights override the subtle default wash. */
   .sequence-paint span.varied{position:relative;background:color-mix(in oklab,var(--_accent) 11%,transparent);border-radius:3px}
   .sequence-paint span.varied::after{content:attr(data-vs);position:absolute;left:50%;bottom:calc(100% - 2px);transform:translateX(-50%);padding:0 2px;border-radius:3px;
     background:var(--_accent-light);color:var(--_accent);border:1px solid color-mix(in oklab,var(--_accent) 35%,transparent);
-    font:600 8px/1.2 system-ui,-apple-system,sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap;pointer-events:none}
+    font:600 8.5px/1.15 system-ui,-apple-system,sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap;pointer-events:none}
+  .sequence-paint span.tinted{color:color-mix(in oklab,var(--_ink) 76%,var(--tint));background:color-mix(in oklab,var(--tint) 12%,transparent)}
+  /* A part no code point names is written by its code: marked, so it does not read as loose punctuation. */
+  .sequence-paint span.custom{text-decoration:underline dotted color-mix(in oklab,var(--_accent) 70%,transparent);text-decoration-thickness:2px;text-underline-offset:5px}
   .sequence-paint span:first-child{border-radius:3px 0 0 3px}
   .sequence-paint span:last-of-type{border-radius:0 3px 3px 0}
   .sequence-paint span:only-of-type{border-radius:3px}

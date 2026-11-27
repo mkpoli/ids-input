@@ -4,6 +4,7 @@
   import { componentDrawing } from '@han-compose/composer/component-forms'
   import { isJurchen } from '../core/ids.js'
   import { isCustom } from '../core/custom.js'
+  import { componentForms } from '../core/forms.js'
   import { codePoints, parseVariationSelector, variationOf, variationSelector, withVariation } from '../core/variation.js'
   import { chainPath } from '../core/chain-shape.js'
   import IdsPartIcon from './IdsPartIcon.svelte'
@@ -42,8 +43,6 @@
   /** @type {ReturnType<typeof setTimeout> | undefined} */ let hideTimer
   /** @type {AbortController | null} */ let controller = null
   let restoringFocus = false
-  let suppressChosen = false
-  /** @type {ReturnType<typeof setTimeout> | undefined} */ let suppressTimer
   let pointerX = NaN, pointerY = NaN
   // A card opened by a click stays while the pointer goes elsewhere, so its buttons can be reached.
   let pinned = $state(false)
@@ -92,25 +91,24 @@
     list().then(found => { if (current) sequences = found }, () => {})
     return () => { current = false }
   })
-  let vsInput = $state('')
-  $effect(() => { vsInput = vs ? vs.tag : '' })
+  let vsInput = $derived(vs ? vs.tag : '')
   const parsedVs = $derived(parseVariationSelector(vsInput))
   const canApplyVs = $derived(Boolean(vs && parsedVs && !disabled && onpick && parsedVs.selector !== vs.selector))
+  // The bundled Jurchen face carries format-14 variation glyphs directly in text; other scripts draw via adapter.icon.
+  const useIconGlyph = $derived(Boolean(vs && adapter.icon && !isJurchen(vs.base)))
   /** Every selectable variation option for the hovered VS-modified character: plain base, known sequences, and current. */
   const vsOptions = $derived.by(() => {
     if (!vs) return []
-    /** @type {string[]} */
-    const ordered = [vs.base]
+    const baseForms = componentForms(char, { sequences })
+      .filter(form => form.kind === 'plain' || form.kind === 'sequence')
+      .map(form => form.write)
+    const ordered = baseForms.length ? [...baseForms] : [vs.base, vs.sequence]
     const seen = new Set(ordered)
-    /** @param {string} seq */
-    const add = seq => { if (!seen.has(seq)) { seen.add(seq); ordered.push(seq) } }
-    for (const seq of sequences.get(vs.base) ?? []) add(seq)
     if (isJurchen(vs.base) && jurchenStrokes) {
       for (const key of jurchenStrokes.keys()) {
-        if (variationSelector(key)?.base === vs.base) add(key)
+        if (variationSelector(key)?.base === vs.base && !seen.has(key)) { seen.add(key); ordered.push(key) }
       }
     }
-    add(vs.sequence)
     const active = variationOf(char)
     return ordered.map(sequence => ({
       sequence,
@@ -293,15 +291,19 @@
     if (!anchor || !panel) return
     const box = anchor.getBoundingClientRect(), card = panel.getBoundingClientRect()
     const margin = 8, gap = 4, width = card.width, height = card.height
-    const viewW = Math.min(innerWidth, visualViewport?.width ?? innerWidth)
-    const viewH = Math.min(innerHeight, visualViewport?.height ?? innerHeight)
+    const viewLeft = visualViewport?.offsetLeft ?? 0
+    const viewTop = visualViewport?.offsetTop ?? 0
+    const viewRight = Math.min(innerWidth, viewLeft + (visualViewport?.width ?? innerWidth))
+    const viewBottom = Math.min(innerHeight, viewTop + (visualViewport?.height ?? innerHeight))
+    const minX = viewLeft + margin, maxX = Math.max(minX, viewRight - width - margin)
+    const minY = viewTop + margin, maxY = Math.max(minY, viewBottom - height - margin)
     // A spot is a place the card's top-left corner can take, clamped into the window; the last
     // number marks one the window pushed in from where it would naturally sit.
     /** @param {number} rawX @param {number} rawY @returns {number[]} */
     const spot = (rawX, rawY) => [
-      Math.max(margin, Math.min(rawX, viewW - width - margin)),
-      Math.max(margin, Math.min(rawY, viewH - height - margin)),
-      rawX < margin || rawX > viewW - width - margin || rawY < margin || rawY > viewH - height - margin ? 1 : 0,
+      Math.max(minX, Math.min(rawX, maxX)),
+      Math.max(minY, Math.min(rawY, maxY)),
+      rawX < minX || rawX > maxX || rawY < minY || rawY > maxY ? 1 : 0,
     ]
     // Below the anchor, then above it, then beside it; and around a surface the card must keep
     // clear of when those spots land on it — beside it, or under the anchor shifted past its edge.
@@ -387,9 +389,11 @@
    * @param {Event} event @param {number} pointX @param {number} pointY */
   function spanUnder(event, pointX, pointY) {
     if (target(event) || !(event.target instanceof HTMLInputElement)) return null
-    return [...(event.target.closest('.sequence-wrap')?.querySelectorAll('[data-character]') ?? [])].find(node => {
+    const wrap = event.target.closest('.sequence-wrap')
+    const badgeHeight = wrap ? parseFloat(getComputedStyle(wrap).getPropertyValue('--vs-height')) || 0 : 0
+    return [...(wrap?.querySelectorAll('[data-character]') ?? [])].find(node => {
       const box = node.getBoundingClientRect()
-      const top = node.hasAttribute('data-vs') ? box.top - 16 : box.top
+      const top = node.hasAttribute('data-vs') ? box.top - badgeHeight : box.top
       return pointX >= box.left && pointX < box.right && pointY >= top && pointY < box.bottom
     }) ?? null
   }
@@ -436,7 +440,7 @@
    * description (from the input, with `all` closing any card on the field's parts).
    * @param {Event} event */
   function chosen(event) {
-    if (dragging || suppressChosen) return
+    if (dragging) return
     const element = target(event)
     if (!(element instanceof HTMLElement) || !root?.contains(element)) {
       const all = /** @type {CustomEvent<{ all?: boolean } | null>} */ (event).detail?.all
@@ -482,13 +486,10 @@
     if (disabled || !onpick) return
     const element = anchor?.closest('.sequence-wrap')?.querySelector('input') ?? anchor
     const path = pathOf(anchor)
-    clearTimeout(suppressTimer)
-    suppressChosen = true
     close()
     onpick(part, path)
     await tick()
     restoreFocus(element?.isConnected ? element : root?.querySelector('input') ?? null)
-    suppressTimer = setTimeout(() => { suppressChosen = false }, 50)
   }
   /** Close the card and put the reader back where it was opened. */
   function finish() {
@@ -596,7 +597,6 @@
     window.addEventListener('resize', close)
     window.addEventListener('scroll', scrolled, true)
     return () => {
-      clearTimeout(suppressTimer)
       changed.disconnect(); resized.disconnect(); close()
       window.removeEventListener('pointermove', pointer); window.removeEventListener('pointerout', gone)
       node.removeEventListener('click', pin, true); node.removeEventListener('pointerleave', leave); node.removeEventListener('idscharacter', chosen)
@@ -622,7 +622,7 @@
           {:else if shape.kind === 'chain'}<svg viewBox="0 0 1000 1000" aria-hidden="true"><path d={shape.d} fill="none" stroke="currentColor" stroke-width="64" stroke-linecap="round" stroke-linejoin="round" /></svg>
           {:else}{#key shape.sequence}<IdsPartIcon sequence={shape.sequence} {adapter} />{/key}{/if}
         </span>
-      {:else if vs && adapter.icon && !isJurchen(vs.base)}
+      {:else if vs && useIconGlyph}
         <span class="glyph vs-glyph">{#key vs.sequence}<IdsPartIcon sequence={vs.sequence} {adapter} />{/key}</span>
       {:else}
         <span class="glyph" lang={vs && isJurchen(vs.base) ? 'juc' : info?.script === 'tangut' || info?.script === 'component' ? 'txg' : 'zh'}>{vs ? vs.sequence : char}</span>
@@ -654,18 +654,18 @@
       <section class="vs-section" aria-labelledby={`${uid}-vs`}>
         <div class="vs-head">
           <p class="label" id={`${uid}-vs`}>{t('info.vs.title')}</p>
-          <span class="vs-meta">{vs.tag} · {vs.codePoint} · {t(vs.kind === 'ivs' ? 'info.vs.ivs' : 'info.vs.svs')}</span>
+          <span class="vs-meta">{t(vs.kind === 'ivs' ? 'info.vs.ivs' : 'info.vs.svs')}</span>
         </div>
-        <div class="vs-options" role="radiogroup" aria-labelledby={`${uid}-vs`}>
+        <div class="vs-options" role="group" aria-labelledby={`${uid}-vs`}>
           {#each vsOptions as option (option.sequence)}
             {@const optionTag = option.vs ? option.vs.tag : t('info.vs.plain')}
             {@const optionTitle = `${optionTag} · ${codePoints(option.sequence)}`}
-            <button type="button" role="radio" class="vs-option" class:active={option.active} data-vs-option={option.sequence}
-              aria-checked={option.active} disabled={disabled || !onpick}
+            <button type="button" class="vs-option" class:active={option.active} data-vs-option={option.sequence}
+              aria-pressed={option.active} disabled={disabled || !onpick}
               title={optionTitle} aria-label={`${t('info.vs.use', { form: optionTag })} · ${codePoints(option.sequence)}`}
               onclick={() => { if (!option.active) pick(withVariation(char, option.sequence)) }}>
               <span class="vs-option-glyph" lang={isJurchen(vs.base) ? 'juc' : 'zh'}>
-                {#if adapter.icon && !isJurchen(vs.base)}
+                {#if useIconGlyph}
                   {#key option.sequence}<IdsPartIcon sequence={option.sequence} {adapter} />{/key}
                 {:else}
                   {option.sequence}
