@@ -207,6 +207,18 @@ descriptions of the IRG component variation entries the component is a form of (
 UCV #1, 間 for 閒 in NUCV #325), each under its entry; choosing one writes it in the component's
 place. `componentForms(part, { sequences, ucv })` in the core gives that list.
 
+An embedded editor can supply its own catalogue through `adapter.variationFamilies(text)`.
+The lookup receives the exact spelling of the selected character, custom component or IDS subtree and returns its families, including when reopened from a saved form.
+Hosts with a registry can pass its lookup directly:
+
+```js
+const adapter = { ...baseAdapter, variationFamilies: registry.familiesFor }
+```
+
+Each family has an `id`, `subjects` (the spellings it describes), and `forms` with an `id` and exact `text`.
+Give a form an optional `outline: { d, viewBox }` to supply its drawing, or use the adapter's `icon` and `drawing` as elsewhere in the editor.
+The tree menu and selected-part panel offer each family's shapes independently. Set `evidenceOnly: true` to reserve a family for source evidence.
+
 A form of an entry that no code point names is written with zi.tools' variant identifier after the
 component: `壬q0012` is the second form of UCV #1. An adapter that answers `formed(sequence)`
 (`babelStoneAdapter({ variations })` over `data/ucv.json`) has the menu offer those forms too, and
