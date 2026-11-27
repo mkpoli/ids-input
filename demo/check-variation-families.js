@@ -27,6 +27,12 @@ try {
   await page.goto(url.href)
   await choose('X-00053', '1', '⿰{53}{53}')
   await field.fill('⿰艹艹')
+  await toggle.click()
+  const choices = menu.locator('[data-variation-family="grass"]')
+  const native = choices.locator(`[data-form-id="${grassIVS.connected}"]`)
+  assert.equal(await native.locator('svg text').last().textContent(), grassIVS.connected)
+  await choices.locator(`[data-form-id="${grassIVS.inward}"] svg path`).waitFor()
+  await page.keyboard.press('Escape')
   await choose('grass', grassIVS.split, '⿰艹' + grassIVS.split)
   await choose('grass', grassIVS.connected, '⿰艹' + grassIVS.connected)
 } finally {

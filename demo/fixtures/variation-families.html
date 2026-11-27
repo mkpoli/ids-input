@@ -3,7 +3,8 @@
 <body><main id="fixture"></main><output></output><script type="module">
   import { mount } from 'svelte'
   import { IdsInput } from '../../src/svelte/index.js'
-  import { grassIVS } from '@han-compose/composer/variants'
+  import { componentDrawing } from '@han-compose/composer/component-forms'
+  import { grassIVS, grassShape } from '@han-compose/composer/variants'
   import customUrl from '../../data/custom-outlines.json.gz?url'
   import '../app.css'
 
@@ -21,6 +22,7 @@
   ]
   const adapter = {
     structure: async () => [],
+    icon: async text => componentDrawing(grassShape(text) ?? text),
     variationFamilies: text => families.filter(f => f.subjects.includes(text) || f.forms.some(form => form.text === text)),
   }
   mount(IdsInput, { target: document.querySelector('#fixture'), props: {
