@@ -431,6 +431,19 @@ SHA-256 of this copy `7e12d79da41b18f5fbf8fb0eae2adc31aa9f57e6e2eabe79836804c072
 `radical-variants.txt` at e4f1da2 (public domain, <https://github.com/cjkvi/cjkvi-variants>; 219
 rows), each row naming its source.
 
+## positional-forms.tsv
+
+The components a description spells in full in a place where characters write a positional form of
+them: 竹 on top, written 𥫗 in 1,796 characters and 竹 in 2. `IdsDidYouMean` offers the description
+respelled with the form; what was typed is not changed. Each row gives the place, the component,
+the form, and how many characters BabelStone IDS describes with each in that place.
+
+`uv run scripts/build_positional_forms.py` writes it from `component-forms.tsv` (its
+`radical-variant <place>` rows) and `babelstone-ids.tsv.gz`. A pair is listed when the form is
+written there in at least 3 characters, and the component itself in at least one and at most one
+for every 20: where no character writes the component in full, the full spelling can only mean the
+form (言 on the left) and nothing is offered. 12 rows.
+
 ## `ucv.json`, `ucv-forms.json.gz`, `ucv-outlines.json.gz`, `ucv-strokes.json.gz` and `ucv-outlines-sans.json.gz`
 
 The IRG's lists of unifiable (UCV, 599 entries) and non-unifiable (NUCV, 14 entries) component

@@ -90,6 +90,7 @@
  * @property {'sans' | 'serif' | 'regular' | 'fangsong' | 'pen-writing'} [fontStyle] Style for bundled component outlines.
  * @property {(char: string, options?: Options) => Promise<Sequence[]>} structure A character's descriptions, each with its source regions; a derived Tangut character-first description replaces its source description and is marked `derived`. A description may be a single distinct component; [] means no smaller parts are recorded.
  * @property {(part: string, options?: Options) => Promise<Swap[]>} [variants] Components that can stand in place of `part`.
+ * @property {() => Promise<Map<string, import('../core/positional.js').PositionalForm>>} [positionalForms] The components a description spells in full where characters write a positional form, by place and component (`readPositionalForms`).
  * @property {(text:string) => readonly VariationFamily[]} [variationFamilies] Catalogue families for this exact component or subtree, including saved form spellings. Source-only evidence is omitted from the picker.
  * @property {() => Promise<Map<string, string[]>>} [variationSequences] Every character the preview draws variation sequences of, with those sequences (者 → 者 U+8005 U+E0101), the plain character left out.
  * @property {(query: string, options?: Options) => Promise<Found[]>} [search] Components and characters found by what is typed: a character, a code point, a name, a word or a reading.

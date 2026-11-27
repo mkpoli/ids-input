@@ -1,0 +1,17 @@
+# Components a description spells in full where characters write a positional form: place, component,
+# form, and how many characters BabelStone IDS describes with each in that place.
+# From component-forms.tsv (`radical-variant <place>` rows) and babelstone-ids.tsv.gz, by
+# scripts/build_positional_forms.py: the form in at least 3 characters, the component
+# itself in at least one and at most one for every 20.
+left	人	亻	14	1888
+left	手	扌	113	2432
+left	水	氵	27	3411
+left	犬	犭	8	895
+left	玉	𤣩	18	1259
+left	衣	衤	2	822
+left	足	𧾷	3	1168
+left	食	飠	1	565
+top	人	𠆢	12	256
+top	爪	爫	4	304
+top	竹	𥫗	2	1796
+top	艸	艹	40	3787

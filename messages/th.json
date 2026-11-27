@@ -15,6 +15,7 @@
   "ids.grass.inward": "ขีดตั้งเอียงเข้าด้านใน",
   "ids.grass.split": "แยกกัน",
   "ids.alternatives.replace": "แทนที่",
+  "ids.suggestion.label": "คุณหมายถึง",
   "ids.alternatives.show": "ทางเลือกอื่น",
   "ids.alternatives.split": "แยก",
   "ids.choose": "เลือก {part}",

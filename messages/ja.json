@@ -15,6 +15,7 @@
   "ids.grass.inward": "縦画が内側",
   "ids.grass.split": "分ける",
   "ids.alternatives.replace": "置き換え",
+  "ids.suggestion.label": "もしかして",
   "ids.alternatives.show": "候補",
   "ids.alternatives.split": "分割",
   "ids.choose": "{part}を選ぶ",
