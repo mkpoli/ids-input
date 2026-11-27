@@ -6,7 +6,7 @@
       "name": "ids-input",
       "dependencies": {
         "@cf-wasm/resvg": "^0.4.0",
-        "@han-compose/composer": "https://codeload.github.com/mkpoli/han-compose/legacy.tar.gz/d50df054a311194c40e5fb509df5245f3aa34d43",
+        "@han-compose/composer": "https://codeload.github.com/mkpoli/han-compose/legacy.tar.gz/5a40ef2196865d9fde9d994d400baf98d04a08d6",
       },
       "devDependencies": {
         "@kurgm/kage-engine": "0.7.0",
@@ -117,7 +117,7 @@
 
     "@esbuild/win32-x64": ["@esbuild/win32-x64@0.28.2", "", { "os": "win32", "cpu": "x64" }, "sha512-5ebpxr3nWMzrL/rnUI755Jkuee0bHL/Gq0WTF9lvcpv73wAp5eu8MfBUgWK9bhWvZjj7yX8etf/8tI8Ney695g=="],
 
-    "@han-compose/composer": ["han-compose@https://codeload.github.com/mkpoli/han-compose/legacy.tar.gz/d50df054a311194c40e5fb509df5245f3aa34d43", {}, "sha512-4eE//A7jTxD3v7We399pXY/8rlDUQnPV5p4IA64VpUdrC1fDoclZJAyryVEutHFm5T//qFIinO/0s5+W0PeATw=="],
+    "@han-compose/composer": ["han-compose@https://codeload.github.com/mkpoli/han-compose/legacy.tar.gz/5a40ef2196865d9fde9d994d400baf98d04a08d6", {}, "sha512-MpnzWWMWB7Y5kKOULatbaX/jVt2l5XcVlryDfDyEaaf2k3osmXd/CRlWEaTYcLEtzIXTUZlT6dryiFpD9Vp1Fg=="],
 
     "@img/colour": ["@img/colour@1.1.0", "", {}, "sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ=="],
 
