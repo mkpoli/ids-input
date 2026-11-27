@@ -5,9 +5,9 @@ import { readFileSync } from 'node:fs'
 const read = path => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8')
 
 /** @param {string} css */
-const stacks = css => Object.fromEntries([...css.matchAll(/--cjk-(sans|serif|regular|fangsong|pen-writing):\s*([^;]+);/g)].map(([, name, value]) => [name, value]))
+const stacks = css => Object.fromEntries([...css.matchAll(/--cjk-(sans|serif|woodblock|regular|fangsong|pen-writing):\s*([^;]+);/g)].map(([, name, value]) => [name, value]))
 /** @param {string} css */
-const labelStacks = css => Object.fromEntries([...css.matchAll(/--cjk-label-(sans|serif|regular|fangsong|pen-writing):\s*([^;]+);/g)].map(([, name, value]) => [name, value]))
+const labelStacks = css => Object.fromEntries([...css.matchAll(/--cjk-label-(sans|serif|woodblock|regular|fangsong|pen-writing):\s*([^;]+);/g)].map(([, name, value]) => [name, value]))
 
 // The installed fonts draw the common characters; Jigmo and the bundled shards fill only what they
 // lack. A stack that names the fallback first draws a serif Jigmo in the Sans face.
@@ -16,7 +16,7 @@ describe('the workshop font stacks', () => {
     it(`${path} puts the chosen face before the fallback`, () => {
       const face = stacks(read(path))
       for (const [name, stack] of Object.entries(face)) {
-        const installed = name === 'serif' || name === 'regular' || name === 'fangsong' ? 'Noto Serif CJK JP' : 'Noto Sans CJK JP'
+        const installed = name === 'serif' || name === 'woodblock' || name === 'regular' || name === 'fangsong' ? 'Noto Serif CJK JP' : 'Noto Sans CJK JP'
         expect([path, name, stack.includes(installed)]).toEqual([path, name, true])
         expect([path, name, stack.split('--ids-glyph-fallback').length - 1]).toEqual([path, name, 1])
         expect([path, name, stack.indexOf(installed) < stack.indexOf('--ids-glyph-fallback')]).toEqual([path, name, true])
@@ -30,10 +30,10 @@ describe('the workshop font stacks', () => {
 describe('the font switch label stacks', () => {
   const css = read('demo/app.css')
   const face = labelStacks(css)
-  it('covers the five faces', () => {
-    expect(Object.keys(face).sort()).toEqual(['fangsong', 'pen-writing', 'regular', 'sans', 'serif'])
+  it('covers the six faces', () => {
+    expect(Object.keys(face).sort()).toEqual(['fangsong', 'pen-writing', 'regular', 'sans', 'serif', 'woodblock'])
   })
-  for (const [name, installed] of [['sans', 'Noto Sans CJK JP'], ['serif', 'Noto Serif CJK JP'], ['regular', 'TW-Kai Label'], ['fangsong', 'Zhuque Label'], ['pen-writing', 'Kureedo Label']]) {
+  for (const [name, installed] of [['sans', 'Noto Sans CJK JP'], ['serif', 'Noto Serif CJK JP'], ['woodblock', 'NomNaTong Label'], ['regular', 'TW-Kai Label'], ['fangsong', 'Zhuque Label'], ['pen-writing', 'Kureedo Label']]) {
     it(`${name} starts from its own face`, () => {
       const stack = face[name]
       expect(stack.includes(installed)).toBe(true)

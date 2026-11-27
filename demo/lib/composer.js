@@ -4,10 +4,11 @@
 import { LOCAL_SANS } from './desktop.js'
 
 export const COMPOSER_BASE = 'https://ids-input-composer.mkpoli.workers.dev/a83fc941166b-sans-compose-layout-v4-f7+variants/'
-// The Serif, Regular Kai, Fangsong and Wen Kai exports (han-compose `export-web`) are uploaded beside the sans one.
+// The Serif, Woodblock, Regular Kai, Fangsong and Wen Kai exports (han-compose `export-web`) are uploaded beside the sans one.
 export const COMPOSER_BASES = {
   sans: COMPOSER_BASE,
   serif: 'https://ids-input-composer.mkpoli.workers.dev/8156f838798c-serif-compose-layout-v4-serif-f7+variants/',
+  woodblock: 'https://ids-input-composer.mkpoli.workers.dev/42fc76fbec22-woodblock-compose-layout-v4-woodblock-f7/',
   regular: 'https://ids-input-composer.mkpoli.workers.dev/c14ee5e08798-regular-compose-layout-v4-regular-f7/',
   fangsong: 'https://ids-input-composer.mkpoli.workers.dev/9f797e2322d2-fangsong-compose-layout-v4-fangsong-f7/',
   'pen-writing': 'https://ids-input-composer.mkpoli.workers.dev/ce3eaafda8f9-kaisho-compose-layout-v4-kaisho-f7/',

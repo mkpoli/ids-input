@@ -38,6 +38,7 @@
   const FACES = /** @type {const} */ ([
     { key: 'sans', label: 'app.font.sans' },
     { key: 'serif', label: 'app.font.serif' },
+    { key: 'woodblock', label: 'app.font.woodblock' },
     { key: 'fangsong', label: 'app.font.fangsong' },
     { key: 'regular', label: 'app.font.regular' },
     { key: 'pen-writing', label: 'app.font.pen-writing' },

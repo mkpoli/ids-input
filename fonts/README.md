@@ -4,7 +4,7 @@ Several webfont subsets draw the palette parts that few installed fonts cover: t
 Radicals Supplement, the parts beyond the Basic Multilingual Plane (CJK Extensions B–J), the
 BabelStone PUA glyphs for numbered components with no IDS fragment, and the editor's empty-slot mark
 ⬚ (U+2B1A). Another draws the sixteen ideographic description characters for sequence text where no
-installed font has them. Zhuque Fangsong supplies the optional Fangsong face, TW-Kai the optional Regular Kai face, and
+installed font has them. Nôm Na Tống supplies the optional Woodblock face, Zhuque Fangsong the optional Fangsong face, TW-Kai the optional Regular Kai face, and
 Kureedo and GenZui Sans the optional Wen Kai face.
 
 The cheatsheet uses U+E021 for 父 (qq222), U+E012 for 八(d), and U+E003 for 丰(..p) from the guide’s
@@ -59,6 +59,10 @@ comes from the reader's own CJK font.
 `TWKai-Regular.woff2` (15 MB) supplies the optional `TW-Kai` Regular Kai face. TW-Kai, 數位發展部 (Ministry of Digital Affairs), CNS11643中文標準交換碼全字庫, fonts version 11510.1, from [the CNS 11643 open data](https://www.cns11643.gov.tw/opendata/Fonts_Kai.zip), under the Open Government Data License 1.0 (`LICENSE-OGL.txt`); the data set offers the OFL 1.1 as well. Recompressed from the archive's `TW-Kai.ttf` with its outlines unchanged; this woff2 SHA-256 `a693bce3c087cf40dfd077cabada68652740e651944d423ffdc14b9d3a03f4b9`. The License's Exhibit asks for the provider, the release and its version, and the licence's address.
 
 `TWKai-label.woff2` (13 KB, 107 characters: ASCII, 正, 楷 and 文) is a subset of the same file, under the same licence, named `TW-Kai Label`. The font switch draws the Regular Kai option's name with it, so a page keeps the 15 MB face until the reader chooses Regular Kai. SHA-256 `279b818fa39ef76da64566f73b27c88073f0f0382ca63c4052540eaeae6e4bc9`. Rebuild with `uv run --with 'fonttools[woff]' pyftsubset fonts/TWKai-Regular.woff2 --unicodes='U+0020-007E,U+6B63,U+6587,U+6977' --flavor=woff2 --name-IDs='*' --name-languages='*' --output-file=fonts/TWKai-label.woff2`.
+
+`NomNaTong-Regular.woff2` (6.8 MB) supplies the optional `Nom Na Tong` Woodblock face. Nôm Na Tống 5.20, © 2011–2026 The Vietnamese Nom Preservation Foundation — Nom Na Group, MIT License (`LICENSE-NomNaTong.txt`), from [nomfoundation/font](https://github.com/nomfoundation/font/releases/tag/v5.20) (`NomNaTong-Regular.ttf`, SHA-256 `67a1a68a85566275bbbf72b3501714bbe24628e74f1762ea812a5bd3a8d606e1`), recompressed from the release's TTF with its outlines unchanged; this woff2 SHA-256 `54aca4ee92632188f1f4879a6313ac1dc4dd34a20d265d7e7457321fe30a1486`.
+
+`NomNaTong-label.woff2` (10 KB, 102 characters: ASCII, ả, ộ, 刻, 木, 本, 版 and 體) is a subset of the same file, under the same licence, named `NomNaTong Label`, with the copyright and licence records of the original. The font switch draws the Woodblock option's name and its Aa sample with it. SHA-256 `af44a4bee9d321d3c98a4580c86abbc1d72e68e324f38616b02ca029594213b7`.
 
 `ZhuqueFangsong-Regular.woff2` (4.8 MB) supplies the optional `Zhuque Fangsong` Fangsong face. Zhuque Fangsong v0.212, a technical preview by TrionesType, Copyright 2023 JadeFoci, SIL Open Font License 1.1 with no Reserved Font Name (`OFL-Zhuque.txt`), from [TrionesType/zhuque](https://github.com/TrionesType/zhuque), recompressed from the release's TTF with its outlines unchanged; this woff2 SHA-256 `5cb9aca8a85825a204ba58c9e975d8298e7370494b845694ee8a6882d0d6ed37`. Its Latin, Cyrillic and Greek glyphs are Alegreya's, Copyright 2011 The Alegreya Project Authors, under the same licence. Its README asks that versions modified by others not be widely distributed before the official release; the label subset below and the export's cut outlines are shipped with that request noted, and it is not a licence term.
 

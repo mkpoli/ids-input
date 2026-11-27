@@ -37,6 +37,11 @@
    4.8 MB face. */
 @font-face{font-family:"Zhuque Label";src:url("./Zhuque-label.woff2") format("woff2");font-display:swap;
   unicode-range:U+0020-007E,U+1ECF,U+1ED1,U+4EFF,U+5B8B}
+@font-face{font-family:"Nom Na Tong";src:url("./NomNaTong-Regular.woff2") format("woff2");font-display:swap}
+/* The glyphs Nôm Na Tống draws for the Woodblock option's name and its Aa sample, so the switch avoids
+   the 6.8 MB face. */
+@font-face{font-family:"NomNaTong Label";src:url("./NomNaTong-label.woff2") format("woff2");font-display:swap;
+  unicode-range:U+0020-007E,U+1EA3,U+1ED9,U+523B,U+6728,U+672C,U+7248,U+9AD4}
 @font-face{font-family:"TW-Kai";src:url("./TWKai-Regular.woff2") format("woff2");font-display:swap}
 /* The glyphs TW-Kai draws for the Regular Kai option's name, so the switch avoids the 15 MB face. */
 @font-face{font-family:"TW-Kai Label";src:url("./TWKai-label.woff2") format("woff2");font-display:swap;

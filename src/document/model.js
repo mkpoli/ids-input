@@ -19,7 +19,7 @@ export const MAX_DEPTH = 64
 export const MAX_EDITS = 1000
 export const MAX_OPERATIONS = 64
 export const MAX_ASSETS = 128
-export const DOCUMENT_FACES = /** @type {const} */ (['sans', 'serif', 'fangsong', 'regular', 'pen-writing'])
+export const DOCUMENT_FACES = /** @type {const} */ (['sans', 'serif', 'woodblock', 'fangsong', 'regular', 'pen-writing'])
 
 const ID = /^[A-Za-z0-9_-]{1,80}$/
 const DIGEST = /^[0-9a-f]{64}$/
