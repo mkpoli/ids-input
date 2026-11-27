@@ -1,5 +1,5 @@
 <script>
-  import { isSelector, partAt } from '../core/ids.js'
+  import { isSelector } from '../core/ids.js'
   import { exactRateForm } from '@han-compose/composer/rate-forms'
   import IdsPartIcon from './IdsPartIcon.svelte'
   import { codePoints } from '../core/variation.js'
@@ -7,26 +7,27 @@
   const drawings = import('@han-compose/composer/rate-drawing')
 
   /** @type {{
-   * editor: import('./editor.svelte.js').Editor,
-   * path: import('../core/ids.js').Path,
+   * adapter: import('../adapter/types.js').IdsAdapter,
+   * part: import('../core/ids.js').Part | undefined,
+   * t: import('./i18n.js').Translate,
    * family: import('../adapter/types.js').VariationFamily,
-   * menu?: boolean, onchoose?: () => void
+   * disabled?: boolean, menu?: boolean,
+   * onreplace: (part: import('../core/ids.js').Part) => void
    * }} */
-  let { editor, path, family, menu = false, onchoose } = $props()
-  const part = $derived(partAt(editor.tree, path))
+  let { adapter, part, t, family, disabled = false, menu = false, onreplace } = $props()
   const current = $derived(formSpelling(part))
   const knownHost = $derived(exactRateForm(family.forms[0]?.text)?.host)
   const original = $derived(family.subjects.length === 1 ? family.subjects[0] : knownHost && family.subjects.includes(knownHost) ? knownHost : null)
   const host = $derived(original ?? family.subjects[0] ?? current)
   const reference = $derived(/^(UCV|NUCV|IVD)\/[a-z0-9.-]+$/i.test(family.id) ? family.id.replace('/', ' ') : '')
-  const heading = $derived(reference || editor.t('ids.variants.label', { part: host }))
+  const heading = $derived(reference || t('ids.variants.label', { part: host }))
   /** Spell out invisible selectors, including those inside a compound IDS. @param {string} text */
   const spelling = text => [...text].map(char => isSelector(char) ? ' ' + codePoints(char) + ' ' : char).join('').trim()
   /** @param {string} value */
   function choose(value) {
-    if (!editor.currentTree) return
+    if (disabled) return
     const replacement = readFormSpelling(part, value)
-    if (replacement !== null && editor.put(replacement, path)) onchoose?.()
+    if (replacement !== null) onreplace(replacement)
   }
 </script>
 
@@ -37,7 +38,7 @@
       {#if original && !family.forms.some(form => form.text === original)}
         <button type="button" class="rate-original" role={menu ? 'menuitemradio' : undefined}
           aria-checked={menu ? current === host : undefined} aria-pressed={menu ? undefined : current === host}
-          disabled={editor.disabled || !editor.currentTree} title={host} onclick={() => choose(host)}>{host}</button>
+          {disabled} title={host} onclick={() => choose(host)}>{host}</button>
       {/if}
     </div>
     <div class="rate-grid">
@@ -45,15 +46,15 @@
         {@const label = spelling(form.text)}
         <button type="button" data-form-id={form.id} data-rate-form={exactRateForm(form.text)?.id} role={menu ? 'menuitemradio' : undefined}
           aria-checked={menu ? current === form.text : undefined} aria-pressed={menu ? undefined : current === form.text}
-          disabled={editor.disabled || !editor.currentTree} title={label} aria-label={label} onclick={() => choose(form.text)}>
+          {disabled} title={label} aria-label={label} onclick={() => choose(form.text)}>
           {#if form.outline}
             <svg viewBox={form.outline.viewBox ?? '0 0 1000 1000'} aria-hidden="true" focusable="false"><path d={form.outline.d} /></svg>
           {:else if exactRateForm(form.text)}
             <svg viewBox="0 0 1000 1000" aria-hidden="true" focusable="false">
-              {#await drawings then module}<path d={module.rateDrawing(form.text, editor.adapter.fontStyle ?? 'sans') ?? ''} />{/await}
+              {#await drawings then module}<path d={module.rateDrawing(form.text, adapter.fontStyle ?? 'sans') ?? ''} />{/await}
             </svg>
           {:else}
-            <IdsPartIcon sequence={form.text} adapter={editor.adapter} />
+            <IdsPartIcon sequence={form.text} {adapter} />
           {/if}
         </button>
       {/each}
