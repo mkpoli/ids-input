@@ -80,3 +80,17 @@ it('preserves a marked recursive expansion once when it becomes a saved choice',
   expect(occurrenceChoices(index, '倘ˊ', splits).flatMap(e => e.forms.map(f => f.write)))
     .toContain('⿰亻⿱&GW-u21b54-03;冋ˊ')
 })
+
+it('offers each entry once, where the least expanded description reaches it', () => {
+  const ids = (char, splits) => occurrenceChoices(index, char, splits).map(entry => entry.id)
+  expect(ids('肖', ['⿱⺌月', '⿱⺌⿵冂二', '⿱⿰丨八月', '⿱⿲㇒丨丶月'])).toEqual(['28', '417', '21', '53'])
+  expect(ids('消', ['⿰氵肖', '⿰氵⿱⺌月'])).toEqual(['430', '28'])
+  expect(ids('唇', ['⿱辰口'])).toContain('305')
+  expect(ids('次', ['⿰二欠'])).toEqual(['47'])
+})
+
+it('reads each spelling of a component in the same place into one entry', () => {
+  const forms = occurrenceChoices(index, '肖', ['⿱⺌⺝', '⿱⺌⺼', '⿱⺌月']).filter(entry => entry.id === '53')
+  expect(forms.length).toBe(1)
+  expect(forms[0].forms.map(form => form.write)).toEqual(['⿱⺌月󠄀', '⿱⺌月󠄁', '⿱⺌舟󠄁', '⿱⺌⺼'])
+})
