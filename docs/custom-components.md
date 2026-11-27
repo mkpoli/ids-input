@@ -175,6 +175,8 @@ zi.tools' `ids_lv1.txt` at the pinned revision. GPL-2.0-or-later, since CHISE's 
   from, basis, of, status, ids, attested }`. `attested` is set where the table named by `in` writes
   that description itself; the rest are in a notation whose table did not write them.
 - `forms`: one row per form, `{ id, char, names }`; `retired` lists numbers no longer given out.
+- `same`: forms read as one shape where no table confirms it, `{ forms, names, drawing, reason }`,
+  from `scripts/data/custom-same.json`; their basis is `editorial`.
 - `strokeLetters`, `chainNames`, `sources`, `counts`.
 
 ### Identifiers
@@ -185,16 +187,18 @@ private-use character is U+F0000 plus the number. The number says nothing about 
 
 Every custom component is a form, and so is each expression found for one that nothing confirms and
 each other arrangement of the same parts. Two names are one form only where the tables confirm it:
-one is the other on two or more characters, or both have the same confirmed expression. Two names
-of one source are never joined. What a form resembles, what it is less a part, or which UCV entry
+one is the other on two or more characters, or both have the same confirmed expression. A reader's
+comparison of their glyphs joins two more, recorded with its reasons in `scripts/data/custom-same.json`
+(183 forms). Two names of one source are never joined. What a form resembles, what it is less a part, or which UCV entry
 it belongs to is a relation between identifiers and never changes one.
 
 The ledger is append-only. A form keeps the number its first name was given. Two numbers found to
 be one form keep the lower, and the other is retired with `merged into`; a form split in two keeps
 its number on the side with its first name; a number whose first name is gone is `withdrawn`. A
-retired number is not given out again. 2,054 forms: 1,588 with a source's name, 466 without.
+retired number is not given out again. 1,871 forms: 1,586 with a source's name, 285 without.
 
-Every row is derived. No source states these equalities, and each row names the characters behind it.
+No source states these equalities. A derived row names the characters behind it, and an editorial one
+the glyphs compared.
 
 ### Method
 
