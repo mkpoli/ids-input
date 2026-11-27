@@ -32,7 +32,7 @@
    * @param {import('./editor.svelte.js').Editor} editor @param {number} [unifiable] how many UCV entries offer a form */
   export function hasAlternatives(editor, unifiable = 0) {
     const groups = alternativeGroups(editor), search = editor.alternatives
-    return variationFamiliesOfPart(editor.picked, editor.adapter.variationFamilies).length > 0 || Boolean(grassForm(editor)) || unifiable > 0 || groups.swaps.length + groups.splits.length + groups.merges.length + groups.merged.length + groups.split.length + groups.both.length > 0
+    return variationFamiliesOfPart(editor.picked, editor.adapter.variationFamilies).length > 0 || Boolean(grassForm(editor)) || (typeof editor.picked === 'string' && unifiable > 0) || groups.swaps.length + groups.splits.length + groups.merges.length + groups.merged.length + groups.split.length + groups.both.length > 0
       || search.truncated || search.failed
   }
 </script>
@@ -99,21 +99,20 @@
       </div>
     </div>
   {/if}
-  {#if unifiable.entries.length}
+  {#if part && unifiable.entries.length}
     <div class="ids-option-group" role="group" aria-labelledby={`${uid}-unified`}>
       <span class="ids-option-label" id={`${uid}-unified`}>{t('ids.alternatives.unifiable')}</span>
-      {#each unifiable.entries as entry (entry.id + entry.context)}
-        <div class="ids-option-items ids-unified" data-ucv={entry.id} title={entry.note}>
+      {#each unifiable.entries as entry (entry.id)}
+        <div class="ids-option-items ids-unified" data-ucv={entry.id}>
           {#if variationsHref}<a class="ids-unified-entry" href={variationsHref(entry.id)} target="_blank" rel="noreferrer">UCV {entry.id}</a>
           {:else}<span class="ids-unified-entry">UCV {entry.id}</span>{/if}
-          {#if entry.context}<span class="ids-unified-entry">{entry.context}</span>{/if}
           {#each entry.forms as form, place (place)}
             {@const outline = unifiable.outlines?.[form.glyph]}
             {#if form.write}
               {@const text = form.write}
               <!-- A component with an identifier is put as written: `take` would read its letters as typed operators. -->
-              <button type="button" class="ids-swap ids-unified-form" data-form={form.glyph} disabled={editor.disabled} title={`${part || written} → ${text}`} aria-label={`${part || written} → ${text}`}
-                draggable="true" ondragstart={event => event.dataTransfer?.setData('text/plain', text)} onclick={() => choose(() => editor.put(form.tree, editor.chosen))}>
+              <button type="button" class="ids-swap ids-unified-form" data-form={form.glyph} disabled={editor.disabled} title={`${part} → ${text}`} aria-label={`${part} → ${text}`}
+                draggable="true" ondragstart={event => event.dataTransfer?.setData('text/plain', text)} onclick={() => choose(() => form.text ? editor.take(text) : editor.put(text, editor.chosen))}>
                 {#if outline}<svg viewBox="0 0 200 200" aria-hidden="true"><path d={outline} /></svg>{:else}{text}{/if}
               </button>
             {:else if outline}
