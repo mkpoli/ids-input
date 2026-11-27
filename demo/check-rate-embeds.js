@@ -14,6 +14,12 @@ async function checkChoices(editor, readSaved) {
     await editor.locator('.ids-forms-toggle[data-hover-path="1"]').click()
     const option = editor.getByRole('menuitemradio').and(editor.locator(`[data-rate-form="${form.id}"]`))
     await option.locator('svg path').waitFor()
+    assert.equal((await option.innerText()).trim(), '')
+    const label = await option.getAttribute('aria-label')
+    assert.ok(label && !/CN|JP|＞＜/.test(label))
+    for (const selector of form.text.matchAll(/[\u{E0100}-\u{E01EF}]/gu)) {
+      assert.ok(label.includes('U+' + selector[0].codePointAt(0).toString(16).toUpperCase()))
+    }
     await option.click()
     const expected = '⿰蟀' + form.text
     assert.equal(await field.inputValue(), expected)
