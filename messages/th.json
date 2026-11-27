@@ -433,5 +433,11 @@
   "ids.ucv.failed": "ไม่สามารถโหลดรายการได้",
   "ids.ucv.kind": "รายการ",
   "ids.ucv.form": "รูปแบบ {name}",
-  "ids.alternatives.unifiable": "รูปที่รวมรหัสได้"
+  "ids.alternatives.unifiable": "รูปที่รวมรหัสได้",
+  "info.vs.title": "ตัวเลือกรูปแปร",
+  "info.vs.ivs": "ตัวเลือกรูปแปรอักษรภาพ",
+  "info.vs.svs": "ตัวเลือกรูปแปรมาตรฐาน",
+  "info.vs.plain": "ปกติ",
+  "info.vs.input": "ตัวเลือกรูปแปรอื่น",
+  "info.vs.use": "ใช้ {form}"
 }

@@ -433,5 +433,11 @@
   "ids.ucv.failed": "No se pudo cargar la lista.",
   "ids.ucv.kind": "Lista",
   "ids.ucv.form": "Forma {name}",
-  "ids.alternatives.unifiable": "Formas unificables"
+  "ids.alternatives.unifiable": "Formas unificables",
+  "info.vs.title": "Selector de variación",
+  "info.vs.ivs": "Selector de variación ideográfica",
+  "info.vs.svs": "Selector de variación estandarizada",
+  "info.vs.plain": "Base",
+  "info.vs.input": "Otro selector de variación",
+  "info.vs.use": "Usar {form}"
 }

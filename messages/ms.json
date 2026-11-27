@@ -433,5 +433,11 @@
   "ids.ucv.failed": "Senarai tidak dapat dimuatkan.",
   "ids.ucv.kind": "Senarai",
   "ids.ucv.form": "Bentuk {name}",
-  "ids.alternatives.unifiable": "Bentuk boleh disatukan"
+  "ids.alternatives.unifiable": "Bentuk boleh disatukan",
+  "info.vs.title": "Pemilih variasi",
+  "info.vs.ivs": "Pemilih Variasi Ideograf",
+  "info.vs.svs": "Pemilih Variasi Piawai",
+  "info.vs.plain": "Asas",
+  "info.vs.input": "Pemilih variasi lain",
+  "info.vs.use": "Gunakan {form}"
 }

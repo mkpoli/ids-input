@@ -433,5 +433,11 @@
   "ids.ucv.failed": "Daftar tidak dapat dimuat.",
   "ids.ucv.kind": "Daftar",
   "ids.ucv.form": "Bentuk {name}",
-  "ids.alternatives.unifiable": "Bentuk yang dapat disatukan"
+  "ids.alternatives.unifiable": "Bentuk yang dapat disatukan",
+  "info.vs.title": "Pemilih variasi",
+  "info.vs.ivs": "Pemilih Variasi Ideografis",
+  "info.vs.svs": "Pemilih Variasi Terstandardisasi",
+  "info.vs.plain": "Dasar",
+  "info.vs.input": "Pemilih variasi lain",
+  "info.vs.use": "Gunakan {form}"
 }
