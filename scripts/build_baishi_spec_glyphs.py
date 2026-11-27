@@ -9,7 +9,7 @@
 Every outline comes from a pinned source: Noto Sans CJK JP 2.004 VF (at wght=400,
 using its OpenType locl tables for ZHS, ZHH, ZHT and JAN), Plangothic P1/P2 V2.9.5795,
 NightFurySL2001/bai-ids fonts/example.woff2 (SIL OFL 1.1), the repo's UCV Sans
-outlines, or pinned GlyphWiki revisions via scripts/build_baishi_spec_kage.mjs.
+outlines, Source Han Sans JP 2.005 Regular, or pinned GlyphWiki revisions via scripts/build_baishi_spec_kage.mjs.
 """
 import base64
 import gzip
@@ -32,6 +32,11 @@ from build_ids_parts import FONTS
 ROOT = Path(__file__).resolve().parents[1]
 TARGET = ROOT / "demo/lib/baishi-spec-glyphs.json"
 SANS = "NotoSansCJKjp-VF-2.004.ttf"
+SOURCE_HAN_JP = (
+    "https://raw.githubusercontent.com/adobe-fonts/source-han-sans/"
+    "2.005R/OTF/Japanese/SourceHanSans-Regular.otf",
+    "6fe3b72967986ccdef600128752d1ade57c13c68129a548cdebe4c7d3c0f8543",
+)
 GUIDE_FONT = (
     "https://raw.githubusercontent.com/NightFurySL2001/bai-ids/"
     "0ca5ed48f51821d4d54246196f1f5f38c9d6bd6a/fonts/example.woff2",
@@ -50,7 +55,6 @@ NOTO_SPECS = [
     ("公T", "公", "ZHT"),
     ("惠", "惠", "ZHS"),
     ("叀.", "叀", "ZHS"),              # ids_lv0: 叀. = ⿱𤰔厶.
-    ("叀y2002", "叀", "JAN"),          # ids_lv0: 叀y2002 = ⿱⿻十.日⿰一t丶. (matches top of 惠)
     ("冷.", "冷", "ZHS"),
     ("冷H", "冷", "ZHH"),
     ("冷J", "冷", "JAN"),
@@ -74,7 +78,6 @@ NOTO_SPECS = [
     ("滿.", "滿", "ZHS"),
     ("父.", "父", "ZHS"),
     ("卮.", "卮", "ZHS"),              # ids_lv0 row 1391: 卮. = ⿸𠂋㔾.
-    ("卮qq123", "卮", "JAN"),          # ids_lv0 row 1391 & UCV 123: 卮qq123 = ⿸𠂋巳.
     ("丰.", "丰", "ZHS"),
     ("邦.", "邦", "ZHS"),
     ("勳.", "勳", "ZHS"),
@@ -99,8 +102,11 @@ NOTO_SPECS = [
     ("与J", "与", "JAN"),
     ("廴", "廴", "ZHS"),
     ("身", "身", "ZHS"),
-    ("径.", "径", "JAN"),              # ids_lv0 row 4485: 径. = ⿰彳𢀖.
-    ("径T", "径", "ZHT"),              # ids_lv0 row 4485: {?0径}⿰彳圣(T)
+    # Match the component in lv0 row 4485 to its outline in Noto 2.004.
+    ("径.", "径", "ZHT"),  # G form: 𢀖 ends in 工
+    ("径T", "径", "JAN"),  # T form: 圣 ends in 土
+    ("日", "日", "ZHS"),
+    ("土", "土", "ZHS"),
     ("曰", "曰", "ZHS"),
     ("士", "士", "ZHS"),
     ("一.", "一", "ZHS"),
@@ -114,6 +120,7 @@ NOTO_SPECS = [
 
 # Donor cuts from Noto Sans CJK JP VF (key, char, locl tag or None, contour indices).
 NOTO_CUTS = [
+    ("七t", "切", "ZHS", [2, 4, 5]),  # ids_lv0: 切 = ⿰七t刀(.)
     ("十.t", "戢", "ZHS", [9, 10]),    # SC 戢: bottom-left 十 with rising horizontal 一t
     ("子t", "孩", "JAN", [0, 1, 2, 3]),  # 孩 = ⿰子t亥J(J)
     ("凵y", "世", "JAN", [2, 4, 5]),    # 世 = ⿻⿺𠃊.凵y一.(.)
@@ -121,6 +128,7 @@ NOTO_CUTS = [
 
 # Plangothic P1/P2 glyphs (key, plane 1 or 2, char).
 PLANGOTHIC_SPECS = [
+    ("𮱻", 1, "𮱻"),
     ("𣂀.", 1, "𣂀"),
     ("𱤻m", 2, "𱤻"),
     ("𡴧m", 1, "𡴧"),
@@ -205,20 +213,19 @@ def draw_glyph(font, glyph_name, is_vf=False):
     return pen.getCommands()
 
 
-def fit_paths(paths):
+def fit_paths(paths, ink_box=None):
     bounds = BoundsPen(None)
     for path in paths:
         parse_path(path, bounds)
     left, top, right, bottom = bounds.bounds
-    scale = 880 / max(right - left, bottom - top)
-    transform = (
-        scale,
-        0,
-        0,
-        scale,
-        500 - scale * (left + right) / 2,
-        500 - scale * (top + bottom) / 2,
-    )
+    if ink_box is None:
+        sx = sy = 880 / max(right - left, bottom - top)
+        cx = cy = 500
+    else:
+        x0, y0, x1, y1 = ink_box
+        sx, sy = (x1 - x0) / (right - left), (y1 - y0) / (bottom - top)
+        cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    transform = (sx, 0, 0, sy, cx - sx * (left + right) / 2, cy - sy * (top + bottom) / 2)
     out = []
     for path in paths:
         pen = SVGPathPen(None, ntos=lambda n: f"{n:.1f}".removesuffix(".0"))
@@ -245,6 +252,18 @@ def main():
             d = draw_glyph(vf, glyph, is_vf=True)
             contours = ["M" + part for part in d.split("M")[1:]]
             out[key] = fit_paths([contours[i] for i in indices])
+
+    # ids_lv0 line 4833: 惠 = ⿱叀y2002心. Its first seven contours include
+    # the uninterrupted 丨. Fit them to the standalone 叀 tile's original ink box.
+    hui_top = ["M" + part for part in out["惠"].split("M")[1:8]]
+    out["叀y2002"] = fit_paths(hui_top, ink_box=(60.3, 41.1, 941.2, 967.6))
+
+    # Yi Bai, ids_lv0 lines 1522 and 30572 (2597437b), gives ⿰口.七. for
+    # both the 叱 V form and 𠮟. Source Han Sans 2.005 maps U+20B9F to
+    # its Japanese outline. Preserve the previous 叱V witness’s ink box.
+    with TTFont(fetch(SOURCE_HAN_JP[0], cache / "SourceHanSansJP-Regular-2.005.otf", SOURCE_HAN_JP[1])) as source_han:
+        outline = draw_glyph(source_han, source_han.getBestCmap()[ord("𠮟")])
+        out["叱V"] = out["𠮟"] = fit_paths([outline], ink_box=(60, 90.2, 940, 909.8))
 
     p1_name, p2_name = "PlangothicP1-Regular.ttf", "PlangothicP2-Regular.ttf"
     with (
@@ -281,7 +300,9 @@ def main():
 
     kage = subprocess.check_output(["node", ROOT / "scripts/build_baishi_spec_kage.mjs"], text=True)
     for key, path in json.loads(kage).items():
-        out[key] = fit_paths([path])
+        # Preserve the previous 卮qq123 witness’s ink box at the same em size.
+        ink_box = (31.6, 46.3, 962.8, 962) if key == "卮qq123" else None
+        out[key] = fit_paths([path], ink_box=ink_box)
 
     TARGET.write_text(json.dumps(out, ensure_ascii=False, indent=1) + "\n")
     print(f"Wrote {len(out)} glyphs ({TARGET.stat().st_size} bytes) -> {TARGET.relative_to(ROOT)}")

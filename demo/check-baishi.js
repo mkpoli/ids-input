@@ -42,6 +42,13 @@ try {
         return {
           gong: pathsFor('八T厶.(T)'),
           hui: pathsFor('叀y2002心'),
+          huiStem: (() => {
+            const path = document.querySelector('svg[aria-label="叀 (y2002)"] path')
+            return path instanceof SVGGeometryElement && [
+              path.isPointInFill(new DOMPoint(500, 770)),
+              path.isPointInFill(new DOMPoint(340, 770)),
+            ]
+          })(),
           leng: pathsFor('令H'),
           lingDao: pathsFor('令dhs'),
           zhai: pathsFor('斉J小.(J,J)'),
@@ -57,6 +64,7 @@ try {
       })
       assert.equal(new Set(checked.gong).size, 2, `${view}: 公 contrasts (.) and (T)`)
       assert.equal(new Set(checked.hui).size, 3, `${view}: 惠 shows 惠 plus 叀. vs 叀y2002`)
+      assert.deepEqual(checked.huiStem, [true, false], `${view}: 叀y2002 has a vertical stroke below 日`)
       assert.equal(new Set(checked.leng).size, 3, `${view}: 冷 shows distinct (.), (H), (J) outlines`)
       assert.equal(new Set(checked.lingDao).size, 3, `${view}: 刢 shows distinct (.), (J), (T) outlines`)
       assert.equal(new Set(checked.zhai).size, 2, `${view}: 斎 contrasts (.) and (J,J)`)
