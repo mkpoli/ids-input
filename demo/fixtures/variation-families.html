@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Embedded variation families</title></head>
+<body><main id="fixture"></main><output></output><script type="module">
+  import { mount } from 'svelte'
+  import { IdsInput } from '../../src/svelte/index.js'
+  import { componentDrawing } from '@han-compose/composer/component-forms'
+  import { grassIVS, grassShape } from '@han-compose/composer/variants'
+  import customUrl from '../../data/custom-outlines.json.gz?url'
+  import '../app.css'
+
+  const bytes = await (await fetch(customUrl)).arrayBuffer()
+  const raw = new Uint8Array(bytes)
+  const json = raw[0] === 0x1f ? new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream('gzip'))) : new Response(raw)
+  const custom = await json.json()
+  // The custom component catalogue records all three spellings for X-00053.
+  const names = ['{53}', '&CDP-8964;', '⿱丿⿴#(-𠃌㇉)丶']
+  const outline = { d: custom.outlines[custom.names[names[1]]], viewBox: '0 0 200 200' }
+  const families = [
+    { id: 'grass', subjects: ['艹'], forms: Object.values(grassIVS).map(text => ({ id: text, text })) },
+    { id: 'X-00053', subjects: ['{53}'], forms: names.map((text, i) => ({ id: String(i + 1), text, outline })) },
+    { id: 'comparison', subjects: ['{53}'], forms: [{ id: '1', text: '{53}' }], evidenceOnly: true },
+  ]
+  const adapter = {
+    structure: async () => [],
+    icon: async text => componentDrawing(grassShape(text) ?? text),
+    variationFamilies: text => families.filter(f => f.subjects.includes(text) || f.forms.some(form => form.text === text)),
+  }
+  mount(IdsInput, { target: document.querySelector('#fixture'), props: {
+    adapter, value: new URL(location.href).searchParams.get('ids') ?? '⿰{53}{53}',
+    onuse: text => { document.querySelector('output').textContent = text },
+  } })
+</script></body></html>

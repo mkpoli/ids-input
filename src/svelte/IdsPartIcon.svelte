@@ -7,7 +7,7 @@
   /** @type {{ sequence: string, adapter: import('../adapter/types.js').IdsAdapter }} */
   let { sequence, adapter } = $props()
   const uid = $props.id()
-  const tree = $derived(parse(sequence).tree ?? null)
+  const tree = $derived(parse(sequence, { open: true }).tree ?? null)
   const fallback = $derived(roughLayout(tree))
   let visible = $state(false)
   let drawn = $state.raw(/** @type {import('../adapter/types.js').Drawing | null} */ (null))
