@@ -32,3 +32,5 @@ export { isOwnDescription, readVariantDescriptions } from './variant-description
 export { readPositionalForms, positionalRespellings, positionalSuggestion } from './positional.js'
 
 export { rateFormsOfPart, variationFamiliesOfPart } from './variation-families.js'
+
+export { compatibilitySequences } from './compatibility.js'

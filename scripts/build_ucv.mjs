@@ -8,6 +8,8 @@
 // file lacks; `--refresh` reads every outline again. A form that has no vector drawing is traced
 // from the snapshot's image of it. The forms no text writes are also drawn in
 // Gothic from their stroke data (`data/ucv-strokes.json.gz`, see `build_ucv_strokes.mjs`).
+import { compatibilitySequences } from '../src/core/compatibility.js'
+import registered from '../data/ucv-spellings.json' with { type: 'json' }
 import { Kage, Polygons } from '@kurgm/kage-engine'
 import { createHash } from 'node:crypto'
 import { readFile, writeFile } from 'node:fs/promises'
@@ -237,10 +239,15 @@ function record(key, polygons, { strokes = false, heavy } = {}) {
 // The forms no text writes, each under the reference a description names it by (&GW-u58ec-t;).
 /** @type {Record<string, object>} */
 const records = {}
+/** @type {Record<string, string>} */
+const aliases = {}
 for (const entry of entries) for (const form of entry.forms) {
-  if (form.text) continue
+  const spelling = form.text ? compatibilitySequences(form.text) : registered[form.glyph]
+  const sequence = spelling && /^[\p{Unified_Ideograph}][\uFE00-\uFE0F\u{E0100}-\u{E01EF}]$/u.test(spelling)
+  if (form.text && !sequence) continue
   const key = `&GW-${form.glyph};`
   if ([...key].length > 48 || !/^&[A-Za-z][A-Za-z0-9+_-]*;$/.test(key)) throw new Error(`${key}: not a reference a description can name`)
+  if (sequence) aliases[spelling] = key
   records[key] = record(key, polygonsOf(outlines[form.glyph]))
 }
 
@@ -345,9 +352,9 @@ const source = {
 }
 await writeFile(new URL('ucv.json', data), JSON.stringify({ format: 'ids-input/ucv', version: 1, source, groups, entries }, null, 1) + '\n')
 await writeFile(new URL('ucv-forms.json.gz', data), gzipSync(JSON.stringify(Object.fromEntries(names.map(name => [name, outlines[name]])))))
-await writeFile(new URL('ucv-outlines.json.gz', data), gzipSync(JSON.stringify({ source: 'GlyphWiki glyphs of the IRG UCV and NUCV forms; see data/README.md', records })))
+await writeFile(new URL('ucv-outlines.json.gz', data), gzipSync(JSON.stringify({ source: 'GlyphWiki glyphs of the IRG UCV and NUCV forms; see data/README.md', aliases, records })))
 if (strokes) {
-  await writeFile(new URL('ucv-outlines-sans.json.gz', data), gzipSync(JSON.stringify({ source: 'GlyphWiki glyphs of the IRG UCV and NUCV forms, drawn in Gothic from their stroke data; see data/README.md', records: even })))
+  await writeFile(new URL('ucv-outlines-sans.json.gz', data), gzipSync(JSON.stringify({ source: 'GlyphWiki glyphs of the IRG UCV and NUCV forms, drawn in Gothic from their stroke data; see data/README.md', aliases, records: even })))
   console.log(`${gothic} forms drawn in Gothic, ${unweighted.length} of them at one width, ${Object.keys(even).length - gothic} kept in Mincho`)
   if (unweighted.length) console.log(unweighted.join(' '))
   if (clogged.length) console.log(`${clogged.length} with a counter filled at the least width of a master: ${clogged.join(' ')}`)
