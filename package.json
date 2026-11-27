@@ -127,6 +127,6 @@
   },
   "dependencies": {
     "@cf-wasm/resvg": "^0.4.0",
-    "@han-compose/composer": "https://codeload.github.com/mkpoli/han-compose/legacy.tar.gz/997824559cbb80c6421fba8650e58056ddf1405a"
+    "@han-compose/composer": "https://codeload.github.com/mkpoli/han-compose/legacy.tar.gz/d50df054a311194c40e5fb509df5245f3aa34d43"
   }
 }
