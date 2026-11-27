@@ -5,7 +5,21 @@
 // once an entry is shown; a form that cannot be written shows only as its drawing.
 import { variantOf } from '../core/ids.js'
 import { ucvIdentifier } from '../core/forms.js'
+import { marksOf } from '../core/marks.js'
 import { loadUcvIndex, loadUcvOutlines } from './ucv.js'
+
+/** The descriptions a selected character is read through, for its component occurrences: the
+ * editor's splits and, once the search finishes, each recursive expansion without the host's
+ * trailing marks, which the chooser restores after replacing the component.
+ * @param {import('./editor.svelte.js').Editor} editor */
+export function decompositionChoices(editor) {
+  const search = editor.alternatives
+  if (search.loading) return editor.splits
+  const marks = marksOf(editor.picked ?? null)
+  const expanded = search.found.filter(item => item.operation === 'expand').map(item =>
+    marks && marksOf(item.tree).endsWith(marks) ? item.text.slice(0, -marks.length) : item.text)
+  return [...editor.splits, ...expanded]
+}
 
 /** @param {() => import('./editor.svelte.js').Editor} of the editor @param {() => boolean} [wanted] whether the forms are asked for */
 export function createUnifiable(of, wanted = () => true) {

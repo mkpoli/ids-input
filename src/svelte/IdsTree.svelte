@@ -21,6 +21,8 @@
   import IdsVariationFamily from './IdsVariationFamily.svelte'
   import { rateFormsOfPart, formSpelling, readFormSpelling, variationFamiliesOfPart } from '../core/variation-families.js'
   import { marksOf, withMarks } from '../core/marks.js'
+  import { decompositionChoices } from './unifiable.svelte.js'
+  import { occurrenceChoices } from '../core/ucv-choice.js'
   import { componentForms, drawnForm } from '../core/forms.js'
   import { loadUcvIndex } from './ucv.js'
   import IdsPartIcon from './IdsPartIcon.svelte'
@@ -62,7 +64,18 @@
   /** What a component can be written as, its character first. None where it has no other form. A
    * component that is the whole text takes no variant identifier, which only a description carries.
    * @param {Part | undefined} part @param {Path} path */
-  const formsOf = (part, path) => componentForms(isNode(part) ? rateFormsOfPart(part)[0]?.host : part, { sequences, ucv, variants: Boolean(editor.adapter.formed) && path.length > 0 })
+  function formsOf(part, path) {
+    const existing = componentForms(isNode(part) ? rateFormsOfPart(part)[0]?.host : part, { sequences, ucv, variants: Boolean(editor.adapter.formed) && path.length > 0 })
+    if (!ucv || typeof part !== 'string') return existing
+    const forms = existing.filter(form => !form.unifiable)
+    const seen = new Set(forms.map(form => form.write))
+    for (const entry of occurrenceChoices(ucv, variationOf(part), editor.chosen && samePath(editor.chosen, path) ? decompositionChoices(editor) : [])) for (const form of entry.forms) {
+      if (seen.has(form.write)) continue
+      seen.add(form.write)
+      forms.push({ write: form.write, glyph: form.glyph, entry: entry.id, unifiable: true, kind: 'sibling' })
+    }
+    return forms
+  }
   /** @param {Part | undefined} part */
   const familiesOf = part => variationFamiliesOfPart(part, editor.adapter.variationFamilies)
   /** @param {Part | undefined} part */
@@ -97,7 +110,7 @@
     // variant identifier for typed operators.
     if (form.kind !== 'sibling' || variationBase(form.write) !== null) { editor.put(withVariation(part, form.write), path); return }
     const read = parse(form.write, { open: true })
-    if (!read.problem && read.tree !== null && read.tree !== undefined) editor.put(read.tree, path)
+    if (!read.problem && read.tree !== null && read.tree !== undefined) editor.put(/** @type {Part} */ (withMarks(read.tree, marksOf(part))), path)
   }
   /** What a form's button says: its code points or its description, and the entry that lists it. @param {import('../core/forms.js').ComponentForm} form */
   const formTitle = form => [variationBase(form.write) !== null ? codePoints(form.write) : form.write, form.entry ? `${form.unifiable ? 'UCV' : 'NUCV'} ${form.entry}` : ''].filter(Boolean).join(' · ')
