@@ -583,6 +583,8 @@ export function createEditor(options) {
     /** @param {Path} path */
     isSelected(path) { return chosen !== null && chosen.every((n, i) => path[i] === n) },
     get tree() { return tree },
+    /** Whether the field still describes this tree, including a resolved expression. */
+    get currentTree() { return expressed || !typed.problem },
     get chosen() { return chosen },
     get draft() { return draft },
     get piece() { return piece },

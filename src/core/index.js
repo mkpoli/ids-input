@@ -30,3 +30,5 @@ export { componentForms, drawnForm, formedText, formedTree, glyphReference, ucvF
 export { codePoints, parseVariationSelector, selectorInfo, variationBase, variationOf, variationSelector, withVariation } from './variation.js'
 export { isOwnDescription, readVariantDescriptions } from './variant-descriptions.js'
 export { readPositionalForms, positionalRespellings, positionalSuggestion } from './positional.js'
+
+export { rateFormsOfPart, variationFamiliesOfPart } from './variation-families.js'

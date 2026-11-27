@@ -1,5 +1,6 @@
 <script module>
   import { variationOf, withVariation } from '../core/variation.js'
+  import { variationFamiliesOfPart } from '../core/variation-families.js'
   import { grassIVS, grassShape } from '@han-compose/composer/variants'
   import { isNode, partAt, write } from '../core/ids.js'
 
@@ -31,7 +32,7 @@
    * @param {import('./editor.svelte.js').Editor} editor @param {number} [unifiable] how many UCV entries offer a form */
   export function hasAlternatives(editor, unifiable = 0) {
     const groups = alternativeGroups(editor), search = editor.alternatives
-    return Boolean(grassForm(editor)) || (typeof editor.picked === 'string' && unifiable > 0) || groups.swaps.length + groups.splits.length + groups.merges.length + groups.merged.length + groups.split.length + groups.both.length > 0
+    return variationFamiliesOfPart(editor.picked, editor.adapter.variationFamilies).length > 0 || Boolean(grassForm(editor)) || (typeof editor.picked === 'string' && unifiable > 0) || groups.swaps.length + groups.splits.length + groups.merges.length + groups.merged.length + groups.split.length + groups.both.length > 0
       || search.truncated || search.failed
   }
 </script>
@@ -42,16 +43,18 @@
   // splitting and merging, and with `variations` the forms the IRG unifies with it (its UCV entries),
   // each under its own heading. `onchoose` hears an alternative being used; `onspent`, the search
   // asked for more having found everything. With nothing to offer it shows nothing.
+  import IdsVariationFamily from './IdsVariationFamily.svelte'
   import { createUnifiable } from './unifiable.svelte.js'
 
-  /** @type {{ editor: import('./editor.svelte.js').Editor, variations?: boolean, variationsHref?: ((entry: string) => string) | null, onchoose?: () => void, onspent?: () => void }} */
-  let { editor, variations = false, variationsHref = null, onchoose, onspent } = $props()
+  /** @type {{ editor: import('./editor.svelte.js').Editor, variations?: boolean, showFamilies?: boolean, variationsHref?: ((entry: string) => string) | null, onchoose?: () => void, onspent?: () => void }} */
+  let { editor, showFamilies = true, variations = false, variationsHref = null, onchoose, onspent } = $props()
   const t = $derived(editor.t)
   const uid = $props.id()
   const search = $derived(editor.alternatives)
   const groups = $derived(alternativeGroups(editor))
   const picked = $derived(editor.picked)
   const part = $derived(typeof picked === 'string' ? picked : '')
+  const families = $derived(variationFamiliesOfPart(picked, editor.adapter.variationFamilies))
   const grass = $derived(grassForm(editor))
   const written = $derived(isNode(picked) ? write(picked) : '')
   const unifiable = createUnifiable(() => editor, () => variations)
@@ -71,6 +74,7 @@
 
 {#if hasAlternatives(editor, unifiable.entries.length)}
 <div class="ids-options">
+  {#if showFamilies && editor.chosen}{#each families as family (family.id)}<IdsVariationFamily adapter={editor.adapter} part={picked} {t} {family} disabled={editor.disabled || !editor.currentTree} onreplace={replacement => choose(() => editor.put(replacement, editor.chosen))} />{/each}{/if}
   {#if grass}
     <div class="ids-option-group" role="group" aria-labelledby={`${uid}-grass`}>
       <span class="ids-option-label" id={`${uid}-grass`}>{t('ids.grass.head')}</span>
