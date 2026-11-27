@@ -66,7 +66,7 @@
   /** @param {Part | undefined} part */
   const familiesOf = part => variationFamiliesOfPart(part, editor.adapter.variationFamilies)
   /** @param {Part | undefined} part */
-  const familyHeight = part => familiesOf(part).reduce((height, group) => height + 30 + 56 * Math.ceil(group.forms.length / 2), 0)
+  const familyHeight = part => familiesOf(part).reduce((height, group) => height + 30 + 56 * Math.ceil(group.forms.length / (group.occurrence ? 3 : 2)), 0)
   /** The forms under one heading each: the character and its variation sequences, then each entry's.
    * @param {import('../core/forms.js').ComponentForm[]} forms */
   function formGroups(forms) {

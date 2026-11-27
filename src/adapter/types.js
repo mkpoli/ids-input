@@ -83,7 +83,7 @@
  * @typedef {Options & { onSketch?: (leaves: SketchLeaf[]) => void }} PreviewOptions
  *
  * @typedef {{id:string, text:string, outline?:{d:string, viewBox?:string}}} VariationChoice
- * @typedef {{id:string, subjects:readonly string[], forms:readonly VariationChoice[], evidenceOnly?:boolean}} VariationFamily
+ * @typedef {{id:string, subjects:readonly string[], forms:readonly VariationChoice[], evidenceOnly?:boolean, occurrence?:{path:readonly number[], form:string|null,index:number,count:number}}} VariationFamily
  *
  * @typedef {object} IdsAdapter
  * @property {(char: string, options?: Options) => Promise<import('./character-info.js').CharacterInfo | null>} [characterInfo] Sourced meanings and explicit correspondences for one character.
