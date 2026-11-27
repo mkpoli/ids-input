@@ -16,7 +16,7 @@
   // variation sequences the preview draws and, with `variations`, the forms of the IRG component
   // variation entries it belongs to: another character or a description, or, where the adapter
   // draws them (`formed`), a form no code point names, written with its variant identifier (壬q0012).
-  import { OPERATOR_GROUPS, isCustom, isJurchen, isNode, parse, partAt, samePath, write } from '../core/ids.js'
+  import { OPERATOR_GROUPS, isCustom, isJurchen, isNode, parse, partAt, samePath, withoutVariants, write } from '../core/ids.js'
   import { codePoints, variationBase, variationOf, variationSelector, withVariation } from '../core/variation.js'
   import IdsVariationFamily from './IdsVariationFamily.svelte'
   import { rateFormsOfPart, formSpelling, readFormSpelling, variationFamiliesOfPart } from '../core/variation-families.js'
@@ -24,7 +24,7 @@
   import { decompositionChoices } from './unifiable.svelte.js'
   import { occurrenceChoices } from '../core/ucv-choice.js'
   import { componentForms, drawnForm } from '../core/forms.js'
-  import { loadUcvIndex } from './ucv.js'
+  import { loadUcvIndex, loadUcvOutlines } from './ucv.js'
   import IdsPartIcon from './IdsPartIcon.svelte'
   import OperatorIcon from './OperatorIcon.svelte'
   import { shortcut } from './shortcut.js'
@@ -347,6 +347,17 @@
   const menuPart = $derived(menu ? partAt(editor.tree, menu.path) : undefined)
   const menuFamilies = $derived(familiesOf(menuPart))
   const menuForms = $derived(menu ? formsOf(menuPart, menu.path) : [])
+  // A UCV form written with a GlyphWiki reference or a variant identifier shows the IWDS reference
+  // drawing it names, since the composer cannot draw it; any other form is drawn as written.
+  /** @param {import('../core/forms.js').ComponentForm} form */
+  const referenceOnly = form => {
+    if (!form.unifiable || !form.glyph) return false
+    if (form.write.includes('&')) return true
+    const tree = parse(form.write, { open: true }).tree
+    return tree !== null && tree !== undefined && write(withoutVariants(tree)) !== write(tree)
+  }
+  let ucvOutlines = $state.raw(/** @type {Record<string, string> | null} */ (null))
+  $effect(() => { if (!ucvOutlines && menuForms.some(referenceOnly)) loadUcvOutlines().then(found => { ucvOutlines = found }, () => {}) })
   const menuGroups = $derived(formGroups(menuForms))
   /** A click on a node's frame, away from its parts and buttons, chooses it. @param {MouseEvent} event @param {Path} path */
   function frameClick(event, path) {
@@ -462,7 +473,7 @@
             {#each group.forms as form (form.write)}
               {@const formVs = variationSelector(form.write)}
               <button type="button" role="menuitemradio" class="ids-menu-form" class:has-vs={Boolean(formVs)} data-form={form.write} data-vs={formVs?.tag} aria-checked={formSpelling(menuPart) === form.write} title={formTitle(form)} aria-label={formTitle(form)}
-                onclick={() => run(() => chooseForm(form, /** @type {Path} */ (menu?.path)))}><IdsPartIcon sequence={form.write} adapter={editor.adapter} />{#if formVs}<span class="ids-menu-vs" aria-hidden="true">{formVs.tag}</span>{/if}</button>
+                onclick={() => run(() => chooseForm(form, /** @type {Path} */ (menu?.path)))}>{#if referenceOnly(form) && ucvOutlines?.[/** @type {string} */ (form.glyph)]}<svg class="ids-menu-outline" viewBox="0 0 200 200" aria-hidden="true"><path d={ucvOutlines[/** @type {string} */ (form.glyph)]} /></svg>{:else}<IdsPartIcon sequence={form.write} adapter={editor.adapter} />{/if}{#if formVs}<span class="ids-menu-vs" aria-hidden="true">{formVs.tag}</span>{/if}</button>
             {/each}
           </div>
         {/each}
@@ -612,6 +623,7 @@
   .ids-menu-op{display:grid;place-items:center;height:30px;padding:0;border-color:transparent !important;background:none !important}
   .ids-menu-op:hover,.ids-menu-op:focus-visible{background:var(--_accent-light) !important}
   .ids-menu-forms{display:grid;grid-template-columns:repeat(6,40px);gap:2px}
+  .ids-menu-outline{width:28px;height:28px;fill:currentColor}
   .ids-menu-form{display:grid;place-items:center;align-content:center;gap:1px;min-height:40px;padding:3px 2px;font-size:28px;border-color:transparent !important;background:none !important}
   .ids-menu-vs{font:600 8.5px/1.1 var(--ids-ui-font,system-ui,sans-serif);font-variant-numeric:tabular-nums;color:var(--_accent);white-space:nowrap}
   .ids-menu-form:hover,.ids-menu-form:focus-visible{background:var(--_surface-selected) !important}
