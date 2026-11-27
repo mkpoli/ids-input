@@ -80,3 +80,9 @@ it('preserves a marked recursive expansion once when it becomes a saved choice',
   expect(occurrenceChoices(index, '倘ˊ', splits).flatMap(e => e.forms.map(f => f.write)))
     .toContain('⿰亻⿱&GW-u21b54-03;冋ˊ')
 })
+
+it('applies a bare-operator entry only where its operands are components', () => {
+  const ids = entries => entries.filter(entry => entry.id === '305').flatMap(entry => entry.forms.map(form => form.write))
+  expect(ids(occurrenceChoices(index, '肖', ['⿱⺌月']))).toEqual(['⿸⺌月'])
+  expect(ids(occurrenceChoices(index, '肖', ['⿱⺌⿵冂二']))).toEqual([])
+})

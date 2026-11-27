@@ -125,7 +125,11 @@ export function occurrenceChoices(index, picked, splits) {
       if (!entries) { entries = ucvChoices(index, part); matches.set(token, entries) }
       if (!entries.length) continue
       const context = write(replaceAt(source, path, '〔' + token + '〕'))
+      // An entry that unifies two bare operators (⿱ and ⿸) applies where the operands are
+      // components. Deeper in an expansion that operator only joins the strokes of a component.
+      const nested = isNode(part) && part.parts.some(isNode)
       for (const entry of entries) {
+        if (nested && entry.forms.every(form => /^[\u2FF0-\u2FFF\u31EF]$/u.test(form.text ?? ''))) continue
         const forms = entry.forms.flatMap(form => {
           const tree = /** @type {Part} */ (withMarks(replaceAt(source, path, form.tree), marks))
           const written = write(tree)
