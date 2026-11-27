@@ -64,6 +64,13 @@ try {
   await page.goto(parentURL, { waitUntil: 'domcontentloaded' })
   const frame = page.frameLocator('iframe')
   await checkChoices(frame, expected => page.waitForFunction(value => window.saved === value, expected))
+  // The compound has two independently editable 幺 although the tree currently shows one 絲.
+  await frame.locator('.sequence-wrap input').first().fill('⿰水絲')
+  await frame.locator('.ids-forms-toggle[data-hover-path="1"]').click()
+  const sites = frame.locator('[role=menu] [data-variation-family^="VR/5E7A@"]')
+  assert.equal(await sites.count(), 2)
+  await sites.nth(1).locator('button[data-form-id="folded"]').click()
+  await page.waitForFunction(() => window.saved === '⿰水⿰糹⿱&VR-5E7A-02;小')
   const saved = await page.evaluate(() => window.saved)
   const reopening = page.waitForEvent('framenavigated', frame =>
     frame.parentFrame() !== null && new URL(frame.url()).searchParams.get('ids') === saved)
