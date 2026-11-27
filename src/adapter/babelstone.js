@@ -13,6 +13,7 @@ import { unicodeProperty } from '../core/unicode.js'
 import { isComponent, isCustom, isSequence, parse, write } from '../core/ids.js'
 import { createCustomComponents } from '../core/custom-components.js'
 import { formedText } from '../core/forms.js'
+import { readPositionalForms } from '../core/positional.js'
 import { createUcvIndex } from '../core/ucv.js'
 import { chainCharacter as chainName, readChainEntries } from '../core/chain-entries.js'
 import { readSketchTemplates } from '../core/sketch-data.js'
@@ -255,6 +256,7 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  *   custom?: string | URL | import('../core/custom-components.js').CustomComponentsData,
  *   customOutlines?: string | URL | import('./types.js').CustomOutlinesData,
  *   variations?: string | URL | import('../core/ucv.js').UcvData,
+ *   positional?: string | URL, positionalText?: string,
  *   characterInfo?: string | URL | import('./character-info.js').CharacterInfoData,
  *   layers?: string | URL, layersText?: string,
 
@@ -266,7 +268,7 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  *   worker?: (() => Worker) | null, after?: Promise<unknown>, pause?: () => Promise<void> }} options
  * @returns {IdsAdapter & { table: () => Promise<Map<string, Sequence[]>> }}
  */
-export function babelStoneAdapter({ ids, zitools, chise, project, components, componentsText, overwrite, overwriteText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, chains, custom, customOutlines, variations, characterInfo, layers, layersText, smallSeal, sketches, shuishu, jurchen, table: given, palette: givenPalette, fetch: get = download, after, pause,
+export function babelStoneAdapter({ ids, zitools, chise, project, components, componentsText, overwrite, overwriteText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, chains, custom, customOutlines, variations, positional, positionalText, characterInfo, layers, layersText, smallSeal, sketches, shuishu, jurchen, table: given, palette: givenPalette, fetch: get = download, after, pause,
 
   worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./table-worker.js', import.meta.url), { type: 'module' }) } = {}) {
   // A page with something to show first passes `after`: the description tables and the worker that
@@ -417,6 +419,12 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
   const readVariations = () => ucvIndex ??= (async () => createUcvIndex(
     typeof variations === 'string' || variations instanceof URL ? JSON.parse(await readText(await load(variations))) : /** @type {import('../core/ucv.js').UcvData} */ (variations)))()
     .catch(error => { ucvIndex = null; throw error })
+  /** @type {Promise<Map<string, import('../core/positional.js').PositionalForm>> | null} */
+  let positionalForms = null
+  /** The components spelled in full where characters write a positional form (`data/positional-forms.tsv`), loaded once. */
+  const readPositional = () => positionalForms ??= (async () => readPositionalForms(
+    positionalText !== undefined ? positionalText : await readText(await load(/** @type {string | URL} */ (positional)))))()
+    .catch(error => { positionalForms = null; throw error })
   /** @type {Promise<import('./seal-data.js').SmallSealData | null> | null} */
   let seal = null
   const readSeal = () => seal ??= (async () => {
@@ -825,6 +833,7 @@ export function babelStoneAdapter({ ids, zitools, chise, project, components, co
         return /[{&#㇯]/.test(sequence) ? (await readCustom()).drawableLeaves(sequence) : { text: sequence, leaves: [] }
       },
     } : {}),
+    ...(positional || positionalText !== undefined ? { positionalForms: readPositional } : {}),
     ...(variations ? {
       async formed(/** @type {string} */ sequence, /** @type {import('./types.js').Options} */ { signal } = {}) {
         signal?.throwIfAborted()

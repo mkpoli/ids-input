@@ -15,6 +15,7 @@
   "ids.grass.inward": "Montants rentrants",
   "ids.grass.split": "Séparé",
   "ids.alternatives.replace": "Remplacer",
+  "ids.suggestion.label": "Essayez avec cette orthographe",
   "ids.alternatives.show": "Alternatives",
   "ids.alternatives.split": "Diviser",
   "ids.choose": "Choisir {part}",

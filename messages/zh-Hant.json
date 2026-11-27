@@ -15,6 +15,7 @@
   "ids.grass.inward": "豎畫在內",
   "ids.grass.split": "分寫",
   "ids.alternatives.replace": "替換",
+  "ids.suggestion.label": "您是不是要找",
   "ids.alternatives.show": "替換項",
   "ids.alternatives.split": "拆分",
   "ids.choose": "選擇{part}",

@@ -15,6 +15,7 @@
   "ids.grass.inward": "Verticales hacia dentro",
   "ids.grass.split": "Separado",
   "ids.alternatives.replace": "Reemplazar",
+  "ids.suggestion.label": "Quizás quisiste decir",
   "ids.alternatives.show": "Alternativas",
   "ids.alternatives.split": "Dividir",
   "ids.choose": "Elegir {part}",

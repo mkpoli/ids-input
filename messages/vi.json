@@ -15,6 +15,7 @@
   "ids.grass.inward": "Nét dọc phía trong",
   "ids.grass.split": "Nét rời",
   "ids.alternatives.replace": "Thay thế",
+  "ids.suggestion.label": "Có phải ý bạn là",
   "ids.alternatives.show": "Mục thay thế",
   "ids.alternatives.split": "Tách",
   "ids.choose": "Chọn {part}",

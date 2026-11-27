@@ -15,6 +15,7 @@
   "ids.grass.inward": "Nach innen geneigte Senkrechte",
   "ids.grass.split": "Getrennt",
   "ids.alternatives.replace": "Ersetzen",
+  "ids.suggestion.label": "Meinten Sie",
   "ids.alternatives.show": "Alternativen",
   "ids.alternatives.split": "Zerlegen",
   "ids.choose": "{part} auswählen",

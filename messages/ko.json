@@ -15,6 +15,7 @@
   "ids.grass.inward": "세로획이 안쪽",
   "ids.grass.split": "분리",
   "ids.alternatives.replace": "바꾸기",
+  "ids.suggestion.label": "이것을 찾으셨나요",
   "ids.alternatives.show": "후보",
   "ids.alternatives.split": "나누기",
   "ids.choose": "{part} 고르기",

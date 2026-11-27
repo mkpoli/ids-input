@@ -15,6 +15,7 @@
   "ids.grass.inward": "Стойки внутрь",
   "ids.grass.split": "Раздельный",
   "ids.alternatives.replace": "Заменить",
+  "ids.suggestion.label": "Возможно, вы имели в виду",
   "ids.alternatives.show": "Варианты",
   "ids.alternatives.split": "Разбить",
   "ids.choose": "Выбрать {part}",
