@@ -443,5 +443,11 @@
   "ids.ucv.failed": "Не удалось загрузить список.",
   "ids.ucv.kind": "Список",
   "ids.ucv.form": "Форма {name}",
-  "ids.alternatives.unifiable": "Унифицируемые формы"
+  "ids.alternatives.unifiable": "Унифицируемые формы",
+  "info.vs.title": "Селектор варианта",
+  "info.vs.ivs": "Идеографический селектор варианта",
+  "info.vs.svs": "Стандартизированный селектор варианта",
+  "info.vs.plain": "База",
+  "info.vs.input": "Другой селектор варианта",
+  "info.vs.use": "Выбрать {form}"
 }

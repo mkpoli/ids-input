@@ -433,5 +433,11 @@
   "ids.ucv.failed": "Жагсаалтыг ачаалж чадсангүй.",
   "ids.ucv.kind": "Жагсаалт",
   "ids.ucv.form": "Хэлбэр {name}",
-  "ids.alternatives.unifiable": "Нэгтгэж болох хэлбэрүүд"
+  "ids.alternatives.unifiable": "Нэгтгэж болох хэлбэрүүд",
+  "info.vs.title": "Хувилбар сонгогч",
+  "info.vs.ivs": "Дүрс үсгийн хувилбар сонгогч",
+  "info.vs.svs": "Стандарт хувилбар сонгогч",
+  "info.vs.plain": "Үндсэн",
+  "info.vs.input": "Өөр хувилбар сонгогч",
+  "info.vs.use": "{form} сонгох"
 }

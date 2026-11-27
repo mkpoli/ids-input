@@ -28,6 +28,7 @@
   import { unpack } from '@han-compose/composer'
   import IdsPartIcon from './IdsPartIcon.svelte'
   import { isNewKorean, isSequence } from '../core/ids.js'
+  import { variationSelector } from '../core/variation.js'
   import { translator } from './i18n.js'
   import { STROKE_KEYS, findByStrokes, nextStrokes, strokesFrom } from '../core/stroke-order.js'
   import { loadCharacterStrokeOrders, loadStrokeOrders } from './strokes.js'
@@ -716,8 +717,10 @@
     // The composer's character list has no first-stroke class; its code point identifies the character.
     const composerCharacters = tab === 'components' && characters
     const identity = componentIdentity(part.part)
+    const vs = variationSelector(part.part)
     return [
       isNewKorean(part.part) ? null : part.part,
+      vs ? `${vs.tag} (${vs.codePoint})` : null,
       part.description ?? null,
       part.glyph ? `U+${part.glyph.codePointAt(0)?.toString(16).toUpperCase().padStart(4, '0')}` : part.fragment ?? null,
       (identity || tab === 'gongche' && !isSequence(part.part) || tab === 'marks' || composerCharacters) ? `U+${part.part.codePointAt(0)?.toString(16).toUpperCase().padStart(4, '0')}` : null,
@@ -759,7 +762,8 @@
   <div class="parts-grid">
     {#each list as part (part.part)}
       {@const identity = componentIdentity(part.part)}
-      <button type="button" class="part" data-component-type={identity?.type} data-part-uses={part.uses} data-character={part.part} data-mark={part.display ? 'true' : undefined} class:compound={isSequence(part.part) || Boolean(part.fragment && isSequence(part.fragment))} class:numbered={Boolean(part.glyph || part.fragment && !isSequence(part.fragment))} class:readonly={part.readonly === 1} disabled={disabled} aria-disabled={part.readonly === 1 || undefined} lang={tab === 'other' ? /** @type {Record<string, string>} */ ({ Arab: 'ar', Hebr: 'he', Hira: 'ja', Kana: 'ja', Deva: 'hi' })[otherScript] : tab === 'hangul' && newKoreanNames[part.part] ? 'ko' : part.kind === 't' ? 'txg' : part.kind === 'shui' ? 'swi' : characterScript(part.part) === 'jurchen' ? 'juc' : 'ja'} dir={tab === 'other' ? 'auto' : undefined} title={title(part)} aria-label={title(part)}
+      {@const vs = variationSelector(part.part)}
+      <button type="button" class="part" data-component-type={identity?.type} data-part-uses={part.uses} data-character={part.part} data-vs={vs?.tag} data-mark={part.display ? 'true' : undefined} class:vs={Boolean(vs)} class:compound={isSequence(part.part) || Boolean(part.fragment && isSequence(part.fragment))} class:numbered={Boolean(part.glyph || part.fragment && !isSequence(part.fragment))} class:readonly={part.readonly === 1} disabled={disabled} aria-disabled={part.readonly === 1 || undefined} lang={tab === 'other' ? /** @type {Record<string, string>} */ ({ Arab: 'ar', Hebr: 'he', Hira: 'ja', Kana: 'ja', Deva: 'hi' })[otherScript] : tab === 'hangul' && newKoreanNames[part.part] ? 'ko' : part.kind === 't' ? 'txg' : part.kind === 'shui' ? 'swi' : characterScript(part.part) === 'jurchen' ? 'juc' : 'ja'} dir={tab === 'other' ? 'auto' : undefined} title={title(part)} aria-label={title(part)}
         onpointerdown={event => { selectionAtDown = window.getSelection()?.toString() ?? ''; event.currentTarget.draggable = !disabled && part.readonly !== 1 && !(/** @type {Element} */ (event.target).closest('.part-text')) }}
         ondragstart={event => { if (event.target === event.currentTarget && part.readonly !== 1) event.dataTransfer?.setData('text/plain', part.fragment ?? part.glyph ?? part.part) }}
         onclick={event => { if (part.readonly !== 1) clickPart(event, part.fragment ?? part.glyph ?? part.part) }} ondblclick={selectPart} onkeydown={selectionKey}>
@@ -779,6 +783,7 @@
           <span class="part-text compound-text">{part.part}</span>
         {:else}
           <span class="part-text">{part.display ?? part.part}</span>
+          {#if vs}<span class="part-vs" aria-hidden="true">{vs.tag}</span>{/if}
           {#if (part.kind === 'shui' || part.kind === 'jur') && part.ids}<span class="part-ids" aria-hidden="true">{part.ids}</span>{/if}
           {#if part.sealBasis === 'cjk-ids'}<span class="seal-estimate" aria-hidden="true">≈</span>{/if}
         {/if}
@@ -1236,6 +1241,8 @@
      place them over a Latin base the way the standard dotted-circle notation expects. */
   .part[data-mark]{font-family:"Noto Sans","DejaVu Sans","Liberation Sans",var(--ids-font,var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif)}
   .seal-estimate{position:absolute;right:3px;bottom:1px;font:11px system-ui;color:var(--_muted);user-select:none}
+  .part.vs{border-color:color-mix(in oklab,var(--_accent) 40%,transparent)}
+  .part-vs{position:absolute;top:1px;right:1px;padding:0 2px;border-radius:3px;background:var(--_accent-light);color:var(--_accent);font:600 7.5px/1.2 var(--ids-ui-font,system-ui,sans-serif);font-variant-numeric:tabular-nums;pointer-events:none;user-select:none}
   .part:has(> .part-ids){padding-bottom:12px;font-size:20px}
   .part-ids{font-family:"IDS Operators","IDS Shuishu","IDS Jurchen",var(--ids-font,var(--ids-glyph-fallback,sans-serif));position:absolute;inset:auto 1px 1px;font-size:10px;line-height:1;text-align:center;color:var(--_ink);background:inherit;white-space:nowrap;overflow:hidden;user-select:none}
   .gongche-guide p{margin:8px 0;font-size:12px;color:var(--_muted)}

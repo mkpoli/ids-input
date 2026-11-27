@@ -433,5 +433,11 @@
   "ids.ucv.failed": "載入唔到清單。",
   "ids.ucv.kind": "清單",
   "ids.ucv.form": "字形{name}",
-  "ids.alternatives.unifiable": "可統一字形"
+  "ids.alternatives.unifiable": "可統一字形",
+  "info.vs.title": "變體選擇器",
+  "info.vs.ivs": "表意文字變體選擇器",
+  "info.vs.svs": "標準化變體選擇器",
+  "info.vs.plain": "原本",
+  "info.vs.input": "其他變體選擇器",
+  "info.vs.use": "用{form}"
 }

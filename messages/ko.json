@@ -429,5 +429,11 @@
   "ids.ucv.failed": "목록을 불러오지 못했습니다.",
   "ids.ucv.kind": "목록",
   "ids.ucv.form": "자형 {name}",
-  "ids.alternatives.unifiable": "통합 가능 자형"
+  "ids.alternatives.unifiable": "통합 가능 자형",
+  "info.vs.title": "이체자 선택자",
+  "info.vs.ivs": "한자 이체자 선택자",
+  "info.vs.svs": "표준 이체자 선택자",
+  "info.vs.plain": "기본",
+  "info.vs.input": "다른 이체자 선택자",
+  "info.vs.use": "{form} 사용"
 }

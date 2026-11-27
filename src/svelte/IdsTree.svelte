@@ -16,8 +16,8 @@
   // variation sequences the preview draws and, with `variations`, the forms of the IRG component
   // variation entries it belongs to: another character or a description, or, where the adapter
   // draws them (`formed`), a form no code point names, written with its variant identifier (壬q0012).
-  import { OPERATOR_GROUPS, isCustom, isNode, parse, partAt, samePath, write } from '../core/ids.js'
-  import { codePoints, variationBase, variationOf, withVariation } from '../core/variation.js'
+  import { OPERATOR_GROUPS, isCustom, isJurchen, isNode, parse, partAt, samePath, write } from '../core/ids.js'
+  import { codePoints, variationBase, variationOf, variationSelector, withVariation } from '../core/variation.js'
   import { componentForms, drawnForm } from '../core/forms.js'
   import { loadUcvIndex } from './ucv.js'
   import IdsPartIcon from './IdsPartIcon.svelte'
@@ -361,14 +361,15 @@
     </div>
   {:else}
     {@const label = part === null ? t('ids.empty') : part}
+    {@const vs = variationSelector(part)}
     {#if editing && samePath(editing.path, path)}
       {#key editing}<IdsInlineEdit {editor} {path} owner={rootEl} variant="leaf" onclose={() => editing = null} />{/key}
     {:else}
-    <button type="button" class="ids-part" data-character={part ?? undefined} draggable={!editor.disabled && path.length > 0} ondragstart={event => startDrag(event, path)} ondragend={endDrag} style:--tint={tint(path)} class:empty={part === null} class:dragged={dragging !== null && samePath(dragging.path, path)} class:carried={carry !== null && samePath(carry.path, path)} class:chosen={selected} class:hovered={editor.isHovered(path)} class:tinted={editor.isTinted(path)} class:over={overKind(path) === 'move'} class:swap={overKind(path) === 'swap'} aria-pressed={selected} aria-keyshortcuts="Space"
-      data-path={key(path)} data-hover-path={key(path)} disabled={editor.disabled} title={`${part === null ? label : t('ids.choose', { part })}${path.length ? ` · ${t('ids.dragSibling')}` : ''}`}
-      aria-label={parent ? t('ids.part', { part: label, n: parent.n, name: editor.name(parent.op) }) : label}
+    <button type="button" class="ids-part" data-character={part ?? undefined} data-vs={vs?.tag} draggable={!editor.disabled && path.length > 0} ondragstart={event => startDrag(event, path)} ondragend={endDrag} style:--tint={tint(path)} class:empty={part === null} class:vs={Boolean(vs)} class:dragged={dragging !== null && samePath(dragging.path, path)} class:carried={carry !== null && samePath(carry.path, path)} class:chosen={selected} class:hovered={editor.isHovered(path)} class:tinted={editor.isTinted(path)} class:over={overKind(path) === 'move'} class:swap={overKind(path) === 'swap'} aria-pressed={selected} aria-keyshortcuts="Space"
+      data-path={key(path)} data-hover-path={key(path)} disabled={editor.disabled} title={`${part === null ? label : t('ids.choose', { part })}${vs ? ` · ${vs.tag} (${vs.codePoint})` : ''}${path.length ? ` · ${t('ids.dragSibling')}` : ''}`}
+      aria-label={`${parent ? t('ids.part', { part: label, n: parent.n, name: editor.name(parent.op) }) : label}${vs ? ` (${vs.tag})` : ''}`}
       onclick={() => editor.choose(path)} oncontextmenu={event => contextmenu(event, path)} onkeydown={event => partKey(event, path)}
-      ondragover={event => dragover(event, path)} ondragleave={() => { overPath = null; overSwap = false }} ondrop={event => drop(event, path)}>{#if part !== null && isCustom(part)}<span class="ids-custom"><IdsPartIcon sequence={part} adapter={editor.adapter} /><span class="ids-custom-name">{part}</span></span>{:else if part !== null && varied(part) && editor.adapter.icon}<span class="ids-form"><IdsPartIcon sequence={variationOf(part)} adapter={editor.adapter} />{part.slice(variationOf(part).length)}</span>{:else}{part ?? '⬚'}{/if}</button>
+      ondragover={event => dragover(event, path)} ondragleave={() => { overPath = null; overSwap = false }} ondrop={event => drop(event, path)}>{#if part !== null && isCustom(part)}<span class="ids-custom"><IdsPartIcon sequence={part} adapter={editor.adapter} /><span class="ids-custom-name">{part}</span></span>{:else if part !== null && varied(part) && editor.adapter.icon && !(vs && isJurchen(vs.base))}<span class="ids-form"><IdsPartIcon sequence={variationOf(part)} adapter={editor.adapter} />{part.slice(variationOf(part).length)}</span>{:else}{part ?? '⬚'}{/if}{#if vs}<span class="ids-vs-badge" aria-hidden="true">{vs.tag}</span>{/if}</button>
     {#if formsOf(part, path).length}
       {@const open = menu?.forms === true && samePath(menu.path, path)}
       <button type="button" class="ids-forms-toggle" class:varied={varied(part)} disabled={editor.disabled} aria-haspopup="menu" aria-expanded={open}
@@ -422,8 +423,9 @@
           <p class="ids-menu-title">{group.title ?? t('ids.variants.label', { part: menuForms[0].write })}</p>
           <div class="ids-menu-forms" data-forms={group.key || 'own'}>
             {#each group.forms as form (form.write)}
-              <button type="button" role="menuitemradio" class="ids-menu-form" data-form={form.write} aria-checked={variationOf(menuPart) === form.write} title={formTitle(form)} aria-label={formTitle(form)}
-                onclick={() => run(() => chooseForm(form, /** @type {Path} */ (menu?.path)))}><IdsPartIcon sequence={form.write} adapter={editor.adapter} /></button>
+              {@const formVs = variationSelector(form.write)}
+              <button type="button" role="menuitemradio" class="ids-menu-form" class:has-vs={Boolean(formVs)} data-form={form.write} data-vs={formVs?.tag} aria-checked={variationOf(menuPart) === form.write} title={formTitle(form)} aria-label={formTitle(form)}
+                onclick={() => run(() => chooseForm(form, /** @type {Path} */ (menu?.path)))}><IdsPartIcon sequence={form.write} adapter={editor.adapter} />{#if formVs}<span class="ids-menu-vs" aria-hidden="true">{formVs.tag}</span>{/if}</button>
             {/each}
           </div>
         {/each}
@@ -525,8 +527,15 @@
   [data-op="⿽"] > .ids-parts > [data-index="0"] > .ids-part{place-items:end end}
   .ids-custom{display:grid;justify-items:center;gap:1px;max-width:100%;line-height:1;border-bottom:2px dotted color-mix(in oklab,var(--_accent) 70%,transparent)}
   .ids-custom-name{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:500 10px/1.2 var(--ids-ui-font,system-ui,sans-serif);color:var(--_muted)}
-  .ids-part{display:grid;place-items:center;width:100%;height:100%;min-width:0;min-height:0;box-sizing:border-box;padding:min(2px,2cqh) min(4px,2cqw);font-size:min(var(--ids-part-size,32px),max(0px,calc(66cqh - 3px)),max(0px,calc(66cqw - 3px)));line-height:1.4;overflow:hidden;
+  .ids-part{position:relative;display:grid;place-items:center;width:100%;height:100%;min-width:0;min-height:0;box-sizing:border-box;padding:min(2px,2cqh) min(4px,2cqw);font-size:min(var(--ids-part-size,32px),max(0px,calc(66cqh - 3px)),max(0px,calc(66cqw - 3px)));line-height:1.4;overflow:hidden;
     font-family:var(--_font);color:var(--_ink);background:var(--_surface);border:min(1px,1cqw,1cqh) solid var(--_line);border-radius:min(8px,8cqw,8cqh)}
+  .ids-part.vs{border-color:color-mix(in oklab,var(--_accent) 55%,var(--_line))}
+  .ids-vs-badge{position:absolute;top:3px;right:3px;padding:1px 4px;border-radius:4px;background:var(--_accent-light);color:var(--_accent);
+    border:1px solid color-mix(in oklab,var(--_accent) 35%,transparent);font:600 9px/1.15 var(--ids-ui-font,system-ui,sans-serif);font-variant-numeric:tabular-nums;white-space:nowrap;pointer-events:none}
+  /* An enclosing part keeps its VS tag in a clear corner, opposite its forms toggle where needed. */
+  .enclosure > .ids-parts > .ids-cell[data-index="0"] > .ids-part > .ids-vs-badge{top:1px;right:1px;padding:0 3px;font-size:8px}
+  :is([data-op="⿸"],[data-op="⿵"],[data-op="⿹"]) > .ids-parts > .ids-cell[data-index="0"] > .ids-part > .ids-vs-badge{top:auto;bottom:1px}
+  :is([data-op="⿷"],[data-op="⿽"]) > .ids-parts > .ids-cell[data-index="0"] > .ids-part > .ids-vs-badge{right:auto;left:1px}
   .ids-part:not(:disabled):hover{border-color:var(--_line-strong)}
   .ids-part.empty{font-size:min(20px,max(0px,calc(66cqh - 3px)),max(0px,calc(66cqw - 3px)));color:var(--_muted);border-style:dashed;border-color:var(--_line-strong);background:transparent}
   .ids-tree-root > .ids-part{font-size:min(140px,max(0px,calc(66cqh - 3px)),max(0px,calc(66cqw - 3px)))}
@@ -547,7 +556,7 @@
   [data-op="⿹"] > .ids-parts > .ids-cell[data-index="0"] > .ids-forms-toggle{right:auto;bottom:auto;left:1px;top:1px}
   :is([data-op="⿷"],[data-op="⿽"]) > .ids-parts > .ids-cell[data-index="0"] > .ids-forms-toggle{right:auto;left:1px}
   @container (max-height:40px) or (max-width:40px){
-    .ids-forms-toggle{display:none}
+    .ids-forms-toggle,.ids-vs-badge{display:none}
   }
 
   /* Device-pixel minimum borders and controls cannot fit in the smallest cells.
@@ -565,7 +574,8 @@
   .ids-menu-op{display:grid;place-items:center;height:30px;padding:0;border-color:transparent !important;background:none !important}
   .ids-menu-op:hover,.ids-menu-op:focus-visible{background:var(--_accent-light) !important}
   .ids-menu-forms{display:grid;grid-template-columns:repeat(6,40px);gap:2px}
-  .ids-menu-form{display:grid;place-items:center;height:40px;padding:0;font-size:30px;border-color:transparent !important;background:none !important}
+  .ids-menu-form{display:grid;place-items:center;align-content:center;gap:1px;min-height:40px;padding:3px 2px;font-size:28px;border-color:transparent !important;background:none !important}
+  .ids-menu-vs{font:600 8.5px/1.1 var(--ids-ui-font,system-ui,sans-serif);font-variant-numeric:tabular-nums;color:var(--_accent);white-space:nowrap}
   .ids-menu-form:hover,.ids-menu-form:focus-visible{background:var(--_surface-selected) !important}
   .ids-menu-form[aria-checked="true"]{border-color:var(--_accent) !important;background:var(--_accent-light) !important}
   .ids-menu-sep{height:1px;margin:4px 2px;background:var(--_line)}
