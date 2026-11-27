@@ -14,6 +14,7 @@
   // `lookup` is shared with an editor so each character is asked once; one is made when none is given.
   import { untrack } from 'svelte'
   import { isNode, leaves, write } from '../core/ids.js'
+  import { variationSelector } from '../core/variation.js'
   import { DEPTH, ROOTS, decomposable, lookupChar, namedParts, roots, searchParts, tokens, treeKey, unencoded, variants } from '../core/decompose.js'
   import { createLookup } from './lookup.svelte.js'
   import { translator } from './i18n.js'
@@ -287,7 +288,8 @@
 {#snippet written(/** @type {string} */ sequence)}
   {#each tokens(sequence) as token, i (i)}
     {@const n = unencoded(token)}
-    {#if n !== null}<abbr class="from-unencoded" title={t('ids.from.unencoded', { n })}>{token}</abbr>{:else}{token}{/if}
+    {@const vs = variationSelector(token)}
+    {#if n !== null}<abbr class="from-unencoded" title={t('ids.from.unencoded', { n })}>{token}</abbr>{:else if vs}<span class="from-varied" data-vs={vs.tag}>{token}<sup aria-hidden="true">{vs.tag}</sup></span>{:else}{token}{/if}
   {/each}
 {/snippet}
 
@@ -305,10 +307,11 @@
     <ul class="from-tree" role="tree" aria-label={t('ids.from.tree')} title={t('ids.from.hint')} bind:this={tree}>
       {#each rows as row, index (row.key)}
         {@const current = row.key === focusKey ? swapAt : null}
+        {@const vs = row.kind === 'char' ? variationSelector(row.part) : null}
         <!-- svelte-ignore a11y_click_events_have_key_events -->
-        <li role="treeitem" data-character={row.kind === 'char' ? row.part : undefined} class="from-row {row.kind}" class:off={!row.take && row.kind !== 'status'} data-key={row.key}
+        <li role="treeitem" data-character={row.kind === 'char' ? row.part : undefined} data-vs={vs?.tag} class="from-row {row.kind}" class:vs={Boolean(vs)} class:off={!row.take && row.kind !== 'status'} data-key={row.key}
           aria-level={row.level} aria-selected="false" aria-expanded={row.openable ? row.open : undefined}
-          aria-disabled={disabled || (!row.take && row.status !== 'failed') ? 'true' : undefined} aria-label={rowLabel(row)}
+          aria-disabled={disabled || (!row.take && row.status !== 'failed') ? 'true' : undefined} aria-label={`${rowLabel(row)}${vs ? ` (${vs.tag})` : ''}`}
           tabindex={row.key === tabStop ? 0 : -1} style:--level={row.level - 1}
           onfocus={() => { if (focusKey !== row.key) swapAt = null; focusKey = row.key }}
           draggable={Boolean(row.take) && !disabled} ondragstart={event => { if (row.take) event.dataTransfer?.setData('text/plain', row.take) }}
@@ -319,6 +322,7 @@
             {#if row.status === 'failed'}<span class="from-retry" aria-hidden="true">{t('ids.from.retry')}</span>{/if}
           {:else}
             <span class="from-take" lang="ja" aria-hidden="true">{#if row.kind === 'char'}{row.part}{:else}{@render written(row.text ?? '')}{/if}</span>
+            {#if vs}<span class="from-vs" aria-hidden="true">{vs.tag}</span>{/if}
             {#if row.regions}<span class="from-regions" aria-hidden="true" title={regionsTitle(row.regions)}>{row.regions}</span>{/if}
             {#if shownSources(row).length}<span class="from-sources" aria-hidden="true" title={t('ids.from.sources', { sources: sourceNames(shownSources(row)) })}>{#each shownSources(row) as source (source)}<span class="from-source">{t(`ids.source.${source}`)}</span>{/each}</span>{/if}
             {#if row.note && (row.note !== 'atomic' || row.level === 1)}<span class="from-note" aria-hidden="true">{t(`ids.from.${row.note}`)}</span>{/if}
@@ -389,6 +393,9 @@
   .from-row:not(.off):hover .from-take{border-color:var(--_accent);background:var(--_surface)}
   .off .from-take{color:var(--_muted)}
   .from-unencoded{text-decoration:underline dotted;font-family:ui-monospace,monospace;font-size:12px;color:var(--_muted);cursor:help}
+  .from-vs{padding:1px 5px;border-radius:4px;background:var(--_accent-light);color:var(--_accent);border:1px solid color-mix(in oklab,var(--_accent) 35%,transparent);font:600 10px/1.2 var(--ids-ui-font,system-ui,sans-serif);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .from-varied{display:inline-flex;align-items:baseline}
+  .from-varied sup{margin-inline-start:1px;font:600 9px/1 var(--ids-ui-font,system-ui,sans-serif);font-variant-numeric:tabular-nums;color:var(--_accent)}
   .from-regions{font-size:10px;letter-spacing:.08em;padding:1px 4px;border-radius:4px;background:var(--_surface-selected);color:var(--_muted);font-variant-numeric:tabular-nums;cursor:help}
   .from-sources{display:inline-flex;gap:3px;margin-inline-start:2px;cursor:help}
   .from-source{padding:0 4px;border:1px solid var(--_line);border-radius:4px;font-size:10px;line-height:15px;color:var(--_muted);white-space:nowrap}

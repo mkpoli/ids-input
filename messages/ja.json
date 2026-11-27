@@ -429,5 +429,11 @@
   "ids.ucv.failed": "一覧を読み込めませんでした。",
   "ids.ucv.kind": "一覧",
   "ids.ucv.form": "字形{name}",
-  "ids.alternatives.unifiable": "統合可能な字形"
+  "ids.alternatives.unifiable": "統合可能な字形",
+  "info.vs.title": "異体字セレクタ",
+  "info.vs.ivs": "漢字異体字セレクタ",
+  "info.vs.svs": "標準異体字セレクタ",
+  "info.vs.plain": "基底",
+  "info.vs.input": "その他の異体字セレクタ",
+  "info.vs.use": "{form}を使用"
 }

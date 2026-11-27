@@ -18,6 +18,8 @@ it('lists the character, then its variation sequences', () => {
   const forms = componentForms('者', { sequences: new Map([['者', [DOTTED]]]) })
   expect(forms).toEqual([{ write: '者', kind: 'plain' }, { write: DOTTED, kind: 'sequence' }])
   expect(writtenForm(forms, DOTTED)?.kind).toBe('sequence')
+  // A component already carrying a selector lists plain and itself even without an export entry.
+  expect(componentForms('木\uFE00')).toEqual([{ write: '木', kind: 'plain' }, { write: '木\uFE00', kind: 'sequence' }])
 })
 
 it('offers the other characters of a unifiable entry as sibling encodings', () => {

@@ -433,5 +433,11 @@
   "ids.ucv.failed": "सूची लोड नहीं हो सकी।",
   "ids.ucv.kind": "सूची",
   "ids.ucv.form": "रूप {name}",
-  "ids.alternatives.unifiable": "एकीकरणीय रूप"
+  "ids.alternatives.unifiable": "एकीकरणीय रूप",
+  "info.vs.title": "रूप चयनक",
+  "info.vs.ivs": "भावचित्र रूप चयनक",
+  "info.vs.svs": "मानकीकृत रूप चयनक",
+  "info.vs.plain": "मूल",
+  "info.vs.input": "अन्य रूप चयनक",
+  "info.vs.use": "{form} चुनें"
 }

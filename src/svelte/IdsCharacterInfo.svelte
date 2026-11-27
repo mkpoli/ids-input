@@ -4,6 +4,8 @@
   import { componentDrawing } from '@han-compose/composer/component-forms'
   import { isJurchen } from '../core/ids.js'
   import { isCustom } from '../core/custom.js'
+  import { componentForms } from '../core/forms.js'
+  import { codePoints, parseVariationSelector, variationOf, variationSelector, withVariation } from '../core/variation.js'
   import { chainPath } from '../core/chain-shape.js'
   import IdsPartIcon from './IdsPartIcon.svelte'
   import { componentIdentity } from '../core/component-identity.js'
@@ -58,6 +60,9 @@
   // A component no code point names ({53}, &CDP-8964;, #(-𠃌㇉)) has its own card: its shape, and
   // the other ways the same form is written.
   const customChar = $derived(isCustom(char))
+  const vs = $derived(variationSelector(char))
+  const baseChar = $derived(vs ? vs.base : char)
+  const copyText = $derived(vs ? vs.sequence : char)
   /** @type {import('../adapter/types.js').CustomPartInfo | null} */ let custom = $state.raw(null)
   /** How many subtractions the card lists; the table has the rest. */
   const SUBTRACTIONS = 4
@@ -72,8 +77,49 @@
     for (const name of written) { const d = chainPath(name); if (d) return { kind: /** @type {const} */ ('chain'), d } }
     return { kind: /** @type {const} */ ('drawn'), sequence: char }
   })
-  const code = $derived(!char ? '' : customChar ? char : codePoint(char))
-  const identity = $derived(customChar ? null : componentIdentity(char))
+  const code = $derived(!char ? '' : customChar ? char : vs ? codePoints(vs.sequence) : codePoint(char))
+  const identity = $derived(customChar ? null : componentIdentity(baseChar))
+  // The variation sequences the preview draws, loaded lazily when inspecting a VS-modified character.
+  const listSequences = $derived(adapter.variationSequences)
+  let sequences = $state.raw(/** @type {Map<string, string[]>} */ (new Map()))
+  let sequencesFor = /** @type {import('../adapter/types.js').IdsAdapter['variationSequences'] | null} */ (null)
+  $effect(() => {
+    const list = listSequences
+    if (sequencesFor !== list) { sequencesFor = list ?? null; sequences = new Map() }
+    if (!list || !open || !vs) return
+    let current = true
+    list().then(found => { if (current) sequences = found }, () => {})
+    return () => { current = false }
+  })
+  let vsInput = $derived(vs ? vs.tag : '')
+  const parsedVs = $derived(parseVariationSelector(vsInput))
+  const canApplyVs = $derived(Boolean(vs && parsedVs && !disabled && onpick && parsedVs.selector !== vs.selector))
+  // The bundled Jurchen face carries format-14 variation glyphs directly in text; other scripts draw via adapter.icon.
+  const useIconGlyph = $derived(Boolean(vs && adapter.icon && !isJurchen(vs.base)))
+  /** Every selectable variation option for the hovered VS-modified character: plain base, known sequences, and current. */
+  const vsOptions = $derived.by(() => {
+    if (!vs) return []
+    const baseForms = componentForms(char, { sequences })
+      .filter(form => form.kind === 'plain' || form.kind === 'sequence')
+      .map(form => form.write)
+    const ordered = baseForms.length ? [...baseForms] : [vs.base, vs.sequence]
+    const seen = new Set(ordered)
+    if (isJurchen(vs.base) && jurchenStrokes) {
+      for (const key of jurchenStrokes.keys()) {
+        if (variationSelector(key)?.base === vs.base && !seen.has(key)) { seen.add(key); ordered.push(key) }
+      }
+    }
+    const active = variationOf(char)
+    return ordered.map(sequence => ({
+      sequence,
+      vs: variationSelector(sequence),
+      active: active === sequence,
+    }))
+  })
+  function applyCustomVs() {
+    if (!vs || !parsedVs || disabled || !onpick || parsedVs.selector === vs.selector) return
+    void pick(withVariation(char, vs.base + parsedVs.selector))
+  }
   /** @type {number | null} */ let uses = $state(null)
   // Whether the card stands on a part inside a description: only there can a spelling that carries
   // a variant identifier (𢎘z) take the part's place.
@@ -87,28 +133,28 @@
   // Tangut characters carry a count in their own table; it has no first stroke to give.
   let tangutStrokes = $state.raw(/** @type {Map<string, number> | null} */ (null))
   // The Tangut table counts the ideographs and the 768 components of U+18800–U+18AFF alike.
-  const tangutKeyed = $derived(characterScript(char ?? '') === 'tangut' || characterScript(char ?? '') === 'component')
+  const tangutKeyed = $derived(characterScript(baseChar ?? '') === 'tangut' || characterScript(baseChar ?? '') === 'component')
   $effect(() => {
     if (tangutStrokes || !tangutKeyed) return
     loadTangutStrokes().then(counts => { tangutStrokes = counts }).catch(() => { tangutStrokes = new Map() })
   })
-  const tangutCount = $derived(tangutKeyed ? tangutStrokes?.get(char ?? '') ?? null : null)
+  const tangutCount = $derived(tangutKeyed ? tangutStrokes?.get(baseChar ?? '') ?? null : null)
   // Jurchen characters carry a count and, from their stroke code, a first stroke of their own.
   let jurchenStrokes = $state.raw(/** @type {Map<string, import('./strokes.js').StrokeRecord> | null} */ (null))
   $effect(() => {
-    if (jurchenStrokes || !char || !isJurchen(char)) return
+    if (jurchenStrokes || !baseChar || !isJurchen(baseChar)) return
     loadJurchenStrokes().then(records => { jurchenStrokes = records }).catch(() => { jurchenStrokes = new Map() })
   })
-  const jurchenRecord = $derived(char && isJurchen(char) ? jurchenStrokes?.get(char) ?? null : null)
+  const jurchenRecord = $derived(baseChar && isJurchen(baseChar) ? jurchenStrokes?.get(vs?.sequence ?? baseChar) ?? jurchenStrokes?.get(baseChar) ?? null : null)
   // Kana counts come from KanjiVG's stroke paths; it names no class, so there is no first stroke.
   let kanaCounts = $state.raw(/** @type {Map<string, number> | null} */ (null))
   $effect(() => {
-    if (kanaCounts || !char || characterScript(char) !== 'kana') return
+    if (kanaCounts || !baseChar || characterScript(baseChar) !== 'kana') return
     loadKanaStrokes().then(counts => { kanaCounts = counts }).catch(() => { kanaCounts = new Map() })
   })
-  const kanaCount = $derived(char && characterScript(char) === 'kana' ? kanaCounts?.get(char) ?? null : null)
-  const strokes = $derived(char
-    ? strokeRecords?.get(char)
+  const kanaCount = $derived(baseChar && characterScript(baseChar) === 'kana' ? kanaCounts?.get(baseChar) ?? null : null)
+  const strokes = $derived(baseChar
+    ? strokeRecords?.get(baseChar)
       ?? (tangutCount == null ? null : { strokes: tangutCount, first: null })
       ?? jurchenRecord
       ?? (kanaCount == null ? null : { strokes: kanaCount, first: null })
@@ -141,14 +187,14 @@
     for (const entry of list) if (shared.get(entry.site) > 1 && entry.what) entry.site = `${entry.site} · ${entry.what}`
     // The sites that hold the character in their own records, after the records the card read.
     // zi.tools and CHISE list every script the card shows; 字海 and 漢典 cover Han characters.
-    if (char && !customChar) {
-      list.push({ key: 'zitools', site: t('info.site.zitools'), what: 'zi.tools', url: `https://zi.tools/zi/${encodeURIComponent(char)}` })
-      if (/^\p{Unified_Ideograph}$/u.test(char)) {
-        const point = (char.codePointAt(0) ?? 0).toString(16).toUpperCase().padStart(5, '0')
+    if (baseChar && !customChar) {
+      list.push({ key: 'zitools', site: t('info.site.zitools'), what: 'zi.tools', url: `https://zi.tools/zi/${encodeURIComponent(baseChar)}` })
+      if (/^\p{Unified_Ideograph}$/u.test(baseChar)) {
+        const point = (baseChar.codePointAt(0) ?? 0).toString(16).toUpperCase().padStart(5, '0')
         list.push({ key: 'yedict', site: t('info.site.yedict'), what: 'yedict', url: `http://www.yedict.com/z/U${point}` })
-        list.push({ key: 'zdic', site: t('info.site.zdic'), what: 'zdic', url: `https://www.zdic.net/${locale.startsWith('zh-Hant') || locale === 'yue' ? 'hant' : 'hans'}/${encodeURIComponent(char)}` })
+        list.push({ key: 'zdic', site: t('info.site.zdic'), what: 'zdic', url: `https://www.zdic.net/${locale.startsWith('zh-Hant') || locale === 'yue' ? 'hant' : 'hans'}/${encodeURIComponent(baseChar)}` })
       }
-      list.push({ key: 'chise', site: t('info.site.chise'), what: 'CHISE IDS', url: `https://www.chise.org/est/view/character/${encodeURIComponent(char)}` })
+      list.push({ key: 'chise', site: t('info.site.chise'), what: 'CHISE IDS', url: `https://www.chise.org/est/view/character/${encodeURIComponent(baseChar)}` })
     }
     return list
   })
@@ -211,7 +257,7 @@
     const id = generation, token = ++copyToken
     let done = false
     try {
-      if (navigator.clipboard) { await navigator.clipboard.writeText(char); done = true }
+      if (navigator.clipboard) { await navigator.clipboard.writeText(copyText); done = true }
     } catch { done = false }
     if (id !== generation || token !== copyToken) return
     copied = done; copyFailed = !done
@@ -245,13 +291,19 @@
     if (!anchor || !panel) return
     const box = anchor.getBoundingClientRect(), card = panel.getBoundingClientRect()
     const margin = 8, gap = 4, width = card.width, height = card.height
+    const viewLeft = visualViewport?.offsetLeft ?? 0
+    const viewTop = visualViewport?.offsetTop ?? 0
+    const viewRight = Math.min(innerWidth, viewLeft + (visualViewport?.width ?? innerWidth))
+    const viewBottom = Math.min(innerHeight, viewTop + (visualViewport?.height ?? innerHeight))
+    const minX = viewLeft + margin, maxX = Math.max(minX, viewRight - width - margin)
+    const minY = viewTop + margin, maxY = Math.max(minY, viewBottom - height - margin)
     // A spot is a place the card's top-left corner can take, clamped into the window; the last
     // number marks one the window pushed in from where it would naturally sit.
     /** @param {number} rawX @param {number} rawY @returns {number[]} */
     const spot = (rawX, rawY) => [
-      Math.max(margin, Math.min(rawX, innerWidth - width - margin)),
-      Math.max(margin, Math.min(rawY, innerHeight - height - margin)),
-      rawX < margin || rawX > innerWidth - width - margin || rawY < margin || rawY > innerHeight - height - margin ? 1 : 0,
+      Math.max(minX, Math.min(rawX, maxX)),
+      Math.max(minY, Math.min(rawY, maxY)),
+      rawX < minX || rawX > maxX || rawY < minY || rawY > maxY ? 1 : 0,
     ]
     // Below the anchor, then above it, then beside it; and around a surface the card must keep
     // clear of when those spots land on it — beside it, or under the anchor shifted past its edge.
@@ -295,9 +347,12 @@
    * @param {HTMLElement} element @param {string} value @param {number} delay @param {boolean} [always] */
   function schedule(element, value, delay, always = false) {
     if (dragging) return
+    const valueVs = variationSelector(value)
+    const lookup = valueVs ? valueVs.base : value
     // A mark records strokes but no script and no Unicode identity (々, 〡), and the panel is the
-    // only place its strokes are laid out; it opens for the stroke record too.
-    if (!always && !(adapter.customPart && isCustom(value)) && !componentIdentity(value) && !(adapter.characterInfo && characterScript(value)) && !strokeRecords?.has(value) && !(isJurchen(value) && jurchenStrokes?.has(value))) { leave(); return }
+    // only place its strokes are laid out; it opens for the stroke record too. Any character modified
+    // with a variation selector always opens so its selector details and form picker are reachable.
+    if (!always && !valueVs && !(adapter.customPart && isCustom(value)) && !componentIdentity(lookup) && !(adapter.characterInfo && characterScript(lookup)) && !strokeRecords?.has(lookup) && !(isJurchen(lookup) && (jurchenStrokes?.has(value) || jurchenStrokes?.has(lookup)))) { leave(); return }
     keep()
     if (anchor === element && char === value && (open || showTimer !== undefined)) return
     close(); anchor = element; anchorPath = pathOf(element); char = value
@@ -315,7 +370,7 @@
       await tick(); panel?.showPopover(); position()
       try {
         const named = isCustom(value)
-        const found = named ? await adapter.customPart?.(value, { signal: controller.signal }) : await adapter.characterInfo?.(value, { signal: controller.signal })
+        const found = named ? await adapter.customPart?.(value, { signal: controller.signal }) : await adapter.characterInfo?.(lookup, { signal: controller.signal })
         if (id !== generation) return
         if (!anchor?.isConnected || anchor.dataset.character !== value) { close(); return }
         if (named) custom = /** @type {import('../adapter/types.js').CustomPartInfo | null} */ (found ?? null)
@@ -334,9 +389,12 @@
    * @param {Event} event @param {number} pointX @param {number} pointY */
   function spanUnder(event, pointX, pointY) {
     if (target(event) || !(event.target instanceof HTMLInputElement)) return null
-    return [...(event.target.closest('.sequence-wrap')?.querySelectorAll('[data-character]') ?? [])].find(node => {
+    const wrap = event.target.closest('.sequence-wrap')
+    const badgeHeight = wrap ? parseFloat(getComputedStyle(wrap).getPropertyValue('--vs-height')) || 0 : 0
+    return [...(wrap?.querySelectorAll('[data-character]') ?? [])].find(node => {
       const box = node.getBoundingClientRect()
-      return pointX >= box.left && pointX < box.right && pointY >= box.top && pointY < box.bottom
+      const top = node.hasAttribute('data-vs') ? box.top - badgeHeight : box.top
+      return pointX >= box.left && pointX < box.right && pointY >= top && pointY < box.bottom
     }) ?? null
   }
   /** @param {PointerEvent} event */
@@ -564,16 +622,21 @@
           {:else if shape.kind === 'chain'}<svg viewBox="0 0 1000 1000" aria-hidden="true"><path d={shape.d} fill="none" stroke="currentColor" stroke-width="64" stroke-linecap="round" stroke-linejoin="round" /></svg>
           {:else}{#key shape.sequence}<IdsPartIcon sequence={shape.sequence} {adapter} />{/key}{/if}
         </span>
+      {:else if vs && useIconGlyph}
+        <span class="glyph vs-glyph">{#key vs.sequence}<IdsPartIcon sequence={vs.sequence} {adapter} />{/key}</span>
       {:else}
-        <span class="glyph" lang={info?.script === 'tangut' || info?.script === 'component' ? 'txg' : 'zh'}>{char}</span>
+        <span class="glyph" lang={vs && isJurchen(vs.base) ? 'juc' : info?.script === 'tangut' || info?.script === 'component' ? 'txg' : 'zh'}>{vs ? vs.sequence : char}</span>
       {/if}
       <div>
-        {#if customChar}
-          <span class="script">{t('info.custom.kind')}</span>
-        {:else if identity || info?.script || characterScript(char)}
-          <span class="script">{identity ? t(`parts.identity.${identity.type}`) : t(`info.script.${info?.script ?? characterScript(char)}`)}</span>
-        {/if}
-        <div class="code"><code>{code}</code><button class="copy" type="button" title={t('info.copy', { char })} aria-label={t('info.copy', { char })} onclick={copy}><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d={copied ? 'm5 12 5 5 9-10' : 'M9 9h11v11H9zM5 15H4V4h11v1'} /></svg></button><span class="copy-note" class:failed={copyFailed} role="status">{copied ? t('info.copied') : copyFailed ? t('info.copyFailed') : ''}</span></div>
+        <div class="kind-row">
+          {#if customChar}
+            <span class="script">{t('info.custom.kind')}</span>
+          {:else if identity || info?.script || characterScript(baseChar)}
+            <span class="script">{identity ? t(`parts.identity.${identity.type}`) : t(`info.script.${info?.script ?? characterScript(baseChar)}`)}</span>
+          {/if}
+          {#if vs}<span class="vs-pill">{vs.tag}</span>{/if}
+        </div>
+        <div class="code"><code>{code}</code><button class="copy" type="button" title={t('info.copy', { char: copyText })} aria-label={t('info.copy', { char: copyText })} onclick={copy}><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d={copied ? 'm5 12 5 5 9-10' : 'M9 9h11v11H9zM5 15H4V4h11v1'} /></svg></button><span class="copy-note" class:failed={copyFailed} role="status">{copied ? t('info.copied') : copyFailed ? t('info.copyFailed') : ''}</span></div>
         {#if strokes?.strokes != null || strokeGlyph}
           <!-- Both halves are strokes: the count carries its unit ("4 strokes", "{count}画"), and
                the glyph after the separator is marked as the first of them. The class the glyph draws
@@ -587,6 +650,41 @@
       </div>
       {#if pinned}<button class="close" type="button" aria-label={t('info.close')} onclick={() => { const el = anchor; close(); restoreFocus(el) }}>×</button>{/if}
     </header>
+    {#if vs}
+      <section class="vs-section" aria-labelledby={`${uid}-vs`}>
+        <div class="vs-head">
+          <p class="label" id={`${uid}-vs`}>{t('info.vs.title')}</p>
+          <span class="vs-meta">{t(vs.kind === 'ivs' ? 'info.vs.ivs' : 'info.vs.svs')}</span>
+        </div>
+        <div class="vs-options" role="group" aria-labelledby={`${uid}-vs`}>
+          {#each vsOptions as option (option.sequence)}
+            {@const optionTag = option.vs ? option.vs.tag : t('info.vs.plain')}
+            {@const optionTitle = `${optionTag} · ${codePoints(option.sequence)}`}
+            <button type="button" class="vs-option" class:active={option.active} data-vs-option={option.sequence}
+              aria-pressed={option.active} disabled={disabled || !onpick}
+              title={optionTitle} aria-label={`${t('info.vs.use', { form: optionTag })} · ${codePoints(option.sequence)}`}
+              onclick={() => { if (!option.active) pick(withVariation(char, option.sequence)) }}>
+              <span class="vs-option-glyph" lang={isJurchen(vs.base) ? 'juc' : 'zh'}>
+                {#if useIconGlyph}
+                  {#key option.sequence}<IdsPartIcon sequence={option.sequence} {adapter} />{/key}
+                {:else}
+                  {option.sequence}
+                {/if}
+              </span>
+              <span class="vs-option-tag">{optionTag}</span>
+            </button>
+          {/each}
+        </div>
+        {#if onpick}
+          <form class="vs-custom" onsubmit={event => { event.preventDefault(); applyCustomVs() }}>
+            <input type="text" class="vs-input" bind:value={vsInput} {disabled} spellcheck="false" autocomplete="off"
+              aria-label={t('info.vs.input')} aria-invalid={vsInput.trim() !== '' && parsedVs === null}
+              placeholder="VS17 / E0100" />
+            <button type="submit" class="vs-apply" disabled={!canApplyVs}>{t('ids.apply')}</button>
+          </form>
+        {/if}
+      </section>
+    {/if}
     {#if identity}
       <p class="unicode-name" lang="en">{identity.name}</p>
       {#if identity.strokeName}<p lang="en">{identity.strokeName}</p>{/if}
@@ -673,7 +771,8 @@
 </div>
 
 <style>
-  .ids-character-info{position:fixed;inset:auto;margin:0;box-sizing:border-box;width:320px;max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);overflow:auto;padding:16px;border:1px solid var(--ids-line,light-dark(#e1e1e8,#484850));border-radius:12px;background:var(--ids-surface,light-dark(#fff,#24242b));color:var(--ids-ink,light-dark(#24242b,#f0f0f5));box-shadow:0 8px 30px #0003;font:13px/1.5 system-ui,sans-serif;--info-muted:var(--ids-muted,light-dark(#686874,#b4b4c0));--info-font:"IDS Numbered","IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Jurchen","IDS Operators","Noto Sans CJK JP",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif}
+  .ids-character-info{position:fixed;inset:auto;margin:0;box-sizing:border-box;width:320px;max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);overflow:auto;scrollbar-width:thin;scrollbar-color:var(--ids-line-strong,light-dark(#c2c2cc,#4a4a55)) transparent;padding:16px;border:1px solid var(--ids-line,light-dark(#e1e1e8,#484850));border-radius:12px;background:var(--ids-surface,light-dark(#fff,#24242b));color:var(--ids-ink,light-dark(#24242b,#f0f0f5));box-shadow:0 8px 30px #0003;font:13px/1.5 system-ui,sans-serif;--info-muted:var(--ids-muted,light-dark(#686874,#b4b4c0));--info-font:"IDS Numbered","IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Jurchen","IDS Operators","Noto Sans CJK JP",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif}
+  @supports not (scrollbar-color: auto){.ids-character-info::-webkit-scrollbar{width:6px;height:6px}.ids-character-info::-webkit-scrollbar-thumb{border-radius:999px;background:var(--ids-line-strong,light-dark(#c2c2cc,#4a4a55))}.ids-character-info::-webkit-scrollbar-track{background:transparent}}
   header{display:flex;align-items:center;gap:14px;margin-bottom:12px}header>div{display:flex;flex-direction:column;gap:3px}.glyph{font:56px/1.15 var(--info-font)}.script{font-size:12px;color:var(--info-muted)}code{font-size:11px;letter-spacing:.02em}
   .code{display:flex;align-items:center;gap:4px;min-height:24px}.stroke-glyph{font-family:var(--info-font);font-size:16px;line-height:1;color:var(--ids-ink,light-dark(#24242b,#f0f0f5))}.stroke-facts{display:flex;align-items:center;gap:5px;margin:2px 0 0;font-size:12px;white-space:nowrap}.stroke-count{color:var(--ids-ink,light-dark(#24242b,#f0f0f5));font-weight:600;font-variant-numeric:tabular-nums}.stroke-first{color:var(--info-muted)}.stroke-sep{align-self:stretch;width:1px;background:var(--ids-line,light-dark(#e1e1e8,#3a3a43))}.copy{display:grid;place-items:center;flex:none;width:24px;height:24px;padding:0;border:0;border-radius:5px;background:none;color:var(--info-muted);cursor:pointer}.copy:hover{background:var(--ids-surface-subtle,light-dark(#f6f6f9,#16161a));color:inherit}.copy svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.copy-note{font-size:11px;color:var(--ids-accent,light-dark(#2944c7,#8ea8ff))}.copy-note.failed{color:var(--ids-fault,light-dark(#b42318,#ff8a80))}
   .close{align-self:flex-start;margin-left:auto;padding:0 4px;background:none;border:0;font:22px/1 system-ui;color:var(--info-muted);cursor:pointer}button:focus-visible{outline:2px solid var(--ids-focus,light-dark(#2944c7,#8ea8ff));outline-offset:3px}
@@ -686,7 +785,28 @@
   .sources a:hover{color:var(--ids-accent,light-dark(#2944c7,#8ea8ff));text-decoration-color:currentColor}
   .sources a:focus-visible{outline:2px solid var(--ids-focus,light-dark(#2944c7,#8ea8ff));outline-offset:2px;border-radius:2px}
   .sep{color:var(--ids-line,#d6d6de)}
-  .custom-glyph{flex:none;display:grid;place-items:center;width:64px;height:64px;font-size:64px;line-height:1}.custom-glyph>svg{display:block;width:100%;height:100%}
+  .custom-glyph,.vs-glyph{flex:none;display:grid;place-items:center;width:64px;height:64px;font-size:64px;line-height:1}.custom-glyph>svg,.vs-glyph>svg{display:block;width:100%;height:100%}
+  .kind-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .vs-pill{padding:1px 6px;border-radius:5px;background:var(--ids-accent-light,light-dark(#e9edfd,#232c4c));color:var(--ids-accent,light-dark(#2944c7,#8ea8ff));border:1px solid color-mix(in oklab,var(--ids-accent,light-dark(#2944c7,#8ea8ff)) 35%,transparent);font:600 11px/1.3 system-ui,sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .vs-section{margin:0 0 12px;padding:10px;border:1px solid var(--ids-line,light-dark(#e1e1e8,#3a3a43));border-radius:9px;background:var(--ids-surface-subtle,light-dark(#f6f6f9,#16161a))}
+  .vs-head{display:flex;flex-direction:column;gap:2px;margin-bottom:8px}
+  .vs-head .label{margin:0}
+  .vs-meta{font-size:11.5px;color:var(--ids-ink,light-dark(#24242b,#f0f0f5));font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+  .vs-options{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:6px}
+  .vs-option{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:5px 4px;border:1px solid var(--ids-line,light-dark(#e1e1e8,#3a3a43));border-radius:8px;background:var(--ids-surface,light-dark(#fff,#24242b));color:inherit;font:inherit;cursor:pointer}
+  .vs-option:not(:disabled):hover{border-color:var(--ids-accent,light-dark(#2944c7,#8ea8ff))}
+  .vs-option[aria-checked="true"]{border-color:var(--ids-accent,light-dark(#2944c7,#8ea8ff));background:var(--ids-accent-light,light-dark(#e9edfd,#232c4c))}
+  .vs-option:disabled{cursor:default;opacity:.6}
+  .vs-option-glyph{display:grid;place-items:center;width:30px;height:30px;font:28px/1 var(--info-font)}
+  .vs-option-tag{font:600 10px/1.15 system-ui,sans-serif;font-variant-numeric:tabular-nums;color:var(--info-muted);white-space:nowrap}
+  .vs-option[aria-checked="true"] .vs-option-tag{color:var(--ids-accent,light-dark(#2944c7,#8ea8ff))}
+  .vs-custom{display:flex;gap:6px;margin-top:8px}
+  .vs-input{flex:1;min-width:0;height:28px;padding:0 8px;border:1px solid var(--ids-control-border,light-dark(#8a8a96,#6f6f7e));border-radius:6px;background:var(--ids-surface,light-dark(#fff,#24242b));color:inherit;font:12px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+  .vs-input:focus-visible{outline:2px solid var(--ids-focus,light-dark(#2944c7,#8ea8ff));outline-offset:1px}
+  .vs-input[aria-invalid="true"]{border-color:var(--ids-fault,light-dark(#b42318,#ff8a80))}
+  .vs-apply{flex:none;height:28px;padding:0 10px;border:1px solid var(--ids-line,light-dark(#e1e1e8,#3a3a43));border-radius:6px;background:var(--ids-surface,light-dark(#fff,#24242b));color:inherit;font:inherit;font-size:12px;cursor:pointer}
+  .vs-apply:not(:disabled):hover{border-color:var(--ids-accent,light-dark(#2944c7,#8ea8ff));color:var(--ids-accent,light-dark(#2944c7,#8ea8ff))}
+  .vs-apply:disabled{opacity:.45;cursor:default}
   .custom-note{font-size:12px;color:var(--info-muted)}
   .spellings{display:flex;flex-direction:column;gap:4px}.spelling{display:flex;align-items:baseline;justify-content:space-between;gap:12px;width:100%;text-align:start}
   .spelled{min-width:0;overflow-wrap:anywhere;font:15px/1.4 var(--info-font)}.spelling .label{flex:none;margin:0}

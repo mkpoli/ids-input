@@ -4,7 +4,7 @@
 // entry that is another character or a description is a sibling encoding; one no code point names
 // is written with zi.tools' variant identifier after the component (壬q0012, form 2 of UCV #1).
 import { isNode, parse, variantIdentifier, variantOf, write } from './ids.js'
-import { variationBase, variationOf } from './variation.js'
+import { variationBase, variationOf, variationSelector } from './variation.js'
 
 /**
  * @typedef {object} ComponentForm
@@ -75,6 +75,8 @@ export function componentForms(part, { sequences = null, ucv = null, variants = 
   /** @param {ComponentForm} form */
   const add = form => { if (!seen.has(form.write)) { seen.add(form.write); forms.push(form) } }
   for (const sequence of sequences?.get(base) ?? []) add({ write: sequence, kind: 'sequence' })
+  const current = variationSelector(part)
+  if (current) add({ write: current.sequence, kind: 'sequence' })
   for (const entry of ucv?.formsOf(base) ?? []) {
     const unifiable = entry.kind === 'unifiable'
     entry.forms.forEach((form, at) => {
