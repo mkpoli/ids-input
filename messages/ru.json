@@ -15,6 +15,7 @@
   "ids.grass.inward": "Стойки внутрь",
   "ids.grass.split": "Раздельный",
   "ids.alternatives.replace": "Заменить",
+  "ids.suggestion.label": "Возможно, вы имели в виду",
   "ids.alternatives.show": "Варианты",
   "ids.alternatives.split": "Разбить",
   "ids.choose": "Выбрать {part}",
@@ -443,5 +444,11 @@
   "ids.ucv.failed": "Не удалось загрузить список.",
   "ids.ucv.kind": "Список",
   "ids.ucv.form": "Форма {name}",
-  "ids.alternatives.unifiable": "Унифицируемые формы"
+  "ids.alternatives.unifiable": "Унифицируемые формы",
+  "info.vs.title": "Селектор варианта",
+  "info.vs.ivs": "Идеографический селектор варианта",
+  "info.vs.svs": "Стандартизированный селектор варианта",
+  "info.vs.plain": "База",
+  "info.vs.input": "Другой селектор варианта",
+  "info.vs.use": "Выбрать {form}"
 }

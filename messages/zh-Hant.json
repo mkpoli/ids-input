@@ -15,6 +15,7 @@
   "ids.grass.inward": "豎畫在內",
   "ids.grass.split": "分寫",
   "ids.alternatives.replace": "替換",
+  "ids.suggestion.label": "您是不是要找",
   "ids.alternatives.show": "替換項",
   "ids.alternatives.split": "拆分",
   "ids.choose": "選擇{part}",
@@ -429,5 +430,11 @@
   "ids.ucv.failed": "無法載入清單。",
   "ids.ucv.kind": "清單",
   "ids.ucv.form": "字形 {name}",
-  "ids.alternatives.unifiable": "可認同字形"
+  "ids.alternatives.unifiable": "可認同字形",
+  "info.vs.title": "變體選擇符",
+  "info.vs.ivs": "表意文字變體選擇符",
+  "info.vs.svs": "標準化變體選擇符",
+  "info.vs.plain": "基本",
+  "info.vs.input": "其他變體選擇符",
+  "info.vs.use": "使用{form}"
 }

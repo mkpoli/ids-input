@@ -15,6 +15,7 @@
   "ids.grass.inward": "Inward uprights",
   "ids.grass.split": "Split",
   "ids.alternatives.replace": "Replace",
+  "ids.suggestion.label": "Did you mean",
   "ids.alternatives.show": "Alternatives",
   "ids.alternatives.split": "Split",
   "ids.choose": "Choose {part}",
@@ -433,5 +434,11 @@
   "ids.ucv.failed": "The list could not be loaded.",
   "ids.ucv.kind": "List",
   "ids.ucv.form": "Form {name}",
-  "ids.alternatives.unifiable": "Unifiable forms"
+  "ids.alternatives.unifiable": "Unifiable forms",
+  "info.vs.title": "Variation selector",
+  "info.vs.ivs": "Ideographic Variation Selector",
+  "info.vs.svs": "Standardized Variation Selector",
+  "info.vs.plain": "Plain",
+  "info.vs.input": "Other variation selector",
+  "info.vs.use": "Use {form}"
 }

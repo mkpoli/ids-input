@@ -15,6 +15,7 @@
   "ids.grass.inward": "अंदर की ओर खड़ी रेखाएँ",
   "ids.grass.split": "विभाजित",
   "ids.alternatives.replace": "बदलें",
+  "ids.suggestion.label": "क्या आपका मतलब यह था",
   "ids.alternatives.show": "विकल्प",
   "ids.alternatives.split": "विभाजित करें",
   "ids.choose": "{part} चुनें",
@@ -433,5 +434,11 @@
   "ids.ucv.failed": "सूची लोड नहीं हो सकी।",
   "ids.ucv.kind": "सूची",
   "ids.ucv.form": "रूप {name}",
-  "ids.alternatives.unifiable": "एकीकरणीय रूप"
+  "ids.alternatives.unifiable": "एकीकरणीय रूप",
+  "info.vs.title": "रूप चयनक",
+  "info.vs.ivs": "भावचित्र रूप चयनक",
+  "info.vs.svs": "मानकीकृत रूप चयनक",
+  "info.vs.plain": "मूल",
+  "info.vs.input": "अन्य रूप चयनक",
+  "info.vs.use": "{form} चुनें"
 }

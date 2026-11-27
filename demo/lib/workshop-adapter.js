@@ -16,6 +16,7 @@ import sealExtraParts from '../../data/seal-extra-parts.json'
 import parts from '../../data/ids-parts.json?url'
 import sketches from '../../data/sketch-parts.json.gz?url'
 import forms from '../../data/component-forms.tsv?url'
+import positional from '../../data/positional-forms.tsv?url'
 import names from '../../data/component-names.tsv?url'
 import folds from '../../data/component-name-folds.tsv?url'
 import characterInfo from '../../data/character-info.json.gz?url'
@@ -31,7 +32,7 @@ import characters from '../../data/character-vocabulary.tsv.gz?url'
  * @param {{ after?: Promise<unknown> }} [options]
  */
 export function workshopAdapter({ after } = {}) {
-  const sealAdapter = smallSealAdapter({ after, data: sealData, shuishu: shuishuData, jurchen: jurchenData, ids, layers, zitools, chise: corpus, project: projectIds, overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, customOutlines, characterInfo, chains, custom, variations })
+  const sealAdapter = smallSealAdapter({ after, data: sealData, shuishu: shuishuData, jurchen: jurchenData, ids, layers, zitools, chise: corpus, project: projectIds, overwrite: overwriteIds, components, parts, sketches, forms, positional, names, folds, characters, customOutlines, characterInfo, chains, custom, variations })
   return { ...sealAdapter, parts: async () => {
     const curated = await sealAdapter.parts()
     const seen = new Set(curated.map(part => part.part))

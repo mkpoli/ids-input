@@ -15,6 +15,7 @@
   "ids.grass.inward": "İçe dönük dikeyler",
   "ids.grass.split": "Ayrık",
   "ids.alternatives.replace": "Değiştir",
+  "ids.suggestion.label": "Bunu mu demek istediniz",
   "ids.alternatives.show": "Alternatifler",
   "ids.alternatives.split": "Böl",
   "ids.choose": "{part} parçasını seç",
@@ -433,5 +434,11 @@
   "ids.ucv.failed": "Liste yüklenemedi.",
   "ids.ucv.kind": "Liste",
   "ids.ucv.form": "Biçim {name}",
-  "ids.alternatives.unifiable": "Birleştirilebilir biçimler"
+  "ids.alternatives.unifiable": "Birleştirilebilir biçimler",
+  "info.vs.title": "Varyasyon seçici",
+  "info.vs.ivs": "İdeografik Varyasyon Seçici",
+  "info.vs.svs": "Standartlaştırılmış Varyasyon Seçici",
+  "info.vs.plain": "Temel",
+  "info.vs.input": "Diğer varyasyon seçici",
+  "info.vs.use": "{form} kullan"
 }

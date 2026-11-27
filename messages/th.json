@@ -15,6 +15,7 @@
   "ids.grass.inward": "ขีดตั้งเอียงเข้าด้านใน",
   "ids.grass.split": "แยกกัน",
   "ids.alternatives.replace": "แทนที่",
+  "ids.suggestion.label": "คุณหมายถึง",
   "ids.alternatives.show": "ทางเลือกอื่น",
   "ids.alternatives.split": "แยก",
   "ids.choose": "เลือก {part}",
@@ -433,5 +434,11 @@
   "ids.ucv.failed": "ไม่สามารถโหลดรายการได้",
   "ids.ucv.kind": "รายการ",
   "ids.ucv.form": "รูปแบบ {name}",
-  "ids.alternatives.unifiable": "รูปที่รวมรหัสได้"
+  "ids.alternatives.unifiable": "รูปที่รวมรหัสได้",
+  "info.vs.title": "ตัวเลือกรูปแปร",
+  "info.vs.ivs": "ตัวเลือกรูปแปรอักษรภาพ",
+  "info.vs.svs": "ตัวเลือกรูปแปรมาตรฐาน",
+  "info.vs.plain": "ปกติ",
+  "info.vs.input": "ตัวเลือกรูปแปรอื่น",
+  "info.vs.use": "ใช้ {form}"
 }

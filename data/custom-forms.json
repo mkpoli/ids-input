@@ -109,7 +109,7 @@
      "text": "⿹⿺㇉一灬",
      "status": "candidate",
      "count": 1,
-     "id": "X-01788"
+     "id": "X-00001"
     },
     {
      "in": "zi-tools",
@@ -141,7 +141,7 @@
      "text": "⿱⺈𫩏",
      "status": "candidate",
      "count": 1,
-     "id": "X-01591"
+     "id": "X-00002"
     },
     {
      "in": "zi-tools",
@@ -389,7 +389,7 @@
      "text": "⿾犭",
      "status": "candidate",
      "count": 1,
-     "id": "X-01973"
+     "id": "X-00652"
     },
     {
      "in": "zi-tools",
@@ -448,7 +448,7 @@
    "entity": "&X-00010;",
    "char": "U+F000A",
    "babelstone": "{10}",
-   "chise": "",
+   "chise": "&CDP-88EC;",
    "zi_tools": "",
    "expression": "",
    "subtractions": "㇯巩工 ㇯𠌋俗 ㇯㇯𡠧其女 ㇯㇯𥭰𥫗木 ㇯㇯𦝠吂⺼ ㇯𨾑隹",
@@ -480,7 +480,7 @@
      "in": "zi-tools",
      "text": "⿹㇈乂",
      "status": "confirmed",
-     "count": 2,
+     "count": 3,
      "id": "X-00010"
     },
     {
@@ -496,12 +496,7 @@
      "count": 1
     }
    ],
-   "of": [
-    {
-     "id": "X-00772",
-     "relation": "candidate"
-    }
-   ]
+   "of": []
   },
   {
    "id": "X-00011",
@@ -1225,7 +1220,7 @@
      "text": "⿻弋一",
      "status": "candidate",
      "count": 1,
-     "id": "X-01938"
+     "id": "X-00028"
     },
     {
      "in": "zi-tools",
@@ -3825,10 +3820,10 @@
    "entity": "&X-00094;",
    "char": "U+F005E",
    "babelstone": "{95}",
-   "chise": "",
+   "chise": "&CDP-89CE;",
    "zi_tools": "",
    "expression": "",
-   "subtractions": "㇯㇯𦙪㇒⺝ ㇯𭅯⺊ ㇯𭅰⺊ ㇯㇯𭾊由皿 ㇯㇯𭾊丨𰤷 ㇯㇯𮓞丅⺝",
+   "subtractions": "㇯𢀞工 ㇯㇯𦙪㇒⺝ ㇯𭅯⺊ ㇯𭅰⺊ ㇯㇯𭾊由皿 ㇯㇯𭾊丨𰤷 ㇯㇯𮓞丅⺝",
    "character": "",
    "description": "bottom of 𢀞 (ECF1)",
    "status": "confirmed",
@@ -3847,13 +3842,6 @@
      "status": "confirmed",
      "count": 2,
      "id": "X-00094"
-    },
-    {
-     "in": "chise",
-     "text": "&CDP-89CE;",
-     "status": "candidate",
-     "count": 1,
-     "id": "X-00808"
     },
     {
      "in": "zi-tools",
@@ -4440,7 +4428,7 @@
      "text": "⿵冂八",
      "status": "candidate",
      "count": 1,
-     "id": "X-01743"
+     "id": "X-00112"
     },
     {
      "in": "chise",
@@ -4464,7 +4452,12 @@
      "id": "X-01736"
     }
    ],
-   "of": []
+   "of": [
+    {
+     "id": "X-01034",
+     "relation": "candidate"
+    }
+   ]
   },
   {
    "id": "X-00113",
@@ -4912,7 +4905,7 @@
      "text": "⿱𠂈𰀠",
      "status": "candidate",
      "count": 1,
-     "id": "X-01688"
+     "id": "X-00124"
     },
     {
      "in": "zi-tools",
@@ -5159,7 +5152,7 @@
      "text": "⿻⿱彐八⿰丨丨",
      "status": "candidate",
      "count": 1,
-     "id": "X-01834"
+     "id": "X-00135"
     }
    ],
    "of": []
@@ -5184,10 +5177,15 @@
      "text": "⿱龷𰀠",
      "status": "candidate",
      "count": 1,
-     "id": "X-01686"
+     "id": "X-00136"
     }
    ],
-   "of": []
+   "of": [
+    {
+     "id": "X-00934",
+     "relation": "candidate"
+    }
+   ]
   },
   {
    "id": "X-00137",
@@ -5549,7 +5547,7 @@
      "text": "⿰丨臼",
      "status": "candidate",
      "count": 1,
-     "id": "X-01555"
+     "id": "X-00154"
     }
    ],
    "of": []
@@ -5574,14 +5572,14 @@
      "text": "⿱卄両",
      "status": "candidate",
      "count": 1,
-     "id": "X-01661"
+     "id": "X-00155"
     },
     {
      "in": "zi-tools",
      "text": "⿱卄両",
      "status": "candidate",
      "count": 1,
-     "id": "X-01661"
+     "id": "X-00155"
     }
    ],
    "of": []
@@ -5606,7 +5604,7 @@
      "text": "⿳⿱爫⿰丨冃罒又",
      "status": "candidate",
      "count": 1,
-     "id": "X-01708"
+     "id": "X-00156"
     }
    ],
    "of": []
@@ -5631,7 +5629,7 @@
      "text": "㇯烏一",
      "status": "candidate",
      "count": 1,
-     "id": "X-01987"
+     "id": "X-00157"
     }
    ],
    "of": []
@@ -5656,14 +5654,14 @@
      "text": "⿻亻⿴囗丷",
      "status": "candidate",
      "count": 1,
-     "id": "X-01895"
+     "id": "X-00158"
     },
     {
      "in": "zi-tools",
      "text": "⿻亻⿴囗丷",
      "status": "candidate",
      "count": 1,
-     "id": "X-01895"
+     "id": "X-00158"
     }
    ],
    "of": []
@@ -5688,7 +5686,7 @@
      "text": "⿻𡗗丷",
      "status": "candidate",
      "count": 1,
-     "id": "X-01954"
+     "id": "X-00159"
     }
    ],
    "of": []
@@ -5713,7 +5711,7 @@
      "text": "⿻三夂",
      "status": "candidate",
      "count": 1,
-     "id": "X-01855"
+     "id": "X-00160"
     }
    ],
    "of": []
@@ -5738,7 +5736,7 @@
      "text": "⿱冖⿰𰀄⿺乚𠁣",
      "status": "candidate",
      "count": 1,
-     "id": "X-01659"
+     "id": "X-00161"
     }
    ],
    "of": []
@@ -5763,7 +5761,7 @@
      "text": "⿸⿹屮㇇㇏",
      "status": "candidate",
      "count": 1,
-     "id": "X-01765"
+     "id": "X-00162"
     },
     {
      "in": "zi-tools",
@@ -8647,14 +8645,14 @@
      "text": "⿳一𠃑一",
      "status": "candidate",
      "count": 1,
-     "id": "X-01715"
+     "id": "X-00303"
     },
     {
      "in": "zi-tools",
      "text": "⿳一𠃑一",
      "status": "candidate",
      "count": 1,
-     "id": "X-01715"
+     "id": "X-00303"
     }
    ],
    "of": []
@@ -8832,7 +8830,7 @@
      "text": "⿱⿹𠃌㐅一",
      "status": "candidate",
      "count": 1,
-     "id": "X-01611"
+     "id": "X-00311"
     }
    ],
    "of": []
@@ -11507,7 +11505,7 @@
      "text": "⿰⿱廿⿻口土隹",
      "status": "candidate",
      "count": 1,
-     "id": "X-01550"
+     "id": "X-00438"
     }
    ],
    "of": []
@@ -11566,7 +11564,7 @@
      "text": "⿱廿⿻冂从",
      "status": "candidate",
      "count": 1,
-     "id": "X-01672"
+     "id": "X-00441"
     }
    ],
    "of": []
@@ -11721,7 +11719,7 @@
      "text": "⿻干㗊",
      "status": "candidate",
      "count": 1,
-     "id": "X-01937"
+     "id": "X-00448"
     },
     {
      "in": "zi-tools",
@@ -11889,7 +11887,7 @@
      "text": "⿻厸大",
      "status": "candidate",
      "count": 1,
-     "id": "X-01917"
+     "id": "X-00457"
     },
     {
      "in": "zi-tools",
@@ -11938,7 +11936,7 @@
      "text": "⿱⿻土䀠八",
      "status": "candidate",
      "count": 1,
-     "id": "X-01617"
+     "id": "X-00459"
     }
    ],
    "of": []
@@ -11963,7 +11961,7 @@
      "text": "⿻乇从",
      "status": "candidate",
      "count": 1,
-     "id": "X-01880"
+     "id": "X-00460"
     }
    ],
    "of": []
@@ -11988,7 +11986,7 @@
      "text": "⿵冂㸚",
      "status": "candidate",
      "count": 1,
-     "id": "X-01741"
+     "id": "X-00461"
     },
     {
      "in": "babelstone",
@@ -12002,7 +12000,7 @@
      "text": "⿵冂㸚",
      "status": "candidate",
      "count": 1,
-     "id": "X-01741"
+     "id": "X-00461"
     }
    ],
    "of": []
@@ -12093,7 +12091,7 @@
      "text": "⿻𠈌⿱丨大",
      "status": "candidate",
      "count": 1,
-     "id": "X-01951"
+     "id": "X-00465"
     }
    ],
    "of": []
@@ -12118,7 +12116,7 @@
      "text": "⿻⿱卝干誩",
      "status": "candidate",
      "count": 1,
-     "id": "X-01832"
+     "id": "X-00466"
     }
    ],
    "of": []
@@ -12320,7 +12318,7 @@
      "text": "⿻工⿱从吅",
      "status": "candidate",
      "count": 1,
-     "id": "X-01934"
+     "id": "X-00474"
     },
     {
      "in": "zi-tools",
@@ -12352,7 +12350,7 @@
      "text": "⿻丨⿱丷⿵冂㸚",
      "status": "candidate",
      "count": 1,
-     "id": "X-01859"
+     "id": "X-00475"
     }
    ],
    "of": []
@@ -12409,7 +12407,7 @@
      "text": "⿻十𠈌",
      "status": "candidate",
      "count": 1,
-     "id": "X-01913"
+     "id": "X-00477"
     }
    ],
    "of": []
@@ -12434,7 +12432,7 @@
      "text": "⿻口⿻人丷",
      "status": "candidate",
      "count": 1,
-     "id": "X-01921"
+     "id": "X-00478"
     },
     {
      "in": "zi-tools",
@@ -12466,7 +12464,7 @@
      "text": "⿻亅⿱凵⿰冫⿱丿丶",
      "status": "candidate",
      "count": 1,
-     "id": "X-01886"
+     "id": "X-00479"
     }
    ],
    "of": []
@@ -12523,7 +12521,7 @@
      "text": "⿱一⿻山𠈌",
      "status": "candidate",
      "count": 1,
-     "id": "X-01630"
+     "id": "X-00481"
     },
     {
      "in": "zi-tools",
@@ -12555,7 +12553,7 @@
      "text": "⿻𦥔𠮛",
      "status": "candidate",
      "count": 1,
-     "id": "X-01959"
+     "id": "X-00482"
     }
    ],
    "of": []
@@ -12605,7 +12603,7 @@
      "text": "⿻丨𠆢",
      "status": "candidate",
      "count": 1,
-     "id": "X-01866"
+     "id": "X-00484"
     },
     {
      "in": "zi-tools",
@@ -12654,7 +12652,7 @@
      "text": "⿸尹㇏",
      "status": "candidate",
      "count": 1,
-     "id": "X-01776"
+     "id": "X-00486"
     },
     {
      "in": "zi-tools",
@@ -12686,7 +12684,7 @@
      "text": "⿻⿱亠⿻⿱凵丨凵昍",
      "status": "candidate",
      "count": 1,
-     "id": "X-01830"
+     "id": "X-00487"
     },
     {
      "in": "zi-tools",
@@ -12735,7 +12733,7 @@
      "text": "⿻干⿴囗从",
      "status": "candidate",
      "count": 1,
-     "id": "X-01936"
+     "id": "X-00489"
     }
    ],
    "of": []
@@ -12777,7 +12775,7 @@
      "text": "⿻千⿱𠈌二",
      "status": "candidate",
      "count": 1,
-     "id": "X-01914"
+     "id": "X-00491"
     }
    ],
    "of": []
@@ -12802,7 +12800,7 @@
      "text": "⿻⿱乊一亅",
      "status": "candidate",
      "count": 1,
-     "id": "X-01829"
+     "id": "X-00492"
     },
     {
      "in": "zi-tools",
@@ -12834,7 +12832,7 @@
      "text": "⿻丷大",
      "status": "candidate",
      "count": 1,
-     "id": "X-01873"
+     "id": "X-00493"
     }
    ],
    "of": []
@@ -13165,7 +13163,7 @@
      "text": "⿻𦘒𠚪",
      "status": "candidate",
      "count": 1,
-     "id": "X-01957"
+     "id": "X-00509"
     }
    ],
    "of": []
@@ -13190,7 +13188,7 @@
      "text": "⿻吕氺",
      "status": "candidate",
      "count": 1,
-     "id": "X-01925"
+     "id": "X-00510"
     }
    ],
    "of": []
@@ -13245,7 +13243,7 @@
      "text": "⿻⿰丨丨丷",
      "status": "candidate",
      "count": 1,
-     "id": "X-01820"
+     "id": "X-00512"
     }
    ],
    "of": []
@@ -13345,7 +13343,7 @@
      "text": "⿲𰀪丨𰀪",
      "status": "candidate",
      "count": 1,
-     "id": "X-01705"
+     "id": "X-00517"
     },
     {
      "in": "babelstone",
@@ -13453,7 +13451,7 @@
      "text": "⿵吊口",
      "status": "candidate",
      "count": 1,
-     "id": "X-01745"
+     "id": "X-00522"
     }
    ],
    "of": []
@@ -13561,7 +13559,7 @@
      "text": "⿻彖丶",
      "status": "candidate",
      "count": 1,
-     "id": "X-01942"
+     "id": "X-00527"
     },
     {
      "in": "zi-tools",
@@ -13661,14 +13659,14 @@
      "text": "⿻丨⿵冂⿰𰀁𰀁",
      "status": "candidate",
      "count": 1,
-     "id": "X-01862"
+     "id": "X-00532"
     },
     {
      "in": "zi-tools",
      "text": "⿻丨⿵冂⿰𰀁𰀁",
      "status": "candidate",
      "count": 1,
-     "id": "X-01862"
+     "id": "X-00532"
     }
    ],
    "of": []
@@ -13752,7 +13750,7 @@
      "text": "⿻⿱吕𠆢丨",
      "status": "candidate",
      "count": 1,
-     "id": "X-01833"
+     "id": "X-00536"
     },
     {
      "in": "zi-tools",
@@ -13917,7 +13915,7 @@
      "text": "⿹⺄⿻丨㇒",
      "status": "candidate",
      "count": 1,
-     "id": "X-01787"
+     "id": "X-00542"
     },
     {
      "in": "zi-tools",
@@ -14292,7 +14290,7 @@
      "text": "⿻日𠤎",
      "status": "candidate",
      "count": 1,
-     "id": "X-01943"
+     "id": "X-00558"
     }
    ],
    "of": []
@@ -14428,14 +14426,14 @@
      "text": "⿾𦣞",
      "status": "candidate",
      "count": 1,
-     "id": "X-01974"
+     "id": "X-00563"
     },
     {
      "in": "zi-tools",
      "text": "⿾𦣞",
      "status": "candidate",
      "count": 1,
-     "id": "X-01974"
+     "id": "X-00563"
     }
    ],
    "of": []
@@ -14570,7 +14568,7 @@
      "text": "⿻乃丶",
      "status": "candidate",
      "count": 1,
-     "id": "X-01879"
+     "id": "X-00570"
     },
     {
      "in": "zi-tools",
@@ -14619,7 +14617,7 @@
      "text": "⿰丨三",
      "status": "candidate",
      "count": 1,
-     "id": "X-01554"
+     "id": "X-00572"
     }
    ],
    "of": []
@@ -14661,7 +14659,7 @@
      "text": "⿻冄⿰丨丨",
      "status": "candidate",
      "count": 1,
-     "id": "X-01902"
+     "id": "X-00574"
     }
    ],
    "of": []
@@ -14737,7 +14735,7 @@
      "text": "⿻⿱一彐⿰丨丨",
      "status": "candidate",
      "count": 1,
-     "id": "X-01828"
+     "id": "X-00578"
     },
     {
      "in": "zi-tools",
@@ -14818,14 +14816,14 @@
      "text": "⿷匚二",
      "status": "candidate",
      "count": 1,
-     "id": "X-01759"
+     "id": "X-00581"
     },
     {
      "in": "zi-tools",
      "text": "⿷匚二",
      "status": "candidate",
      "count": 1,
-     "id": "X-01759"
+     "id": "X-00581"
     }
    ],
    "of": []
@@ -14850,7 +14848,7 @@
      "text": "⿻丅⿱八⿵冂⿰糸虫",
      "status": "candidate",
      "count": 1,
-     "id": "X-01853"
+     "id": "X-00582"
     }
    ],
    "of": []
@@ -14875,7 +14873,7 @@
      "text": "⿴⿻冂一十",
      "status": "candidate",
      "count": 1,
-     "id": "X-01728"
+     "id": "X-00583"
     }
    ],
    "of": []
@@ -14934,7 +14932,7 @@
      "text": "⿻龰亘",
      "status": "candidate",
      "count": 1,
-     "id": "X-01948"
+     "id": "X-00586"
     }
    ],
    "of": []
@@ -15050,14 +15048,14 @@
      "text": "⿼己工",
      "status": "candidate",
      "count": 1,
-     "id": "X-01968"
+     "id": "X-00591"
     },
     {
      "in": "zi-tools",
      "text": "⿼己工",
      "status": "candidate",
      "count": 1,
-     "id": "X-01968"
+     "id": "X-00591"
     }
    ],
    "of": []
@@ -15165,7 +15163,7 @@
      "text": "⿻⿰丿㇂一",
      "status": "candidate",
      "count": 1,
-     "id": "X-01821"
+     "id": "X-00596"
     }
    ],
    "of": []
@@ -15377,7 +15375,7 @@
      "text": "⿰𠄌彐",
      "status": "candidate",
      "count": 1,
-     "id": "X-01570"
+     "id": "X-00608"
     }
    ],
    "of": []
@@ -15402,7 +15400,7 @@
      "text": "⿻口㇉",
      "status": "candidate",
      "count": 1,
-     "id": "X-01922"
+     "id": "X-00609"
     },
     {
      "in": "zi-tools",
@@ -15434,7 +15432,7 @@
      "text": "⿻⿳⿻口一口𠮛丨",
      "status": "candidate",
      "count": 1,
-     "id": "X-01836"
+     "id": "X-00610"
     }
    ],
    "of": []
@@ -15633,7 +15631,7 @@
      "text": "⿻口⿰丨丨",
      "status": "candidate",
      "count": 1,
-     "id": "X-01919"
+     "id": "X-00617"
     },
     {
      "in": "zi-tools",
@@ -15643,7 +15641,12 @@
      "id": "X-02050"
     }
    ],
-   "of": []
+   "of": [
+    {
+     "id": "X-00749",
+     "relation": "candidate"
+    }
+   ]
   },
   {
    "id": "X-00618",
@@ -15750,7 +15753,7 @@
      "text": "⿻⿱冖冂乚",
      "status": "candidate",
      "count": 1,
-     "id": "X-01831"
+     "id": "X-00623"
     },
     {
      "in": "zi-tools",
@@ -15830,7 +15833,7 @@
      "text": "⿵冂⿲⿱丶丶丨⿱丶丶",
      "status": "candidate",
      "count": 1,
-     "id": "X-01739"
+     "id": "X-00626"
     }
    ],
    "of": []
@@ -15855,7 +15858,7 @@
      "text": "⿻十⿵冂㸚",
      "status": "candidate",
      "count": 1,
-     "id": "X-01910"
+     "id": "X-00627"
     }
    ],
    "of": []
@@ -15897,7 +15900,7 @@
      "text": "⿻几二",
      "status": "candidate",
      "count": 1,
-     "id": "X-01906"
+     "id": "X-00629"
     },
     {
      "in": "zi-tools",
@@ -16067,7 +16070,7 @@
      "text": "⿻刀⿱丶丶",
      "status": "candidate",
      "count": 1,
-     "id": "X-01908"
+     "id": "X-00636"
     }
    ],
    "of": []
@@ -16126,7 +16129,7 @@
      "text": "⿻一束",
      "status": "candidate",
      "count": 1,
-     "id": "X-01850"
+     "id": "X-00639"
     },
     {
      "in": "zi-tools",
@@ -16262,14 +16265,14 @@
      "text": "⿿止",
      "status": "candidate",
      "count": 1,
-     "id": "X-01978"
+     "id": "X-00644"
     },
     {
      "in": "zi-tools",
      "text": "⿿止",
      "status": "candidate",
      "count": 1,
-     "id": "X-01978"
+     "id": "X-00644"
     }
    ],
    "of": []
@@ -16447,17 +16450,22 @@
      "text": "⿾犭",
      "status": "candidate",
      "count": 1,
-     "id": "X-01973"
+     "id": "X-00652"
     },
     {
      "in": "zi-tools",
      "text": "⿾犭",
      "status": "candidate",
      "count": 1,
-     "id": "X-01973"
+     "id": "X-00652"
     }
    ],
-   "of": []
+   "of": [
+    {
+     "id": "X-00008",
+     "relation": "candidate"
+    }
+   ]
   },
   {
    "id": "X-00653",
@@ -16496,14 +16504,14 @@
      "text": "⿻屮亼",
      "status": "candidate",
      "count": 1,
-     "id": "X-01933"
+     "id": "X-00654"
     },
     {
      "in": "zi-tools",
      "text": "⿻屮亼",
      "status": "candidate",
      "count": 1,
-     "id": "X-01933"
+     "id": "X-00654"
     }
    ],
    "of": []
@@ -16715,7 +16723,7 @@
      "text": "⿻十龷",
      "status": "candidate",
      "count": 1,
-     "id": "X-01912"
+     "id": "X-00664"
     }
    ],
    "of": []
@@ -16802,14 +16810,14 @@
      "text": "⿻𬺰乀",
      "status": "candidate",
      "count": 1,
-     "id": "X-01961"
+     "id": "X-00667"
     },
     {
      "in": "zi-tools",
      "text": "⿻𬺰乀",
      "status": "candidate",
      "count": 1,
-     "id": "X-01961"
+     "id": "X-00667"
     }
    ],
    "of": []
@@ -16834,7 +16842,7 @@
      "text": "⿻囗𠃊",
      "status": "candidate",
      "count": 1,
-     "id": "X-01926"
+     "id": "X-00668"
     }
    ],
    "of": []
@@ -17073,7 +17081,7 @@
      "text": "⿰⿱𠃊丆尸",
      "status": "candidate",
      "count": 1,
-     "id": "X-01551"
+     "id": "X-00679"
     }
    ],
    "of": []
@@ -17098,7 +17106,7 @@
      "text": "⿻二儿",
      "status": "candidate",
      "count": 1,
-     "id": "X-01888"
+     "id": "X-00680"
     },
     {
      "in": "zi-tools",
@@ -17130,7 +17138,7 @@
      "text": "⿻串一",
      "status": "candidate",
      "count": 1,
-     "id": "X-01871"
+     "id": "X-00681"
     },
     {
      "in": "zi-tools",
@@ -17162,7 +17170,7 @@
      "text": "⿻中𠆢",
      "status": "candidate",
      "count": 1,
-     "id": "X-01869"
+     "id": "X-00682"
     },
     {
      "in": "zi-tools",
@@ -17194,7 +17202,7 @@
      "text": "⿻丁⿱𠃋㇀",
      "status": "candidate",
      "count": 1,
-     "id": "X-01851"
+     "id": "X-00683"
     },
     {
      "in": "zi-tools",
@@ -17304,7 +17312,7 @@
      "text": "⿻𠘨㇒",
      "status": "candidate",
      "count": 1,
-     "id": "X-01953"
+     "id": "X-00687"
     },
     {
      "in": "zi-tools",
@@ -17377,7 +17385,7 @@
      "text": "⿱⿻且⿲丨丨丨八",
      "status": "candidate",
      "count": 1,
-     "id": "X-01615"
+     "id": "X-00690"
     },
     {
      "in": "zi-tools",
@@ -17474,7 +17482,7 @@
      "text": "⿻丂丨",
      "status": "candidate",
      "count": 1,
-     "id": "X-01852"
+     "id": "X-00694"
     },
     {
      "in": "zi-tools",
@@ -17652,7 +17660,7 @@
      "text": "㇯𨸏㇒",
      "status": "candidate",
      "count": 1,
-     "id": "X-01990"
+     "id": "X-00701"
     },
     {
      "in": "zi-tools",
@@ -17684,7 +17692,7 @@
      "text": "⿻弓人",
      "status": "candidate",
      "count": 1,
-     "id": "X-01940"
+     "id": "X-00702"
     },
     {
      "in": "zi-tools",
@@ -17716,7 +17724,7 @@
      "text": "⿵⿸丨𠃍𰀪",
      "status": "candidate",
      "count": 1,
-     "id": "X-01737"
+     "id": "X-00703"
     },
     {
      "in": "zi-tools",
@@ -17806,7 +17814,7 @@
      "text": "⿱⿰𠮝口禸",
      "status": "candidate",
      "count": 1,
-     "id": "X-02039"
+     "id": "X-00707"
     }
    ],
    "of": []
@@ -17928,7 +17936,7 @@
      "text": "⿻冂⿰二二",
      "status": "candidate",
      "count": 1,
-     "id": "X-01899"
+     "id": "X-00712"
     }
    ],
    "of": []
@@ -17953,7 +17961,7 @@
      "text": "⿱己乂",
      "status": "candidate",
      "count": 1,
-     "id": "X-01667"
+     "id": "X-00713"
     },
     {
      "in": "zi-tools",
@@ -18130,7 +18138,7 @@
      "text": "⿻土⿱丷丷",
      "status": "candidate",
      "count": 1,
-     "id": "X-01927"
+     "id": "X-00720"
     }
    ],
    "of": []
@@ -18277,14 +18285,14 @@
      "text": "⿻千从",
      "status": "candidate",
      "count": 1,
-     "id": "X-01915"
+     "id": "X-00725"
     },
     {
      "in": "zi-tools",
      "text": "⿻千从",
      "status": "candidate",
      "count": 1,
-     "id": "X-01915"
+     "id": "X-00725"
     }
    ],
    "of": []
@@ -18340,7 +18348,7 @@
      "text": "⿻丷屮",
      "status": "candidate",
      "count": 1,
-     "id": "X-01874"
+     "id": "X-00727"
     }
    ],
    "of": []
@@ -18634,7 +18642,7 @@
      "text": "⿻口大",
      "status": "candidate",
      "count": 1,
-     "id": "X-01923"
+     "id": "X-00740"
     },
     {
      "in": "zi-tools",
@@ -18792,7 +18800,7 @@
      "text": "⿻土吅",
      "status": "candidate",
      "count": 1,
-     "id": "X-01928"
+     "id": "X-00746"
     }
    ],
    "of": []
@@ -18817,7 +18825,7 @@
      "text": "⿻𠈌十",
      "status": "candidate",
      "count": 1,
-     "id": "X-01952"
+     "id": "X-00747"
     }
    ],
    "of": []
@@ -18842,14 +18850,14 @@
      "text": "⿰丨𠃎",
      "status": "candidate",
      "count": 1,
-     "id": "X-01556"
+     "id": "X-00748"
     },
     {
      "in": "zi-tools",
      "text": "⿰丨𠃎",
      "status": "candidate",
      "count": 1,
-     "id": "X-01556"
+     "id": "X-00748"
     }
    ],
    "of": []
@@ -18888,7 +18896,7 @@
      "text": "⿻口⿰丨丨",
      "status": "candidate",
      "count": 1,
-     "id": "X-01919"
+     "id": "X-00617"
     },
     {
      "in": "zi-tools",
@@ -19247,7 +19255,7 @@
      "text": "⿸⿹丅丿丨",
      "status": "candidate",
      "count": 1,
-     "id": "X-01764"
+     "id": "X-00760"
     },
     {
      "in": "zi-tools",
@@ -19284,14 +19292,14 @@
      "text": "⿵卄二",
      "status": "candidate",
      "count": 1,
-     "id": "X-01744"
+     "id": "X-00761"
     },
     {
      "in": "zi-tools",
      "text": "⿵卄二",
      "status": "candidate",
      "count": 1,
-     "id": "X-01744"
+     "id": "X-00761"
     }
    ],
    "of": []
@@ -19442,14 +19450,14 @@
      "text": "⿻十吅",
      "status": "candidate",
      "count": 1,
-     "id": "X-01911"
+     "id": "X-00766"
     },
     {
      "in": "zi-tools",
      "text": "⿻十吅",
      "status": "candidate",
      "count": 1,
-     "id": "X-01911"
+     "id": "X-00766"
     }
    ],
    "of": []
@@ -19474,7 +19482,7 @@
      "text": "⿱㇒⿻一止",
      "status": "candidate",
      "count": 1,
-     "id": "X-01622"
+     "id": "X-00767"
     },
     {
      "in": "zi-tools",
@@ -19560,7 +19568,7 @@
      "text": "⿻𣄼丨",
      "status": "candidate",
      "count": 2,
-     "id": "X-01955"
+     "id": "X-00770"
     },
     {
      "in": "zi-tools",
@@ -19599,38 +19607,6 @@
      "status": "confirmed",
      "count": 3,
      "id": "X-00771"
-    }
-   ],
-   "of": []
-  },
-  {
-   "id": "X-00772",
-   "entity": "&X-00772;",
-   "char": "U+F0304",
-   "babelstone": "",
-   "chise": "&CDP-88EC;",
-   "zi_tools": "",
-   "expression": "",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 1,
-   "used_in": "𠅴",
-   "equivalents": [
-    {
-     "in": "babelstone",
-     "text": "{10}",
-     "status": "candidate",
-     "count": 1,
-     "id": "X-00010"
-    },
-    {
-     "in": "zi-tools",
-     "text": "⿹㇈乂",
-     "status": "candidate",
-     "count": 1,
-     "id": "X-00010"
     }
    ],
    "of": []
@@ -19753,14 +19729,14 @@
      "text": "⿾𨸏",
      "status": "candidate",
      "count": 1,
-     "id": "X-01975"
+     "id": "X-00776"
     },
     {
      "in": "zi-tools",
      "text": "⿾𨸏",
      "status": "candidate",
      "count": 1,
-     "id": "X-01975"
+     "id": "X-00776"
     }
    ],
    "of": []
@@ -20516,7 +20492,7 @@
      "text": "⿻⿱⿻口一口丨",
      "status": "candidate",
      "count": 1,
-     "id": "X-01825"
+     "id": "X-00803"
     }
    ],
    "of": []
@@ -20645,32 +20621,7 @@
      "text": "⿲丿⿱⿰𠃎𠃊⿰𠃍厂丨",
      "status": "candidate",
      "count": 1,
-     "id": "X-01703"
-    }
-   ],
-   "of": []
-  },
-  {
-   "id": "X-00808",
-   "entity": "&X-00808;",
-   "char": "U+F0328",
-   "babelstone": "",
-   "chise": "&CDP-89CE;",
-   "zi_tools": "",
-   "expression": "",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 1,
-   "used_in": "𢀞",
-   "equivalents": [
-    {
-     "in": "babelstone",
-     "text": "{95}",
-     "status": "candidate",
-     "count": 1,
-     "id": "X-00094"
+     "id": "X-00807"
     }
    ],
    "of": []
@@ -20837,7 +20788,7 @@
      "text": "⿻冖丿",
      "status": "candidate",
      "count": 1,
-     "id": "X-01904"
+     "id": "X-00814"
     },
     {
      "in": "zi-tools",
@@ -20918,14 +20869,14 @@
      "text": "⿰𠄌丶",
      "status": "candidate",
      "count": 1,
-     "id": "X-01569"
+     "id": "X-00817"
     },
     {
      "in": "zi-tools",
      "text": "⿰𠄌丶",
      "status": "candidate",
      "count": 1,
-     "id": "X-01569"
+     "id": "X-00817"
     }
    ],
    "of": []
@@ -20967,7 +20918,7 @@
      "text": "⿻二巾",
      "status": "candidate",
      "count": 1,
-     "id": "X-01889"
+     "id": "X-00819"
     },
     {
      "in": "zi-tools",
@@ -21041,7 +20992,7 @@
      "text": "⿴夂丶",
      "status": "candidate",
      "count": 1,
-     "id": "X-01734"
+     "id": "X-00822"
     }
    ],
    "of": []
@@ -21433,7 +21384,7 @@
      "text": "⿻丷十",
      "status": "candidate",
      "count": 1,
-     "id": "X-01872"
+     "id": "X-00838"
     }
    ],
    "of": []
@@ -21674,7 +21625,7 @@
      "text": "⿳⺊𠔿⿵冂厶",
      "status": "candidate",
      "count": 1,
-     "id": "X-01707"
+     "id": "X-00848"
     }
    ],
    "of": []
@@ -21699,7 +21650,7 @@
      "text": "⿸丆剡",
      "status": "candidate",
      "count": 1,
-     "id": "X-01768"
+     "id": "X-00849"
     }
    ],
    "of": []
@@ -21748,14 +21699,14 @@
      "text": "⿿或",
      "status": "candidate",
      "count": 1,
-     "id": "X-01977"
+     "id": "X-00851"
     },
     {
      "in": "zi-tools",
      "text": "⿿或",
      "status": "candidate",
      "count": 1,
-     "id": "X-01977"
+     "id": "X-00851"
     }
    ],
    "of": []
@@ -21805,7 +21756,7 @@
      "text": "⿱罒⿸厂罒",
      "status": "candidate",
      "count": 1,
-     "id": "X-01681"
+     "id": "X-00853"
     }
    ],
    "of": []
@@ -21974,7 +21925,7 @@
      "text": "⿻𫩏丷",
      "status": "candidate",
      "count": 1,
-     "id": "X-01960"
+     "id": "X-00860"
     }
    ],
    "of": []
@@ -22392,7 +22343,7 @@
      "text": "⿱⿱十罒一",
      "status": "candidate",
      "count": 1,
-     "id": "X-01600"
+     "id": "X-00874"
     },
     {
      "in": "zi-tools",
@@ -22481,7 +22432,7 @@
      "text": "⿱业𦍌",
      "status": "candidate",
      "count": 1,
-     "id": "X-01635"
+     "id": "X-00877"
     }
    ],
    "of": []
@@ -22646,7 +22597,7 @@
      "text": "⿹耳𤣩",
      "status": "candidate",
      "count": 1,
-     "id": "X-01797"
+     "id": "X-00883"
     }
    ],
    "of": []
@@ -22728,7 +22679,7 @@
      "text": "⿱囪心",
      "status": "candidate",
      "count": 1,
-     "id": "X-01664"
+     "id": "X-00886"
     },
     {
      "in": "zi-tools",
@@ -23051,7 +23002,7 @@
      "text": "⿸廿又",
      "status": "candidate",
      "count": 1,
-     "id": "X-01778"
+     "id": "X-00897"
     }
    ],
    "of": []
@@ -23093,7 +23044,7 @@
      "text": "⿻⿲丿凵乚一",
      "status": "candidate",
      "count": 1,
-     "id": "X-01835"
+     "id": "X-00899"
     }
    ],
    "of": []
@@ -23180,14 +23131,14 @@
      "text": "⿱𠂉子",
      "status": "candidate",
      "count": 1,
-     "id": "X-01690"
+     "id": "X-00902"
     },
     {
      "in": "zi-tools",
      "text": "⿱𠂉子",
      "status": "candidate",
      "count": 1,
-     "id": "X-01690"
+     "id": "X-00902"
     }
    ],
    "of": []
@@ -23355,7 +23306,7 @@
      "text": "⿱𠂉一",
      "status": "candidate",
      "count": 1,
-     "id": "X-01689"
+     "id": "X-00908"
     }
    ],
    "of": []
@@ -23484,7 +23435,7 @@
      "text": "⿵戌𣥂",
      "status": "candidate",
      "count": 1,
-     "id": "X-01746"
+     "id": "X-00913"
     }
    ],
    "of": []
@@ -23638,14 +23589,14 @@
      "text": "⿱肀口",
      "status": "candidate",
      "count": 1,
-     "id": "X-01682"
+     "id": "X-00919"
     },
     {
      "in": "zi-tools",
      "text": "⿱肀口",
      "status": "candidate",
      "count": 1,
-     "id": "X-01682"
+     "id": "X-00919"
     }
    ],
    "of": []
@@ -23736,14 +23687,14 @@
      "text": "⿵䒑山",
      "status": "candidate",
      "count": 1,
-     "id": "X-01738"
+     "id": "X-00923"
     },
     {
      "in": "zi-tools",
      "text": "⿵䒑山",
      "status": "candidate",
      "count": 1,
-     "id": "X-01738"
+     "id": "X-00923"
     }
    ],
    "of": []
@@ -23880,14 +23831,14 @@
      "text": "⿱𠃑大",
      "status": "candidate",
      "count": 1,
-     "id": "X-01696"
+     "id": "X-00928"
     },
     {
      "in": "zi-tools",
      "text": "⿱𠃑大",
      "status": "candidate",
      "count": 1,
-     "id": "X-01696"
+     "id": "X-00928"
     }
    ],
    "of": []
@@ -23971,7 +23922,7 @@
      "text": "⿱白方",
      "status": "candidate",
      "count": 1,
-     "id": "X-01680"
+     "id": "X-00932"
     }
    ],
    "of": []
@@ -24033,7 +23984,7 @@
      "text": "⿱龷𰀠",
      "status": "candidate",
      "count": 1,
-     "id": "X-01686"
+     "id": "X-00136"
     }
    ],
    "of": []
@@ -24058,7 +24009,7 @@
      "text": "⿳一由八",
      "status": "candidate",
      "count": 1,
-     "id": "X-01714"
+     "id": "X-00935"
     },
     {
      "in": "zi-tools",
@@ -24107,7 +24058,7 @@
      "text": "⿱刀巴",
      "status": "candidate",
      "count": 1,
-     "id": "X-01660"
+     "id": "X-00937"
     }
    ],
    "of": []
@@ -24132,7 +24083,7 @@
      "text": "⿱廿⺝",
      "status": "candidate",
      "count": 1,
-     "id": "X-01669"
+     "id": "X-00938"
     },
     {
      "in": "zi-tools",
@@ -24256,14 +24207,14 @@
      "text": "⿰工口",
      "status": "candidate",
      "count": 1,
-     "id": "X-01567"
+     "id": "X-00944"
     },
     {
      "in": "zi-tools",
      "text": "⿰工口",
      "status": "candidate",
      "count": 1,
-     "id": "X-01567"
+     "id": "X-00944"
     }
    ],
    "of": []
@@ -24320,7 +24271,7 @@
      "text": "⿱廿巾",
      "status": "candidate",
      "count": 1,
-     "id": "X-01673"
+     "id": "X-00946"
     },
     {
      "in": "zi-tools",
@@ -24562,7 +24513,7 @@
      "text": "⿱乛𢖻",
      "status": "candidate",
      "count": 1,
-     "id": "X-01652"
+     "id": "X-00955"
     }
    ],
    "of": []
@@ -24587,7 +24538,7 @@
      "text": "⿸厂彡",
      "status": "candidate",
      "count": 1,
-     "id": "X-01775"
+     "id": "X-00956"
     }
    ],
    "of": []
@@ -24801,14 +24752,14 @@
      "text": "⿱氺牛",
      "status": "candidate",
      "count": 1,
-     "id": "X-01678"
+     "id": "X-00964"
     },
     {
      "in": "zi-tools",
      "text": "⿱氺牛",
      "status": "candidate",
      "count": 1,
-     "id": "X-01678"
+     "id": "X-00964"
     }
    ],
    "of": []
@@ -24980,7 +24931,7 @@
      "text": "⿱丗木",
      "status": "candidate",
      "count": 1,
-     "id": "X-01634"
+     "id": "X-00972"
     },
     {
      "in": "zi-tools",
@@ -25011,7 +24962,7 @@
      "text": "⿱䙲巳",
      "status": "candidate",
      "count": 1,
-     "id": "X-01626"
+     "id": "X-00973"
     }
    ],
    "of": []
@@ -25173,14 +25124,14 @@
      "text": "⿹弓土",
      "status": "candidate",
      "count": 1,
-     "id": "X-01796"
+     "id": "X-00980"
     },
     {
      "in": "zi-tools",
      "text": "⿹弓土",
      "status": "candidate",
      "count": 1,
-     "id": "X-01796"
+     "id": "X-00980"
     }
    ],
    "of": []
@@ -25222,14 +25173,14 @@
      "text": "⿱口𠕁",
      "status": "candidate",
      "count": 1,
-     "id": "X-01662"
+     "id": "X-00982"
     },
     {
      "in": "zi-tools",
      "text": "⿱口𠕁",
      "status": "candidate",
      "count": 1,
-     "id": "X-01662"
+     "id": "X-00982"
     }
    ],
    "of": []
@@ -25349,7 +25300,7 @@
      "text": "⿳山一糸",
      "status": "candidate",
      "count": 1,
-     "id": "X-01719"
+     "id": "X-00987"
     }
    ],
    "of": []
@@ -25391,14 +25342,14 @@
      "text": "⿺元攴",
      "status": "candidate",
      "count": 1,
-     "id": "X-01805"
+     "id": "X-00989"
     },
     {
      "in": "zi-tools",
      "text": "⿺元攴",
      "status": "candidate",
      "count": 1,
-     "id": "X-01805"
+     "id": "X-00989"
     }
    ],
    "of": []
@@ -26483,7 +26434,7 @@
      "text": "⿱爫𠙻",
      "status": "candidate",
      "count": 1,
-     "id": "X-01679"
+     "id": "X-01033"
     }
    ],
    "of": []
@@ -26521,14 +26472,14 @@
      "text": "⿵冂八",
      "status": "candidate",
      "count": 1,
-     "id": "X-01743"
+     "id": "X-00112"
     },
     {
      "in": "zi-tools",
      "text": "⿵冂八",
      "status": "candidate",
      "count": 1,
-     "id": "X-01743"
+     "id": "X-00112"
     },
     {
      "in": "zi-tools",
@@ -27052,7 +27003,7 @@
      "text": "⿻丨𠃍",
      "status": "candidate",
      "count": 1,
-     "id": "X-01865"
+     "id": "X-01057"
     }
    ],
    "of": []
@@ -27254,7 +27205,7 @@
      "text": "⿱𠃎丿",
      "status": "candidate",
      "count": 1,
-     "id": "X-01695"
+     "id": "X-01066"
     },
     {
      "in": "chise",
@@ -27521,7 +27472,7 @@
      "text": "⿱⺀乂",
      "status": "candidate",
      "count": 1,
-     "id": "X-01586"
+     "id": "X-01077"
     },
     {
      "in": "zi-tools",
@@ -27553,7 +27504,7 @@
      "text": "⿸𡰣𠃍",
      "status": "candidate",
      "count": 1,
-     "id": "X-01784"
+     "id": "X-01078"
     }
    ],
    "of": []
@@ -27616,7 +27567,7 @@
      "text": "⿹勹乂",
      "status": "candidate",
      "count": 1,
-     "id": "X-01795"
+     "id": "X-01080"
     }
    ],
    "of": []
@@ -28137,7 +28088,7 @@
      "text": "⿱一⿻丷屮",
      "status": "candidate",
      "count": 1,
-     "id": "X-01629"
+     "id": "X-01104"
     }
    ],
    "of": []
@@ -28417,7 +28368,7 @@
      "text": "⿻𦍌㇒",
      "status": "candidate",
      "count": 1,
-     "id": "X-01956"
+     "id": "X-01116"
     }
    ],
    "of": []
@@ -28712,7 +28663,7 @@
      "text": "⿴⿱㇒囗⿱㇒⿻丷⿻丨𠆢",
      "status": "candidate",
      "count": 1,
-     "id": "X-01725"
+     "id": "X-01130"
     },
     {
      "in": "zi-tools",
@@ -28993,7 +28944,7 @@
      "text": "⿳十罒心",
      "status": "candidate",
      "count": 1,
-     "id": "X-01718"
+     "id": "X-01143"
     }
    ],
    "of": []
@@ -29463,7 +29414,7 @@
      "text": "⿱𱼀缶",
      "status": "candidate",
      "count": 1,
-     "id": "X-01700"
+     "id": "X-01165"
     }
    ],
    "of": []
@@ -29997,7 +29948,7 @@
      "text": "⿱关力",
      "status": "candidate",
      "count": 1,
-     "id": "X-01657"
+     "id": "X-01192"
     }
    ],
    "of": []
@@ -30724,14 +30675,14 @@
      "text": "⿱日匂",
      "status": "candidate",
      "count": 1,
-     "id": "X-01674"
+     "id": "X-01228"
     },
     {
      "in": "zi-tools",
      "text": "⿱日匂",
      "status": "candidate",
      "count": 1,
-     "id": "X-01674"
+     "id": "X-01228"
     }
    ],
    "of": []
@@ -31891,7 +31842,7 @@
      "text": "⿹勹⿺𠃊㐅",
      "status": "candidate",
      "count": 1,
-     "id": "X-01794"
+     "id": "X-01289"
     }
    ],
    "of": []
@@ -31933,7 +31884,7 @@
      "text": "⿱㇒犮",
      "status": "candidate",
      "count": 1,
-     "id": "X-01623"
+     "id": "X-01291"
     }
    ],
    "of": []
@@ -32121,7 +32072,7 @@
      "text": "⿱𠄢一",
      "status": "candidate",
      "count": 1,
-     "id": "X-01697"
+     "id": "X-01300"
     },
     {
      "in": "zi-tools",
@@ -32286,14 +32237,14 @@
      "text": "⿽弋十",
      "status": "candidate",
      "count": 1,
-     "id": "X-01971"
+     "id": "X-01308"
     },
     {
      "in": "zi-tools",
      "text": "⿽弋十",
      "status": "candidate",
      "count": 1,
-     "id": "X-01971"
+     "id": "X-01308"
     }
    ],
    "of": []
@@ -32318,7 +32269,7 @@
      "text": "⿻肀𬺻",
      "status": "candidate",
      "count": 1,
-     "id": "X-01947"
+     "id": "X-01309"
     },
     {
      "in": "zi-tools",
@@ -32350,7 +32301,7 @@
      "text": "⿸𬺷乀",
      "status": "candidate",
      "count": 1,
-     "id": "X-01785"
+     "id": "X-01310"
     }
    ],
    "of": []
@@ -32375,7 +32326,7 @@
      "text": "⿱廿⿻⿲㇒丨人冂",
      "status": "candidate",
      "count": 1,
-     "id": "X-01670"
+     "id": "X-01311"
     },
     {
      "in": "zi-tools",
@@ -32515,7 +32466,7 @@
      "text": "⿱⿴𦥑囟⿸丆⿱二⿰止㇂",
      "status": "candidate",
      "count": 1,
-     "id": "X-01608"
+     "id": "X-01317"
     },
     {
      "in": "zi-tools",
@@ -32692,7 +32643,7 @@
      "text": "⿱丨⿰𠃊亅",
      "status": "candidate",
      "count": 1,
-     "id": "X-01637"
+     "id": "X-01324"
     },
     {
      "in": "zi-tools",
@@ -32724,7 +32675,7 @@
      "text": "⿳一从工",
      "status": "candidate",
      "count": 1,
-     "id": "X-01713"
+     "id": "X-01325"
     }
    ],
    "of": []
@@ -32805,7 +32756,7 @@
      "text": "⿰方⿱𠂉畨",
      "status": "candidate",
      "count": 1,
-     "id": "X-01568"
+     "id": "X-01328"
     }
    ],
    "of": []
@@ -33008,7 +32959,7 @@
      "text": "⿻肀⿱𠃊人",
      "status": "candidate",
      "count": 1,
-     "id": "X-01946"
+     "id": "X-01336"
     }
    ],
    "of": []
@@ -33134,7 +33085,7 @@
      "text": "⿰⿱山𠮛攵",
      "status": "candidate",
      "count": 1,
-     "id": "X-01549"
+     "id": "X-01342"
     }
    ],
    "of": []
@@ -33437,7 +33388,7 @@
      "text": "⿾巴",
      "status": "candidate",
      "count": 1,
-     "id": "X-01972"
+     "id": "X-01358"
     }
    ],
    "of": []
@@ -33569,7 +33520,7 @@
      "text": "⿿𠃛",
      "status": "candidate",
      "count": 1,
-     "id": "X-01983"
+     "id": "X-01364"
     }
    ],
    "of": []
@@ -33799,7 +33750,7 @@
      "text": "⿻冂丄",
      "status": "candidate",
      "count": 1,
-     "id": "X-01900"
+     "id": "X-01374"
     },
     {
      "in": "zi-tools",
@@ -33831,14 +33782,14 @@
      "text": "⿿见",
      "status": "candidate",
      "count": 1,
-     "id": "X-01980"
+     "id": "X-01375"
     },
     {
      "in": "zi-tools",
      "text": "⿿见",
      "status": "candidate",
      "count": 1,
-     "id": "X-01980"
+     "id": "X-01375"
     }
    ],
    "of": []
@@ -33863,14 +33814,14 @@
      "text": "⿿隹",
      "status": "candidate",
      "count": 1,
-     "id": "X-01981"
+     "id": "X-01376"
     },
     {
      "in": "zi-tools",
      "text": "⿿隹",
      "status": "candidate",
      "count": 1,
-     "id": "X-01981"
+     "id": "X-01376"
     }
    ],
    "of": []
@@ -33929,7 +33880,7 @@
      "text": "⿱廿⿻丨网",
      "status": "candidate",
      "count": 1,
-     "id": "X-01671"
+     "id": "X-01379"
     }
    ],
    "of": []
@@ -34017,7 +33968,7 @@
      "text": "⿹⿻乛亅㇒",
      "status": "candidate",
      "count": 1,
-     "id": "X-01789"
+     "id": "X-01382"
     }
    ],
    "of": []
@@ -34316,7 +34267,7 @@
      "text": "⿻全丷",
      "status": "candidate",
      "count": 1,
-     "id": "X-01897"
+     "id": "X-01396"
     }
    ],
    "of": []
@@ -34366,7 +34317,7 @@
      "text": "⿱𮂱旨",
      "status": "candidate",
      "count": 1,
-     "id": "X-01699"
+     "id": "X-01398"
     }
    ],
    "of": []
@@ -34641,7 +34592,7 @@
      "text": "⿳一丨一",
      "status": "candidate",
      "count": 1,
-     "id": "X-01712"
+     "id": "X-01412"
     },
     {
      "in": "zi-tools",
@@ -37159,7 +37110,7 @@
      "text": "⿱丿⺃",
      "status": "candidate",
      "count": 1,
-     "id": "X-01644"
+     "id": "X-01518"
     }
    ],
    "of": []
@@ -37832,72 +37783,6 @@
    ]
   },
   {
-   "id": "X-01549",
-   "entity": "&X-01549;",
-   "char": "U+F060D",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿰⿱山𠮛攵",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01342",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01550",
-   "entity": "&X-01550;",
-   "char": "U+F060E",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿰⿱廿⿻口土隹",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00438",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01551",
-   "entity": "&X-01551;",
-   "char": "U+F060F",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿰⿱𠃊丆尸",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00679",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01552",
    "entity": "&X-01552;",
    "char": "U+F0610",
@@ -37937,72 +37822,6 @@
    "of": [
     {
      "id": "X-01507",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01554",
-   "entity": "&X-01554;",
-   "char": "U+F0612",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿰丨三",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00572",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01555",
-   "entity": "&X-01555;",
-   "char": "U+F0613",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿰丨臼",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00154",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01556",
-   "entity": "&X-01556;",
-   "char": "U+F0614",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿰丨𠃎",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00748",
      "relation": "candidate"
     }
    ]
@@ -38239,94 +38058,6 @@
     },
     {
      "id": "X-00103",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01567",
-   "entity": "&X-01567;",
-   "char": "U+F061F",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿰工口",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00944",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01568",
-   "entity": "&X-01568;",
-   "char": "U+F0620",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿰方⿱𠂉畨",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01328",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01569",
-   "entity": "&X-01569;",
-   "char": "U+F0621",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿰𠄌丶",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00817",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01570",
-   "entity": "&X-01570;",
-   "char": "U+F0622",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿰𠄌彐",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00608",
      "relation": "candidate"
     }
    ]
@@ -38662,28 +38393,6 @@
    ]
   },
   {
-   "id": "X-01586",
-   "entity": "&X-01586;",
-   "char": "U+F0632",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱⺀乂",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01077",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01587",
    "entity": "&X-01587;",
    "char": "U+F0633",
@@ -38767,28 +38476,6 @@
    "of": [
     {
      "id": "X-00003",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01591",
-   "entity": "&X-01591;",
-   "char": "U+F0637",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱⺈𫩏",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00002",
      "relation": "candidate"
     }
    ]
@@ -38970,28 +38657,6 @@
    ]
   },
   {
-   "id": "X-01600",
-   "entity": "&X-01600;",
-   "char": "U+F0640",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱⿱十罒一",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00874",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01601",
    "entity": "&X-01601;",
    "char": "U+F0641",
@@ -39146,28 +38811,6 @@
    ]
   },
   {
-   "id": "X-01608",
-   "entity": "&X-01608;",
-   "char": "U+F0648",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱⿴𦥑囟⿸丆⿱二⿰止㇂",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01317",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01609",
    "entity": "&X-01609;",
    "char": "U+F0649",
@@ -39208,28 +38851,6 @@
     {
      "id": "X-00093",
      "relation": "arrangement"
-    }
-   ]
-  },
-  {
-   "id": "X-01611",
-   "entity": "&X-01611;",
-   "char": "U+F064B",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱⿹𠃌㐅一",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00311",
-     "relation": "candidate"
     }
    ]
   },
@@ -39278,28 +38899,6 @@
    ]
   },
   {
-   "id": "X-01615",
-   "entity": "&X-01615;",
-   "char": "U+F064F",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱⿻且⿲丨丨丨八",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00690",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01616",
    "entity": "&X-01616;",
    "char": "U+F0650",
@@ -39318,28 +38917,6 @@
     {
      "id": "X-00957",
      "relation": "arrangement"
-    }
-   ]
-  },
-  {
-   "id": "X-01617",
-   "entity": "&X-01617;",
-   "char": "U+F0651",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱⿻土䀠八",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00459",
-     "relation": "candidate"
     }
    ]
   },
@@ -39432,50 +39009,6 @@
    ]
   },
   {
-   "id": "X-01622",
-   "entity": "&X-01622;",
-   "char": "U+F0656",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱㇒⿻一止",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00767",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01623",
-   "entity": "&X-01623;",
-   "char": "U+F0657",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱㇒犮",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01291",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01624",
    "entity": "&X-01624;",
    "char": "U+F0658",
@@ -39520,28 +39053,6 @@
    ]
   },
   {
-   "id": "X-01626",
-   "entity": "&X-01626;",
-   "char": "U+F065A",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱䙲巳",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00973",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01627",
    "entity": "&X-01627;",
    "char": "U+F065B",
@@ -39581,50 +39092,6 @@
    "of": [
     {
      "id": "X-00579",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01629",
-   "entity": "&X-01629;",
-   "char": "U+F065D",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱一⿻丷屮",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01104",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01630",
-   "entity": "&X-01630;",
-   "char": "U+F065E",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱一⿻山𠈌",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00481",
      "relation": "candidate"
     }
    ]
@@ -39696,50 +39163,6 @@
    ]
   },
   {
-   "id": "X-01634",
-   "entity": "&X-01634;",
-   "char": "U+F0662",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱丗木",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00972",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01635",
-   "entity": "&X-01635;",
-   "char": "U+F0663",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱业𦍌",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00877",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01636",
    "entity": "&X-01636;",
    "char": "U+F0664",
@@ -39757,28 +39180,6 @@
    "of": [
     {
      "id": "X-01494",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01637",
-   "entity": "&X-01637;",
-   "char": "U+F0665",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱丨⿰𠃊亅",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01324",
      "relation": "candidate"
     }
    ]
@@ -39911,28 +39312,6 @@
    "of": [
     {
      "id": "X-00024",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01644",
-   "entity": "&X-01644;",
-   "char": "U+F066C",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱丿⺃",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01518",
      "relation": "candidate"
     }
    ]
@@ -40092,28 +39471,6 @@
    ]
   },
   {
-   "id": "X-01652",
-   "entity": "&X-01652;",
-   "char": "U+F0674",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱乛𢖻",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00955",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01654",
    "entity": "&X-01654;",
    "char": "U+F0676",
@@ -40180,28 +39537,6 @@
    ]
   },
   {
-   "id": "X-01657",
-   "entity": "&X-01657;",
-   "char": "U+F0679",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱关力",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01192",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01658",
    "entity": "&X-01658;",
    "char": "U+F067A",
@@ -40224,94 +39559,6 @@
    ]
   },
   {
-   "id": "X-01659",
-   "entity": "&X-01659;",
-   "char": "U+F067B",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱冖⿰𰀄⿺乚𠁣",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00161",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01660",
-   "entity": "&X-01660;",
-   "char": "U+F067C",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱刀巴",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00937",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01661",
-   "entity": "&X-01661;",
-   "char": "U+F067D",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱卄両",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00155",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01662",
-   "entity": "&X-01662;",
-   "char": "U+F067E",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱口𠕁",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00982",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01663",
    "entity": "&X-01663;",
    "char": "U+F067F",
@@ -40329,28 +39576,6 @@
    "of": [
     {
      "id": "X-00111",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01664",
-   "entity": "&X-01664;",
-   "char": "U+F0680",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱囪心",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00886",
      "relation": "candidate"
     }
    ]
@@ -40400,28 +39625,6 @@
    ]
   },
   {
-   "id": "X-01667",
-   "entity": "&X-01667;",
-   "char": "U+F0683",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱己乂",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00713",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01668",
    "entity": "&X-01668;",
    "char": "U+F0684",
@@ -40439,138 +39642,6 @@
    "of": [
     {
      "id": "X-00934",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01669",
-   "entity": "&X-01669;",
-   "char": "U+F0685",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱廿⺝",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00938",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01670",
-   "entity": "&X-01670;",
-   "char": "U+F0686",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱廿⿻⿲㇒丨人冂",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01311",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01671",
-   "entity": "&X-01671;",
-   "char": "U+F0687",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱廿⿻丨网",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01379",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01672",
-   "entity": "&X-01672;",
-   "char": "U+F0688",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱廿⿻冂从",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00441",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01673",
-   "entity": "&X-01673;",
-   "char": "U+F0689",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱廿巾",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00946",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01674",
-   "entity": "&X-01674;",
-   "char": "U+F068A",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱日匂",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01228",
      "relation": "candidate"
     }
    ]
@@ -40642,116 +39713,6 @@
    ]
   },
   {
-   "id": "X-01678",
-   "entity": "&X-01678;",
-   "char": "U+F068E",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱氺牛",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00964",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01679",
-   "entity": "&X-01679;",
-   "char": "U+F068F",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱爫𠙻",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01033",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01680",
-   "entity": "&X-01680;",
-   "char": "U+F0690",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱白方",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00932",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01681",
-   "entity": "&X-01681;",
-   "char": "U+F0691",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱罒⿸厂罒",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00853",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01682",
-   "entity": "&X-01682;",
-   "char": "U+F0692",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱肀口",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00919",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01683",
    "entity": "&X-01683;",
    "char": "U+F0693",
@@ -40818,32 +39779,6 @@
    ]
   },
   {
-   "id": "X-01686",
-   "entity": "&X-01686;",
-   "char": "U+F0696",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱龷𰀠",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00934",
-     "relation": "candidate"
-    },
-    {
-     "id": "X-00136",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01687",
    "entity": "&X-01687;",
    "char": "U+F0697",
@@ -40861,72 +39796,6 @@
    "of": [
     {
      "id": "X-00590",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01688",
-   "entity": "&X-01688;",
-   "char": "U+F0698",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱𠂈𰀠",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00124",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01689",
-   "entity": "&X-01689;",
-   "char": "U+F0699",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱𠂉一",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00908",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01690",
-   "entity": "&X-01690;",
-   "char": "U+F069A",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱𠂉子",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00902",
      "relation": "candidate"
     }
    ]
@@ -41020,72 +39889,6 @@
    ]
   },
   {
-   "id": "X-01695",
-   "entity": "&X-01695;",
-   "char": "U+F069F",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱𠃎丿",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01066",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01696",
-   "entity": "&X-01696;",
-   "char": "U+F06A0",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱𠃑大",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00928",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01697",
-   "entity": "&X-01697;",
-   "char": "U+F06A1",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱𠄢一",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01300",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01698",
    "entity": "&X-01698;",
    "char": "U+F06A2",
@@ -41103,50 +39906,6 @@
    "of": [
     {
      "id": "X-01132",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01699",
-   "entity": "&X-01699;",
-   "char": "U+F06A3",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱𮂱旨",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01398",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01700",
-   "entity": "&X-01700;",
-   "char": "U+F06A4",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱𱼀缶",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01165",
      "relation": "candidate"
     }
    ]
@@ -41200,28 +39959,6 @@
    ]
   },
   {
-   "id": "X-01703",
-   "entity": "&X-01703;",
-   "char": "U+F06A7",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿲丿⿱⿰𠃎𠃊⿰𠃍厂丨",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00807",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01704",
    "entity": "&X-01704;",
    "char": "U+F06A8",
@@ -41244,28 +39981,6 @@
    ]
   },
   {
-   "id": "X-01705",
-   "entity": "&X-01705;",
-   "char": "U+F06A9",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿲𰀪丨𰀪",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00517",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01706",
    "entity": "&X-01706;",
    "char": "U+F06AA",
@@ -41283,50 +39998,6 @@
    "of": [
     {
      "id": "X-01331",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01707",
-   "entity": "&X-01707;",
-   "char": "U+F06AB",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿳⺊𠔿⿵冂厶",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00848",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01708",
-   "entity": "&X-01708;",
-   "char": "U+F06AC",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿳⿱爫⿰丨冃罒又",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00156",
      "relation": "candidate"
     }
    ]
@@ -41402,94 +40073,6 @@
    ]
   },
   {
-   "id": "X-01712",
-   "entity": "&X-01712;",
-   "char": "U+F06B0",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿳一丨一",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01412",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01713",
-   "entity": "&X-01713;",
-   "char": "U+F06B1",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿳一从工",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01325",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01714",
-   "entity": "&X-01714;",
-   "char": "U+F06B2",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿳一由八",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00935",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01715",
-   "entity": "&X-01715;",
-   "char": "U+F06B3",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿳一𠃑一",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00303",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01716",
    "entity": "&X-01716;",
    "char": "U+F06B4",
@@ -41529,50 +40112,6 @@
    "of": [
     {
      "id": "X-00874",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01718",
-   "entity": "&X-01718;",
-   "char": "U+F06B6",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿳十罒心",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01143",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01719",
-   "entity": "&X-01719;",
-   "char": "U+F06B7",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿳山一糸",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00987",
      "relation": "candidate"
     }
    ]
@@ -41688,28 +40227,6 @@
    ]
   },
   {
-   "id": "X-01725",
-   "entity": "&X-01725;",
-   "char": "U+F06BD",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿴⿱㇒囗⿱㇒⿻丷⿻丨𠆢",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01130",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01726",
    "entity": "&X-01726;",
    "char": "U+F06BE",
@@ -41750,28 +40267,6 @@
     {
      "id": "X-00047",
      "relation": "arrangement"
-    }
-   ]
-  },
-  {
-   "id": "X-01728",
-   "entity": "&X-01728;",
-   "char": "U+F06C0",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿴⿻冂一十",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00583",
-     "relation": "candidate"
     }
    ]
   },
@@ -41886,28 +40381,6 @@
    ]
   },
   {
-   "id": "X-01734",
-   "entity": "&X-01734;",
-   "char": "U+F06C6",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿴夂丶",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00822",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01735",
    "entity": "&X-01735;",
    "char": "U+F06C7",
@@ -41952,72 +40425,6 @@
    ]
   },
   {
-   "id": "X-01737",
-   "entity": "&X-01737;",
-   "char": "U+F06C9",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿵⿸丨𠃍𰀪",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00703",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01738",
-   "entity": "&X-01738;",
-   "char": "U+F06CA",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿵䒑山",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00923",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01739",
-   "entity": "&X-01739;",
-   "char": "U+F06CB",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿵冂⿲⿱丶丶丨⿱丶丶",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00626",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01740",
    "entity": "&X-01740;",
    "char": "U+F06CC",
@@ -42025,28 +40432,6 @@
    "chise": "",
    "zi_tools": "",
    "expression": "⿵冂⿲爻丨爻",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00461",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01741",
-   "entity": "&X-01741;",
-   "char": "U+F06CD",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿵冂㸚",
    "subtractions": "",
    "character": "",
    "description": "",
@@ -42079,98 +40464,6 @@
    "of": [
     {
      "id": "X-00831",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01743",
-   "entity": "&X-01743;",
-   "char": "U+F06CF",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿵冂八",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00112",
-     "relation": "candidate"
-    },
-    {
-     "id": "X-01034",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01744",
-   "entity": "&X-01744;",
-   "char": "U+F06D0",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿵卄二",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00761",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01745",
-   "entity": "&X-01745;",
-   "char": "U+F06D1",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿵吊口",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00522",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01746",
-   "entity": "&X-01746;",
-   "char": "U+F06D2",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿵戌𣥂",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00913",
      "relation": "candidate"
     }
    ]
@@ -42440,28 +40733,6 @@
    ]
   },
   {
-   "id": "X-01759",
-   "entity": "&X-01759;",
-   "char": "U+F06DF",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿷匚二",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00581",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01760",
    "entity": "&X-01760;",
    "char": "U+F06E0",
@@ -42550,50 +40821,6 @@
    ]
   },
   {
-   "id": "X-01764",
-   "entity": "&X-01764;",
-   "char": "U+F06E4",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿸⿹丅丿丨",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00760",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01765",
-   "entity": "&X-01765;",
-   "char": "U+F06E5",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿸⿹屮㇇㇏",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00162",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01766",
    "entity": "&X-01766;",
    "char": "U+F06E6",
@@ -42633,28 +40860,6 @@
    "of": [
     {
      "id": "X-00481",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01768",
-   "entity": "&X-01768;",
-   "char": "U+F06E8",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿸丆剡",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00849",
      "relation": "candidate"
     }
    ]
@@ -42792,50 +40997,6 @@
    ]
   },
   {
-   "id": "X-01775",
-   "entity": "&X-01775;",
-   "char": "U+F06EF",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿸厂彡",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00956",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01776",
-   "entity": "&X-01776;",
-   "char": "U+F06F0",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿸尹㇏",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00486",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01777",
    "entity": "&X-01777;",
    "char": "U+F06F1",
@@ -42853,28 +41014,6 @@
    "of": [
     {
      "id": "X-00055",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01778",
-   "entity": "&X-01778;",
-   "char": "U+F06F2",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿸廿又",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00897",
      "relation": "candidate"
     }
    ]
@@ -42990,50 +41129,6 @@
    ]
   },
   {
-   "id": "X-01784",
-   "entity": "&X-01784;",
-   "char": "U+F06F8",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿸𡰣𠃍",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01078",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01785",
-   "entity": "&X-01785;",
-   "char": "U+F06F9",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿸𬺷乀",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01310",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01786",
    "entity": "&X-01786;",
    "char": "U+F06FA",
@@ -43051,72 +41146,6 @@
    "of": [
     {
      "id": "X-00001",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01787",
-   "entity": "&X-01787;",
-   "char": "U+F06FB",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿹⺄⿻丨㇒",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00542",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01788",
-   "entity": "&X-01788;",
-   "char": "U+F06FC",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿹⿺㇉一灬",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00001",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01789",
-   "entity": "&X-01789;",
-   "char": "U+F06FD",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿹⿻乛亅㇒",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01382",
      "relation": "candidate"
     }
    ]
@@ -43205,94 +41234,6 @@
    "of": [
     {
      "id": "X-01324",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01794",
-   "entity": "&X-01794;",
-   "char": "U+F0702",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿹勹⿺𠃊㐅",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01289",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01795",
-   "entity": "&X-01795;",
-   "char": "U+F0703",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿹勹乂",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01080",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01796",
-   "entity": "&X-01796;",
-   "char": "U+F0704",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿹弓土",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00980",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01797",
-   "entity": "&X-01797;",
-   "char": "U+F0705",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿹耳𤣩",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00883",
      "relation": "candidate"
     }
    ]
@@ -43451,28 +41392,6 @@
     },
     {
      "id": "X-01491",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01805",
-   "entity": "&X-01805;",
-   "char": "U+F070D",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿺元攴",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00989",
      "relation": "candidate"
     }
    ]
@@ -43786,50 +41705,6 @@
    ]
   },
   {
-   "id": "X-01820",
-   "entity": "&X-01820;",
-   "char": "U+F071C",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻⿰丨丨丷",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00512",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01821",
-   "entity": "&X-01821;",
-   "char": "U+F071D",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻⿰丿㇂一",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00596",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01822",
    "entity": "&X-01822;",
    "char": "U+F071E",
@@ -43900,28 +41775,6 @@
    ]
   },
   {
-   "id": "X-01825",
-   "entity": "&X-01825;",
-   "char": "U+F0721",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻⿱⿻口一口丨",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00803",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01826",
    "entity": "&X-01826;",
    "char": "U+F0722",
@@ -43961,204 +41814,6 @@
    "of": [
     {
      "id": "X-00816",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01828",
-   "entity": "&X-01828;",
-   "char": "U+F0724",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻⿱一彐⿰丨丨",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00578",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01829",
-   "entity": "&X-01829;",
-   "char": "U+F0725",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻⿱乊一亅",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00492",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01830",
-   "entity": "&X-01830;",
-   "char": "U+F0726",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻⿱亠⿻⿱凵丨凵昍",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00487",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01831",
-   "entity": "&X-01831;",
-   "char": "U+F0727",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻⿱冖冂乚",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00623",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01832",
-   "entity": "&X-01832;",
-   "char": "U+F0728",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻⿱卝干誩",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00466",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01833",
-   "entity": "&X-01833;",
-   "char": "U+F0729",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻⿱吕𠆢丨",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00536",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01834",
-   "entity": "&X-01834;",
-   "char": "U+F072A",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻⿱彐八⿰丨丨",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00135",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01835",
-   "entity": "&X-01835;",
-   "char": "U+F072B",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻⿲丿凵乚一",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00899",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01836",
-   "entity": "&X-01836;",
-   "char": "U+F072C",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻⿳⿻口一口𠮛丨",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00610",
      "relation": "candidate"
     }
    ]
@@ -44450,94 +42105,6 @@
    ]
   },
   {
-   "id": "X-01850",
-   "entity": "&X-01850;",
-   "char": "U+F073A",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻一束",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00639",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01851",
-   "entity": "&X-01851;",
-   "char": "U+F073B",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻丁⿱𠃋㇀",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00683",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01852",
-   "entity": "&X-01852;",
-   "char": "U+F073C",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻丂丨",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00694",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01853",
-   "entity": "&X-01853;",
-   "char": "U+F073D",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻丅⿱八⿵冂⿰糸虫",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00582",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01854",
    "entity": "&X-01854;",
    "char": "U+F073E",
@@ -44555,28 +42122,6 @@
    "of": [
     {
      "id": "X-00448",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01855",
-   "entity": "&X-01855;",
-   "char": "U+F073F",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻三夂",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00160",
      "relation": "candidate"
     }
    ]
@@ -44648,28 +42193,6 @@
    ]
   },
   {
-   "id": "X-01859",
-   "entity": "&X-01859;",
-   "char": "U+F0743",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻丨⿱丷⿵冂㸚",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00475",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01860",
    "entity": "&X-01860;",
    "char": "U+F0744",
@@ -44714,28 +42237,6 @@
    ]
   },
   {
-   "id": "X-01862",
-   "entity": "&X-01862;",
-   "char": "U+F0746",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻丨⿵冂⿰𰀁𰀁",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00532",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01863",
    "entity": "&X-01863;",
    "char": "U+F0747",
@@ -44765,50 +42266,6 @@
    "chise": "",
    "zi_tools": "",
    "expression": "⿻丨人",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00484",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01865",
-   "entity": "&X-01865;",
-   "char": "U+F0749",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻丨𠃍",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01057",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01866",
-   "entity": "&X-01866;",
-   "char": "U+F074A",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻丨𠆢",
    "subtractions": "",
    "character": "",
    "description": "",
@@ -44868,28 +42325,6 @@
    ]
   },
   {
-   "id": "X-01869",
-   "entity": "&X-01869;",
-   "char": "U+F074D",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻中𠆢",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00682",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01870",
    "entity": "&X-01870;",
    "char": "U+F074E",
@@ -44907,94 +42342,6 @@
    "of": [
     {
      "id": "X-00681",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01871",
-   "entity": "&X-01871;",
-   "char": "U+F074F",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻串一",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00681",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01872",
-   "entity": "&X-01872;",
-   "char": "U+F0750",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻丷十",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00838",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01873",
-   "entity": "&X-01873;",
-   "char": "U+F0751",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻丷大",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00493",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01874",
-   "entity": "&X-01874;",
-   "char": "U+F0752",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻丷屮",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00727",
      "relation": "candidate"
     }
    ]
@@ -45092,50 +42439,6 @@
    ]
   },
   {
-   "id": "X-01879",
-   "entity": "&X-01879;",
-   "char": "U+F0757",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻乃丶",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00570",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01880",
-   "entity": "&X-01880;",
-   "char": "U+F0758",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻乇从",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00460",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01881",
    "entity": "&X-01881;",
    "char": "U+F0759",
@@ -45224,28 +42527,6 @@
    ]
   },
   {
-   "id": "X-01886",
-   "entity": "&X-01886;",
-   "char": "U+F075E",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻亅⿱凵⿰冫⿱丿丶",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00479",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01887",
    "entity": "&X-01887;",
    "char": "U+F075F",
@@ -45263,50 +42544,6 @@
    "of": [
     {
      "id": "X-01100",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01888",
-   "entity": "&X-01888;",
-   "char": "U+F0760",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻二儿",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00680",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01889",
-   "entity": "&X-01889;",
-   "char": "U+F0761",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻二巾",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00819",
      "relation": "candidate"
     }
    ]
@@ -45422,28 +42659,6 @@
    ]
   },
   {
-   "id": "X-01895",
-   "entity": "&X-01895;",
-   "char": "U+F0767",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻亻⿴囗丷",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00158",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01896",
    "entity": "&X-01896;",
    "char": "U+F0768",
@@ -45461,28 +42676,6 @@
    "of": [
     {
      "id": "X-00680",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01897",
-   "entity": "&X-01897;",
-   "char": "U+F0769",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻全丷",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01396",
      "relation": "candidate"
     }
    ]
@@ -45510,50 +42703,6 @@
    ]
   },
   {
-   "id": "X-01899",
-   "entity": "&X-01899;",
-   "char": "U+F076B",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻冂⿰二二",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00712",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01900",
-   "entity": "&X-01900;",
-   "char": "U+F076C",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻冂丄",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01374",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01901",
    "entity": "&X-01901;",
    "char": "U+F076D",
@@ -45571,28 +42720,6 @@
    "of": [
     {
      "id": "X-00163",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01902",
-   "entity": "&X-01902;",
-   "char": "U+F076E",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻冄⿰丨丨",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00574",
      "relation": "candidate"
     }
    ]
@@ -45620,28 +42747,6 @@
    ]
   },
   {
-   "id": "X-01904",
-   "entity": "&X-01904;",
-   "char": "U+F0770",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻冖丿",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00814",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01905",
    "entity": "&X-01905;",
    "char": "U+F0771",
@@ -45659,28 +42764,6 @@
    "of": [
     {
      "id": "X-00687",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01906",
-   "entity": "&X-01906;",
-   "char": "U+F0772",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻几二",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00629",
      "relation": "candidate"
     }
    ]
@@ -45708,28 +42791,6 @@
    ]
   },
   {
-   "id": "X-01908",
-   "entity": "&X-01908;",
-   "char": "U+F0774",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻刀⿱丶丶",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00636",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01909",
    "entity": "&X-01909;",
    "char": "U+F0775",
@@ -45748,138 +42809,6 @@
     {
      "id": "X-00034",
      "relation": "arrangement"
-    }
-   ]
-  },
-  {
-   "id": "X-01910",
-   "entity": "&X-01910;",
-   "char": "U+F0776",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻十⿵冂㸚",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00627",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01911",
-   "entity": "&X-01911;",
-   "char": "U+F0777",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻十吅",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00766",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01912",
-   "entity": "&X-01912;",
-   "char": "U+F0778",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻十龷",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00664",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01913",
-   "entity": "&X-01913;",
-   "char": "U+F0779",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻十𠈌",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00477",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01914",
-   "entity": "&X-01914;",
-   "char": "U+F077A",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻千⿱𠈌二",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00491",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01915",
-   "entity": "&X-01915;",
-   "char": "U+F077B",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻千从",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00725",
-     "relation": "candidate"
     }
    ]
   },
@@ -45906,28 +42835,6 @@
    ]
   },
   {
-   "id": "X-01917",
-   "entity": "&X-01917;",
-   "char": "U+F077D",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻厸大",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00457",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01918",
    "entity": "&X-01918;",
    "char": "U+F077E",
@@ -45945,32 +42852,6 @@
    "of": [
     {
      "id": "X-00674",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01919",
-   "entity": "&X-01919;",
-   "char": "U+F077F",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻口⿰丨丨",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00749",
-     "relation": "candidate"
-    },
-    {
-     "id": "X-00617",
      "relation": "candidate"
     }
    ]
@@ -46002,72 +42883,6 @@
    ]
   },
   {
-   "id": "X-01921",
-   "entity": "&X-01921;",
-   "char": "U+F0781",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻口⿻人丷",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00478",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01922",
-   "entity": "&X-01922;",
-   "char": "U+F0782",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻口㇉",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00609",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01923",
-   "entity": "&X-01923;",
-   "char": "U+F0783",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻口大",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00740",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01924",
    "entity": "&X-01924;",
    "char": "U+F0784",
@@ -46085,94 +42900,6 @@
    "of": [
     {
      "id": "X-00519",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01925",
-   "entity": "&X-01925;",
-   "char": "U+F0785",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻吕氺",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00510",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01926",
-   "entity": "&X-01926;",
-   "char": "U+F0786",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻囗𠃊",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00668",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01927",
-   "entity": "&X-01927;",
-   "char": "U+F0787",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻土⿱丷丷",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00720",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01928",
-   "entity": "&X-01928;",
-   "char": "U+F0788",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻土吅",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00746",
      "relation": "candidate"
     }
    ]
@@ -46244,50 +42971,6 @@
    ]
   },
   {
-   "id": "X-01933",
-   "entity": "&X-01933;",
-   "char": "U+F078D",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻屮亼",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00654",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01934",
-   "entity": "&X-01934;",
-   "char": "U+F078E",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻工⿱从吅",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00474",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01935",
    "entity": "&X-01935;",
    "char": "U+F078F",
@@ -46305,72 +42988,6 @@
    "of": [
     {
      "id": "X-00474",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01936",
-   "entity": "&X-01936;",
-   "char": "U+F0790",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻干⿴囗从",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00489",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01937",
-   "entity": "&X-01937;",
-   "char": "U+F0791",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻干㗊",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00448",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01938",
-   "entity": "&X-01938;",
-   "char": "U+F0792",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻弋一",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00028",
      "relation": "candidate"
     }
    ]
@@ -46398,28 +43015,6 @@
    ]
   },
   {
-   "id": "X-01940",
-   "entity": "&X-01940;",
-   "char": "U+F0794",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻弓人",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00702",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01941",
    "entity": "&X-01941;",
    "char": "U+F0795",
@@ -46437,50 +43032,6 @@
    "of": [
     {
      "id": "X-00757",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01942",
-   "entity": "&X-01942;",
-   "char": "U+F0796",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻彖丶",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00527",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01943",
-   "entity": "&X-01943;",
-   "char": "U+F0797",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻日𠤎",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00558",
      "relation": "candidate"
     }
    ]
@@ -46534,72 +43085,6 @@
    ]
   },
   {
-   "id": "X-01946",
-   "entity": "&X-01946;",
-   "char": "U+F079A",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻肀⿱𠃊人",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01336",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01947",
-   "entity": "&X-01947;",
-   "char": "U+F079B",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻肀𬺻",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01309",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01948",
-   "entity": "&X-01948;",
-   "char": "U+F079C",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻龰亘",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00586",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01949",
    "entity": "&X-01949;",
    "char": "U+F079D",
@@ -46644,160 +43129,6 @@
    ]
   },
   {
-   "id": "X-01951",
-   "entity": "&X-01951;",
-   "char": "U+F079F",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻𠈌⿱丨大",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00465",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01952",
-   "entity": "&X-01952;",
-   "char": "U+F07A0",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻𠈌十",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00747",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01953",
-   "entity": "&X-01953;",
-   "char": "U+F07A1",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻𠘨㇒",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00687",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01954",
-   "entity": "&X-01954;",
-   "char": "U+F07A2",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻𡗗丷",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00159",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01955",
-   "entity": "&X-01955;",
-   "char": "U+F07A3",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻𣄼丨",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00770",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01956",
-   "entity": "&X-01956;",
-   "char": "U+F07A4",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻𦍌㇒",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01116",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01957",
-   "entity": "&X-01957;",
-   "char": "U+F07A5",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻𦘒𠚪",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00509",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01958",
    "entity": "&X-01958;",
    "char": "U+F07A6",
@@ -46815,72 +43146,6 @@
    "of": [
     {
      "id": "X-00125",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01959",
-   "entity": "&X-01959;",
-   "char": "U+F07A7",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻𦥔𠮛",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00482",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01960",
-   "entity": "&X-01960;",
-   "char": "U+F07A8",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻𫩏丷",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00860",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01961",
-   "entity": "&X-01961;",
-   "char": "U+F07A9",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿻𬺰乀",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00667",
      "relation": "candidate"
     }
    ]
@@ -47018,28 +43283,6 @@
    ]
   },
   {
-   "id": "X-01968",
-   "entity": "&X-01968;",
-   "char": "U+F07B0",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿼己工",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00591",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01969",
    "entity": "&X-01969;",
    "char": "U+F07B1",
@@ -47084,120 +43327,6 @@
    ]
   },
   {
-   "id": "X-01971",
-   "entity": "&X-01971;",
-   "char": "U+F07B3",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿽弋十",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01308",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01972",
-   "entity": "&X-01972;",
-   "char": "U+F07B4",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿾巴",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01358",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01973",
-   "entity": "&X-01973;",
-   "char": "U+F07B5",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿾犭",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00008",
-     "relation": "candidate"
-    },
-    {
-     "id": "X-00652",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01974",
-   "entity": "&X-01974;",
-   "char": "U+F07B6",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿾𦣞",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00563",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01975",
-   "entity": "&X-01975;",
-   "char": "U+F07B7",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿾𨸏",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00776",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01976",
    "entity": "&X-01976;",
    "char": "U+F07B8",
@@ -47215,50 +43344,6 @@
    "of": [
     {
      "id": "X-01389",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01977",
-   "entity": "&X-01977;",
-   "char": "U+F07B9",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿿或",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00851",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01978",
-   "entity": "&X-01978;",
-   "char": "U+F07BA",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿿止",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00644",
      "relation": "candidate"
     }
    ]
@@ -47290,50 +43375,6 @@
    ]
   },
   {
-   "id": "X-01980",
-   "entity": "&X-01980;",
-   "char": "U+F07BC",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿿见",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01375",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01981",
-   "entity": "&X-01981;",
-   "char": "U+F07BD",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿿隹",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01376",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01982",
    "entity": "&X-01982;",
    "char": "U+F07BE",
@@ -47351,28 +43392,6 @@
    "of": [
     {
      "id": "X-01389",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01983",
-   "entity": "&X-01983;",
-   "char": "U+F07BF",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿿𠃛",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-01364",
      "relation": "candidate"
     }
    ]
@@ -47444,28 +43463,6 @@
    ]
   },
   {
-   "id": "X-01987",
-   "entity": "&X-01987;",
-   "char": "U+F07C3",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "㇯烏一",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00157",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
    "id": "X-01988",
    "entity": "&X-01988;",
    "char": "U+F07C4",
@@ -47505,28 +43502,6 @@
    "of": [
     {
      "id": "X-00560",
-     "relation": "candidate"
-    }
-   ]
-  },
-  {
-   "id": "X-01990",
-   "entity": "&X-01990;",
-   "char": "U+F07C6",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "㇯𨸏㇒",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00701",
      "relation": "candidate"
     }
    ]
@@ -48948,28 +44923,6 @@
     }
    ],
    "of": []
-  },
-  {
-   "id": "X-02039",
-   "entity": "&X-02039;",
-   "char": "U+F07F7",
-   "babelstone": "",
-   "chise": "",
-   "zi_tools": "",
-   "expression": "⿱⿰𠮝口禸",
-   "subtractions": "",
-   "character": "",
-   "description": "",
-   "status": "candidate",
-   "uses": 0,
-   "used_in": "",
-   "equivalents": [],
-   "of": [
-    {
-     "id": "X-00707",
-     "relation": "candidate"
-    }
-   ]
   },
   {
    "id": "X-02040",

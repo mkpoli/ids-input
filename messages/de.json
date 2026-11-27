@@ -15,6 +15,7 @@
   "ids.grass.inward": "Nach innen geneigte Senkrechte",
   "ids.grass.split": "Getrennt",
   "ids.alternatives.replace": "Ersetzen",
+  "ids.suggestion.label": "Meinten Sie",
   "ids.alternatives.show": "Alternativen",
   "ids.alternatives.split": "Zerlegen",
   "ids.choose": "{part} auswählen",
@@ -433,5 +434,11 @@
   "ids.ucv.failed": "Die Liste konnte nicht geladen werden.",
   "ids.ucv.kind": "Liste",
   "ids.ucv.form": "Form {name}",
-  "ids.alternatives.unifiable": "Vereinheitlichbare Formen"
+  "ids.alternatives.unifiable": "Vereinheitlichbare Formen",
+  "info.vs.title": "Variantenselektor",
+  "info.vs.ivs": "Ideografischer Variantenselektor",
+  "info.vs.svs": "Standardisierter Variantenselektor",
+  "info.vs.plain": "Basis",
+  "info.vs.input": "Anderer Variantenselektor",
+  "info.vs.use": "{form} verwenden"
 }

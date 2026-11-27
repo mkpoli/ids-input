@@ -15,6 +15,7 @@
   "ids.grass.inward": "세로획이 안쪽",
   "ids.grass.split": "분리",
   "ids.alternatives.replace": "바꾸기",
+  "ids.suggestion.label": "이것을 찾으셨나요",
   "ids.alternatives.show": "후보",
   "ids.alternatives.split": "나누기",
   "ids.choose": "{part} 고르기",
@@ -429,5 +430,11 @@
   "ids.ucv.failed": "목록을 불러오지 못했습니다.",
   "ids.ucv.kind": "목록",
   "ids.ucv.form": "자형 {name}",
-  "ids.alternatives.unifiable": "통합 가능 자형"
+  "ids.alternatives.unifiable": "통합 가능 자형",
+  "info.vs.title": "이체자 선택자",
+  "info.vs.ivs": "한자 이체자 선택자",
+  "info.vs.svs": "표준 이체자 선택자",
+  "info.vs.plain": "기본",
+  "info.vs.input": "다른 이체자 선택자",
+  "info.vs.use": "{form} 사용"
 }

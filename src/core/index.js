@@ -27,6 +27,10 @@ export { STRUCTURE_TEMPLATES } from './templates.js'
 export { SLOT_HINTS, SLOT_HINT_DEFAULT, SLOT_HINT_METADATA, hintsAt, slotHints } from './hints.js'
 export { createUcvIndex, entryCharacters } from './ucv.js'
 export { componentForms, drawnForm, formedText, formedTree, glyphReference, ucvFormOf, ucvIdentifier, writtenForm } from './forms.js'
+export { codePoints, parseVariationSelector, selectorInfo, variationBase, variationOf, variationSelector, withVariation } from './variation.js'
 export { isOwnDescription, readVariantDescriptions } from './variant-descriptions.js'
+export { readPositionalForms, positionalRespellings, positionalSuggestion } from './positional.js'
+
+export { rateFormsOfPart, variationFamiliesOfPart } from './variation-families.js'
 
 export { compatibilitySequences } from './compatibility.js'

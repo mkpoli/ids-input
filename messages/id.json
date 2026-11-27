@@ -15,6 +15,7 @@
   "ids.grass.inward": "Tegak ke dalam",
   "ids.grass.split": "Terpisah",
   "ids.alternatives.replace": "Ganti",
+  "ids.suggestion.label": "Mungkin maksud Anda",
   "ids.alternatives.show": "Alternatif",
   "ids.alternatives.split": "Pecah",
   "ids.choose": "Pilih {part}",
@@ -433,5 +434,11 @@
   "ids.ucv.failed": "Daftar tidak dapat dimuat.",
   "ids.ucv.kind": "Daftar",
   "ids.ucv.form": "Bentuk {name}",
-  "ids.alternatives.unifiable": "Bentuk yang dapat disatukan"
+  "ids.alternatives.unifiable": "Bentuk yang dapat disatukan",
+  "info.vs.title": "Pemilih variasi",
+  "info.vs.ivs": "Pemilih Variasi Ideografis",
+  "info.vs.svs": "Pemilih Variasi Terstandardisasi",
+  "info.vs.plain": "Dasar",
+  "info.vs.input": "Pemilih variasi lain",
+  "info.vs.use": "Gunakan {form}"
 }

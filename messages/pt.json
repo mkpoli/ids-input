@@ -15,6 +15,7 @@
   "ids.grass.inward": "Verticais para dentro",
   "ids.grass.split": "Dividido",
   "ids.alternatives.replace": "Substituir",
+  "ids.suggestion.label": "Você quis dizer",
   "ids.alternatives.show": "Alternativas",
   "ids.alternatives.split": "Dividir",
   "ids.choose": "Escolher {part}",
@@ -433,5 +434,11 @@
   "ids.ucv.failed": "Não foi possível carregar a lista.",
   "ids.ucv.kind": "Lista",
   "ids.ucv.form": "Forma {name}",
-  "ids.alternatives.unifiable": "Formas unificáveis"
+  "ids.alternatives.unifiable": "Formas unificáveis",
+  "info.vs.title": "Seletor de variação",
+  "info.vs.ivs": "Seletor de variação ideográfica",
+  "info.vs.svs": "Seletor de variação padronizada",
+  "info.vs.plain": "Base",
+  "info.vs.input": "Outro seletor de variação",
+  "info.vs.use": "Usar {form}"
 }

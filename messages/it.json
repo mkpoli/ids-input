@@ -15,6 +15,7 @@
   "ids.grass.inward": "Verticali verso l'interno",
   "ids.grass.split": "Separato",
   "ids.alternatives.replace": "Sostituisci",
+  "ids.suggestion.label": "Forse cercavi",
   "ids.alternatives.show": "Alternative",
   "ids.alternatives.split": "Dividi",
   "ids.choose": "Scegli {part}",
@@ -433,5 +434,11 @@
   "ids.ucv.failed": "Impossibile caricare la lista.",
   "ids.ucv.kind": "Lista",
   "ids.ucv.form": "Forma {name}",
-  "ids.alternatives.unifiable": "Forme unificabili"
+  "ids.alternatives.unifiable": "Forme unificabili",
+  "info.vs.title": "Selettore di variante",
+  "info.vs.ivs": "Selettore di variante ideografica",
+  "info.vs.svs": "Selettore di variante standardizzata",
+  "info.vs.plain": "Base",
+  "info.vs.input": "Altro selettore di variante",
+  "info.vs.use": "Usa {form}"
 }

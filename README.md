@@ -207,6 +207,18 @@ descriptions of the IRG component variation entries the component is a form of (
 UCV #1, 間 for 閒 in NUCV #325), each under its entry; choosing one writes it in the component's
 place. `componentForms(part, { sequences, ucv })` in the core gives that list.
 
+An embedded editor can supply its own catalogue through `adapter.variationFamilies(text)`.
+The lookup receives the exact spelling of the selected character, custom component or IDS subtree and returns its families, including when reopened from a saved form.
+Hosts with a registry can pass its lookup directly:
+
+```js
+const adapter = { ...baseAdapter, variationFamilies: registry.familiesFor }
+```
+
+Each family has an `id`, `subjects` (the spellings it describes), and `forms` with an `id` and exact `text`.
+Give a form an optional `outline: { d, viewBox }` to supply its drawing, or use the adapter's `icon` and `drawing` as elsewhere in the editor.
+The tree menu and selected-part panel offer each family's shapes independently. Set `evidenceOnly: true` to reserve a family for source evidence.
+
 A form of an entry that no code point names is written with zi.tools' variant identifier after the
 component: `壬q0012` is the second form of UCV #1. An adapter that answers `formed(sequence)`
 (`babelStoneAdapter({ variations })` over `data/ucv.json`) has the menu offer those forms too, and
@@ -912,8 +924,8 @@ recognition falls back to them.
 
 A description is drawn by [han-compose](https://github.com/mkpoli/han-compose)'s composing engine,
 the package `@han-compose/composer` (MIT): the same engine that draws it in the terminal and in the
-static files its `export-web` writes. `package.json` reads it from han-compose's `package` branch.
-Han descriptions read that export — a manifest, the learned
+static files its `export-web` writes. `package.json` reads it from han-compose's `package` branch, and
+the `han-compose` workflow moves `bun.lock` to each package published there. Han descriptions read that export — a manifest, the learned
 layout, and the records of every character and the host lists of every (place, operand), packed into
 gzipped shards by the first three hex digits of their SHA-256 (`g/<hhh>.json`, `p/<hhh>.json`) — so a
 sequence loads only the shards its parts fall in. Tangut, Bopomofo, New Korean, Shuishu, Small Seal,
@@ -1619,6 +1631,7 @@ The font switch selects the Serif illustrations at `?face=serif`. Rebuild the Se
 `demo/lib/baishi-serif-layers.json` before accepting a redraw with `--redrawn`.
 For the separately cited shapes, run `node scripts/build_baishi_ten.mjs`,
 `uv run scripts/build_baishi_variant_glyphs.py FONT_DIR`,
+`uv run scripts/build_baishi_spec_glyphs.py FONT_DIR`,
 `uv run scripts/build_baishi_font_glyphs.py FONT_DIR` and
 `uv run scripts/build_baishi_serif_glyphs.py FONT_DIR`. The sheets retain the guide's
 illustration for 父 (qq222). An unillustrated tooltip entry gives its original IDS.
