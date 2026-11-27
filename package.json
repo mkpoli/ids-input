@@ -128,6 +128,6 @@
   },
   "dependencies": {
     "@cf-wasm/resvg": "^0.4.0",
-    "@han-compose/composer": "github:mkpoli/han-compose#33cd39e44f12d7be4d442ac8390d0ac14b128c6e"
+    "@han-compose/composer": "github:mkpoli/han-compose#edfb1828873505bd8a8b01aacc4e027b4b084d8d"
   }
 }
