@@ -167,7 +167,7 @@
   .pager{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ui-color-ink-muted)}
   .pager.bottom{margin-top:16px;justify-content:center}
   .table{border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-lg);overflow:clip;background:var(--ui-color-surface)}
-  .head,.row{display:grid;grid-template-columns:minmax(110px,1.1fr) repeat(5,1fr);align-items:center}
+  .head,.row{display:grid;grid-template-columns:minmax(110px,1.1fr) repeat(6,1fr);align-items:center}
   .head{position:sticky;top:0;z-index:2;padding:8px;border-bottom:1px solid var(--ui-color-border);background:var(--ui-color-surface);font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--ui-color-ink-muted);text-align:center}
   .head .label{text-align:start;padding-inline-start:6px}
   .row{border-bottom:1px solid var(--ui-color-border-faint)}
@@ -182,7 +182,7 @@
   .source{max-width:80ch;margin:18px 0 0;font-size:11px;line-height:1.6;color:var(--ui-color-ink-muted)}
   .source a{color:var(--ui-color-accent);text-decoration:none}
   @media (max-width:720px){
-    .head,.row{grid-template-columns:minmax(72px,1fr) repeat(5,1fr)}
+    .head,.row{grid-template-columns:minmax(72px,1fr) repeat(6,1fr)}
     .label b{font-size:16px}
   }
 </style>
