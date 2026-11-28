@@ -4,8 +4,8 @@
     {
       "key": "sans",
       "name": "Sans",
-      "font": "Noto Sans CJK + Jigmo",
-      "fallback": "Jigmo",
+      "font": "Noto Sans CJK JP + Plangothic P1/P2",
+      "fallback": "Plangothic P1/P2",
       "version": "a83fc941166b-sans-compose-layout-v4-f7+variants",
       "commit": "a83fc941166b",
       "format": 7,
@@ -23,7 +23,7 @@
     {
       "key": "serif",
       "name": "Serif",
-      "font": "Noto Serif CJK + Jigmo",
+      "font": "Noto Serif CJK JP + Jigmo",
       "fallback": "Jigmo",
       "version": "8156f838798c-serif-compose-layout-v4-serif-f7+variants",
       "commit": "8156f838798c",
@@ -64,8 +64,8 @@
     {
       "key": "fangsong",
       "name": "Fangsong",
-      "font": "Zhuque Fangsong",
-      "fallback": "Fallback",
+      "font": "Zhuque Fangsong + Jigmo",
+      "fallback": "Jigmo",
       "version": "9f797e2322d2-fangsong-compose-layout-v4-fangsong-f7",
       "commit": "9f797e2322d2",
       "format": 7,
@@ -83,8 +83,8 @@
     {
       "key": "regular",
       "name": "Regular",
-      "font": "TW-Kai",
-      "fallback": "Fallback",
+      "font": "TW-Kai + Ext-B/G",
+      "fallback": "Ext-B/G",
       "version": "c14ee5e08798-regular-compose-layout-v4-regular-f7",
       "commit": "c14ee5e08798",
       "format": 7,
@@ -102,8 +102,8 @@
     {
       "key": "pen-writing",
       "name": "Pen",
-      "font": "Kureedo",
-      "fallback": "None (native only)",
+      "font": "Kureedo Full + GenZui Sans",
+      "fallback": "GenZui Sans",
       "version": "ce3eaafda8f9-kaisho-compose-layout-v4-kaisho-f7",
       "commit": "ce3eaafda8f9",
       "format": 7,
