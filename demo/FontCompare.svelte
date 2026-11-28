@@ -1,5 +1,5 @@
 <script>
-  // Five faces side by side for the same characters and descriptions: the sets are 千字文, four
+  // All faces side by side for the same characters and descriptions: the sets are 千字文, four
   // classical poems, the workshop's examples, and the records unencoded-db holds.
   import { onMount } from 'svelte'
   import PageHeader from './ui/PageHeader.svelte'
@@ -121,26 +121,28 @@
       </div>
     </div>
 
-    <div class="table" role="table" aria-label={t('fontCompare.title')}>
-      <div class="head" role="row" style:top={`${headTop}px`}>
-        <span class="label" role="columnheader">{t('fontCompare.row')}</span>
-        {#each FACES as face (face.key)}<span role="columnheader">{t(face.label)}</span>{/each}
-      </div>
-      {#each shown as row (row.key)}
-        <div class="row" role="row">
-          <span class="label" role="rowheader">
-            <b lang="zh">{row.sequence}</b>
-            {#if row.rcc || row.note}
-              <small>{#if row.rcc}<a class="rcc-link" href={rccUrl(row.rcc, locale)} target="_blank" rel="noopener noreferrer" title={t('app.rcc.open', { code: rccCode(row.rcc) })}>{rccCode(row.rcc)}<span aria-hidden="true">↗</span></a>{#if row.note}{' · '}{/if}{/if}{row.note}</small>
-            {/if}
-          </span>
-          {#each FACES as face (face.key)}
-            <span class="cell" role="cell">
-              <FontDrawing sequence={row.sequence} draw={drawOf(face.key)} label={`${row.sequence} — ${t(face.label)}`} />
-            </span>
-          {/each}
+    <div class="table-wrap" style:--faces={FACES.length}>
+      <div class="table" role="table" aria-label={t('fontCompare.title')}>
+        <div class="head" role="row" style:top={`${headTop}px`}>
+          <span class="label" role="columnheader">{t('fontCompare.row')}</span>
+          {#each FACES as face (face.key)}<span role="columnheader">{t(face.label)}</span>{/each}
         </div>
-      {/each}
+        {#each shown as row (row.key)}
+          <div class="row" role="row">
+            <span class="label" role="rowheader">
+              <b lang="zh">{row.sequence}</b>
+              {#if row.rcc || row.note}
+                <small>{#if row.rcc}<a class="rcc-link" href={rccUrl(row.rcc, locale)} target="_blank" rel="noopener noreferrer" title={t('app.rcc.open', { code: rccCode(row.rcc) })}>{rccCode(row.rcc)}<span aria-hidden="true">↗</span></a>{#if row.note}{' · '}{/if}{/if}{row.note}</small>
+              {/if}
+            </span>
+            {#each FACES as face (face.key)}
+              <span class="cell" role="cell">
+                <FontDrawing sequence={row.sequence} draw={drawOf(face.key)} label={`${row.sequence} — ${t(face.label)}`} />
+              </span>
+            {/each}
+          </div>
+        {/each}
+      </div>
     </div>
 
     <div class="pager bottom">
@@ -159,30 +161,44 @@
 </div>
 
 <style>
-  main{max-width:1200px;margin:0 auto;padding:24px max(18px,env(safe-area-inset-right)) 48px max(18px,env(safe-area-inset-left))}
-  .lead{max-width:62ch;margin:0 0 20px;color:var(--ui-color-ink-muted)}
-  .controls{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+  main{inline-size:100%;max-inline-size:1600px;margin-inline:auto;padding:24px max(18px,env(safe-area-inset-right)) 48px max(18px,env(safe-area-inset-left))}
+  .lead{max-inline-size:62ch;margin:0 0 20px;color:var(--ui-color-ink-muted)}
+  .controls{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-block-end:14px}
   .select{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--ui-color-ink-muted)}
   .count{font-size:12px;color:var(--ui-color-ink-muted);margin-inline-start:auto}
   .pager{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ui-color-ink-muted)}
-  .pager.bottom{margin-top:16px;justify-content:center}
+  .pager.bottom{margin-block-start:16px;justify-content:center}
+  .table-wrap{container-type:inline-size}
   .table{border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-lg);overflow:clip;background:var(--ui-color-surface)}
-  .head,.row{display:grid;grid-template-columns:minmax(110px,1.1fr) repeat(5,1fr);align-items:center}
-  .head{position:sticky;top:0;z-index:2;padding:8px;border-bottom:1px solid var(--ui-color-border);background:var(--ui-color-surface);font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--ui-color-ink-muted);text-align:center}
-  .head .label{text-align:start;padding-inline-start:6px}
+  .head,.row{display:grid;grid-template-columns:minmax(104px,.85fr) repeat(var(--faces,6),minmax(0,1fr));align-items:center}
+  .head{position:sticky;inset-block-start:0;z-index:2;border-bottom:1px solid var(--ui-color-border);background:var(--ui-color-surface);font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--ui-color-ink-muted);text-align:center}
+  .head > span{padding:8px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-inline-size:0}
+  .head .label{text-align:start;padding:8px 6px 8px 10px}
   .row{border-bottom:1px solid var(--ui-color-border-faint)}
   .row:last-child{border-bottom:0}
-  .label{display:flex;flex-direction:column;gap:2px;padding:8px 6px 8px 10px;min-width:0}
+  .label{display:flex;flex-direction:column;justify-content:center;align-self:stretch;gap:2px;padding:8px 6px 8px 10px;min-inline-size:0}
   .label b{font-size:20px;font-weight:500}
   .label small{font-size:10px;color:var(--ui-color-ink-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .label .rcc-link{color:var(--ui-color-accent);font-family:var(--ui-font-mono);text-decoration:none}
   .label .rcc-link:hover{text-decoration:underline;text-underline-offset:2px}
   .label .rcc-link:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px;border-radius:var(--ui-radius-xs)}
-  .cell{padding:4px;min-width:0;border-inline-start:1px solid var(--ui-color-border-faint)}
-  .source{max-width:80ch;margin:18px 0 0;font-size:11px;line-height:1.6;color:var(--ui-color-ink-muted)}
+  .cell{padding:4px;min-inline-size:0;border-inline-start:1px solid var(--ui-color-border-faint)}
+  .source{max-inline-size:80ch;margin:18px 0 0;font-size:11px;line-height:1.6;color:var(--ui-color-ink-muted)}
   .source a{color:var(--ui-color-accent);text-decoration:none}
-  @media (max-width:720px){
-    .head,.row{grid-template-columns:minmax(72px,1fr) repeat(5,1fr)}
+  @container (inline-size < 1024px){
+    .head,.row{grid-template-columns:minmax(84px,.8fr) repeat(var(--faces,6),minmax(0,1fr))}
+    .label{padding:6px 6px 6px 8px}
+    .head .label{padding:8px 6px 8px 8px}
+    .label b{font-size:17px}
+  }
+  @container (inline-size < 720px){
+    .table{overflow-x:auto;overscroll-behavior-x:contain}
+    .head,.row{min-inline-size:calc(76px + var(--faces,6) * 108px);grid-template-columns:76px repeat(var(--faces,6),minmax(108px,1fr))}
+    .head{position:static}
+    .label{position:sticky;inset-inline-start:0;z-index:1;background:var(--ui-color-surface);border-inline-end:1px solid var(--ui-color-border-faint)}
+    .head .label{z-index:2}
+    .cell{border-inline-start:0;border-inline-end:1px solid var(--ui-color-border-faint)}
+    .cell:last-child{border-inline-end:0}
     .label b{font-size:16px}
   }
 </style>
