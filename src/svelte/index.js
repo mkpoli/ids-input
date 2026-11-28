@@ -24,3 +24,5 @@ export { default as IdsStructuralSearch } from './IdsStructuralSearch.svelte'
 export { default as IdsTemplates } from './IdsTemplates.svelte'
 export { default as IdsVariations } from './IdsVariations.svelte'
 export { default as IdsCharacterInfo } from './IdsCharacterInfo.svelte'
+
+export { createUnifiable } from './unifiable.svelte.js'
