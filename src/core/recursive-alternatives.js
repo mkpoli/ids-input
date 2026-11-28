@@ -66,16 +66,29 @@ async function lookup(start, signal, timeoutMs) {
  * Limits bound results, retained states, rewrite distance, inspected paths/candidates and lookups. If a
  * limit excludes work, the last event reports it; stopping iteration early omits that event.
  * Failed or timed-out lookups are reported as 'lookup' and other paths continue; cancellation propagates.
+ * The first call to each adapter method may wait for the adapter to download and index its tables,
+ * so it gets `firstLookupTimeoutMs` (at least `lookupTimeoutMs`); later calls get `lookupTimeoutMs`.
  * @param {Part} part
  * @param {Pick<import('../adapter/types.js').IdsAdapter, 'structure' | 'encoded'>} adapter
- * @param {{ maxResults?: number, maxStates?: number, maxDepth?: number, maxWork?: number, maxLookups?: number, lookupTimeoutMs?: number, signal?: AbortSignal }} [options]
+ * @param {{ maxResults?: number, maxStates?: number, maxDepth?: number, maxWork?: number, maxLookups?: number, lookupTimeoutMs?: number, firstLookupTimeoutMs?: number, signal?: AbortSignal }} [options]
  * @returns {AsyncGenerator<AlternativeEvent, void, unknown>}
  */
-export async function* recursiveAlternatives(part, adapter, { maxResults = 128, maxStates = 512, maxDepth = 4, maxWork = 8192, maxLookups = 64, lookupTimeoutMs = 5000, signal } = {}) {
+export async function* recursiveAlternatives(part, adapter, { maxResults = 128, maxStates = 512, maxDepth = 4, maxWork = 8192, maxLookups = 64, lookupTimeoutMs = 5000, firstLookupTimeoutMs = 60000, signal } = {}) {
   for (const [name, value, minimum] of /** @type {[string, number, number][]} */ ([['maxResults', maxResults, 0], ['maxStates', maxStates, 1], ['maxDepth', maxDepth, 0], ['maxWork', maxWork, 1], ['maxLookups', maxLookups, 0]])) {
     if (!Number.isSafeInteger(value) || value < minimum) throw new RangeError(`${name} must be an integer >= ${minimum}`)
   }
-  if (!Number.isSafeInteger(lookupTimeoutMs) || lookupTimeoutMs < 1 || lookupTimeoutMs > 2147483647) throw new RangeError('lookupTimeoutMs must be an integer between 1 and 2147483647')
+  for (const [name, value] of /** @type {[string, number][]} */ ([['lookupTimeoutMs', lookupTimeoutMs], ['firstLookupTimeoutMs', firstLookupTimeoutMs]])) {
+    if (!Number.isSafeInteger(value) || value < 1 || value > 2147483647) throw new RangeError(`${name} must be an integer between 1 and 2147483647`)
+  }
+  /** The adapter methods already called in this run. @type {Set<'structure' | 'encoded'>} */
+  const called = new Set()
+  /** How long a call to `method` may take: longer for the first, which may load the adapter's data.
+   * @param {'structure' | 'encoded'} method */
+  const timeoutFor = method => {
+    if (called.has(method)) return lookupTimeoutMs
+    called.add(method)
+    return Math.max(lookupTimeoutMs, firstLookupTimeoutMs)
+  }
   /** @type {{ tree: Part, depth: number, expand: boolean, merge: boolean }[]} */
   const queue = [{ tree: part, depth: 0, expand: false, merge: false }]
   const seen = new Set([write(part)])
@@ -114,7 +127,7 @@ export async function* recursiveAlternatives(part, adapter, { maxResults = 128, 
           if (lookups >= maxLookups) { cuts.add('lookups'); break }
           lookups++
           const findStructure = adapter.structure.bind(adapter)
-          structures.set(base, lookup(requestSignal => findStructure(base, { signal: requestSignal }), signal, lookupTimeoutMs))
+          structures.set(base, lookup(requestSignal => findStructure(base, { signal: requestSignal }), signal, timeoutFor('structure')))
         }
         let list
         try {
@@ -180,7 +193,7 @@ export async function* recursiveAlternatives(part, adapter, { maxResults = 128, 
             if (lookups < maxLookups) {
               lookups++
               const findEncoded = adapter.encoded.bind(adapter)
-              encoded.set(sequence, lookup(requestSignal => findEncoded(sequence, { exact: true, signal: requestSignal }), signal, lookupTimeoutMs))
+              encoded.set(sequence, lookup(requestSignal => findEncoded(sequence, { exact: true, signal: requestSignal }), signal, timeoutFor('encoded')))
             } else cuts.add('lookups')
           }
           if (encoded.has(sequence)) {
@@ -205,7 +218,7 @@ export async function* recursiveAlternatives(part, adapter, { maxResults = 128, 
           if (!structures.has(base)) {
             if (lookups >= maxLookups) { cuts.add('lookups'); continue }
             lookups++
-            structures.set(base, lookup(requestSignal => adapter.structure(base, { signal: requestSignal }), signal, lookupTimeoutMs))
+            structures.set(base, lookup(requestSignal => adapter.structure(base, { signal: requestSignal }), signal, timeoutFor('structure')))
           }
           const found = await /** @type {Promise<import('./decompose.js').Sequence[]>} */ (structures.get(base))
           signal?.throwIfAborted()
@@ -223,7 +236,7 @@ export async function* recursiveAlternatives(part, adapter, { maxResults = 128, 
             if (lookups >= maxLookups) { cuts.add('lookups'); continue }
             lookups++
             const findEncoded = adapter.encoded.bind(adapter)
-            encoded.set(sequence, lookup(requestSignal => findEncoded(sequence, { exact: true, signal: requestSignal }), signal, lookupTimeoutMs))
+            encoded.set(sequence, lookup(requestSignal => findEncoded(sequence, { exact: true, signal: requestSignal }), signal, timeoutFor('encoded')))
           }
           const found = await /** @type {Promise<string[]>} */ (encoded.get(sequence))
           signal?.throwIfAborted()
