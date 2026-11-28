@@ -402,7 +402,12 @@
         <div class="text">
           {#if serif && quote.char === '父' && item.id === 'list-analogy'}<small lang={locale}>{t('cheatsheet.referenceGlyph')} · I26</small>{/if}
           <!-- A whole row opens with its character; an entry is named by the one it describes. -->
-          {#if !quote.text.includes('\t')}<span class="char" lang="ja">{quote.char}</span>{/if}
+          {#if item.id === 'overlap-reverse'}
+            <a class="char" href={`${SOURCE.repository}/blob/${SOURCE.commit}/ids_lv0.txt#L${quote.row}`}
+              aria-label={`${quote.char} · ${t('cheatsheet.source.data')}`} lang="ja">{quote.char}</a>
+          {:else if !quote.text.includes('\t')}
+            <span class="char" lang="ja">{quote.char}</span>
+          {/if}
           <NotationSequence tokens={quote.tokens} label={quote.text.replaceAll('\t', ' ')} numbered={quote.numbered} active={pointed?.key === quote.key ? pointed.index : null} lit={pointed?.key === quote.key ? pointed.quote.tokens[pointed.index].lights : null}
             tip="cheatsheet-tip" onpoint={(index, element, how) => point(item, quote, index, element, how)} />
         </div>

@@ -84,11 +84,21 @@ describe('reading a quotation of the zi.tools notation', () => {
 })
 
 describe('the cheatsheet\'s cards', () => {
-  it('gives every feature card and letter legend a cited reading', () => {
-    const features = cards.filter(card => !card.id.startsWith('worked-')).map(card => card.id)
+  it('gives feature cards and letter legends supplementary cited readings where available', () => {
+    const features = cards.filter(card => !card.id.startsWith('worked-') && card.id !== 'overlap-reverse').map(card => card.id)
     for (const id of [...features, 'sourceLetters', 'styleLetters', 'positionLetters', 'strokeLetters']) {
       expect(featureExamples[id]?.length, id).toBeGreaterThan(0)
     }
+  })
+  it('keeps the reverse matrix primary quotation and omits duplicate readings', () => {
+    expect(featureExamples['overlap-reverse']).toBeUndefined()
+    const reverse = cards.find(card => card.id === 'overlap-reverse')
+    expect(reverse?.quotes).toHaveLength(1)
+    expect(reverse?.quotes[0]).toMatchObject({
+      char: '𫠣',
+      row: 74703,
+      text: '⿻[1:|b]𠃌⿱⿻𠃊.一.八d',
+    })
   })
   it('have ids of their own', () => {
     expect(new Set(cards.map(card => card.id)).size).toBe(cards.length)
