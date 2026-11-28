@@ -147,11 +147,22 @@ describe('recursiveAlternatives', () => {
       },
       encoded: async (_text, { signal }) => { requests.push(signal); return await new Promise(() => {}) },
     }
-    const { texts, events } = await collect(tree('⿰甲乙'), source, { lookupTimeoutMs: 10 })
+    const { texts, events } = await collect(tree('⿰甲乙'), source, { lookupTimeoutMs: 10, firstLookupTimeoutMs: 10 })
     expect(texts).toContain('⿰甲丙')
     expect(events.at(-1)).toEqual({ type: 'truncated', reasons: ['lookup'] })
     expect(requests.length).toBeGreaterThan(1)
     expect(requests.every(signal => signal.aborted)).toBe(true)
+  })
+
+  test('waits longer for the first call to each method, which may load the data', async () => {
+    const wait = ms => new Promise(resolve => setTimeout(resolve, ms))
+    const source = {
+      structure: async char => { if (char === '甲') await wait(40); return char === '甲' ? [{ text: '⿰乙丙' }] : char === '乙' ? (await wait(40), [{ text: '丁' }]) : [] },
+      encoded: async () => { await wait(40); return [] },
+    }
+    const { texts, events } = await collect('甲', source, { lookupTimeoutMs: 10, firstLookupTimeoutMs: 1000 })
+    expect(texts).toEqual(['⿰乙丙'])
+    expect(events.at(-1)).toEqual({ type: 'truncated', reasons: ['lookup'] })
   })
 
   test('aborts an in-flight lookup even when the adapter ignores its signal', async () => {
@@ -189,6 +200,7 @@ describe('recursiveAlternatives', () => {
     await expect(collect('甲', source, { maxWork: Infinity })).rejects.toThrow(RangeError)
     await expect(collect('甲', source, { lookupTimeoutMs: 0 })).rejects.toThrow(RangeError)
     await expect(collect('甲', source, { lookupTimeoutMs: 2147483648 })).rejects.toThrow(RangeError)
+    await expect(collect('甲', source, { firstLookupTimeoutMs: 0 })).rejects.toThrow(RangeError)
   })
 })
 

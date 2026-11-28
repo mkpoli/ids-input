@@ -16,7 +16,7 @@
   // variation sequences the preview draws and, with `variations`, the forms of the IRG component
   // variation entries it belongs to: another character or a description, or, where the adapter
   // draws them (`formed`), a form no code point names, written with its variant identifier (壬q0012).
-  import { OPERATOR_GROUPS, isCustom, isJurchen, isNode, parse, partAt, samePath, write } from '../core/ids.js'
+  import { OPERATOR_GROUPS, customsOf, isCustom, isJurchen, isNode, parse, partAt, samePath, write } from '../core/ids.js'
   import { codePoints, variationBase, variationOf, variationSelector, withVariation } from '../core/variation.js'
   import IdsVariationFamily from './IdsVariationFamily.svelte'
   import { rateFormsOfPart, formSpelling, readFormSpelling, variationFamiliesOfPart } from '../core/variation-families.js'
@@ -69,13 +69,33 @@
     if (!ucv || typeof part !== 'string') return existing
     const forms = existing.filter(form => !form.unifiable)
     const seen = new Set(forms.map(form => form.write))
-    for (const entry of occurrenceChoices(ucv, variationOf(part), editor.chosen && samePath(editor.chosen, path) ? decompositionChoices(editor) : [])) for (const form of entry.forms) {
-      if (seen.has(form.write)) continue
+    for (const form of occurrenceForms(part, path)) {
+      if (seen.has(form.write) || (unnamed(form.write) && drawable.get(form.write) !== true)) continue
       seen.add(form.write)
-      forms.push({ write: form.write, glyph: form.glyph, entry: entry.id, unifiable: true, kind: 'sibling' })
+      forms.push(form)
     }
     return forms
   }
+  /** The forms of the UCV entries met inside the component's decompositions.
+   * @param {Part | undefined} part @param {Path} path */
+  function occurrenceForms(part, path) {
+    if (!ucv || typeof part !== 'string') return []
+    return occurrenceChoices(ucv, variationOf(part), editor.chosen && samePath(editor.chosen, path) ? decompositionChoices(editor) : [])
+      .flatMap(entry => entry.forms.map(form => ({ write: form.write, glyph: form.glyph, entry: entry.id, unifiable: true, kind: /** @type {const} */ ('sibling') })))
+  }
+  // A form with a component no code point names is offered once the face is known to draw that
+  // component as itself; a form it cannot draw, or draws only by a stand-in, is left out.
+  const unnamed = (/** @type {string} */ text) => /[{&#㇯]/.test(text)
+  let drawable = $state.raw(/** @type {Map<string, boolean>} */ (new Map()))
+  $effect(() => {
+    if (!menu) return
+    const texts = [...new Set(occurrenceForms(menuPart, menu.path).map(form => form.write))].filter(text => unnamed(text) && !untrack(() => drawable.has(text)))
+    if (!texts.length) return
+    const ask = editor.adapter.drawable
+    Promise.all(texts.map(text => ask ? ask(text).then(swap => !swap.approximate?.length && !customsOf(parse(swap.text, { open: true }).tree ?? null).length, () => null) : false))
+      // A failed answer is not kept, so the form is asked about again when the menu next opens.
+      .then(found => { drawable = new Map([...drawable, ...texts.flatMap((text, i) => found[i] === null ? [] : [/** @type {[string, boolean]} */ ([text, found[i]])])]) })
+  })
   /** @param {Part | undefined} part */
   const familiesOf = part => variationFamiliesOfPart(part, editor.adapter.variationFamilies)
   /** @param {Part | undefined} part */

@@ -6,7 +6,7 @@
       "name": "ids-input",
       "dependencies": {
         "@cf-wasm/resvg": "^0.4.0",
-        "@han-compose/composer": "github:mkpoli/han-compose#0d6ce68944b42de0e64d1f0fbafb427d66cf355e",
+        "@han-compose/composer": "github:mkpoli/han-compose#06b207f4aec4361c221b79d4e0c1750eba6d6fc9",
       },
       "devDependencies": {
         "@kurgm/kage-engine": "0.7.0",
@@ -117,7 +117,7 @@
 
     "@esbuild/win32-x64": ["@esbuild/win32-x64@0.28.2", "", { "os": "win32", "cpu": "x64" }, "sha512-5ebpxr3nWMzrL/rnUI755Jkuee0bHL/Gq0WTF9lvcpv73wAp5eu8MfBUgWK9bhWvZjj7yX8etf/8tI8Ney695g=="],
 
-    "@han-compose/composer": ["han-compose@github:mkpoli/han-compose#0d6ce68", { "dependencies": { "clipper-lib": "6.4.2", "d3-contour": "4.0.2" } }, "mkpoli-han-compose-0d6ce68", "sha512-kr2s2XO9Ah7yvmnXlXvlJsVItMToFZldbi3oKJWFci8Bj3vTt9Lrav8SZwK5D51IBnYAKQpI9xq+8XQM2D/kTA=="],
+    "@han-compose/composer": ["han-compose@github:mkpoli/han-compose#06b207f", { "dependencies": { "clipper-lib": "6.4.2", "d3-contour": "4.0.2" } }, "mkpoli-han-compose-06b207f", "sha512-26gW1/Xj6KqnFnuYjs2dY7JAqYsui4hF5GJlo9EXZwId3A7PMtALGO918JyiGLL/P9C4xCy2vLWvlVkoDHuLug=="],
 
     "@img/colour": ["@img/colour@1.1.0", "", {}, "sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ=="],
 

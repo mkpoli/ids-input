@@ -98,14 +98,29 @@ export function ucvChoices(index, picked) {
   })
 }
 
+const isOperator = (/** @type {string | undefined} */ text) => /^[\u2FF0-\u2FFF\u31EF]$/u.test(text ?? '')
+
+/** @param {number[]} outer @param {number[]} inner */
+const within = (outer, inner) => outer.length <= inner.length && outer.every((step, i) => step === inner[i])
+
 /** All selectable occurrences inside a complete decomposition of the chosen character.
+ * Each entry is offered once, at the least expanded place it reaches: a component that has
+ * entries of its own is not opened further, and an entry found at a place or around it is not
+ * repeated inside. An entry that only swaps an operator applies to the characters it lists, and
+ * an entry written in a structure is found where that structure is, never at a bare component.
  * The adapter looks up a plain character, so never use that lookup to open a specific IVS.
  * @param {import('./ucv.js').UcvIndex} index @param {Part | undefined} picked @param {string[]} splits */
 export function occurrenceChoices(index, picked, splits) {
   const groups = ucvChoices(index, picked).map(entry => ({ ...entry, context: '' }))
   if (typeof picked !== 'string' || variationBase(picked) !== variationOf(picked)) return groups
+  const host = variationBase(/** @type {string} */ (withoutMarks(picked)))
   const marks = marksOf(picked)
   const seen = new Set(groups.flatMap(group => group.forms.map(form => form.write)))
+  /** Where each entry is offered, and for a component, its group and what surrounds it.
+   * @type {Map<string, { path: number[], around?: string, group?: (typeof groups)[number] }[]>} */
+  const offered = new Map(groups.map(group => [group.id, [{ path: [] }]]))
+  /** @type {number[][]} */
+  const opened = []
   /** @type {Map<string, ReturnType<typeof ucvChoices>>} */
   const matches = new Map()
   const sites = new Set()
@@ -121,11 +136,24 @@ export function occurrenceChoices(index, picked, splits) {
       // unrelated sibling again would repeat the same choice at this site.
       if (sites.has(site)) continue
       sites.add(site)
-      let entries = matches.get(token)
-      if (!entries) { entries = ucvChoices(index, part); matches.set(token, entries) }
+      // Another spelling of a component in the same place is read; its expansion is not.
+      if (opened.some(at => within(at, path) && (at.length < path.length || isNode(part)))) continue
+      let found = matches.get(token)
+      if (!found) { found = ucvChoices(index, part); matches.set(token, found) }
+      const entries = found.filter(entry => {
+        const catalogued = index.entries.find(one => one.id === entry.id)
+        if (!catalogued) return true
+        if (catalogued.forms.every(form => isOperator(form.text))) return !path.length && Boolean(host && catalogued.unified?.includes(host))
+        return typeof part !== 'string' || !(index.patterns.get(catalogued) ?? []).every(pattern => isNode(parse(pattern, { open: true }).tree ?? null))
+      })
       if (!entries.length) continue
+      if (typeof part === 'string') opened.push(path)
       const context = write(replaceAt(source, path, '〔' + token + '〕'))
+      const around = typeof part === 'string' ? write(replaceAt(source, path, '〔〕')) : undefined
       for (const entry of entries) {
+        const earlier = offered.get(entry.id) ?? []
+        const same = around && earlier.find(at => at.around === around)
+        if (!same && earlier.some(at => within(at.path, path))) continue
         const forms = entry.forms.flatMap(form => {
           const tree = /** @type {Part} */ (withMarks(replaceAt(source, path, form.tree), marks))
           const written = write(tree)
@@ -133,7 +161,11 @@ export function occurrenceChoices(index, picked, splits) {
           seen.add(written)
           return [{ ...form, tree, write: written }]
         })
-        if (forms.length) groups.push({ ...entry, forms, context })
+        if (!forms.length) continue
+        if (same && same.group) { same.group.forms.push(...forms); continue }
+        const group = { ...entry, forms, context }
+        offered.set(entry.id, [...earlier, { path, around, group }])
+        groups.push(group)
       }
     }
   }
