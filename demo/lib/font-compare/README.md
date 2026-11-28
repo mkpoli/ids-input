@@ -8,7 +8,7 @@ The page draws each record in the five composer exports. These files hold what i
 - `poems.json` — 靜夜思 and 早發白帝城 by 李白, 江雪 by 柳宗元, and 相思 by 王維, from their
   Wikisource pages. `characters` holds the distinct characters in reading order; `lines` keeps the
   punctuated text.
-- `unencoded.json` — 1,770 visible records of the sibling unencoded-db site, exported 2026-11-17
+- `unencoded.json` — 4,894 visible records of the sibling unencoded-db site, exported 2026-11-28
   from its D1 database (`45d05e76-22c8-40f8-a81f-6ddbf4899724`). It selects `id`, `ids`,
   `description`, `status`, `radical` and `strokes`, skipping hidden and merged records.
 
