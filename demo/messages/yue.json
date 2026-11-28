@@ -928,8 +928,8 @@
   "page.baishi-cheatsheet.description": "一張速查表總覽zi.tools資料庫嘅擴展IDS：運算子、變體識別符、筆畫鏈、疊加括號同索引括號，每個都配以真實漢字示範，並用顏色區分部件。",
   "page.open-data.description": "本專案轉錄或者讀取嘅IDS描述，以及搜尋所用嘅假名同諺文等價關係，以JSON同TSV格式按CC0 1.0釋出。",
   "page.compare.description": "以真實嘅未編碼字頭為例，將同一IDS由本工坊產生嘅字形同KAGE組字結果並排比較，呈現IDS工坊組字器同KAGE一致同唔同之處。",
-  "page.font-compare.description": "將同一組漢字同描述以工坊嘅黑體、宋體、仿宋、正楷、文楷五種字體並排繪製。",
-  "page.font-mixer.description": "喺工坊嘅黑體、宋體、仿宋、正楷、文楷五種字體之間混合字形，並沿路線播放混合過程。",
+  "page.font-compare.description": "將同一組漢字同描述以工坊嘅黑體、明體、仿宋、楷體、硬筆五種字體並排繪製。",
+  "page.font-mixer.description": "喺工坊嘅黑體、明體、仿宋、楷體、硬筆五種字體之間混合字形，並沿路線播放混合過程。",
   "page.engines.description": "比較IDS字形引擎嘅功能：IDS工坊、KAGE、GlyphWiki、zi.tools、yedict、Mojidata、MetaHan同CHISE。",
   "app.rcc.open": "喺Rare Character Compendium打開{code}"
 }
