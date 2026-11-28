@@ -928,5 +928,7 @@
   "page.font-compare.description": "同じ文字や記述をIDS工房の五つの書体（ゴシック、明朝、仿宋、正楷、文楷）で並べて比較します。",
   "page.font-mixer.description": "IDS工房の五つの書体（ゴシック、明朝、仿宋、正楷、文楷）の間で文字をブレンドし、書体間の変化を自動再生でたどれます。",
   "page.engines.description": "IDS組字エンジンの機能比較。IDS工房、KAGE、GlyphWiki、zi.tools、yedict、Mojidata、MetaHan、CHISEを比較しています。",
-  "app.rcc.open": "珍字集覧で{code}を開く"
+  "app.rcc.open": "珍字集覧で{code}を開く",
+  "app.fontInventory": "書体インベントリ",
+  "page.font-inventory.description": "6書体の収録字数、ホスト切り出し数、エクスポート容量、書体別切り出し表の対応状況。"
 }

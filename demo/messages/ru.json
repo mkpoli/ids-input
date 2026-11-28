@@ -941,5 +941,7 @@
   "page.font-compare.description": "Одни и те же иероглифы и описания в пяти гарнитурах мастерской: Sans, Serif, Fangsong, Regular и Pen.",
   "page.font-mixer.description": "Смешивайте начертание иероглифа между пятью гарнитурами мастерской (Sans, Serif, Fangsong, Regular и Pen) и воспроизводите переход в виде тура.",
   "page.engines.description": "Сравнение возможностей движков отрисовки глифов IDS: IDS Workshop, KAGE, GlyphWiki, zi.tools, yedict, Mojidata, MetaHan и CHISE.",
-  "app.rcc.open": "Открыть {code} в Rare Character Compendium"
+  "app.rcc.open": "Открыть {code} в Rare Character Compendium",
+  "app.fontInventory": "Инвентарь шрифтов",
+  "page.font-inventory.description": "Число компонентов, вырезов из доноров, размеры экспорта и покрытие таблиц вырезов по шести гарнитурам."
 }

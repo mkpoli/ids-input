@@ -931,5 +931,7 @@
   "page.font-compare.description": "Dieselben Zeichen und Beschreibungen in den fünf Schriftstilen des Workshops: Sans, Serif, Fangsong, Regular und Pen.",
   "page.font-mixer.description": "Ein Zeichen zwischen den fünf Schriftstilen des Workshops (Sans, Serif, Fangsong, Regular und Pen) überblenden und den Übergang als Tour abspielen.",
   "page.engines.description": "Funktionsvergleich von IDS-Glyphen-Engines: IDS Workshop, KAGE, GlyphWiki, zi.tools, yedict, Mojidata, MetaHan und CHISE.",
-  "app.rcc.open": "{code} im Rare Character Compendium öffnen"
+  "app.rcc.open": "{code} im Rare Character Compendium öffnen",
+  "app.fontInventory": "Schriftarten-Inventar",
+  "page.font-inventory.description": "Komponentenanzahl, Host-Schnitte, Exportgrößen und Abdeckung der Schnitttabellen für die sechs Schriftarten."
 }

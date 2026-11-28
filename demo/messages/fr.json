@@ -931,5 +931,7 @@
   "page.font-compare.description": "Les mêmes caractères et descriptions tracés dans les cinq polices de l'atelier : Sans, Serif, Fangsong, Regular et Pen.",
   "page.font-mixer.description": "Fusionner un caractère entre les cinq polices de l'atelier (Sans, Serif, Fangsong, Regular et Pen) et lire la transition sous forme de parcours.",
   "page.engines.description": "Comparatif des fonctionnalités des moteurs de glyphes IDS : IDS Workshop, KAGE, GlyphWiki, zi.tools, yedict, Mojidata, MetaHan et CHISE.",
-  "app.rcc.open": "Ouvrir {code} sur Rare Character Compendium"
+  "app.rcc.open": "Ouvrir {code} sur Rare Character Compendium",
+  "app.fontInventory": "Inventaire des polices",
+  "page.font-inventory.description": "Nombre de composants, découpes hôtes, tailles d’export et couverture des tables de découpe pour les six polices."
 }

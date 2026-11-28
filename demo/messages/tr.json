@@ -931,5 +931,7 @@
   "page.font-compare.description": "Aynı karakterler ve betimlemeler atölyenin beş yazı tipinde çizilmiş olarak: Sans, Serif, Fangsong, Regular ve Pen.",
   "page.font-mixer.description": "Bir karakteri atölyenin beş yazı tipi (Sans, Serif, Fangsong, Regular ve Pen) arasında harmanlayın ve bu harmanlamayı bir tur olarak oynatın.",
   "page.engines.description": "IDS glif motorlarının özellik karşılaştırması: IDS Workshop, KAGE, GlyphWiki, zi.tools, yedict, Mojidata, MetaHan ve CHISE.",
-  "app.rcc.open": "{code} kaydını Rare Character Compendium'da aç"
+  "app.rcc.open": "{code} kaydını Rare Character Compendium'da aç",
+  "app.fontInventory": "Yazı tipi envanteri",
+  "page.font-inventory.description": "Altı yazı tipi için bileşen sayıları, konak kesimleri, dışa aktarma boyutları ve kesim tablosu kapsamı."
 }

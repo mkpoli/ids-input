@@ -928,5 +928,7 @@
   "page.font-compare.description": "将同一组汉字与描述以工坊的黑体、宋体、仿宋、正楷、文楷五种字体并排呈现。",
   "page.font-mixer.description": "在工坊的黑体、宋体、仿宋、正楷、文楷五种字体之间混合字形，并沿路线播放混合过程。",
   "page.engines.description": "比较IDS字形引擎的功能：IDS工坊、KAGE、GlyphWiki、zi.tools、yedict、Mojidata、MetaHan与CHISE。",
-  "app.rcc.open": "在珍字集览中打开{code}"
+  "app.rcc.open": "在珍字集览中打开{code}",
+  "app.fontInventory": "字体清单",
+  "page.font-inventory.description": "六种字体的收录字数、宿主切件数、导出体积及分字体切件表覆盖情况。"
 }

@@ -931,5 +931,7 @@
   "page.font-compare.description": "वही वर्ण और विवरण वर्कशॉप के पाँच टाइपफ़ेस में बनाए गए: Sans, Serif, Fangsong, Regular और Pen।",
   "page.font-mixer.description": "वर्कशॉप के पाँच टाइपफ़ेस (Sans, Serif, Fangsong, Regular और Pen) के बीच किसी वर्ण को ब्लेंड करें और इस ब्लेंड को टूर के रूप में चलाएँ।",
   "page.engines.description": "IDS ग्लिफ़ इंजनों की विशेषताओं की तुलना: IDS Workshop, KAGE, GlyphWiki, zi.tools, yedict, Mojidata, MetaHan और CHISE।",
-  "app.rcc.open": "Rare Character Compendium पर {code} खोलें"
+  "app.rcc.open": "Rare Character Compendium पर {code} खोलें",
+  "app.fontInventory": "फ़ॉन्ट सूची",
+  "page.font-inventory.description": "छह कंपोज़र फ़ॉन्ट के लिए घटक संख्या, होस्ट कट, एक्सपोर्ट आकार और कट तालिका कवरेज।"
 }

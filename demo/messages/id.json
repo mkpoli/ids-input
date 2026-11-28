@@ -931,5 +931,7 @@
   "page.font-compare.description": "Aksara dan deskripsi yang sama digambar dalam lima rupa huruf IDS Workshop: Sans, Serif, Fangsong, Regular, dan Pen.",
   "page.font-mixer.description": "Padukan sebuah aksara di antara lima rupa huruf IDS Workshop (Sans, Serif, Fangsong, Regular, dan Pen) dan putar perpaduannya sebagai tur.",
   "page.engines.description": "Perbandingan fitur mesin glif IDS: IDS Workshop, KAGE, GlyphWiki, zi.tools, yedict, Mojidata, MetaHan, dan CHISE.",
-  "app.rcc.open": "Buka {code} di Rare Character Compendium"
+  "app.rcc.open": "Buka {code} di Rare Character Compendium",
+  "app.fontInventory": "Inventaris fon",
+  "page.font-inventory.description": "Jumlah komponen, potongan inang, ukuran ekspor, dan cakupan tabel potongan pada enam rupa huruf."
 }

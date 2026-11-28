@@ -11,7 +11,7 @@ import { pathOf } from '../worker/page.js'
 import { LOCALE_CODES, LOCALIZED_PATHS, alternates, localeUrl } from '../worker/locale.js'
 
 const ORIGIN = 'https://ids.mkpo.li'
-const PAGES = ['/', '/compare', '/font-compare', '/font-mixer', '/engines', '/sources', '/open-data', '/unencoded', '/component-atlas', '/ucv', '/normalization', '/baishi', '/baishi-cheatsheet', '/baishi-railroad', '/components', '/history']
+const PAGES = ['/', '/compare', '/font-compare', '/font-inventory', '/font-mixer', '/engines', '/sources', '/open-data', '/unencoded', '/component-atlas', '/ucv', '/normalization', '/baishi', '/baishi-cheatsheet', '/baishi-railroad', '/components', '/history']
 
 /** @param {string} loc @param {[string, string][]} readings */
 const url = (loc, readings = []) => `<url>\n    <loc>${loc}</loc>${readings.map(([code, href]) => `\n    <xhtml:link rel="alternate" hreflang="${code}" href="${href}"/>`).join('')}\n  </url>`

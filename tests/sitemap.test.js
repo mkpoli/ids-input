@@ -6,7 +6,7 @@ import worker from '../worker/index.js'
 import { LOCALE_CODES, LOCALIZED_PATHS, alternates, localeUrl, localizedHtml, pageMeta } from '../worker/locale.js'
 
 const ORIGIN = 'https://ids.mkpo.li'
-const PAGES = ['/compare', '/font-compare', '/font-mixer', '/engines', '/sources', '/open-data', '/unencoded', '/component-atlas', '/ucv', '/normalization', '/baishi', '/baishi-cheatsheet', '/baishi-railroad', '/components', '/history']
+const PAGES = ['/compare', '/font-compare', '/font-inventory', '/font-mixer', '/engines', '/sources', '/open-data', '/unencoded', '/component-atlas', '/ucv', '/normalization', '/baishi', '/baishi-cheatsheet', '/baishi-railroad', '/components', '/history']
 const locs = [...sitemapXml().matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1])
 
 describe('the sitemap', () => {
@@ -70,7 +70,7 @@ describe('a page with a reading in every language', () => {
     }
   })
   it('leaves a page written in English alone at one address', () => {
-    for (const path of ['/engines', '/open-data']) {
+    for (const path of ['/engines', '/open-data', '/font-inventory']) {
       expect(LOCALIZED_PATHS).not.toContain(path)
       expect(locs.filter(loc => loc.startsWith(`${ORIGIN}${path}`))).toEqual([`${ORIGIN}${path}`])
     }
