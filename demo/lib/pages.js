@@ -16,12 +16,13 @@ export const pages = t => [
   { id: 'open-data', icon: 'download', label: t('app.openData'), description: t('page.open-data.description') },
   { id: 'compare', icon: 'scales', label: t('app.compare'), description: t('page.compare.description') },
   { id: 'font-compare', icon: 'variants', label: t('fontCompare.title'), description: t('page.font-compare.description') },
+  { id: 'font-inventory', icon: 'table', label: t('app.fontInventory'), description: t('page.font-inventory.description') },
   { id: 'font-mixer', icon: 'blend', label: t('fontMixer.title'), description: t('page.font-mixer.description') },
   { id: 'engines', icon: 'table', label: t('app.engines'), description: t('page.engines.description') },
 ]
 
 /** The pages written in English alone, which have one address each. */
-export const ENGLISH_ONLY = new Set(['open-data', 'engines'])
+export const ENGLISH_ONLY = new Set(['open-data', 'engines', 'font-inventory'])
 
 /** The editor's own title and description. @param {(key: string) => string} t */
 export const home = t => ({ title: `${t('app.title')} — ${t('ids.label')}`, description: t('page.home.description') })

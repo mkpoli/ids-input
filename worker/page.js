@@ -20,7 +20,7 @@ export const codePoint = char => [...char].map(unit => `U+${(unit.codePointAt(0)
 export const pathOf = sequence => !sequence ? '/' : (/[./]/.test(sequence) || !parse(sequence, { open: true }).tree)
   ? `/?ids=${encodeURIComponent(sequence)}` : `/${encodeURIComponent(sequence)}`
 
-const RESERVED = new Set(['embed', 'editor', 'compare', 'font-compare', 'font-mixer', 'engines', 'sources', 'open-data', 'unencoded', 'ucv', 'normalization', 'baishi', 'baishi-cheatsheet', 'baishi-railroad', 'components', 'history', 'component-atlas', 'design', 'index', 'og'])
+const RESERVED = new Set(['embed', 'editor', 'compare', 'font-compare', 'font-inventory', 'font-mixer', 'engines', 'sources', 'open-data', 'unencoded', 'ucv', 'normalization', 'baishi', 'baishi-cheatsheet', 'baishi-railroad', 'components', 'history', 'component-atlas', 'design', 'index', 'og'])
 const bad = (error, status = 400) => ({ error, status })
 
 /** Classify requests without loading fonts or rendering. Bounds never truncate a sequence. */

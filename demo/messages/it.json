@@ -931,5 +931,7 @@
   "page.font-compare.description": "Gli stessi caratteri e le stesse descrizioni disegnati nei cinque stili del laboratorio: Sans, Serif, Fangsong, Regular e Pen.",
   "page.font-mixer.description": "Miscela un carattere tra i cinque stili del laboratorio (Sans, Serif, Fangsong, Regular e Pen) e riproduci la transizione come tour.",
   "page.engines.description": "Confronto delle funzionalità dei motori per glifi IDS: IDS Workshop, KAGE, GlyphWiki, zi.tools, yedict, Mojidata, MetaHan e CHISE.",
-  "app.rcc.open": "Apri {code} su Rare Character Compendium"
+  "app.rcc.open": "Apri {code} su Rare Character Compendium",
+  "app.fontInventory": "Inventario dei font",
+  "page.font-inventory.description": "Numero di componenti, tagli ospite, dimensioni di esportazione e copertura delle tabelle di taglio nei sei font."
 }

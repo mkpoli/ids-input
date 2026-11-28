@@ -928,5 +928,7 @@
   "page.font-compare.description": "Cùng những chữ và mô tả được vẽ cạnh nhau bằng năm phông của xưởng: Không chân, Có chân, Phỏng Tống, Khải thư và Bút sắt.",
   "page.font-mixer.description": "Pha trộn hình chữ giữa năm phông của xưởng — Không chân, Có chân, Phỏng Tống, Khải thư và Bút sắt — rồi phát quá trình biến đổi theo lộ trình.",
   "page.engines.description": "So sánh tính năng các công cụ tạo hình chữ từ IDS: Xưởng IDS, KAGE, GlyphWiki, zi.tools, yedict, Mojidata, MetaHan và CHISE.",
-  "app.rcc.open": "Mở {code} trên Tuyển tập chữ quý"
+  "app.rcc.open": "Mở {code} trên Tuyển tập chữ quý",
+  "app.fontInventory": "Thống kê phông chữ",
+  "page.font-inventory.description": "Số lượng ký tự, lát cắt ký tự gốc, dung lượng gói xuất và độ phủ bảng cắt trên cả sáu phông."
 }

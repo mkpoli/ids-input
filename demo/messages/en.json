@@ -931,5 +931,7 @@
   "page.font-compare.description": "The same characters and descriptions drawn in the workshop's five faces: Sans, Serif, Fangsong, Regular and Pen.",
   "page.font-mixer.description": "Blend a character between the workshop's five faces (Sans, Serif, Fangsong, Regular and Pen) and play the blend as a tour.",
   "page.engines.description": "Feature comparison of IDS glyph engines: the IDS Workshop, KAGE, GlyphWiki, zi.tools, yedict, Mojidata, MetaHan and CHISE.",
-  "app.rcc.open": "Open {code} on Rare Character Compendium"
+  "app.rcc.open": "Open {code} on Rare Character Compendium",
+  "app.fontInventory": "Font inventory",
+  "page.font-inventory.description": "Component counts, host cuts, export sizes and per-face cut table coverage across the six composer faces."
 }

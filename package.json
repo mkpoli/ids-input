@@ -90,6 +90,7 @@
     "desktop:build": "tauri build",
     "build:site": "bun run build:demo && bun scripts/og-assets.mjs && bun scripts/build-og-worker.mjs && bun scripts/build-sitemap.mjs",
     "build:example-drawings": "bun demo/scripts/build-example-drawings.mjs",
+    "build:font-inventory": "bun scripts/build-font-inventory.mjs",
     "build:baishi-serif": "bun demo/scripts/build-baishi-serif.mjs",
     "build:baishi-cheatsheet": "bun demo/scripts/build-baishi-cheatsheet.mjs",
     "build:spec-pdf": "bun scripts/build_spec_pdf.mjs",

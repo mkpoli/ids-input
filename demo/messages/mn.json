@@ -931,5 +931,7 @@
   "page.font-compare.description": "Ижил тэмдэгт болон дүрслэлүүдийг уг урлангийн Sans, Serif, Fangsong, Regular болон Pen таван хэвээр зурсан байдал.",
   "page.font-mixer.description": "Тэмдэгтийг уг урлангийн таван хэвийн (Sans, Serif, Fangsong, Regular, Pen) хооронд уусган хольж, уг хольцыг аялал мэт тоглуулах.",
   "page.engines.description": "IDS дүрс бүтээх хөдөлгүүрүүдийн боломжуудын харьцуулалт: IDS Workshop, KAGE, GlyphWiki, zi.tools, yedict, Mojidata, MetaHan болон CHISE.",
-  "app.rcc.open": "Rare Character Compendium дээр {code} нээх"
+  "app.rcc.open": "Rare Character Compendium дээр {code} нээх",
+  "app.fontInventory": "Фонтын бүртгэл",
+  "page.font-inventory.description": "Зургаан фонтын бүрэлдэхүүн хэсэг, тайралтын тоо, экспортын хэмжээ ба хүснэгтийн хамрах хүрээ."
 }

@@ -931,5 +931,7 @@
   "page.font-compare.description": "Aksara dan perihalan yang sama dilukis dalam lima muka taip bengkel ini: Sans, Serif, Fangsong, Regular dan Pen.",
   "page.font-mixer.description": "Adunkan aksara antara lima muka taip bengkel ini (Sans, Serif, Fangsong, Regular dan Pen) dan mainkan adunan itu sebagai jelajahan.",
   "page.engines.description": "Perbandingan ciri enjin glif IDS: IDS Workshop, KAGE, GlyphWiki, zi.tools, yedict, Mojidata, MetaHan dan CHISE.",
-  "app.rcc.open": "Buka {code} di Rare Character Compendium"
+  "app.rcc.open": "Buka {code} di Rare Character Compendium",
+  "app.fontInventory": "Inventori fon",
+  "page.font-inventory.description": "Bilangan komponen, potongan hos, saiz eksport dan liputan jadual potongan bagi enam muka taip."
 }

@@ -931,5 +931,7 @@
   "page.font-compare.description": "อักษรและคำอธิบายชุดเดียวกันที่วาดด้วยแบบอักษรทั้งห้าแบบของเวิร์กชอป ได้แก่ Sans, Serif, Fangsong, Regular และ Pen",
   "page.font-mixer.description": "ผสานรูปอักษรระหว่างแบบอักษรทั้งห้าแบบของเวิร์กชอป (Sans, Serif, Fangsong, Regular และ Pen) และเล่นลำดับการผสานต่อเนื่อง",
   "page.engines.description": "เปรียบเทียบความสามารถของเอนจินสร้างรูปอักษรจาก IDS ได้แก่ IDS Workshop, KAGE, GlyphWiki, zi.tools, yedict, Mojidata, MetaHan และ CHISE",
-  "app.rcc.open": "เปิด {code} บน Rare Character Compendium"
+  "app.rcc.open": "เปิด {code} บน Rare Character Compendium",
+  "app.fontInventory": "คลังข้อมูลฟอนต์",
+  "page.font-inventory.description": "จำนวนองค์ประกอบ การตัดชิ้นส่วน ขนาดไฟล์ส่งออก และความครอบคลุมของตารางตัดสำหรับทั้งหกแบบอักษร"
 }

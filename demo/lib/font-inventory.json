@@ -1,0 +1,379 @@
+{
+  "generatedAt": "2026-11-28",
+  "faces": [
+    {
+      "key": "sans",
+      "name": "Sans",
+      "font": "Noto Sans CJK + Jigmo",
+      "fallback": "Jigmo",
+      "version": "a83fc941166b-sans-compose-layout-v4-f7+variants",
+      "commit": "a83fc941166b",
+      "format": 7,
+      "chars": 95419,
+      "records": 223273,
+      "hostKeys": 57636,
+      "hostCuts": 134264,
+      "cutsPerChar": 1.41,
+      "variants": 1215,
+      "kins": 0,
+      "rooms": 0,
+      "facingLeast": null,
+      "gzipMB": 134.5
+    },
+    {
+      "key": "serif",
+      "name": "Serif",
+      "font": "Noto Serif CJK + Jigmo",
+      "fallback": "Jigmo",
+      "version": "8156f838798c-serif-compose-layout-v4-serif-f7+variants",
+      "commit": "8156f838798c",
+      "format": 7,
+      "chars": 95411,
+      "records": 223235,
+      "hostKeys": 57636,
+      "hostCuts": 98967,
+      "cutsPerChar": 1.04,
+      "variants": 1215,
+      "kins": 0,
+      "rooms": 0,
+      "facingLeast": null,
+      "gzipMB": 221.7
+    },
+    {
+      "key": "woodblock",
+      "name": "Woodblock",
+      "font": "Nôm Na Tống",
+      "fallback": "None (native only)",
+      "version": "771909314e60-woodblock-compose-layout-v4-woodblock-f7",
+      "commit": "771909314e60",
+      "format": 7,
+      "chars": 25297,
+      "records": 54391,
+      "hostKeys": 17503,
+      "hostCuts": 45140,
+      "cutsPerChar": 1.78,
+      "variants": 565,
+      "kins": 29,
+      "rooms": 29,
+      "facingLeast": [
+        24,
+        21
+      ],
+      "gzipMB": 48.8
+    },
+    {
+      "key": "fangsong",
+      "name": "Fangsong",
+      "font": "Zhuque Fangsong",
+      "fallback": "Fallback",
+      "version": "9f797e2322d2-fangsong-compose-layout-v4-fangsong-f7",
+      "commit": "9f797e2322d2",
+      "format": 7,
+      "chars": 95389,
+      "records": 205625,
+      "hostKeys": 8102,
+      "hostCuts": 16360,
+      "cutsPerChar": 0.17,
+      "variants": 0,
+      "kins": 0,
+      "rooms": 0,
+      "facingLeast": null,
+      "gzipMB": 223.3
+    },
+    {
+      "key": "regular",
+      "name": "Regular",
+      "font": "TW-Kai",
+      "fallback": "Fallback",
+      "version": "c14ee5e08798-regular-compose-layout-v4-regular-f7",
+      "commit": "c14ee5e08798",
+      "format": 7,
+      "chars": 75804,
+      "records": 164436,
+      "hostKeys": 15934,
+      "hostCuts": 52351,
+      "cutsPerChar": 0.69,
+      "variants": 0,
+      "kins": 30,
+      "rooms": 0,
+      "facingLeast": null,
+      "gzipMB": 244.5
+    },
+    {
+      "key": "pen-writing",
+      "name": "Pen",
+      "font": "Kureedo",
+      "fallback": "None (native only)",
+      "version": "ce3eaafda8f9-kaisho-compose-layout-v4-kaisho-f7",
+      "commit": "ce3eaafda8f9",
+      "format": 7,
+      "chars": 30472,
+      "records": 76673,
+      "hostKeys": 15835,
+      "hostCuts": 60157,
+      "cutsPerChar": 1.97,
+      "variants": 0,
+      "kins": 0,
+      "rooms": 0,
+      "facingLeast": null,
+      "gzipMB": 100.6
+    }
+  ],
+  "cutTables": [
+    {
+      "file": "bird-outline-cuts.json",
+      "name": "bird-outline-cuts",
+      "counts": {
+        "sans": 3,
+        "serif": 3,
+        "woodblock": 0,
+        "fangsong": 3,
+        "regular": 3,
+        "pen-writing": 3
+      },
+      "covered": 5
+    },
+    {
+      "file": "component-forms.json",
+      "name": "component-forms",
+      "counts": {
+        "sans": 72,
+        "serif": 70,
+        "woodblock": 0,
+        "fangsong": 6,
+        "regular": 0,
+        "pen-writing": 15
+      },
+      "covered": 4
+    },
+    {
+      "file": "cuan-forms.json",
+      "name": "cuan-forms",
+      "counts": {
+        "sans": 2,
+        "serif": 0,
+        "woodblock": 0,
+        "fangsong": 2,
+        "regular": 2,
+        "pen-writing": 2
+      },
+      "covered": 4
+    },
+    {
+      "file": "ha-nine.json",
+      "name": "ha-nine",
+      "counts": {
+        "sans": 0,
+        "serif": 0,
+        "woodblock": 0,
+        "fangsong": 3,
+        "regular": 3,
+        "pen-writing": 0
+      },
+      "covered": 2
+    },
+    {
+      "file": "host-chain-cuts.json",
+      "name": "host-chain-cuts",
+      "counts": {
+        "sans": 39,
+        "serif": 39,
+        "woodblock": 0,
+        "fangsong": 52,
+        "regular": 46,
+        "pen-writing": 39
+      },
+      "covered": 5
+    },
+    {
+      "file": "inward-grass-forms.json",
+      "name": "inward-grass-forms",
+      "counts": {
+        "sans": 1,
+        "serif": 1,
+        "woodblock": 0,
+        "fangsong": 1,
+        "regular": 1,
+        "pen-writing": 1
+      },
+      "covered": 5
+    },
+    {
+      "file": "k5h00030-cuts.json",
+      "name": "k5h00030-cuts",
+      "counts": {
+        "sans": 3,
+        "serif": 3,
+        "woodblock": 0,
+        "fangsong": 3,
+        "regular": 3,
+        "pen-writing": 3
+      },
+      "covered": 5
+    },
+    {
+      "file": "mu-net-forms.json",
+      "name": "mu-net-forms",
+      "counts": {
+        "sans": 3,
+        "serif": 3,
+        "woodblock": 0,
+        "fangsong": 3,
+        "regular": 3,
+        "pen-writing": 3
+      },
+      "covered": 5
+    },
+    {
+      "file": "plain-variants.json",
+      "name": "plain-variants",
+      "counts": {
+        "sans": 7,
+        "serif": 7,
+        "woodblock": 0,
+        "fangsong": 0,
+        "regular": 0,
+        "pen-writing": 0
+      },
+      "covered": 2
+    },
+    {
+      "file": "rate-yao-slots.json",
+      "name": "rate-yao-slots",
+      "counts": {
+        "sans": 37,
+        "serif": 37,
+        "woodblock": 0,
+        "fangsong": 37,
+        "regular": 37,
+        "pen-writing": 37
+      },
+      "covered": 5
+    },
+    {
+      "file": "rcc-booklet-cuts.json",
+      "name": "rcc-booklet-cuts",
+      "counts": {
+        "sans": 4,
+        "serif": 4,
+        "woodblock": 0,
+        "fangsong": 4,
+        "regular": 4,
+        "pen-writing": 4
+      },
+      "covered": 5
+    },
+    {
+      "file": "rcc-component-cuts.json",
+      "name": "rcc-component-cuts",
+      "counts": {
+        "sans": 6,
+        "serif": 6,
+        "woodblock": 0,
+        "fangsong": 6,
+        "regular": 6,
+        "pen-writing": 6
+      },
+      "covered": 5
+    },
+    {
+      "file": "recorded-native.json",
+      "name": "recorded-native",
+      "counts": {
+        "sans": 11,
+        "serif": 11,
+        "woodblock": 0,
+        "fangsong": 3,
+        "regular": 10,
+        "pen-writing": 11
+      },
+      "covered": 5
+    },
+    {
+      "file": "split-grass-forms.json",
+      "name": "split-grass-forms",
+      "counts": {
+        "sans": 1,
+        "serif": 1,
+        "woodblock": 0,
+        "fangsong": 1,
+        "regular": 1,
+        "pen-writing": 1
+      },
+      "covered": 5
+    },
+    {
+      "file": "stroke-donor-cuts.json",
+      "name": "stroke-donor-cuts",
+      "counts": {
+        "sans": 0,
+        "serif": 0,
+        "woodblock": 0,
+        "fangsong": 29,
+        "regular": 9,
+        "pen-writing": 0
+      },
+      "covered": 2
+    },
+    {
+      "file": "stroke-native-records.json",
+      "name": "stroke-native-records",
+      "counts": {
+        "sans": 11,
+        "serif": 11,
+        "woodblock": 0,
+        "fangsong": 5,
+        "regular": 22,
+        "pen-writing": 13
+      },
+      "covered": 5
+    },
+    {
+      "file": "ucv-dot-forms.json",
+      "name": "ucv-dot-forms",
+      "counts": {
+        "sans": 2,
+        "serif": 2,
+        "woodblock": 0,
+        "fangsong": 3,
+        "regular": 2,
+        "pen-writing": 2
+      },
+      "covered": 5
+    },
+    {
+      "file": "water-enclosure.json",
+      "name": "water-enclosure",
+      "counts": {
+        "sans": 2,
+        "serif": 2,
+        "woodblock": 0,
+        "fangsong": 2,
+        "regular": 2,
+        "pen-writing": 2
+      },
+      "covered": 5
+    },
+    {
+      "file": "water-stroke-row.json",
+      "name": "water-stroke-row",
+      "counts": {
+        "sans": 3,
+        "serif": 3,
+        "woodblock": 0,
+        "fangsong": 3,
+        "regular": 3,
+        "pen-writing": 3
+      },
+      "covered": 5
+    }
+  ],
+  "cutTotals": {
+    "sans": 17,
+    "serif": 16,
+    "woodblock": 0,
+    "fangsong": 18,
+    "regular": 17,
+    "pen-writing": 16
+  }
+}

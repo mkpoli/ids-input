@@ -931,5 +931,7 @@
   "page.font-compare.description": "Los mismos caracteres y descripciones dibujados con las cinco tipografías del taller: Sans, Serif, Fangsong, Regular y Pen.",
   "page.font-mixer.description": "Mezcla un carácter entre las cinco tipografías del taller (Sans, Serif, Fangsong, Regular y Pen) y reproduce la mezcla como un recorrido.",
   "page.engines.description": "Comparativa de funciones de los motores de glifos IDS: IDS Workshop, KAGE, GlyphWiki, zi.tools, yedict, Mojidata, MetaHan y CHISE.",
-  "app.rcc.open": "Abrir {code} en Rare Character Compendium"
+  "app.rcc.open": "Abrir {code} en Rare Character Compendium",
+  "app.fontInventory": "Inventario de fuentes",
+  "page.font-inventory.description": "Conteo de componentes, cortes de anfitrión, tamaños de exportación y cobertura de tablas de corte en las seis fuentes."
 }
