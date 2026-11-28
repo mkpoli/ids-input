@@ -9,15 +9,91 @@ import { fileURLToPath } from 'node:url'
 import { COMPOSER_BASES } from '../demo/lib/composer.js'
 
 const FACES = [
-  { key: 'sans', name: 'Sans', font: 'Noto Sans CJK + Jigmo', fallback: 'Jigmo' },
-  { key: 'serif', name: 'Serif', font: 'Noto Serif CJK + Jigmo', fallback: 'Jigmo' },
-  { key: 'woodblock', name: 'Woodblock', font: 'Nôm Na Tống', fallback: 'None (native only)' },
-  { key: 'fangsong', name: 'Fangsong', font: 'Zhuque Fangsong', fallback: 'Fallback' },
-  { key: 'regular', name: 'Regular', font: 'TW-Kai', fallback: 'Fallback' },
-  { key: 'pen-writing', name: 'Pen', font: 'Kureedo', fallback: 'None (native only)' },
+  { key: 'sans', name: 'Sans' },
+  { key: 'serif', name: 'Serif' },
+  { key: 'woodblock', name: 'Woodblock' },
+  { key: 'fangsong', name: 'Fangsong' },
+  { key: 'regular', name: 'Regular' },
+  { key: 'pen-writing', name: 'Pen' },
 ]
 
 const FACE_KEYS = FACES.map(f => f.key)
+
+const DISPLAY_NAMES = {
+  'Nom Na Tong': 'Nôm Na Tống',
+}
+
+/** Normalize a manifest outline font entry into a concise display label. */
+function normalizeFontName(raw) {
+  const cleaned = String(raw).replace(/\s*\([^)]*\)\s*$/, '').trim()
+  if (/^Jigmo[23]?$/.test(cleaned)) return 'Jigmo'
+  return DISPLAY_NAMES[cleaned] ?? cleaned
+}
+
+/** Collapse multi-plane font families (Plangothic P1/P2, TW-Kai-Ext-B/G) while preserving order. */
+function collapseFontLabels(labels) {
+  const deduped = []
+  for (const label of labels) {
+    if (label && !deduped.includes(label)) deduped.push(label)
+  }
+
+  const out = []
+  let i = 0
+  while (i < deduped.length) {
+    const cur = deduped[i]
+
+    // Plangothic P1, Plangothic P2 -> Plangothic P1/P2
+    const planMatch = cur.match(/^Plangothic (P\d+)$/)
+    if (planMatch) {
+      const planes = [planMatch[1]]
+      while (i + 1 < deduped.length) {
+        const nextMatch = deduped[i + 1].match(/^Plangothic (P\d+)$/)
+        if (!nextMatch) break
+        planes.push(nextMatch[1])
+        i += 1
+      }
+      out.push(`Plangothic ${planes.join('/')}`)
+      i += 1
+      continue
+    }
+
+    // TW-Kai-Ext-B, TW-Kai-Ext-G -> Ext-B/G when TW-Kai is already listed
+    const twExtMatch = cur.match(/^TW-Kai-Ext-([A-Z])$/)
+    if (twExtMatch) {
+      const exts = [twExtMatch[1]]
+      while (i + 1 < deduped.length) {
+        const nextMatch = deduped[i + 1].match(/^TW-Kai-Ext-([A-Z])$/)
+        if (!nextMatch) break
+        exts.push(nextMatch[1])
+        i += 1
+      }
+      const prefix = out.includes('TW-Kai') ? 'Ext-' : 'TW-Kai-Ext-'
+      out.push(`${prefix}${exts.join('/')}`)
+      i += 1
+      continue
+    }
+
+    out.push(cur)
+    i += 1
+  }
+  return out
+}
+
+/** Derive display font and fallback strings from a live export manifest. */
+export function summarizeOutlineFonts(manifest) {
+  const outlineFonts = manifest?.licences?.outlines?.fonts
+  const rawNames = Array.isArray(outlineFonts) && outlineFonts.length > 0
+    ? outlineFonts.map(entry => entry.name || entry.file)
+    : Object.keys(manifest?.composer?.font_sha256 ?? {}).map(file => file.replace(/\.[^.]+$/, ''))
+
+  const labels = collapseFontLabels(rawNames.map(normalizeFontName))
+  const [primary, ...rest] = labels
+  return {
+    font: labels.join(' + '),
+    fallback: rest.length > 0 ? rest.join(' + ') : 'None (native only)',
+    primary: primary ?? '',
+  }
+}
 
 /** Fetch one live export manifest.json and extract inventory metrics. */
 async function readExport(face) {
@@ -26,6 +102,7 @@ async function readExport(face) {
   if (!res.ok) throw new Error(`${face.key}: HTTP ${res.status} for ${base}manifest.json`)
   const m = await res.json()
   const f = m.files
+  const { font, fallback } = summarizeOutlineFonts(m)
   const chars = f.identity?.characters ?? 0
   const records = f.records?.entries ?? 0
   const hostKeys = f.hosts?.entries ?? 0
@@ -37,6 +114,8 @@ async function readExport(face) {
   const gzipBytes = (f.records?.gzip ?? 0) + (f.hosts?.gzip ?? 0) + (f.layout?.gzip ?? 0)
   return {
     ...face,
+    font,
+    fallback,
     version: m.version,
     commit: m.composer?.commit ?? null,
     format: m.format,
@@ -74,34 +153,40 @@ function countFaceEntries(value, faceKey) {
   return total
 }
 
-const composerRoot = dirname(fileURLToPath(import.meta.resolve('@han-compose/composer/package.json')))
-const composerSrc = join(composerRoot, 'src')
+async function main() {
+  const composerRoot = dirname(fileURLToPath(import.meta.resolve('@han-compose/composer/package.json')))
+  const composerSrc = join(composerRoot, 'src')
 
-const exportsList = await Promise.all(FACES.map(readExport))
+  const exportsList = await Promise.all(FACES.map(readExport))
 
-const cutTables = []
-for (const file of readdirSync(composerSrc).filter(f => f.endsWith('.json')).sort()) {
-  const raw = readFileSync(join(composerSrc, file), 'utf8')
-  const present = FACE_KEYS.filter(face => raw.includes(`"${face}"`))
-  if (present.length < 2) continue
-  let parsed
-  try { parsed = JSON.parse(raw) } catch { continue }
-  const counts = Object.fromEntries(FACE_KEYS.map(face => [face, present.includes(face) ? Math.max(1, countFaceEntries(parsed, face)) : 0]))
-  cutTables.push({
-    file,
-    name: file.replace(/\.json$/, ''),
-    counts,
-    covered: FACE_KEYS.filter(face => counts[face] > 0).length,
-  })
+  const cutTables = []
+  for (const file of readdirSync(composerSrc).filter(f => f.endsWith('.json')).sort()) {
+    const raw = readFileSync(join(composerSrc, file), 'utf8')
+    const present = FACE_KEYS.filter(face => raw.includes(`"${face}"`))
+    if (present.length < 2) continue
+    let parsed
+    try { parsed = JSON.parse(raw) } catch { continue }
+    const counts = Object.fromEntries(FACE_KEYS.map(face => [face, present.includes(face) ? Math.max(1, countFaceEntries(parsed, face)) : 0]))
+    cutTables.push({
+      file,
+      name: file.replace(/\.json$/, ''),
+      counts,
+      covered: FACE_KEYS.filter(face => counts[face] > 0).length,
+    })
+  }
+
+  const out = {
+    generatedAt: new Date().toISOString().slice(0, 10),
+    faces: exportsList,
+    cutTables,
+    cutTotals: Object.fromEntries(FACE_KEYS.map(face => [face, cutTables.filter(t => t.counts[face] > 0).length])),
+  }
+
+  const target = new URL('../demo/lib/font-inventory.json', import.meta.url)
+  writeFileSync(target, JSON.stringify(out, null, 2) + '\n')
+  console.log(`wrote ${exportsList.length} faces and ${cutTables.length} per-face cut tables -> demo/lib/font-inventory.json`)
 }
 
-const out = {
-  generatedAt: new Date().toISOString().slice(0, 10),
-  faces: exportsList,
-  cutTables,
-  cutTotals: Object.fromEntries(FACE_KEYS.map(face => [face, cutTables.filter(t => t.counts[face] > 0).length])),
+if (import.meta.main) {
+  await main()
 }
-
-const target = new URL('../demo/lib/font-inventory.json', import.meta.url)
-writeFileSync(target, JSON.stringify(out, null, 2) + '\n')
-console.log(`wrote ${exportsList.length} faces and ${cutTables.length} per-face cut tables -> demo/lib/font-inventory.json`)
