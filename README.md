@@ -954,7 +954,7 @@ which are laid out as equal cells. Under Vite, keep both packages out of depende
 `composerPreview({ base, worker })` takes a function making the Worker for other bundlers.
 
 The demo draws Sans from `https://ids-input-composer.mkpoli.workers.dev/a83fc941166b-sans-compose-layout-v4-f7+variants/`,
-Serif from the serif export, Regular Kai from the TW-Kai export, Fangsong from the Zhuque Fangsong export, and Wen Kai from the Kureedo export; `?composer=<url>` or
+Serif from the serif export, Woodblock from the Nôm Na Tống export, Regular Kai from the TW-Kai export, Fangsong from the Zhuque Fangsong export, and Wen Kai from the Kureedo export; `?composer=<url>` or
 `VITE_COMPOSER_BASE` points every face at another copy of one export. A face that cannot draw a
 description draws the encoded character it names in that face, else the Sans export's drawing.
 
@@ -1053,9 +1053,10 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - `data/ids-parts.json`: its first-stroke column adapts Rime’s five-stroke dictionary (LGPL-3.0);
   source notices and licence texts are in `data/licences/`.
 - `fonts/`: Plangothic, Noto Sans CJK JP and BabelStone Han PUA subsets (about 490 KB together),
-  Noto Serif Tangut (1 MB), Zhuque Fangsong (4.8 MB), Zhuque Label (10 KB), Kureedo (2.8 MB), Kureedo
+  Noto Serif Tangut (1 MB), Nôm Na Tống (6.8 MB), NomNaTong Label (10 KB), Zhuque Fangsong (4.8 MB), Zhuque Label (10 KB), Kureedo (2.8 MB), Kureedo
   Label (23 KB) and GenZui Sans (2.3 MB); the
-  BabelStone subset is under the Arphic Public License, the rest SIL Open Font License 1.1.
+  BabelStone subset is under the Arphic Public License, Nôm Na Tống under the MIT License, the rest
+  SIL Open Font License 1.1.
 - `@han-compose/composer`: han-compose's composing engine, MIT, with its own outlines of Noto Serif
   Tangut (SIL OFL 1.1, `fonts/OFL-NotoSerifTangut.txt`), Noto Sans CJK JP and Plangothic (SIL OFL
   1.1, texts in `fonts/OFL-NotoSansCJK.txt` and `fonts/OFL-Plangothic.txt`) and its Unicode fallback.

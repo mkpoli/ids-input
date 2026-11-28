@@ -262,7 +262,7 @@
         "faceTransforms": {
           "type": "object",
           "propertyNames": {
-            "enum": ["sans", "serif", "fangsong", "regular", "pen-writing"]
+            "enum": ["sans", "serif", "woodblock", "fangsong", "regular", "pen-writing"]
           },
           "additionalProperties": {
             "$ref": "#/$defs/chain"
