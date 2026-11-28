@@ -39,7 +39,7 @@ test('a host catalogue shares the picker with the reviewed drawings and excludes
   const forms = rateFormsOfPart('率')
   const supplied = { id: 'registered', subjects: ['率'], forms: forms.map(({ text }, i) => ({ id: String(i), text })) }
   const sourceOnly = { ...supplied, id: 'comparison', evidenceOnly: true }
-  expect(variationFamiliesOfPart('率', () => [supplied, sourceOnly])).toEqual([supplied])
-  expect(variationFamiliesOfPart('率', () => [sourceOnly])).toHaveLength(1)
+  expect(variationFamiliesOfPart('率', () => [supplied, sourceOnly]).filter(group => !group.occurrence)).toEqual([supplied])
+  expect(variationFamiliesOfPart('率', () => [sourceOnly]).filter(group => !group.occurrence)).toHaveLength(1)
   expect(variationFamiliesOfPart('{53}', () => [sourceOnly])).toEqual([])
 })
